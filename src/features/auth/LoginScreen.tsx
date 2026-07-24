@@ -11,7 +11,7 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [role, setRole] = useState<UserRole>('팀원');
-  const [part, setPart] = useState<TeamPart>('플랫폼파트');
+  const [part, setPart] = useState<TeamPart>('TEST혁신파트');
   const [error, setError] = useState('');
 
   const submit = (event: FormEvent<HTMLFormElement>) => {

@@ -61,19 +61,18 @@ export const actionItems: ActionItem[] = [
 ];
 
 export const profiles: Profile[] = [
-  { name: '이선민', part: '플랫폼', trait: 'Careful Sprout', style: '결정 전 맥락을 충분히 봄', color: 'green' },
-  { name: '김승현', part: '경험', trait: 'Swift Ember', style: '이슈를 빠르게 쪼개고 실행함', color: 'red' },
-  { name: '이상협', part: '운영', trait: 'Calm Wave', style: '합의 기준과 프로세스를 선호함', color: 'blue' },
-  { name: '김수정', part: '문화', trait: 'Bright Orbit', style: '사람 사이 연결과 분위기를 잘 봄', color: 'yellow' },
+  { name: '이선민', part: 'TEST혁신파트', trait: 'Careful Sprout', style: '결정 전 맥락을 충분히 봄', color: 'green' },
+  { name: '김승현', part: 'ITS혁신파트', trait: 'Swift Ember', style: '이슈를 빠르게 쪼개고 실행함', color: 'red' },
+  { name: '이상협', part: '혁신도구파트', trait: 'Calm Wave', style: '합의 기준과 프로세스를 선호함', color: 'blue' },
+  { name: '김수정', part: 'TEST혁신파트', trait: 'Bright Orbit', style: '사람 사이 연결과 분위기를 잘 봄', color: 'yellow' },
 ];
 
 export const partScores: PartScore[] = [
-  { name: '문화파트', score: 92, meetings: 6 },
-  { name: '플랫폼파트', score: 84, meetings: 8 },
-  { name: '경험파트', score: 78, meetings: 11 },
-  { name: '운영파트', score: 73, meetings: 13 },
+  { name: 'TEST혁신파트', score: 92, meetings: 6 },
+  { name: 'ITS혁신파트', score: 84, meetings: 8 },
+  { name: '혁신도구파트', score: 78, meetings: 11 },
 ];
 
-export const initialMatches = ['김수정 · 이선민', '김승현 · 이상협', '플랫폼 · 문화 · 경험'];
+export const initialMatches = ['김수정 · 이선민', '김승현 · 이상협', 'TEST혁신파트 · ITS혁신파트'];
 
-export const matchCandidates = ['이선민 · 김수정', '김승현 · 김수정', '이상협 · 이선민', '경험 · 운영 · 문화'];
+export const matchCandidates = ['이선민 · 김수정', '김승현 · 김수정', '이상협 · 이선민', 'ITS혁신파트 · 혁신도구파트'];
