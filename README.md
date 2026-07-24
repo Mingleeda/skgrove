@@ -62,12 +62,11 @@ main
 
 ## 브랜치 작업 방식
 
-`main`은 최종 합의가 끝난 안정 버전만 반영합니다. 일반 개발은 `dev`를 기준으로 기능 브랜치에서 진행하고, 각 개발자는 담당 기능 브랜치에서 본인 이름으로 로컬 작업 브랜치를 따서 개발합니다.
+`main`은 최종 합의가 끝난 안정 버전만 반영합니다. 일반 개발은 `dev`를 기준으로 나눈 기능 브랜치에서 바로 진행합니다.
 
 ```bash
 git fetch origin
 git switch feature/intake
-git switch -c 이선민
 ```
 
 작업 흐름은 아래 기준으로 가져갑니다.
@@ -75,17 +74,18 @@ git switch -c 이선민
 ```text
 main
 └─ dev
-   └─ feature/intake
-      ├─ 이선민
-      ├─ 김승현
-      ├─ 이상협
-      └─ 김수정
+   ├─ feature/intake
+   ├─ feature/leader
+   ├─ feature/agenda
+   ├─ feature/meetings
+   ├─ feature/profiles
+   ├─ feature/connect
+   ├─ feature/memory
+   └─ feature/metrics
 ```
 
 - `main`: 리뷰와 합의가 끝난 안정 버전 브랜치
 - `dev`: 기능 통합과 리뷰를 진행하는 개발 기준 브랜치
-- `feature/*`: dev에서 갈라지는 기능별 통합 브랜치
-- `개발자 이름 브랜치`: 각자 로컬에서 개발하는 개인 작업 브랜치
-- 개인 작업이 완료되면 해당 기능의 `feature/*` 브랜치로 병합
+- `feature/*`: 담당자가 직접 개발하는 기능별 작업 브랜치
 - 기능 단위가 검증되면 `feature/*` 브랜치를 `dev`로 병합
 - 리뷰와 합의가 끝난 dev 변경만 `main`으로 병합
