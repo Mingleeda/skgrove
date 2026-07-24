@@ -1,4 +1,4 @@
-import type { ActionItem, Agenda, CanOpinion, CanSession, Issue, Part, PartScore, Profile } from '../types';
+import type { ActionItem, Agenda, CanOpinion, CanSession, Issue, PartScore, Profile } from '../types';
 
 export const initialIssues: Issue[] = [
   {
@@ -86,7 +86,7 @@ export const initialCanSessions: CanSession[] = [
     topic: '분기 목표 대비 협업 방식 개선',
     source: '자료 첨부',
     sourceRef: '2026_Q3_협업개선_킥오프.pptx',
-    parts: ['플랫폼', '경험', '운영', '문화'],
+    parts: ['TEST혁신파트', 'ITS혁신파트', '혁신도구파트'],
     mode: '하이브리드',
     stage: 'share',
     resultActions: [],
@@ -97,7 +97,7 @@ export const initialCanSessions: CanSession[] = [
     topic: '불필요한 회의를 줄이는 방법',
     source: '직접 입력',
     sourceRef: '',
-    parts: ['플랫폼', '경험', '운영', '문화'],
+    parts: ['TEST혁신파트', 'ITS혁신파트', '혁신도구파트'],
     mode: '하이브리드',
     stage: 'summary',
     resultActions: [
@@ -112,7 +112,7 @@ export const initialCanOpinions: CanOpinion[] = [
   {
     id: 'CAN-01',
     sessionId: 'CAN-S-2',
-    part: '플랫폼',
+    part: 'TEST혁신파트',
     category: '현황·문제',
     content: '파트 간 API 변경 공유가 늦어 재작업이 반복됩니다.',
     author: '실명',
@@ -122,7 +122,7 @@ export const initialCanOpinions: CanOpinion[] = [
   {
     id: 'CAN-02',
     sessionId: 'CAN-S-2',
-    part: '플랫폼',
+    part: 'TEST혁신파트',
     category: '개선 아이디어',
     content: '주간 15분 파트 싱크로 변경 사항만 빠르게 공유하면 좋겠습니다.',
     author: '익명',
@@ -132,7 +132,7 @@ export const initialCanOpinions: CanOpinion[] = [
   {
     id: 'CAN-03',
     sessionId: 'CAN-S-2',
-    part: '경험',
+    part: 'ITS혁신파트',
     category: '현황·문제',
     content: '기획-디자인-개발 핸드오프 기준이 명확하지 않습니다.',
     author: '실명',
@@ -142,7 +142,7 @@ export const initialCanOpinions: CanOpinion[] = [
   {
     id: 'CAN-04',
     sessionId: 'CAN-S-2',
-    part: '경험',
+    part: 'ITS혁신파트',
     category: '기대효과',
     content: '핸드오프 체크리스트가 생기면 리뷰 시간이 절반으로 줄 것 같습니다.',
     author: '익명',
@@ -152,7 +152,7 @@ export const initialCanOpinions: CanOpinion[] = [
   {
     id: 'CAN-05',
     sessionId: 'CAN-S-2',
-    part: '운영',
+    part: '혁신도구파트',
     category: '리스크',
     content: '프로세스를 늘리면 오히려 실행 속도가 느려질 수 있습니다.',
     author: '실명',
@@ -162,7 +162,7 @@ export const initialCanOpinions: CanOpinion[] = [
   {
     id: 'CAN-06',
     sessionId: 'CAN-S-2',
-    part: '운영',
+    part: '혁신도구파트',
     category: '개선 아이디어',
     content: '공통 채널에 변경 로그를 남기는 규칙만 먼저 시도해봅시다.',
     author: '익명',
@@ -172,7 +172,7 @@ export const initialCanOpinions: CanOpinion[] = [
   {
     id: 'CAN-07',
     sessionId: 'CAN-S-2',
-    part: '문화',
+    part: 'TEST혁신파트',
     category: '기대효과',
     content: '작은 성공 사례를 회고에서 공유하면 자발적 참여가 늘 것입니다.',
     author: '실명',
@@ -183,7 +183,7 @@ export const initialCanOpinions: CanOpinion[] = [
   {
     id: 'CAN-Q2-01',
     sessionId: 'CAN-S-1',
-    part: '운영',
+    part: '혁신도구파트',
     category: '개선 아이디어',
     content: '수요일 오후는 회의 없는 집중 시간으로 지정합시다.',
     author: '실명',
@@ -193,7 +193,7 @@ export const initialCanOpinions: CanOpinion[] = [
   {
     id: 'CAN-Q2-02',
     sessionId: 'CAN-S-1',
-    part: '경험',
+    part: 'ITS혁신파트',
     category: '개선 아이디어',
     content: '기본 회의 길이를 30분으로 줄이면 좋겠습니다.',
     author: '익명',

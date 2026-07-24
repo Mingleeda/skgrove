@@ -15,21 +15,21 @@ import {
   Sparkles,
   UsersRound,
 } from 'lucide-react';
+import { isLeader, teamParts } from '../../auth';
 import { PanelHeader } from '../../components/PanelHeader';
 import { canCategories } from '../../data/mockData';
 import type {
   ActionItem,
   CanOpinion,
-  CanRole,
   CanSession,
   CanStage,
   CanTopicSource,
-  CanViewer,
+  CurrentUser,
   Identity,
-  Part,
+  TeamPart,
 } from '../../types';
 
-const allParts: Part[] = ['플랫폼', '경험', '운영', '문화'];
+const allParts: readonly TeamPart[] = teamParts;
 
 const stageFlow: { id: CanStage; label: string }[] = [
   { id: 'setup', label: '세션 준비' },
@@ -50,10 +50,9 @@ type MeetingsProps = {
   sessions: CanSession[];
   opinions: CanOpinion[];
   selectedId: string | null;
-  viewer: CanViewer;
+  currentUser: CurrentUser;
   onSelectSession: (id: string | null) => void;
   onStartSession: () => void;
-  onViewerChange: (viewer: CanViewer) => void;
   onUpdateSession: (session: CanSession) => void;
   onAddOpinion: (opinion: Omit<CanOpinion, 'id' | 'selected'>) => void;
   onToggleOpinion: (id: string) => void;
@@ -71,10 +70,9 @@ export function Meetings({
   sessions,
   opinions,
   selectedId,
-  viewer,
+  currentUser,
   onSelectSession,
   onStartSession,
-  onViewerChange,
   onUpdateSession,
   onAddOpinion,
   onToggleOpinion,
@@ -90,42 +88,11 @@ export function Meetings({
   });
   const [actionDrafts, setActionDrafts] = useState<Record<string, { owner: string; due: string }>>({});
 
-  const isHost = viewer.role === '진행자';
+  const isHost = isLeader(currentUser);
   const session = sessions.find((item) => item.id === selectedId) ?? null;
 
   const authorLabel = (opinion: CanOpinion) =>
     opinion.author === '실명' && opinion.authorName ? opinion.authorName : '익명';
-
-  const viewerBar = (
-    <div className="can-viewer-bar">
-      <span className="can-viewer-label">데모 관점</span>
-      <div className="segmented">
-        {(['진행자', '참여자'] as CanRole[]).map((role) => (
-          <button
-            key={role}
-            className={viewer.role === role ? 'selected' : ''}
-            onClick={() => onViewerChange({ ...viewer, role })}
-          >
-            {role}
-          </button>
-        ))}
-      </div>
-      {viewer.role === '참여자' && (
-        <label className="can-viewer-part">
-          파트
-          <select
-            value={viewer.part}
-            onChange={(event) => onViewerChange({ ...viewer, part: event.target.value as Part })}
-          >
-            {allParts.map((part) => (
-              <option key={part}>{part}</option>
-            ))}
-          </select>
-        </label>
-      )}
-      <span className="can-viewer-hint">실제로는 로그인 사용자로 자동 지정됩니다</span>
-    </div>
-  );
 
   return (
     <section className="screen can-screen">
@@ -142,8 +109,6 @@ export function Meetings({
 
       {tab === 'can' && (
         <div className="can-flow">
-          {viewerBar}
-
           {/* ===== 세션 목록 ===== */}
           {!session && (
             <>
@@ -198,7 +163,7 @@ export function Meetings({
 
               const setStage = (next: CanStage) => onUpdateSession({ ...session, stage: next });
 
-              const togglePart = (part: Part) => {
+              const togglePart = (part: TeamPart) => {
                 const has = session.parts.includes(part);
                 const nextParts = has
                   ? session.parts.filter((item) => item !== part)
@@ -210,7 +175,7 @@ export function Meetings({
                 if (!draft.content.trim()) return;
                 onAddOpinion({
                   sessionId: session.id,
-                  part: viewer.part,
+                  part: currentUser.part,
                   category: draft.category,
                   content: draft.content.trim(),
                   author: draft.author,
@@ -574,7 +539,7 @@ export function Meetings({
                     <div className="can-two">
                       <div className="panel form-panel">
                         <PanelHeader icon={Send} title="② 의견 제출" />
-                        <div className="can-meta">내 파트 · {viewer.part}</div>
+                        <div className="can-meta">내 파트 · {currentUser.part}</div>
                         <label>
                           카테고리
                           <select
@@ -628,13 +593,13 @@ export function Meetings({
                       </div>
 
                       <div className="panel">
-                        <PanelHeader icon={UsersRound} title={`내 파트(${viewer.part}) 의견`} />
+                        <PanelHeader icon={UsersRound} title={`내 파트(${currentUser.part}) 의견`} />
                         <div className="can-part-column bare">
-                          {sessionOpinions.filter((opinion) => opinion.part === viewer.part).length === 0 && (
+                          {sessionOpinions.filter((opinion) => opinion.part === currentUser.part).length === 0 && (
                             <p className="can-empty">아직 제출된 의견이 없어요. 첫 의견을 남겨보세요.</p>
                           )}
                           {sessionOpinions
-                            .filter((opinion) => opinion.part === viewer.part)
+                            .filter((opinion) => opinion.part === currentUser.part)
                             .map((opinion) => (
                               <article className="can-opinion" key={opinion.id}>
                                 <div className="can-opinion-top">

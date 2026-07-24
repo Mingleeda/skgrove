@@ -2203,60 +2203,6 @@ textarea {
   gap: 8px;
 }
 
-.can-viewer-bar {
-  align-items: center;
-  background: #17352f;
-  border-radius: 8px;
-  color: #eff8ef;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  padding: 10px 14px;
-}
-
-.can-viewer-label {
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-  opacity: 0.8;
-}
-
-.can-viewer-bar .segmented {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.16);
-}
-
-.can-viewer-bar .segmented button {
-  color: #d4e4d8;
-}
-
-.can-viewer-bar .segmented .selected {
-  background: #d8f06a;
-  color: #17352f;
-}
-
-.can-viewer-part {
-  align-items: center;
-  color: #eff8ef;
-  display: flex;
-  flex-direction: row;
-  font-size: 12px;
-  font-weight: 700;
-  gap: 8px;
-}
-
-.can-viewer-part select {
-  min-height: 34px;
-  width: auto;
-}
-
-.can-viewer-hint {
-  color: rgba(239, 248, 239, 0.7);
-  font-size: 12px;
-  margin-left: auto;
-}
-
 .can-waiting {
   align-content: start;
   display: grid;

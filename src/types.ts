@@ -74,11 +74,8 @@ export type PartScore = {
   meetings: number;
 };
 
-export type Part = '플랫폼' | '경험' | '운영' | '문화';
 export type CanStage = 'setup' | 'collect' | 'share' | 'select' | 'summary';
 export type CanTopicSource = '직접 입력' | '자료 첨부';
-export type CanRole = '진행자' | '참여자';
-export type CanViewer = { role: CanRole; part: Part };
 
 export type CanSession = {
   id: string;
@@ -86,7 +83,7 @@ export type CanSession = {
   topic: string;
   source: CanTopicSource;
   sourceRef: string;
-  parts: Part[];
+  parts: TeamPart[];
   mode: '하이브리드';
   stage: CanStage;
   resultActions: ActionItem[];
@@ -95,7 +92,7 @@ export type CanSession = {
 export type CanOpinion = {
   id: string;
   sessionId: string;
-  part: Part;
+  part: TeamPart;
   category: string;
   content: string;
   author: Identity;

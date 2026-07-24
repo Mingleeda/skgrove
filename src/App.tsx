@@ -28,7 +28,6 @@ import type {
   Agenda,
   CanOpinion,
   CanSession,
-  CanViewer,
   CurrentUser,
   Identity,
   Issue,
@@ -48,7 +47,6 @@ export function App() {
   const [canOpinions, setCanOpinions] = useState<CanOpinion[]>(initialCanOpinions);
   const [selectedCanId, setSelectedCanId] = useState<string | null>(null);
   const [actionItems, setActionItems] = useState<ActionItem[]>(initialActionItems);
-  const [canViewer, setCanViewer] = useState<CanViewer>({ role: '진행자', part: '경험' });
 
   const passedAgendaCount = agendas.filter((agenda) => agenda.status === '통과').length;
   const openIssueCount = issues.filter((issue) => issue.status !== '종료').length;
@@ -130,7 +128,7 @@ export function App() {
       topic: '',
       source: '직접 입력',
       sourceRef: '',
-      parts: ['플랫폼', '경험', '운영', '문화'],
+      parts: ['TEST혁신파트', 'ITS혁신파트', '혁신도구파트'],
       mode: '하이브리드',
       stage: 'setup',
       resultActions: [],
@@ -220,10 +218,9 @@ export function App() {
           sessions={canSessions}
           opinions={canOpinions}
           selectedId={selectedCanId}
-          viewer={canViewer}
+          currentUser={currentUser}
           onSelectSession={setSelectedCanId}
           onStartSession={startCanSession}
-          onViewerChange={setCanViewer}
           onUpdateSession={updateCanSession}
           onAddOpinion={addCanOpinion}
           onToggleOpinion={toggleCanOpinion}
