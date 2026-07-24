@@ -1094,6 +1094,7 @@ textarea {
   font-weight: 800;
   justify-content: center;
   padding: 5px 9px;
+  white-space: nowrap;
   width: fit-content;
 }
 
@@ -1131,6 +1132,35 @@ textarea {
 .issue-actions select {
   min-height: 40px;
   min-width: 128px;
+}
+
+.leader-inbox-list .issue-card {
+  align-items: center;
+  grid-template-columns: minmax(360px, 1fr) 360px;
+}
+
+.leader-inbox-list .issue-actions {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: 58px minmax(140px, 1fr) 100px;
+  justify-self: end;
+  width: 100%;
+}
+
+.leader-inbox-list .issue-actions .status-pill {
+  align-self: center;
+  justify-self: center;
+  min-width: 48px;
+}
+
+.leader-inbox-list .issue-actions select {
+  min-width: 0;
+}
+
+.leader-inbox-list .issue-actions .secondary-button {
+  min-width: 100px;
+  padding: 0 12px;
+  white-space: nowrap;
 }
 
 .leader-workbench {
@@ -1603,6 +1633,14 @@ textarea {
     position: static;
   }
 
+  .leader-inbox-list .issue-card {
+    grid-template-columns: 1fr;
+  }
+
+  .leader-inbox-list .issue-actions {
+    justify-self: stretch;
+  }
+
   .account-table-head {
     display: none;
   }
@@ -1666,6 +1704,14 @@ textarea {
   .leader-summary,
   .leader-action-tabs {
     grid-template-columns: 1fr;
+  }
+
+  .leader-inbox-list .issue-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .leader-inbox-list .issue-actions .status-pill {
+    justify-self: start;
   }
 
   .login-page {
