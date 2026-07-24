@@ -184,7 +184,7 @@ export function LoginScreen({ accounts, onLogin, onRegister }: LoginScreenProps)
               type="button"
               onClick={() => onLogin({ name: '이두민', email: 'dumin@sk.com', role: '팀원', part: 'TEST혁신파트' })}
             >
-              익명 · 이두민
+              팀원 · 이두민
             </button>
           </div>
         </div>
