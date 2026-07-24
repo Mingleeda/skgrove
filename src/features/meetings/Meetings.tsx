@@ -17,7 +17,6 @@ import {
 } from 'lucide-react';
 import { isLeader, teamParts } from '../../auth';
 import { PanelHeader } from '../../components/PanelHeader';
-import { canCategories } from '../../data/mockData';
 import type {
   ActionItem,
   CanOpinion,
@@ -56,11 +55,10 @@ type MeetingsProps = {
   onUpdateSession: (session: CanSession) => void;
   onAddOpinion: (opinion: Omit<CanOpinion, 'id' | 'selected'>) => void;
   onToggleOpinion: (id: string) => void;
-  onConfirmResult: (sessionId: string, actions: ActionItem[]) => void;
+  onConfirmResult: (sessionId: string, summary: string, actions: ActionItem[]) => void;
 };
 
 type Draft = {
-  category: string;
   author: Identity;
   content: string;
 };
@@ -78,13 +76,12 @@ export function Meetings({
   onConfirmResult,
 }: MeetingsProps) {
   const [tab, setTab] = useState<'can' | 'tea'>('can');
-  const [filter, setFilter] = useState('전체');
   const [draft, setDraft] = useState<Draft>({
-    category: canCategories[0],
     author: '익명',
     content: '',
   });
   const [actionDrafts, setActionDrafts] = useState<Record<string, { owner: string; due: string }>>({});
+  const [aiSummary, setAiSummary] = useState<string | null>(null);
 
   const isHost = isLeader(currentUser);
   const session = sessions.find((item) => item.id === selectedId) ?? null;
@@ -174,7 +171,6 @@ export function Meetings({
                 onAddOpinion({
                   sessionId: session.id,
                   part: currentUser.part,
-                  category: draft.category,
                   content: draft.content.trim(),
                   author: draft.author,
                   authorName: draft.author === '실명' ? currentUser.name : '',
@@ -196,7 +192,20 @@ export function Meetings({
                     status: '대기',
                   };
                 });
-                onConfirmResult(session.id, actions);
+                onConfirmResult(session.id, aiSummary ?? session.resultSummary, actions);
+              };
+
+              // AI 취합 (자리표시): 선정 의견을 파트별로 묶어 정리. 실제 LLM 연동은 예정.
+              const runAiAggregate = () => {
+                const grouped = session.parts
+                  .map((part) => {
+                    const items = selectedOpinions.filter((opinion) => opinion.part === part);
+                    if (items.length === 0) return null;
+                    return `[${part}]\n` + items.map((opinion) => `· ${opinion.content}`).join('\n');
+                  })
+                  .filter(Boolean)
+                  .join('\n\n');
+                setAiSummary(grouped || '선정된 의견이 없습니다.');
               };
 
               const waitingCard = (title: string, desc: string) => (
@@ -212,66 +221,26 @@ export function Meetings({
               );
 
               const partColumns = () => (
-                <>
-                  <div className="can-filter">
-                    {['전체', ...canCategories].map((category) => (
-                      <button
-                        key={category}
-                        className={filter === category ? 'selected' : ''}
-                        onClick={() => setFilter(category)}
-                      >
-                        {category}
-                      </button>
-                    ))}
-                  </div>
-                  <div className="can-part-columns">
-                    {session.parts.map((part) => {
-                      const partOpinions = sessionOpinions.filter(
-                        (opinion) => opinion.part === part && (filter === '전체' || opinion.category === filter),
-                      );
-                      return (
-                        <div className="can-part-column" key={part}>
-                          <h3>
-                            {part} <span>{partOpinions.length}</span>
-                          </h3>
-                          {partOpinions.length === 0 && <p className="can-empty">해당 의견 없음</p>}
-                          {partOpinions.map((opinion) => (
-                            <article className="can-opinion" key={opinion.id}>
-                              <div className="can-opinion-top">
-                                <span className="can-badge">{opinion.category}</span>
-                                <small>{authorLabel(opinion)}</small>
-                              </div>
-                              <p>{opinion.content}</p>
-                            </article>
-                          ))}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </>
-              );
-
-              const summaryGroups = () => (
-                <div className="can-summary">
-                  {canCategories
-                    .map((category) => ({
-                      category,
-                      items: selectedOpinions.filter((opinion) => opinion.category === category),
-                    }))
-                    .filter((group) => group.items.length > 0)
-                    .map((group) => (
-                      <div className="can-summary-group" key={group.category}>
-                        <h4>{group.category}</h4>
-                        <ul>
-                          {group.items.map((opinion) => (
-                            <li key={opinion.id}>
-                              <span className="can-badge subtle">{opinion.part}</span>
-                              {opinion.content}
-                            </li>
-                          ))}
-                        </ul>
+                <div className="can-part-columns">
+                  {session.parts.map((part) => {
+                    const partOpinions = sessionOpinions.filter((opinion) => opinion.part === part);
+                    return (
+                      <div className="can-part-column" key={part}>
+                        <h3>
+                          {part} <span>{partOpinions.length}</span>
+                        </h3>
+                        {partOpinions.length === 0 && <p className="can-empty">해당 의견 없음</p>}
+                        {partOpinions.map((opinion) => (
+                          <article className="can-opinion" key={opinion.id}>
+                            <div className="can-opinion-top">
+                              <small>{authorLabel(opinion)}</small>
+                            </div>
+                            <p>{opinion.content}</p>
+                          </article>
+                        ))}
                       </div>
-                    ))}
+                    );
+                  })}
                 </div>
               );
 
@@ -437,7 +406,6 @@ export function Meetings({
                             <span className="can-select-body">
                               <span className="can-opinion-top">
                                 <span className="can-badge">{opinion.part}</span>
-                                <span className="can-badge subtle">{opinion.category}</span>
                                 <small>{authorLabel(opinion)}</small>
                               </span>
                               <span>{opinion.content}</span>
@@ -474,8 +442,28 @@ export function Meetings({
                         <p className="can-empty">선정된 의견이 없습니다. 선정 단계에서 핵심 의견을 골라주세요.</p>
                       ) : (
                         <>
-                          <h4 className="can-result-title">종합 의견</h4>
-                          {summaryGroups()}
+                          <h4 className="can-result-title">
+                            <Sparkles size={16} />
+                            종합 의견 (AI 취합)
+                          </h4>
+                          {confirmed ? (
+                            <pre className="can-ai-result">{session.resultSummary}</pre>
+                          ) : (
+                            <div className="can-ai">
+                              <div className="can-ai-head">
+                                <button className="ghost-button" onClick={runAiAggregate}>
+                                  <Sparkles size={16} />
+                                  AI로 취합·정리
+                                </button>
+                                <span className="can-ai-note">* 실제 LLM 연동 예정 — 현재는 자리표시(로컬 취합)</span>
+                              </div>
+                              {aiSummary ? (
+                                <pre className="can-ai-result">{aiSummary}</pre>
+                              ) : (
+                                <p className="can-empty">‘AI로 취합·정리’를 누르면 선정 의견이 파트별로 종합됩니다.</p>
+                              )}
+                            </div>
+                          )}
 
                           <h4 className="can-result-title">
                             <ClipboardCheck size={16} />
@@ -538,17 +526,6 @@ export function Meetings({
                       <div className="panel form-panel">
                         <PanelHeader icon={Send} title="② 의견 제출" />
                         <label>
-                          카테고리
-                          <select
-                            value={draft.category}
-                            onChange={(event) => setDraft({ ...draft, category: event.target.value })}
-                          >
-                            {canCategories.map((category) => (
-                              <option key={category}>{category}</option>
-                            ))}
-                          </select>
-                        </label>
-                        <label>
                           제출 방식
                           <div className="segmented">
                             {(['익명', '실명'] as Identity[]).map((item) => (
@@ -596,7 +573,6 @@ export function Meetings({
                             .map((opinion) => (
                               <article className="can-opinion" key={opinion.id}>
                                 <div className="can-opinion-top">
-                                  <span className="can-badge">{opinion.category}</span>
                                   <small>{authorLabel(opinion)}</small>
                                 </div>
                                 <p>{opinion.content}</p>
@@ -632,8 +608,11 @@ export function Meetings({
                               확정됨
                             </span>
                           </div>
-                          <h4 className="can-result-title">종합 의견</h4>
-                          {summaryGroups()}
+                          <h4 className="can-result-title">
+                            <Sparkles size={16} />
+                            종합 의견 (AI 취합)
+                          </h4>
+                          <pre className="can-ai-result">{session.resultSummary}</pre>
                           <h4 className="can-result-title">
                             <ClipboardCheck size={16} />
                             액션아이템

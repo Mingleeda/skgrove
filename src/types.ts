@@ -86,6 +86,7 @@ export type CanSession = {
   parts: TeamPart[];
   mode: '하이브리드';
   stage: CanStage;
+  resultSummary: string;
   resultActions: ActionItem[];
 };
 
@@ -93,7 +94,6 @@ export type CanOpinion = {
   id: string;
   sessionId: string;
   part: TeamPart;
-  category: string;
   content: string;
   author: Identity;
   authorName: string;

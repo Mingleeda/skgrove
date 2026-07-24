@@ -2369,3 +2369,34 @@ textarea {
   color: #55635d;
   cursor: not-allowed;
 }
+
+.can-ai {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.can-ai-head {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.can-ai-note {
+  color: #8a948d;
+  font-size: 12px;
+}
+
+.can-ai-result {
+  background: #f7faf5;
+  border: 1px solid #e1e7df;
+  border-radius: 8px;
+  color: #1d2522;
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 1.6;
+  margin: 0 0 16px;
+  padding: 14px;
+  white-space: pre-wrap;
+}

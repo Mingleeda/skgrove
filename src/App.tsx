@@ -131,6 +131,7 @@ export function App() {
       parts: ['TEST혁신파트', 'ITS혁신파트', '혁신도구파트'],
       mode: '하이브리드',
       stage: 'setup',
+      resultSummary: '',
       resultActions: [],
     };
     setCanSessions((prev) => [draft, ...prev]);
@@ -154,10 +155,12 @@ export function App() {
     );
   };
 
-  const confirmCanResult = (sessionId: string, actions: ActionItem[]) => {
+  const confirmCanResult = (sessionId: string, summary: string, actions: ActionItem[]) => {
     if (actions.length === 0) return;
     setCanSessions((prev) =>
-      prev.map((session) => (session.id === sessionId ? { ...session, resultActions: actions } : session)),
+      prev.map((session) =>
+        session.id === sessionId ? { ...session, resultSummary: summary, resultActions: actions } : session,
+      ),
     );
     setActionItems((prev) => [...actions, ...prev]);
   };
