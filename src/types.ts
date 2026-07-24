@@ -88,7 +88,6 @@ export type CanSession = {
   parts: TeamPart[];
   stage: CanStage;
   resultSummary: string;
-  resultActions: ActionItem[];
 };
 
 export type CanOpinion = {

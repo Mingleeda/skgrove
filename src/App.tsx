@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react';
 import { loadAccounts, makeAccountId, saveAccounts, seedAccounts } from './accountStore';
-import { isLeader, isTeamLeader } from './auth';
+import { isLeader, isTeamLeader, teamParts } from './auth';
 import { loadCanSteps, saveCanSteps } from './canStepsStore';
 import type { CanStepConfig } from './canConfig';
 import { AppShell } from './components/AppShell';
 import {
-  initialActionItems,
   initialAgendas,
   initialCanOpinions,
   initialCanSessions,
@@ -26,7 +25,6 @@ import { Metrics } from './features/metrics/Metrics';
 import { Profiles } from './features/profiles/Profiles';
 import { loadIssues, makeIssueId, saveIssues } from './issueStore';
 import type {
-  ActionItem,
   Agenda,
   CanOpinion,
   CanSession,
@@ -48,7 +46,6 @@ export function App() {
   const [canSessions, setCanSessions] = useState<CanSession[]>(initialCanSessions);
   const [canOpinions, setCanOpinions] = useState<CanOpinion[]>(initialCanOpinions);
   const [selectedCanId, setSelectedCanId] = useState<string | null>(null);
-  const [actionItems] = useState<ActionItem[]>(initialActionItems);
   const [canSteps, setCanSteps] = useState<CanStepConfig[]>(loadCanSteps);
 
   const passedAgendaCount = agendas.filter((agenda) => agenda.status === '통과').length;
@@ -125,20 +122,15 @@ export function App() {
 
   const startCanSession = () => {
     const id = `CAN-S-${canSessions.length + 1}`;
-    const now = new Date();
-    const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(
-      now.getDate(),
-    ).padStart(2, '0')}`;
     const draft: CanSession = {
       id,
       topic: '',
       teamName: '',
-      heldAt: today,
+      heldAt: new Date().toISOString().slice(0, 10),
       method: '오프라인',
-      parts: ['TEST혁신파트', 'ITS혁신파트', '혁신도구파트'],
+      parts: [...teamParts],
       stage: 'setup',
       resultSummary: '',
-      resultActions: [],
     };
     setCanSessions((prev) => [draft, ...prev]);
     setSelectedCanId(id);
@@ -219,7 +211,6 @@ export function App() {
           openIssueCount={openIssueCount}
           passedAgendaCount={passedAgendaCount}
           currentUser={currentUser}
-          actionItems={actionItems}
           onSectionChange={changeSection}
         />
       )}

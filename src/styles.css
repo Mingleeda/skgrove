@@ -1878,12 +1878,6 @@ textarea {
   margin: -4px 0 0;
 }
 
-.can-inline-label {
-  align-items: center;
-  display: inline-flex;
-  gap: 6px;
-}
-
 .can-meta {
   background: #f7faf5;
   border: 1px dashed #cbd6cb;
@@ -1894,15 +1888,13 @@ textarea {
   padding: 10px 12px;
 }
 
-.can-part-picker,
-.can-filter {
+.can-part-picker {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
 }
 
-.can-part-picker button,
-.can-filter button {
+.can-part-picker button {
   background: #ffffff;
   border: 1px solid #cfd8d1;
   border-radius: 999px;
@@ -1912,8 +1904,7 @@ textarea {
   padding: 0 14px;
 }
 
-.can-part-picker .selected,
-.can-filter .selected {
+.can-part-picker .selected {
   background: #17352f;
   border-color: #17352f;
   color: #ffffff;
@@ -2110,41 +2101,6 @@ textarea {
   color: #6b776f;
 }
 
-.can-summary {
-  display: grid;
-  gap: 12px;
-  margin-bottom: 16px;
-}
-
-.can-summary-group {
-  background: #f7faf5;
-  border: 1px solid #e1e7df;
-  border-radius: 8px;
-  padding: 12px 14px;
-}
-
-.can-summary-group h4 {
-  color: #17352f;
-  font-size: 14px;
-  margin: 0 0 8px;
-}
-
-.can-summary-group ul {
-  display: grid;
-  gap: 6px;
-  margin: 0;
-  padding-left: 0;
-  list-style: none;
-}
-
-.can-summary-group li {
-  align-items: center;
-  display: flex;
-  font-size: 13px;
-  gap: 8px;
-  line-height: 1.5;
-}
-
 .can-confirmed-tag {
   align-items: center;
   background: #d8f06a;
@@ -2156,51 +2112,6 @@ textarea {
   gap: 5px;
   margin-left: auto;
   padding: 4px 10px;
-}
-
-.can-result-title {
-  align-items: center;
-  color: #17352f;
-  display: flex;
-  font-size: 14px;
-  gap: 6px;
-  margin: 4px 0 10px;
-}
-
-.can-action-editor {
-  display: grid;
-  gap: 10px;
-  margin-bottom: 16px;
-}
-
-.can-action-draft {
-  background: #f7faf5;
-  border: 1px solid #e1e7df;
-  border-radius: 8px;
-  display: grid;
-  gap: 10px;
-  padding: 12px 14px;
-}
-
-.can-action-draft p {
-  font-size: 13px;
-  line-height: 1.5;
-  margin: 0;
-}
-
-.can-action-fields {
-  display: grid;
-  gap: 10px;
-  grid-template-columns: minmax(0, 1fr) 120px;
-}
-
-.can-action-fields label {
-  font-size: 12px;
-}
-
-.can-action-result {
-  display: grid;
-  gap: 8px;
 }
 
 .can-waiting {
@@ -2358,10 +2269,6 @@ textarea {
   .can-part-columns {
     grid-template-columns: 1fr;
   }
-
-  .can-action-fields {
-    grid-template-columns: 1fr;
-  }
 }
 
 .form-panel input:disabled {
@@ -2386,19 +2293,6 @@ textarea {
 .can-ai-note {
   color: #8a948d;
   font-size: 12px;
-}
-
-.can-ai-result {
-  background: #f7faf5;
-  border: 1px solid #e1e7df;
-  border-radius: 8px;
-  color: #1d2522;
-  font-family: inherit;
-  font-size: 13px;
-  line-height: 1.6;
-  margin: 0 0 16px;
-  padding: 14px;
-  white-space: pre-wrap;
 }
 
 .can-header-grid {
@@ -2439,12 +2333,6 @@ textarea {
   .can-header-grid {
     grid-template-columns: 1fr;
   }
-}
-
-.can-head-actions {
-  align-items: center;
-  display: flex;
-  gap: 10px;
 }
 
 .can-step.clickable {
@@ -2588,44 +2476,9 @@ textarea {
   line-height: 1.55;
 }
 
-.can-export {
-  margin-bottom: 16px;
-}
-
 .can-result-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
   margin: 4px 0 8px;
-}
-
-.can-qw-tag {
-  background: #d8f06a;
-  border-radius: 999px;
-  color: #17352f;
-  font-size: 10px;
-  font-weight: 800;
-  margin-left: 6px;
-  padding: 2px 7px;
-}
-
-.can-qw-list li {
-  display: grid;
-  gap: 6px;
-}
-
-.can-qw-fields {
-  display: flex;
-  gap: 8px;
-}
-
-.can-qw-fields input {
-  max-width: 160px;
-  min-height: 34px;
-}
-
-.can-qw-meta {
-  color: #2b4a3f;
-  font-size: 12px;
-  font-weight: 700;
 }

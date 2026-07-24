@@ -29,7 +29,6 @@ import type {
   TeamPart,
 } from '../../types';
 
-const allParts: readonly TeamPart[] = teamParts;
 const canMethods: CanMethod[] = ['온라인', '오프라인'];
 
 const stageFlow: { id: CanStage; label: string }[] = [
@@ -103,6 +102,15 @@ export function Meetings({
   const stepLabelOf = (id: string) => canSteps.find((step) => step.id === id)?.label ?? id;
   const activeStep = draft.step || canSteps[0]?.id || '';
 
+  // 세션별 의견/선정 수를 1회 스캔으로 집계 (목록 카드에서 재사용)
+  const opinionCountBySession = opinions.reduce((acc, opinion) => {
+    const entry = acc.get(opinion.sessionId) ?? { total: 0, picked: 0 };
+    entry.total += 1;
+    if (opinion.selected) entry.picked += 1;
+    acc.set(opinion.sessionId, entry);
+    return acc;
+  }, new Map<string, { total: number; picked: number }>());
+
   const authorLabel = (opinion: CanOpinion) =>
     opinion.author === '실명' && opinion.authorName ? opinion.authorName : '익명';
 
@@ -152,10 +160,7 @@ export function Meetings({
               <div className="can-session-list">
                 {sessions.length === 0 && <p className="can-empty">아직 진행된 캔미팅이 없습니다.</p>}
                 {sessions.map((item) => {
-                  const count = opinions.filter((opinion) => opinion.sessionId === item.id).length;
-                  const picked = opinions.filter(
-                    (opinion) => opinion.sessionId === item.id && opinion.selected,
-                  ).length;
+                  const { total: count, picked } = opinionCountBySession.get(item.id) ?? { total: 0, picked: 0 };
                   const done = item.stage === 'summary' && item.resultSummary.trim().length > 0;
                   return (
                     <button className="can-session-card" key={item.id} onClick={() => onSelectSession(item.id)}>
@@ -187,6 +192,7 @@ export function Meetings({
               const isLive = stage === liveStage;
               const sessionOpinions = opinions.filter((opinion) => opinion.sessionId === session.id);
               const selectedOpinions = sessionOpinions.filter((opinion) => opinion.selected);
+              const myOpinions = sessionOpinions.filter((opinion) => opinion.part === currentUser.part);
               const confirmed = session.resultSummary.trim().length > 0;
 
               const setStage = (next: CanStage) => {
@@ -335,6 +341,16 @@ export function Meetings({
                 </div>
               );
 
+              const opinionCard = (opinion: CanOpinion) => (
+                <article className="can-opinion" key={opinion.id}>
+                  <div className="can-opinion-top">
+                    <span className="can-badge">{stepLabelOf(opinion.step)}</span>
+                    <small>{authorLabel(opinion)}</small>
+                  </div>
+                  <p>{opinion.content}</p>
+                </article>
+              );
+
               const partColumns = () => (
                 <div className="can-part-columns">
                   {session.parts.map((part) => {
@@ -345,15 +361,7 @@ export function Meetings({
                           {part} <span>{partOpinions.length}</span>
                         </h3>
                         {partOpinions.length === 0 && <p className="can-empty">해당 의견 없음</p>}
-                        {partOpinions.map((opinion) => (
-                          <article className="can-opinion" key={opinion.id}>
-                            <div className="can-opinion-top">
-                              <span className="can-badge">{stepLabelOf(opinion.step)}</span>
-                              <small>{authorLabel(opinion)}</small>
-                            </div>
-                            <p>{opinion.content}</p>
-                          </article>
-                        ))}
+                        {partOpinions.map(opinionCard)}
                       </div>
                     );
                   })}
@@ -454,7 +462,7 @@ export function Meetings({
                       <label>
                         참여 파트
                         <div className="can-part-picker">
-                          {allParts.map((part) => (
+                          {teamParts.map((part) => (
                             <button
                               key={part}
                               className={session.parts.includes(part) ? 'selected' : ''}
@@ -725,20 +733,10 @@ export function Meetings({
                       <div className="panel">
                         <PanelHeader icon={UsersRound} title={`${currentUser.part} 의견`} />
                         <div className="can-part-column bare">
-                          {sessionOpinions.filter((opinion) => opinion.part === currentUser.part).length === 0 && (
+                          {myOpinions.length === 0 && (
                             <p className="can-empty">아직 제출된 의견이 없어요. 첫 의견을 남겨보세요.</p>
                           )}
-                          {sessionOpinions
-                            .filter((opinion) => opinion.part === currentUser.part)
-                            .map((opinion) => (
-                              <article className="can-opinion" key={opinion.id}>
-                                <div className="can-opinion-top">
-                                  <span className="can-badge">{stepLabelOf(opinion.step)}</span>
-                                  <small>{authorLabel(opinion)}</small>
-                                </div>
-                                <p>{opinion.content}</p>
-                              </article>
-                            ))}
+                          {myOpinions.map(opinionCard)}
                         </div>
                         <p className="can-hint">진행자가 수집을 마감하면 의견 공유로 넘어갑니다.</p>
                       </div>

@@ -12,8 +12,3 @@ export const CAN_STEPS: CanStepConfig[] = [
   { id: 'ideation', label: 'Step 2 · Ideation', hint: '우리 팀만이 할 수 있는 해결 / 개선 방안' },
   { id: 'quickwin', label: 'Step 3 · Quick-win', hint: '바로 실천할 과제 (역할 · 기한 구체화)' },
 ];
-
-export const DEFAULT_STEP = CAN_STEPS[0]?.id ?? '';
-
-// 설정에 없는(삭제된) id는 원본 id를 그대로 보여줘 데이터가 사라지지 않게 함
-export const stepLabelOf = (id: string) => CAN_STEPS.find((step) => step.id === id)?.label ?? id;

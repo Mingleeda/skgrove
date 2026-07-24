@@ -1,7 +1,17 @@
 import { FormEvent, useState } from 'react';
 import { HeartHandshake, LogIn, ShieldCheck, UserPlus } from 'lucide-react';
+import { seedAccounts } from '../../accountStore';
 import { teamParts, userRoles, isCompanyEmail } from '../../auth';
 import type { CurrentUser, ManagedAccount, TeamPart, UserRole } from '../../types';
+
+const toCurrentUser = (account: ManagedAccount): CurrentUser => ({
+  name: account.name,
+  email: account.email,
+  role: account.role,
+  part: account.part,
+});
+const quickLeader = seedAccounts.find((account) => account.name === '이선민');
+const quickMember = seedAccounts.find((account) => account.name === '이두민');
 
 type LoginScreenProps = {
   accounts: ManagedAccount[];
@@ -172,18 +182,16 @@ export function LoginScreen({ accounts, onLogin, onRegister }: LoginScreenProps)
         <div className="quick-login">
           <span>빠른 로그인 (데모)</span>
           <div className="quick-login-row">
-            <button
-              type="button"
-              onClick={() => onLogin({ name: '이선민', email: 'sunmin.l@sk.com', role: '팀리더', part: '전체' })}
-            >
-              리더 · 이선민
-            </button>
-            <button
-              type="button"
-              onClick={() => onLogin({ name: '이두민', email: 'dumin@sk.com', role: '팀원', part: 'TEST혁신파트' })}
-            >
-              팀원 · 이두민
-            </button>
+            {quickLeader && (
+              <button type="button" onClick={() => onLogin(toCurrentUser(quickLeader))}>
+                리더 · {quickLeader.name}
+              </button>
+            )}
+            {quickMember && (
+              <button type="button" onClick={() => onLogin(toCurrentUser(quickMember))}>
+                팀원 · {quickMember.name}
+              </button>
+            )}
           </div>
         </div>
       </form>
