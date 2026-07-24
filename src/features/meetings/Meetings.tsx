@@ -14,7 +14,7 @@ import {
   Sparkles,
   UsersRound,
 } from 'lucide-react';
-import { isLeader, isTeamLeader, teamParts } from '../../auth';
+import { isLeader, teamParts } from '../../auth';
 import type { CanStepConfig } from '../../canConfig';
 import { makeStepId } from '../../canStepsStore';
 import { PanelHeader } from '../../components/PanelHeader';
@@ -95,7 +95,7 @@ export function Meetings({
   const [showStepEditor, setShowStepEditor] = useState(false);
 
   const isHost = isLeader(currentUser);
-  const canManageSteps = isTeamLeader(currentUser);
+  const canManageSteps = isLeader(currentUser);
   const session = sessions.find((item) => item.id === selectedId) ?? null;
 
   const stepLabelOf = (id: string) => canSteps.find((step) => step.id === id)?.label ?? id;
@@ -158,7 +158,7 @@ export function Meetings({
 
               {canManageSteps && showStepEditor && (
                 <div className="panel can-step-editor">
-                  <PanelHeader icon={ListChecks} title="캔미팅 단계 설정 (팀리더)" />
+                  <PanelHeader icon={ListChecks} title="캔미팅 단계 설정 (리더)" />
                   <p className="can-hint">
                     단계 이름·설명을 바꾸거나 추가/삭제/순서를 변경합니다. 이미 제출된 의견은 그대로 유지됩니다.
                   </p>

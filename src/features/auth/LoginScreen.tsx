@@ -168,6 +168,26 @@ export function LoginScreen({ accounts, onLogin, onRegister }: LoginScreenProps)
           {mode === 'login' ? <LogIn size={18} /> : <UserPlus size={18} />}
           {mode === 'login' ? '로그인' : '가입 요청'}
         </button>
+
+        <div className="quick-login">
+          <span>빠른 로그인 (데모)</span>
+          <div className="quick-login-row">
+            <button
+              type="button"
+              onClick={() =>
+                onLogin({ name: '김승현', email: 'k2h9205@sk.com', role: '파트리더', part: 'ITS혁신파트' })
+              }
+            >
+              리더 · 김승현
+            </button>
+            <button
+              type="button"
+              onClick={() => onLogin({ name: '이두민', email: 'dumin@sk.com', role: '팀원', part: 'TEST혁신파트' })}
+            >
+              익명 · 이두민
+            </button>
+          </div>
+        </div>
       </form>
     </main>
   );
