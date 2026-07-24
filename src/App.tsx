@@ -48,7 +48,7 @@ export function App() {
   const [canSessions, setCanSessions] = useState<CanSession[]>(initialCanSessions);
   const [canOpinions, setCanOpinions] = useState<CanOpinion[]>(initialCanOpinions);
   const [selectedCanId, setSelectedCanId] = useState<string | null>(null);
-  const [actionItems, setActionItems] = useState<ActionItem[]>(initialActionItems);
+  const [actionItems] = useState<ActionItem[]>(initialActionItems);
   const [canSteps, setCanSteps] = useState<CanStepConfig[]>(loadCanSteps);
 
   const passedAgendaCount = agendas.filter((agenda) => agenda.status === '통과').length;
@@ -125,11 +125,15 @@ export function App() {
 
   const startCanSession = () => {
     const id = `CAN-S-${canSessions.length + 1}`;
+    const now = new Date();
+    const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(
+      now.getDate(),
+    ).padStart(2, '0')}`;
     const draft: CanSession = {
       id,
       topic: '',
       teamName: '',
-      heldAt: '',
+      heldAt: today,
       method: '오프라인',
       parts: ['TEST혁신파트', 'ITS혁신파트', '혁신도구파트'],
       stage: 'setup',
@@ -162,14 +166,11 @@ export function App() {
     saveCanSteps(steps);
   };
 
-  const confirmCanResult = (sessionId: string, summary: string, actions: ActionItem[]) => {
+  const confirmCanResult = (sessionId: string, summary: string) => {
     if (!summary.trim()) return;
     setCanSessions((prev) =>
-      prev.map((session) =>
-        session.id === sessionId ? { ...session, resultSummary: summary, resultActions: actions } : session,
-      ),
+      prev.map((session) => (session.id === sessionId ? { ...session, resultSummary: summary } : session)),
     );
-    setActionItems((prev) => [...actions, ...prev]);
   };
 
   const persistAccounts = (nextAccounts: ManagedAccount[]) => {
