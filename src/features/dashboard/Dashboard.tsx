@@ -12,15 +12,16 @@ import {
 } from 'lucide-react';
 import { PanelHeader } from '../../components/PanelHeader';
 import { actionItems, initialAgendas, profiles } from '../../data/mockData';
-import type { Section } from '../../types';
+import type { CurrentUser, Section } from '../../types';
 
 type DashboardProps = {
   openIssueCount: number;
   passedAgendaCount: number;
+  currentUser: CurrentUser;
   onSectionChange: (section: Section) => void;
 };
 
-export function Dashboard({ openIssueCount, passedAgendaCount, onSectionChange }: DashboardProps) {
+export function Dashboard({ openIssueCount, passedAgendaCount, currentUser, onSectionChange }: DashboardProps) {
   const stats = [
     { label: '접수 의견', value: openIssueCount, icon: Inbox, tone: 'mint' },
     { label: '투표 안건', value: 4, icon: Vote, tone: 'violet' },
@@ -35,7 +36,7 @@ export function Dashboard({ openIssueCount, passedAgendaCount, onSectionChange }
       <div className="home-hero">
         <div>
           <p className="eyebrow">오늘의 팀문화 허브</p>
-          <h2>말하기 어려운 이야기도, 바꾸고 싶은 문화도 여기서 시작해요</h2>
+          <h2>{currentUser.name}님, 말하기 어려운 이야기도 바꾸고 싶은 문화도 여기서 시작해요</h2>
           <p className="hero-copy">
             의견은 리더에게 안전하게 전달되고, 필요한 주제는 안건과 익명 투표를 거쳐 액션아이템으로 이어집니다.
           </p>

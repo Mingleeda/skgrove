@@ -1,7 +1,9 @@
 import { useState } from 'react';
+import { isLeader } from './auth';
 import { AppShell } from './components/AppShell';
 import { initialAgendas, initialIssues, initialMatches, matchCandidates } from './data/mockData';
 import { AgendaBoard } from './features/agenda/AgendaBoard';
+import { LoginScreen } from './features/auth/LoginScreen';
 import { Connect } from './features/connect/Connect';
 import { Dashboard } from './features/dashboard/Dashboard';
 import { Intake } from './features/intake/Intake';
@@ -10,9 +12,10 @@ import { Meetings } from './features/meetings/Meetings';
 import { Memory } from './features/memory/Memory';
 import { Metrics } from './features/metrics/Metrics';
 import { Profiles } from './features/profiles/Profiles';
-import type { Agenda, Identity, Issue, Section } from './types';
+import type { Agenda, CurrentUser, Identity, Issue, Section } from './types';
 
 export function App() {
+  const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
   const [active, setActive] = useState<Section>('dashboard');
   const [issues, setIssues] = useState<Issue[]>(initialIssues);
   const [agendas, setAgendas] = useState<Agenda[]>(initialAgendas);
@@ -66,19 +69,32 @@ export function App() {
     setMatched([...matchCandidates].sort(() => Math.random() - 0.5).slice(0, 3));
   };
 
+  const changeSection = (section: Section) => {
+    if (section === 'leader' && currentUser && !isLeader(currentUser)) {
+      setActive('dashboard');
+      return;
+    }
+    setActive(section);
+  };
+
+  if (!currentUser) {
+    return <LoginScreen onLogin={setCurrentUser} />;
+  }
+
   return (
-    <AppShell active={active} onSectionChange={setActive}>
+    <AppShell active={active} currentUser={currentUser} onLogout={() => setCurrentUser(null)} onSectionChange={changeSection}>
       {active === 'dashboard' && (
         <Dashboard
           openIssueCount={openIssueCount}
           passedAgendaCount={passedAgendaCount}
-          onSectionChange={setActive}
+          currentUser={currentUser}
+          onSectionChange={changeSection}
         />
       )}
       {active === 'intake' && (
         <Intake identity={identity} onIdentityChange={setIdentity} onSubmitIssue={submitIssue} />
       )}
-      {active === 'leader' && <LeaderInbox issues={issues} onPromoteToAgenda={promoteToAgenda} />}
+      {active === 'leader' && isLeader(currentUser) && <LeaderInbox issues={issues} onPromoteToAgenda={promoteToAgenda} />}
       {active === 'agenda' && <AgendaBoard agendas={agendas} onVote={vote} />}
       {active === 'meetings' && <Meetings />}
       {active === 'profiles' && <Profiles />}

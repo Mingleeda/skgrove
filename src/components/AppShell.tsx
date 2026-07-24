@@ -1,16 +1,20 @@
 import type { ReactNode } from 'react';
-import { Bell, HeartHandshake, MessageSquarePlus } from 'lucide-react';
+import { Bell, HeartHandshake, LogOut, MessageSquarePlus } from 'lucide-react';
+import { isLeader } from '../auth';
 import { sections } from '../navigation';
-import type { Section } from '../types';
+import type { CurrentUser, Section } from '../types';
 
 type AppShellProps = {
   active: Section;
   children: ReactNode;
+  currentUser: CurrentUser;
+  onLogout: () => void;
   onSectionChange: (section: Section) => void;
 };
 
-export function AppShell({ active, children, onSectionChange }: AppShellProps) {
+export function AppShell({ active, children, currentUser, onLogout, onSectionChange }: AppShellProps) {
   const currentSection = sections.find((section) => section.id === active) ?? sections[0];
+  const userCanUseLeaderMenu = isLeader(currentUser);
 
   return (
     <div className="app">
@@ -31,6 +35,7 @@ export function AppShell({ active, children, onSectionChange }: AppShellProps) {
             return (
               <button
                 className={active === section.id ? 'nav-item active' : 'nav-item'}
+                disabled={section.id === 'leader' && !userCanUseLeaderMenu}
                 key={section.id}
                 onClick={() => onSectionChange(section.id)}
                 title={`${section.label} · ${section.owner}`}
@@ -43,8 +48,9 @@ export function AppShell({ active, children, onSectionChange }: AppShellProps) {
         </nav>
 
         <div className="owner-box">
-          <span>현재 화면</span>
-          <strong>{currentSection.owner}</strong>
+          <span>{currentUser.part}</span>
+          <strong>{currentUser.name}</strong>
+          <em>{currentUser.role}</em>
         </div>
       </aside>
 
@@ -55,12 +61,21 @@ export function AppShell({ active, children, onSectionChange }: AppShellProps) {
             <h1>{currentSection.label}</h1>
           </div>
           <div className="top-actions">
+            <div className="user-chip">
+              <strong>{currentUser.name}</strong>
+              <span>
+                {currentUser.role} · {currentUser.part}
+              </span>
+            </div>
             <button className="icon-button" title="알림">
               <Bell size={19} />
             </button>
             <button className="primary-button" onClick={() => onSectionChange('intake')}>
               <MessageSquarePlus size={18} />
               의견 접수
+            </button>
+            <button className="icon-button" onClick={onLogout} title="로그아웃">
+              <LogOut size={19} />
             </button>
           </div>
         </header>

@@ -69,7 +69,8 @@ button {
 }
 
 .brand span,
-.owner-box span {
+.owner-box span,
+.owner-box em {
   color: #a9c4b8;
   font-size: 12px;
 }
@@ -98,6 +99,11 @@ button {
   color: #ffffff;
 }
 
+.nav-item:disabled {
+  cursor: not-allowed;
+  opacity: 0.38;
+}
+
 .owner-box {
   border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 8px;
@@ -105,6 +111,10 @@ button {
   gap: 6px;
   margin-top: auto;
   padding: 14px;
+}
+
+.owner-box em {
+  font-style: normal;
 }
 
 .main {
@@ -151,6 +161,27 @@ h1 {
   gap: 10px;
 }
 
+.user-chip {
+  background: #ffffff;
+  border: 1px solid #d9dfd8;
+  border-radius: 8px;
+  display: grid;
+  gap: 2px;
+  min-height: 42px;
+  min-width: 150px;
+  padding: 6px 12px;
+}
+
+.user-chip strong {
+  font-size: 13px;
+}
+
+.user-chip span {
+  color: #65736d;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
 .icon-button,
 .primary-button,
 .secondary-button,
@@ -193,6 +224,81 @@ h1 {
 .screen {
   display: grid;
   gap: 18px;
+}
+
+.login-page {
+  align-items: center;
+  background:
+    linear-gradient(120deg, rgba(23, 53, 47, 0.96), rgba(37, 82, 72, 0.92)),
+    linear-gradient(150deg, rgba(216, 240, 106, 0.24), transparent 42%),
+    #17352f;
+  color: #ffffff;
+  display: grid;
+  gap: 40px;
+  grid-template-columns: minmax(0, 1fr) minmax(360px, 460px);
+  min-height: 100vh;
+  padding: 44px;
+}
+
+.login-intro {
+  display: grid;
+  gap: 28px;
+  max-width: 720px;
+}
+
+.login-brand .brand-mark {
+  background: #d8f06a;
+}
+
+.login-intro h1 {
+  font-size: 42px;
+  line-height: 1.16;
+  max-width: 760px;
+}
+
+.login-intro p {
+  color: #d8e8df;
+  line-height: 1.65;
+  margin-top: 14px;
+  max-width: 620px;
+}
+
+.login-assurance {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 8px;
+  color: #eff8ef;
+  display: flex;
+  gap: 10px;
+  min-height: 54px;
+  padding: 0 14px;
+  width: fit-content;
+}
+
+.login-panel {
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.42);
+  border-radius: 8px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.2);
+  color: #1d2522;
+  display: grid;
+  gap: 16px;
+  padding: 24px;
+}
+
+.login-panel h2 {
+  font-size: 24px;
+}
+
+.form-error {
+  background: #ffe5df;
+  border: 1px solid #f0b8ad;
+  border-radius: 8px;
+  color: #b83324;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 10px 12px;
 }
 
 .hero-panel {
@@ -976,9 +1082,19 @@ textarea {
   .hero-panel,
   .home-hero,
   .home-grid,
+  .login-page,
   .two-column,
   .form-screen {
     grid-template-columns: 1fr;
+  }
+
+  .login-page {
+    align-items: start;
+    padding: 28px;
+  }
+
+  .login-intro h1 {
+    font-size: 34px;
   }
 
   .signal-map {
@@ -1028,10 +1144,28 @@ textarea {
     justify-content: stretch;
   }
 
+  .user-chip {
+    min-width: 0;
+  }
+
   .top-actions .primary-button,
   .issue-actions .secondary-button,
   .draw-controls button {
     flex: 1;
+  }
+
+  .login-page {
+    display: grid;
+    min-height: 100vh;
+    padding: 20px;
+  }
+
+  .login-intro h1 {
+    font-size: 28px;
+  }
+
+  .login-assurance {
+    width: 100%;
   }
 
   .stat-grid,

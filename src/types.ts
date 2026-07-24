@@ -12,6 +12,15 @@ export type Section =
 export type Identity = '익명' | '실명';
 export type Urgency = '낮음' | '보통' | '높음';
 export type AgendaStatus = '투표중' | '통과' | '부결';
+export type UserRole = '팀원' | '파트리더' | '팀리더';
+export type TeamPart = '플랫폼파트' | '경험파트' | '운영파트' | '문화파트';
+
+export type CurrentUser = {
+  name: string;
+  email: string;
+  role: UserRole;
+  part: TeamPart;
+};
 
 export type Issue = {
   id: string;
