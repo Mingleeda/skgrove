@@ -6,6 +6,7 @@ import {
   ClipboardCheck,
   Clock,
   Coffee,
+  Download,
   FileText,
   ListChecks,
   Plus,
@@ -230,17 +231,117 @@ export function Meetings({
                 onConfirmResult(session.id, aiSummary ?? session.resultSummary, actions);
               };
 
+              // 선정 의견을 단계별로 묶은 구조 (템플릿·PPT 공통 소스)
+              const stepGroups = canSteps
+                .map((step) => ({
+                  step,
+                  items: selectedOpinions.filter((opinion) => opinion.step === step.id).map((o) => o.content),
+                }))
+                .filter((group) => group.items.length > 0);
+              // 참석자: 실명 제출자에서 자동 도출
+              const participants =
+                Array.from(
+                  new Set(
+                    sessionOpinions
+                      .filter((opinion) => opinion.author === '실명' && opinion.authorName)
+                      .map((opinion) => opinion.authorName),
+                  ),
+                ).join(', ') || '—';
+
               // AI 취합 (자리표시): 선정 의견을 3-Step 템플릿으로 정리. 실제 LLM 연동은 예정.
               const runAiAggregate = () => {
-                const grouped = canSteps
-                  .map((step) => {
-                    const items = selectedOpinions.filter((opinion) => opinion.step === step.id);
-                    if (items.length === 0) return null;
-                    return `[${step.label}]\n` + items.map((opinion) => `· ${opinion.content}`).join('\n');
-                  })
-                  .filter(Boolean)
+                const grouped = stepGroups
+                  .map((group) => `[${group.step.label}]\n` + group.items.map((c) => `· ${c}`).join('\n'))
                   .join('\n\n');
                 setAiSummary(grouped || '선정된 의견이 없습니다.');
+              };
+
+              const resultTemplate = () => (
+                <div className="can-template">
+                  <div className="can-template-title">Can Meeting 결과 정리</div>
+                  <table className="can-template-head">
+                    <tbody>
+                      <tr>
+                        <th>팀명</th>
+                        <td>{session.teamName || '—'}</td>
+                        <th>참석자</th>
+                        <td>{participants}</td>
+                      </tr>
+                      <tr>
+                        <th>시행일시</th>
+                        <td>{session.heldAt || '—'}</td>
+                        <th>방법</th>
+                        <td>{session.method}</td>
+                      </tr>
+                      <tr>
+                        <th>주제</th>
+                        <td colSpan={3}>{session.topic || '—'}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                  <table className="can-template-steps">
+                    <tbody>
+                      {stepGroups.map((group) => (
+                        <tr key={group.step.id}>
+                          <th>{group.step.label}</th>
+                          <td>
+                            <ul>
+                              {group.items.map((content, index) => (
+                                <li key={index}>{content}</li>
+                              ))}
+                            </ul>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              );
+
+              const exportPptx = async () => {
+                const pptxgen = (await import('pptxgenjs')).default;
+                const pptx = new pptxgen();
+                const slide = pptx.addSlide();
+                const head = (text: string) => ({
+                  text,
+                  options: { bold: true, fill: { color: 'EFF3EC' }, color: '17352F', valign: 'middle' as const },
+                });
+                const body = (text: string) => ({ text, options: { valign: 'middle' as const } });
+                const border = { type: 'solid' as const, color: 'D5DED6', pt: 1 };
+
+                slide.addText('Can Meeting 결과 정리', {
+                  x: 0.4,
+                  y: 0.3,
+                  fontSize: 20,
+                  bold: true,
+                  color: '2F5597',
+                });
+                slide.addTable(
+                  [
+                    [head('팀명'), body(session.teamName || '-'), head('참석자'), body(participants)],
+                    [head('시행일시'), body(session.heldAt || '-'), head('방법'), body(session.method)],
+                    [head('주제'), { text: session.topic || '-', options: { colspan: 3, valign: 'middle' as const } }],
+                  ],
+                  { x: 0.4, y: 0.9, w: 9.2, colW: [1.5, 3.1, 1.5, 3.1], border, fontSize: 11, rowH: 0.4 },
+                );
+                slide.addTable(
+                  stepGroups.map((group) => [
+                    head(group.step.label),
+                    body(group.items.map((c) => `• ${c}`).join('\n')),
+                  ]),
+                  { x: 0.4, y: 2.4, w: 9.2, colW: [2.2, 7.0], border, fontSize: 11, valign: 'top' },
+                );
+                if (resultActions.length > 0) {
+                  slide.addText('액션아이템', { x: 0.4, y: 5.4, fontSize: 13, bold: true, color: '17352F' });
+                  slide.addTable(
+                    [
+                      [head('과제'), head('담당'), head('기한'), head('상태')],
+                      ...resultActions.map((a) => [body(a.title), body(a.owner), body(a.due), body(a.status)]),
+                    ],
+                    { x: 0.4, y: 5.7, w: 9.2, colW: [4.7, 1.5, 1.5, 1.5], border, fontSize: 10 },
+                  );
+                }
+                await pptx.writeFile({ fileName: `캔미팅_${session.teamName || 'result'}_${session.heldAt || ''}.pptx` });
               };
 
               const waitingCard = (title: string, desc: string) => (
@@ -570,23 +671,27 @@ export function Meetings({
                             <Sparkles size={16} />
                             종합 의견 (AI 취합)
                           </h4>
-                          {confirmed ? (
-                            <pre className="can-ai-result">{session.resultSummary}</pre>
-                          ) : (
+                          {!confirmed && !aiSummary ? (
                             <div className="can-ai">
                               <div className="can-ai-head">
-                                <button className="ghost-button" onClick={runAiAggregate}>
-                                  <Sparkles size={16} />
-                                  AI로 취합·정리
-                                </button>
+                                {isLive && (
+                                  <button className="ghost-button" onClick={runAiAggregate}>
+                                    <Sparkles size={16} />
+                                    AI로 취합·정리
+                                  </button>
+                                )}
                                 <span className="can-ai-note">* 실제 LLM 연동 예정 — 현재는 자리표시(로컬 취합)</span>
                               </div>
-                              {aiSummary ? (
-                                <pre className="can-ai-result">{aiSummary}</pre>
-                              ) : (
-                                <p className="can-empty">‘AI로 취합·정리’를 누르면 선정 의견이 파트별로 종합됩니다.</p>
-                              )}
+                              <p className="can-empty">‘AI로 취합·정리’를 누르면 결과 템플릿이 작성됩니다.</p>
                             </div>
+                          ) : (
+                            <>
+                              {resultTemplate()}
+                              <button className="secondary-button can-export" onClick={exportPptx}>
+                                <Download size={16} />
+                                PPT로 내보내기
+                              </button>
+                            </>
                           )}
 
                           <h4 className="can-result-title">
@@ -755,7 +860,11 @@ export function Meetings({
                             <Sparkles size={16} />
                             종합 의견 (AI 취합)
                           </h4>
-                          <pre className="can-ai-result">{session.resultSummary}</pre>
+                          {resultTemplate()}
+                          <button className="secondary-button can-export" onClick={exportPptx}>
+                            <Download size={16} />
+                            PPT로 내보내기
+                          </button>
                           <h4 className="can-result-title">
                             <ClipboardCheck size={16} />
                             액션아이템

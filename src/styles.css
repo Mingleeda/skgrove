@@ -2532,3 +2532,62 @@ textarea {
 .quick-login-row button:hover {
   border-color: #17352f;
 }
+
+.can-template {
+  border: 1px solid #d5ded6;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  overflow: hidden;
+}
+
+.can-template-title {
+  background: #eff3ec;
+  border-bottom: 1px solid #d5ded6;
+  color: #2f5597;
+  font-weight: 800;
+  padding: 10px 14px;
+}
+
+.can-template-head,
+.can-template-steps {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.can-template-head th,
+.can-template-head td,
+.can-template-steps th,
+.can-template-steps td {
+  border: 1px solid #e5eae3;
+  font-size: 13px;
+  padding: 9px 12px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.can-template-head th,
+.can-template-steps th {
+  background: #f4f7f2;
+  color: #17352f;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.can-template-steps th {
+  width: 150px;
+}
+
+.can-template-steps ul {
+  display: grid;
+  gap: 5px;
+  margin: 0;
+  padding-left: 18px;
+}
+
+.can-template-steps li {
+  line-height: 1.55;
+}
+
+.can-export {
+  margin-bottom: 16px;
+}
