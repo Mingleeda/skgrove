@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { loadAccounts, makeAccountId, saveAccounts, seedAccounts } from './accountStore';
 import { isLeader, isTeamLeader } from './auth';
+import { loadCanSteps, saveCanSteps } from './canStepsStore';
+import type { CanStepConfig } from './canConfig';
 import { AppShell } from './components/AppShell';
 import {
   initialActionItems,
@@ -47,6 +49,7 @@ export function App() {
   const [canOpinions, setCanOpinions] = useState<CanOpinion[]>(initialCanOpinions);
   const [selectedCanId, setSelectedCanId] = useState<string | null>(null);
   const [actionItems, setActionItems] = useState<ActionItem[]>(initialActionItems);
+  const [canSteps, setCanSteps] = useState<CanStepConfig[]>(loadCanSteps);
 
   const passedAgendaCount = agendas.filter((agenda) => agenda.status === '통과').length;
   const openIssueCount = issues.filter((issue) => issue.status !== '종료').length;
@@ -154,6 +157,11 @@ export function App() {
     );
   };
 
+  const updateCanSteps = (steps: CanStepConfig[]) => {
+    setCanSteps(steps);
+    saveCanSteps(steps);
+  };
+
   const confirmCanResult = (sessionId: string, summary: string, actions: ActionItem[]) => {
     if (actions.length === 0) return;
     setCanSessions((prev) =>
@@ -221,12 +229,14 @@ export function App() {
           opinions={canOpinions}
           selectedId={selectedCanId}
           currentUser={currentUser}
+          canSteps={canSteps}
           onSelectSession={setSelectedCanId}
           onStartSession={startCanSession}
           onUpdateSession={updateCanSession}
           onAddOpinion={addCanOpinion}
           onToggleOpinion={toggleCanOpinion}
           onConfirmResult={confirmCanResult}
+          onCanStepsChange={updateCanSteps}
         />
       )}
       {active === 'profiles' && <Profiles />}

@@ -14,8 +14,9 @@ import {
   Sparkles,
   UsersRound,
 } from 'lucide-react';
-import { isLeader, teamParts } from '../../auth';
-import { CAN_STEPS, DEFAULT_STEP, stepLabelOf } from '../../canConfig';
+import { isLeader, isTeamLeader, teamParts } from '../../auth';
+import type { CanStepConfig } from '../../canConfig';
+import { makeStepId } from '../../canStepsStore';
 import { PanelHeader } from '../../components/PanelHeader';
 import type {
   ActionItem,
@@ -52,12 +53,14 @@ type MeetingsProps = {
   opinions: CanOpinion[];
   selectedId: string | null;
   currentUser: CurrentUser;
+  canSteps: CanStepConfig[];
   onSelectSession: (id: string | null) => void;
   onStartSession: () => void;
   onUpdateSession: (session: CanSession) => void;
   onAddOpinion: (opinion: Omit<CanOpinion, 'id' | 'selected'>) => void;
   onToggleOpinion: (id: string) => void;
   onConfirmResult: (sessionId: string, summary: string, actions: ActionItem[]) => void;
+  onCanStepsChange: (steps: CanStepConfig[]) => void;
 };
 
 type Draft = {
@@ -71,27 +74,48 @@ export function Meetings({
   opinions,
   selectedId,
   currentUser,
+  canSteps,
   onSelectSession,
   onStartSession,
   onUpdateSession,
   onAddOpinion,
   onToggleOpinion,
   onConfirmResult,
+  onCanStepsChange,
 }: MeetingsProps) {
   const [tab, setTab] = useState<'can' | 'tea'>('can');
   const [draft, setDraft] = useState<Draft>({
-    step: DEFAULT_STEP,
+    step: '',
     author: '익명',
     content: '',
   });
   const [actionDrafts, setActionDrafts] = useState<Record<string, { owner: string; due: string }>>({});
   const [aiSummary, setAiSummary] = useState<string | null>(null);
+  const [view, setView] = useState<{ id: string; stage: CanStage } | null>(null);
+  const [showStepEditor, setShowStepEditor] = useState(false);
 
   const isHost = isLeader(currentUser);
+  const canManageSteps = isTeamLeader(currentUser);
   const session = sessions.find((item) => item.id === selectedId) ?? null;
+
+  const stepLabelOf = (id: string) => canSteps.find((step) => step.id === id)?.label ?? id;
+  const activeStep = draft.step || canSteps[0]?.id || '';
 
   const authorLabel = (opinion: CanOpinion) =>
     opinion.author === '실명' && opinion.authorName ? opinion.authorName : '익명';
+
+  const patchStep = (id: string, patch: Partial<CanStepConfig>) =>
+    onCanStepsChange(canSteps.map((step) => (step.id === id ? { ...step, ...patch } : step)));
+  const addStep = () =>
+    onCanStepsChange([...canSteps, { id: makeStepId(), label: `Step ${canSteps.length + 1} · 새 단계`, hint: '' }]);
+  const removeStep = (id: string) => onCanStepsChange(canSteps.filter((step) => step.id !== id));
+  const moveStep = (index: number, dir: -1 | 1) => {
+    const target = index + dir;
+    if (target < 0 || target >= canSteps.length) return;
+    const next = [...canSteps];
+    [next[index], next[target]] = [next[target], next[index]];
+    onCanStepsChange(next);
+  };
 
   return (
     <section className="screen can-screen">
@@ -116,13 +140,67 @@ export function Meetings({
                   <h2>캔미팅 세션</h2>
                   <p className="can-hint">분기마다 진행되는 캔미팅을 모아봅니다.</p>
                 </div>
-                {isHost && (
-                  <button className="primary-button" onClick={onStartSession}>
-                    <Plus size={18} />
-                    신규 캔미팅 시작
-                  </button>
-                )}
+                <div className="can-head-actions">
+                  {canManageSteps && (
+                    <button className="secondary-button" onClick={() => setShowStepEditor((prev) => !prev)}>
+                      <ListChecks size={16} />
+                      단계 설정
+                    </button>
+                  )}
+                  {isHost && (
+                    <button className="primary-button" onClick={onStartSession}>
+                      <Plus size={18} />
+                      신규 캔미팅 시작
+                    </button>
+                  )}
+                </div>
               </div>
+
+              {canManageSteps && showStepEditor && (
+                <div className="panel can-step-editor">
+                  <PanelHeader icon={ListChecks} title="캔미팅 단계 설정 (팀리더)" />
+                  <p className="can-hint">
+                    단계 이름·설명을 바꾸거나 추가/삭제/순서를 변경합니다. 이미 제출된 의견은 그대로 유지됩니다.
+                  </p>
+                  {canSteps.map((step, index) => (
+                    <div className="can-step-row" key={step.id}>
+                      <input
+                        value={step.label}
+                        placeholder="단계 이름"
+                        onChange={(event) => patchStep(step.id, { label: event.target.value })}
+                      />
+                      <input
+                        value={step.hint}
+                        placeholder="설명 (선택)"
+                        onChange={(event) => patchStep(step.id, { hint: event.target.value })}
+                      />
+                      <div className="can-step-row-actions">
+                        <button className="icon-button" disabled={index === 0} onClick={() => moveStep(index, -1)}>
+                          ↑
+                        </button>
+                        <button
+                          className="icon-button"
+                          disabled={index === canSteps.length - 1}
+                          onClick={() => moveStep(index, 1)}
+                        >
+                          ↓
+                        </button>
+                        <button
+                          className="secondary-button"
+                          disabled={canSteps.length <= 1}
+                          onClick={() => removeStep(step.id)}
+                        >
+                          삭제
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                  <button className="secondary-button" onClick={addStep}>
+                    <Plus size={16} />
+                    단계 추가
+                  </button>
+                </div>
+              )}
               <div className="can-session-list">
                 {sessions.length === 0 && <p className="can-empty">아직 진행된 캔미팅이 없습니다.</p>}
                 {sessions.map((item) => {
@@ -153,14 +231,22 @@ export function Meetings({
           {/* ===== 세션 상세 ===== */}
           {session &&
             (() => {
-              const stage = session.stage;
+              const liveStage = session.stage;
+              const currentIndex = stageFlow.findIndex((item) => item.id === liveStage);
+              // 조회 중 단계: 지나간 단계를 눌러 열람(읽기전용). 없으면 실제 진행 단계.
+              const stage = view && view.id === session.id ? view.stage : liveStage;
               const stageIndex = stageFlow.findIndex((item) => item.id === stage);
+              const isLive = stage === liveStage;
               const sessionOpinions = opinions.filter((opinion) => opinion.sessionId === session.id);
               const selectedOpinions = sessionOpinions.filter((opinion) => opinion.selected);
               const resultActions = session.resultActions;
               const confirmed = resultActions.length > 0;
 
-              const setStage = (next: CanStage) => onUpdateSession({ ...session, stage: next });
+              const setStage = (next: CanStage) => {
+                onUpdateSession({ ...session, stage: next });
+                setView(null);
+              };
+              const viewStage = (target: CanStage) => setView({ id: session.id, stage: target });
 
               const togglePart = (part: TeamPart) => {
                 const has = session.parts.includes(part);
@@ -175,7 +261,7 @@ export function Meetings({
                 onAddOpinion({
                   sessionId: session.id,
                   part: currentUser.part,
-                  step: draft.step,
+                  step: activeStep,
                   content: draft.content.trim(),
                   author: draft.author,
                   authorName: draft.author === '실명' ? currentUser.name : '',
@@ -202,7 +288,7 @@ export function Meetings({
 
               // AI 취합 (자리표시): 선정 의견을 3-Step 템플릿으로 정리. 실제 LLM 연동은 예정.
               const runAiAggregate = () => {
-                const grouped = CAN_STEPS
+                const grouped = canSteps
                   .map((step) => {
                     const items = selectedOpinions.filter((opinion) => opinion.step === step.id);
                     if (items.length === 0) return null;
@@ -280,19 +366,33 @@ export function Meetings({
                   </div>
 
                   <ol className="can-stepper">
-                    {stageFlow.map((item, index) => (
-                      <li key={item.id}>
-                        <div
-                          className={`can-step ${index === stageIndex ? 'active' : ''} ${
-                            index < stageIndex ? 'done' : ''
-                          }`}
-                        >
-                          <span>{index + 1}</span>
-                          <strong>{item.label}</strong>
-                        </div>
-                      </li>
-                    ))}
+                    {stageFlow.map((item, index) => {
+                      const viewable = index <= currentIndex;
+                      return (
+                        <li key={item.id}>
+                          <button
+                            type="button"
+                            disabled={!viewable}
+                            onClick={() => viewStage(item.id)}
+                            className={`can-step ${index === stageIndex ? 'active' : ''} ${
+                              index < currentIndex ? 'done' : ''
+                            } ${viewable ? 'clickable' : ''}`}
+                          >
+                            <span>{index + 1}</span>
+                            <strong>{item.label}</strong>
+                          </button>
+                        </li>
+                      );
+                    })}
                   </ol>
+                  {!isLive && (
+                    <div className="can-readonly-bar">
+                      지나간 단계를 조회 중입니다 (읽기 전용).
+                      <button className="can-back" onClick={() => setView(null)}>
+                        현재 단계로
+                      </button>
+                    </div>
+                  )}
 
                   {/* 진행자 뷰 */}
                   {isHost && stage === 'setup' && (
@@ -307,14 +407,16 @@ export function Meetings({
                           <input
                             value={session.teamName}
                             placeholder="예: 혁신 Tribe"
+                            disabled={!isLive}
                             onChange={(event) => onUpdateSession({ ...session, teamName: event.target.value })}
                           />
                         </label>
                         <label>
                           시행일시
                           <input
-                            type="datetime-local"
+                            type="date"
                             value={session.heldAt}
+                            disabled={!isLive}
                             onChange={(event) => onUpdateSession({ ...session, heldAt: event.target.value })}
                           />
                         </label>
@@ -325,6 +427,7 @@ export function Meetings({
                               <button
                                 key={method}
                                 className={session.method === method ? 'selected' : ''}
+                                disabled={!isLive}
                                 onClick={() => onUpdateSession({ ...session, method })}
                               >
                                 {method}
@@ -338,6 +441,7 @@ export function Meetings({
                         <textarea
                           value={session.topic}
                           placeholder="예) 팀 목표-개인 목표 간 Alignment 저해 요인 도출"
+                          disabled={!isLive}
                           onChange={(event) => onUpdateSession({ ...session, topic: event.target.value })}
                         />
                       </label>
@@ -348,6 +452,7 @@ export function Meetings({
                             <button
                               key={part}
                               className={session.parts.includes(part) ? 'selected' : ''}
+                              disabled={!isLive}
                               onClick={() => togglePart(part)}
                             >
                               {part}
@@ -355,15 +460,17 @@ export function Meetings({
                           ))}
                         </div>
                       </label>
-                      <div className="can-meta">3-Step 진행 · Speak-out → Ideation → Quick-win</div>
-                      <button
-                        className="primary-button wide"
-                        disabled={!session.topic.trim() || session.parts.length === 0}
-                        onClick={() => setStage('collect')}
-                      >
-                        의견 수집 시작
-                        <ArrowRight size={18} />
-                      </button>
+                      <div className="can-meta">3-Step 진행 · {canSteps.map((s) => s.label.replace(/^Step \d+ · /, '')).join(' → ')}</div>
+                      {isLive && (
+                        <button
+                          className="primary-button wide"
+                          disabled={!session.topic.trim() || session.parts.length === 0}
+                          onClick={() => setStage('collect')}
+                        >
+                          의견 수집 시작
+                          <ArrowRight size={18} />
+                        </button>
+                      )}
                     </div>
                   )}
 
@@ -379,10 +486,12 @@ export function Meetings({
                         ))}
                       </div>
                       {partColumns()}
-                      <button className="primary-button wide" onClick={() => setStage('share')}>
-                        수집 마감하고 공유
-                        <ArrowRight size={18} />
-                      </button>
+                      {isLive && (
+                        <button className="primary-button wide" onClick={() => setStage('share')}>
+                          수집 마감하고 공유
+                          <ArrowRight size={18} />
+                        </button>
+                      )}
                     </div>
                   )}
 
@@ -390,22 +499,29 @@ export function Meetings({
                     <div className="panel">
                       <PanelHeader icon={Share2} title="③ 파트별 의견 공유 (진행자)" />
                       {partColumns()}
-                      <button className="primary-button wide" onClick={() => setStage('select')}>
-                        선정 시작
-                        <ArrowRight size={18} />
-                      </button>
+                      {isLive && (
+                        <button className="primary-button wide" onClick={() => setStage('select')}>
+                          선정 시작
+                          <ArrowRight size={18} />
+                        </button>
+                      )}
                     </div>
                   )}
 
                   {isHost && stage === 'select' && (
                     <div className="panel">
                       <PanelHeader icon={ListChecks} title={`④ 진행자 선정 · ${selectedOpinions.length}건 선택됨`} />
-                      <p className="can-hint">종합 의견에 포함할 핵심 의견을 진행자가 선정합니다.</p>
+                      <p className="can-hint">
+                        {isLive
+                          ? '종합 의견에 포함할 핵심 의견을 진행자가 선정합니다.'
+                          : '지나간 선정 결과입니다 (읽기 전용).'}
+                      </p>
                       <div className="can-select-list">
                         {sessionOpinions.map((opinion) => (
                           <button
                             key={opinion.id}
                             className={`can-select-item ${opinion.selected ? 'picked' : ''}`}
+                            disabled={!isLive}
                             onClick={() => onToggleOpinion(opinion.id)}
                           >
                             <span className="can-check">{opinion.selected ? '✓' : ''}</span>
@@ -420,14 +536,16 @@ export function Meetings({
                           </button>
                         ))}
                       </div>
-                      <button
-                        className="primary-button wide"
-                        disabled={selectedOpinions.length === 0}
-                        onClick={() => setStage('summary')}
-                      >
-                        결과 정리
-                        <ArrowRight size={18} />
-                      </button>
+                      {isLive && (
+                        <button
+                          className="primary-button wide"
+                          disabled={selectedOpinions.length === 0}
+                          onClick={() => setStage('summary')}
+                        >
+                          결과 정리
+                          <ArrowRight size={18} />
+                        </button>
+                      )}
                     </div>
                   )}
 
@@ -535,10 +653,11 @@ export function Meetings({
                         <label>
                           Step
                           <div className="can-step-picker">
-                            {CAN_STEPS.map((item) => (
+                            {canSteps.map((item) => (
                               <button
                                 key={item.id}
-                                className={draft.step === item.id ? 'selected' : ''}
+                                className={activeStep === item.id ? 'selected' : ''}
+                                disabled={!isLive}
                                 onClick={() => setDraft({ ...draft, step: item.id })}
                               >
                                 {item.label}
@@ -546,7 +665,7 @@ export function Meetings({
                             ))}
                           </div>
                         </label>
-                        <p className="can-step-hint">{CAN_STEPS.find((s) => s.id === draft.step)?.hint}</p>
+                        <p className="can-step-hint">{canSteps.find((s) => s.id === activeStep)?.hint}</p>
                         <label>
                           제출 방식
                           <div className="segmented">
@@ -554,6 +673,7 @@ export function Meetings({
                               <button
                                 key={item}
                                 className={draft.author === item ? 'selected' : ''}
+                                disabled={!isLive}
                                 onClick={() => setDraft({ ...draft, author: item })}
                               >
                                 {item}
@@ -572,12 +692,13 @@ export function Meetings({
                           <textarea
                             value={draft.content}
                             placeholder="안건에 대한 의견을 자유롭게 남겨주세요"
+                            disabled={!isLive}
                             onChange={(event) => setDraft({ ...draft, content: event.target.value })}
                           />
                         </label>
                         <button
                           className="primary-button wide"
-                          disabled={!draft.content.trim()}
+                          disabled={!draft.content.trim() || !isLive}
                           onClick={submitOpinion}
                         >
                           의견 제출

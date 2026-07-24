@@ -2440,3 +2440,62 @@ textarea {
     grid-template-columns: 1fr;
   }
 }
+
+.can-head-actions {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+}
+
+.can-step.clickable {
+  cursor: pointer;
+}
+
+.can-step:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.can-readonly-bar {
+  align-items: center;
+  background: #fff6e5;
+  border: 1px solid #f0d8a8;
+  border-radius: 8px;
+  color: #8a5a12;
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 13px;
+  font-weight: 700;
+  gap: 12px;
+  justify-content: space-between;
+  padding: 10px 14px;
+}
+
+.can-step-editor {
+  display: grid;
+  gap: 12px;
+}
+
+.can-step-row {
+  align-items: center;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr) auto;
+}
+
+.can-step-row-actions {
+  align-items: center;
+  display: flex;
+  gap: 6px;
+}
+
+.can-step-row-actions .icon-button {
+  min-height: 36px;
+  width: 36px;
+}
+
+@media (max-width: 900px) {
+  .can-step-row {
+    grid-template-columns: 1fr;
+  }
+}
