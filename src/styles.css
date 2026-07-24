@@ -2400,3 +2400,43 @@ textarea {
   padding: 14px;
   white-space: pre-wrap;
 }
+
+.can-header-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.can-step-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.can-step-picker button {
+  background: #ffffff;
+  border: 1px solid #cfd8d1;
+  border-radius: 999px;
+  color: #44514d;
+  font-weight: 700;
+  min-height: 36px;
+  padding: 0 14px;
+}
+
+.can-step-picker .selected {
+  background: #17352f;
+  border-color: #17352f;
+  color: #ffffff;
+}
+
+.can-step-hint {
+  color: #5a675f;
+  font-size: 12px;
+  margin: -6px 0 0;
+}
+
+@media (max-width: 900px) {
+  .can-header-grid {
+    grid-template-columns: 1fr;
+  }
+}

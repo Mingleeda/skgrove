@@ -80,27 +80,27 @@ export const matchCandidates = ['이선민 · 김수정', '김승현 · 김수�
 export const initialCanSessions: CanSession[] = [
   {
     id: 'CAN-S-2',
-    quarter: '2026 Q3',
-    topic: '분기 목표 대비 협업 방식 개선',
-    source: '자료 첨부',
-    sourceRef: '2026_Q3_협업개선_킥오프.pptx',
+    topic: 'Being AX 달성을 위한 협업 방식 개선',
+    teamName: '혁신 Tribe',
+    participants: '이선민, 김승현, 이상협, 김수정',
+    heldAt: '2026-07-10 14:00',
+    method: '오프라인 (본사 회의실)',
     parts: ['TEST혁신파트', 'ITS혁신파트', '혁신도구파트'],
-    mode: '하이브리드',
     stage: 'share',
     resultSummary: '',
     resultActions: [],
   },
   {
     id: 'CAN-S-1',
-    quarter: '2026 Q2',
-    topic: '불필요한 회의를 줄이는 방법',
-    source: '직접 입력',
-    sourceRef: '',
+    topic: '불필요한 회의를 줄여 집중 업무 시간 확보',
+    teamName: '혁신 Tribe',
+    participants: '이선민, 김승현, 이상협, 김수정',
+    heldAt: '2026-04-15 10:00',
+    method: '하이브리드',
     parts: ['TEST혁신파트', 'ITS혁신파트', '혁신도구파트'],
-    mode: '하이브리드',
     stage: 'summary',
     resultSummary:
-      '[혁신도구파트]\n· 수요일 오후는 회의 없는 집중 시간으로 지정합시다.\n\n[ITS혁신파트]\n· 기본 회의 길이를 30분으로 줄이면 좋겠습니다.',
+      '[Step 1 · Speak-out]\n· 목적이 불분명한 정기회의가 많아 집중 업무 시간이 끊깁니다.\n\n[Step 2 · Ideation]\n· 회의 없는 수요일 오후를 지정하고 기본 회의를 30분으로 제한합니다.\n\n[Step 3 · Quick-win]\n· 회의 없는 수요일 오후 시범 운영 / 30분 기본 회의 가이드 배포',
     resultActions: [
       { title: '회의 없는 수요일 오후 시범 운영', owner: '이상협', due: '상시', status: '진행중' },
       { title: '30분 기본 회의 길이 가이드 배포', owner: '김승현', due: 'D-10', status: '대기' },
@@ -113,6 +113,7 @@ export const initialCanOpinions: CanOpinion[] = [
   {
     id: 'CAN-01',
     sessionId: 'CAN-S-2',
+    step: 'Speak-out',
     part: 'TEST혁신파트',
     content: '파트 간 API 변경 공유가 늦어 재작업이 반복됩니다.',
     author: '실명',
@@ -122,6 +123,7 @@ export const initialCanOpinions: CanOpinion[] = [
   {
     id: 'CAN-02',
     sessionId: 'CAN-S-2',
+    step: 'Ideation',
     part: 'TEST혁신파트',
     content: '주간 15분 파트 싱크로 변경 사항만 빠르게 공유하면 좋겠습니다.',
     author: '익명',
@@ -131,6 +133,7 @@ export const initialCanOpinions: CanOpinion[] = [
   {
     id: 'CAN-03',
     sessionId: 'CAN-S-2',
+    step: 'Speak-out',
     part: 'ITS혁신파트',
     content: '기획-디자인-개발 핸드오프 기준이 명확하지 않습니다.',
     author: '실명',
@@ -140,6 +143,7 @@ export const initialCanOpinions: CanOpinion[] = [
   {
     id: 'CAN-04',
     sessionId: 'CAN-S-2',
+    step: 'Ideation',
     part: 'ITS혁신파트',
     content: '핸드오프 체크리스트가 생기면 리뷰 시간이 절반으로 줄 것 같습니다.',
     author: '익명',
@@ -149,6 +153,7 @@ export const initialCanOpinions: CanOpinion[] = [
   {
     id: 'CAN-05',
     sessionId: 'CAN-S-2',
+    step: 'Speak-out',
     part: '혁신도구파트',
     content: '프로세스를 늘리면 오히려 실행 속도가 느려질 수 있습니다.',
     author: '실명',
@@ -158,6 +163,7 @@ export const initialCanOpinions: CanOpinion[] = [
   {
     id: 'CAN-06',
     sessionId: 'CAN-S-2',
+    step: 'Quick-win',
     part: '혁신도구파트',
     content: '공통 채널에 변경 로그를 남기는 규칙만 먼저 시도해봅시다.',
     author: '익명',
@@ -167,6 +173,7 @@ export const initialCanOpinions: CanOpinion[] = [
   {
     id: 'CAN-07',
     sessionId: 'CAN-S-2',
+    step: 'Ideation',
     part: 'TEST혁신파트',
     content: '작은 성공 사례를 회고에서 공유하면 자발적 참여가 늘 것입니다.',
     author: '실명',
@@ -177,6 +184,7 @@ export const initialCanOpinions: CanOpinion[] = [
   {
     id: 'CAN-Q2-01',
     sessionId: 'CAN-S-1',
+    step: 'Quick-win',
     part: '혁신도구파트',
     content: '수요일 오후는 회의 없는 집중 시간으로 지정합시다.',
     author: '실명',
@@ -186,6 +194,7 @@ export const initialCanOpinions: CanOpinion[] = [
   {
     id: 'CAN-Q2-02',
     sessionId: 'CAN-S-1',
+    step: 'Quick-win',
     part: 'ITS혁신파트',
     content: '기본 회의 길이를 30분으로 줄이면 좋겠습니다.',
     author: '익명',

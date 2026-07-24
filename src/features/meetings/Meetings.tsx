@@ -8,7 +8,6 @@ import {
   Coffee,
   FileText,
   ListChecks,
-  Paperclip,
   Plus,
   Send,
   Share2,
@@ -22,7 +21,7 @@ import type {
   CanOpinion,
   CanSession,
   CanStage,
-  CanTopicSource,
+  CanStep,
   CurrentUser,
   Identity,
   TeamPart,
@@ -30,10 +29,18 @@ import type {
 
 const allParts: readonly TeamPart[] = teamParts;
 
+const canSteps: { id: CanStep; label: string; hint: string }[] = [
+  { id: 'Speak-out', label: 'Step 1 · Speak-out', hint: "먼저 해결해야 할 '진짜' 문제 · Bottleneck · 비효율" },
+  { id: 'Ideation', label: 'Step 2 · Ideation', hint: '우리 팀만이 할 수 있는 해결 / 개선 방안' },
+  { id: 'Quick-win', label: 'Step 3 · Quick-win', hint: '바로 실천할 과제 (역할 · 기한 구체화)' },
+];
+
+const stepLabel = (step: CanStep) => canSteps.find((item) => item.id === step)?.label ?? step;
+
 const stageFlow: { id: CanStage; label: string }[] = [
   { id: 'setup', label: '세션 준비' },
   { id: 'collect', label: '의견 수집' },
-  { id: 'share', label: '파트별 공유' },
+  { id: 'share', label: '의견 공유' },
   { id: 'select', label: '선정' },
   { id: 'summary', label: '결과' },
 ];
@@ -59,6 +66,7 @@ type MeetingsProps = {
 };
 
 type Draft = {
+  step: CanStep;
   author: Identity;
   content: string;
 };
@@ -77,6 +85,7 @@ export function Meetings({
 }: MeetingsProps) {
   const [tab, setTab] = useState<'can' | 'tea'>('can');
   const [draft, setDraft] = useState<Draft>({
+    step: 'Speak-out',
     author: '익명',
     content: '',
   });
@@ -130,14 +139,14 @@ export function Meetings({
                   return (
                     <button className="can-session-card" key={item.id} onClick={() => onSelectSession(item.id)}>
                       <div className="can-session-top">
-                        <span className="can-badge">{item.quarter || '분기 미정'}</span>
+                        <span className="can-badge">{item.teamName || '팀 미정'}</span>
                         <span className={`can-stage-badge ${done ? 'done' : ''}`}>{stageLabelOf(item)}</span>
                       </div>
                       <h3>{item.topic || '(제목 미정)'}</h3>
                       <div className="can-session-meta">
+                        <span>{item.heldAt || '일시 미정'}</span>
                         <span>의견 {count}</span>
                         <span>선정 {picked}</span>
-                        <span>파트 {item.parts.length}</span>
                       </div>
                     </button>
                   );
@@ -171,6 +180,7 @@ export function Meetings({
                 onAddOpinion({
                   sessionId: session.id,
                   part: currentUser.part,
+                  step: draft.step,
                   content: draft.content.trim(),
                   author: draft.author,
                   authorName: draft.author === '실명' ? currentUser.name : '',
@@ -195,13 +205,13 @@ export function Meetings({
                 onConfirmResult(session.id, aiSummary ?? session.resultSummary, actions);
               };
 
-              // AI 취합 (자리표시): 선정 의견을 파트별로 묶어 정리. 실제 LLM 연동은 예정.
+              // AI 취합 (자리표시): 선정 의견을 3-Step 템플릿으로 정리. 실제 LLM 연동은 예정.
               const runAiAggregate = () => {
-                const grouped = session.parts
-                  .map((part) => {
-                    const items = selectedOpinions.filter((opinion) => opinion.part === part);
+                const grouped = canSteps
+                  .map((step) => {
+                    const items = selectedOpinions.filter((opinion) => opinion.step === step.id);
                     if (items.length === 0) return null;
-                    return `[${part}]\n` + items.map((opinion) => `· ${opinion.content}`).join('\n');
+                    return `[${step.label}]\n` + items.map((opinion) => `· ${opinion.content}`).join('\n');
                   })
                   .filter(Boolean)
                   .join('\n\n');
@@ -233,6 +243,7 @@ export function Meetings({
                         {partOpinions.map((opinion) => (
                           <article className="can-opinion" key={opinion.id}>
                             <div className="can-opinion-top">
+                              <span className="can-badge">{stepLabel(opinion.step)}</span>
                               <small>{authorLabel(opinion)}</small>
                             </div>
                             <p>{opinion.content}</p>
@@ -269,7 +280,7 @@ export function Meetings({
                       <ChevronLeft size={16} />
                       세션 목록
                     </button>
-                    <span className="can-badge">{session.quarter || '분기 미정'}</span>
+                    <span className="can-badge">{session.teamName || '팀 미정'}</span>
                     <strong className="can-detail-topic">{session.topic || '새 캔미팅'}</strong>
                   </div>
 
@@ -292,49 +303,51 @@ export function Meetings({
                   {isHost && stage === 'setup' && (
                     <div className="panel form-panel">
                       <PanelHeader icon={FileText} title="① 세션 준비 (진행자)" />
-                      <p className="can-hint">회사/팀에 내려온 안건을 등록하고 참여 파트를 정합니다.</p>
+                      <p className="can-hint">
+                        캔미팅 결과 정리용 템플릿 헤더를 입력합니다. (팀장 Talk로 조직 목표·현황 공유 후 진행)
+                      </p>
+                      <div className="can-header-grid">
+                        <label>
+                          팀명
+                          <input
+                            value={session.teamName}
+                            placeholder="예: 혁신 Tribe"
+                            onChange={(event) => onUpdateSession({ ...session, teamName: event.target.value })}
+                          />
+                        </label>
+                        <label>
+                          참석자
+                          <input
+                            value={session.participants}
+                            placeholder="예: 이선민, 김승현, 이상협, 김수정"
+                            onChange={(event) => onUpdateSession({ ...session, participants: event.target.value })}
+                          />
+                        </label>
+                        <label>
+                          시행일시
+                          <input
+                            value={session.heldAt}
+                            placeholder="예: 2026-08-01 14:00"
+                            onChange={(event) => onUpdateSession({ ...session, heldAt: event.target.value })}
+                          />
+                        </label>
+                        <label>
+                          방법
+                          <input
+                            value={session.method}
+                            placeholder="예: 오프라인 / 온라인 / 하이브리드"
+                            onChange={(event) => onUpdateSession({ ...session, method: event.target.value })}
+                          />
+                        </label>
+                      </div>
                       <label>
-                        분기
-                        <input
-                          value={session.quarter}
-                          placeholder="예: 2026 Q4"
-                          onChange={(event) => onUpdateSession({ ...session, quarter: event.target.value })}
-                        />
-                      </label>
-                      <label>
-                        안건 주제
+                        주제 (Being AX 장애요인 · 실천방안)
                         <textarea
                           value={session.topic}
+                          placeholder="예) 팀 목표-개인 목표 간 Alignment 저해 요인 도출"
                           onChange={(event) => onUpdateSession({ ...session, topic: event.target.value })}
                         />
                       </label>
-                      <label>
-                        안건 출처
-                        <div className="segmented">
-                          {(['직접 입력', '자료 첨부'] as CanTopicSource[]).map((item) => (
-                            <button
-                              key={item}
-                              className={session.source === item ? 'selected' : ''}
-                              onClick={() => onUpdateSession({ ...session, source: item })}
-                            >
-                              {item}
-                            </button>
-                          ))}
-                        </div>
-                      </label>
-                      {session.source === '자료 첨부' && (
-                        <label>
-                          <span className="can-inline-label">
-                            <Paperclip size={14} />
-                            자료 파일명 또는 링크
-                          </span>
-                          <input
-                            value={session.sourceRef}
-                            placeholder="예: 2026_Q4_킥오프.pptx 또는 공유 링크"
-                            onChange={(event) => onUpdateSession({ ...session, sourceRef: event.target.value })}
-                          />
-                        </label>
-                      )}
                       <label>
                         참여 파트
                         <div className="can-part-picker">
@@ -349,7 +362,7 @@ export function Meetings({
                           ))}
                         </div>
                       </label>
-                      <div className="can-meta">방식 · 하이브리드 (사전 비동기 수집 + 미팅 정리)</div>
+                      <div className="can-meta">3-Step 진행 · Speak-out → Ideation → Quick-win</div>
                       <button
                         className="primary-button wide"
                         disabled={!session.topic.trim() || session.parts.length === 0}
@@ -405,7 +418,8 @@ export function Meetings({
                             <span className="can-check">{opinion.selected ? '✓' : ''}</span>
                             <span className="can-select-body">
                               <span className="can-opinion-top">
-                                <span className="can-badge">{opinion.part}</span>
+                                <span className="can-badge">{stepLabel(opinion.step)}</span>
+                                <span className="can-badge subtle">{opinion.part}</span>
                                 <small>{authorLabel(opinion)}</small>
                               </span>
                               <span>{opinion.content}</span>
@@ -526,6 +540,21 @@ export function Meetings({
                       <div className="panel form-panel">
                         <PanelHeader icon={Send} title="② 의견 제출" />
                         <label>
+                          Step
+                          <div className="can-step-picker">
+                            {canSteps.map((item) => (
+                              <button
+                                key={item.id}
+                                className={draft.step === item.id ? 'selected' : ''}
+                                onClick={() => setDraft({ ...draft, step: item.id })}
+                              >
+                                {item.label}
+                              </button>
+                            ))}
+                          </div>
+                        </label>
+                        <p className="can-step-hint">{canSteps.find((s) => s.id === draft.step)?.hint}</p>
+                        <label>
                           제출 방식
                           <div className="segmented">
                             {(['익명', '실명'] as Identity[]).map((item) => (
@@ -573,13 +602,14 @@ export function Meetings({
                             .map((opinion) => (
                               <article className="can-opinion" key={opinion.id}>
                                 <div className="can-opinion-top">
+                                  <span className="can-badge">{stepLabel(opinion.step)}</span>
                                   <small>{authorLabel(opinion)}</small>
                                 </div>
                                 <p>{opinion.content}</p>
                               </article>
                             ))}
                         </div>
-                        <p className="can-hint">진행자가 수집을 마감하면 파트별 공유로 넘어갑니다.</p>
+                        <p className="can-hint">진행자가 수집을 마감하면 의견 공유로 넘어갑니다.</p>
                       </div>
                     </div>
                   )}

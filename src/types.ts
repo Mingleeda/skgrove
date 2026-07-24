@@ -75,16 +75,16 @@ export type PartScore = {
 };
 
 export type CanStage = 'setup' | 'collect' | 'share' | 'select' | 'summary';
-export type CanTopicSource = '직접 입력' | '자료 첨부';
+export type CanStep = 'Speak-out' | 'Ideation' | 'Quick-win';
 
 export type CanSession = {
   id: string;
-  quarter: string;
   topic: string;
-  source: CanTopicSource;
-  sourceRef: string;
+  teamName: string;
+  participants: string;
+  heldAt: string;
+  method: string;
   parts: TeamPart[];
-  mode: '하이브리드';
   stage: CanStage;
   resultSummary: string;
   resultActions: ActionItem[];
@@ -94,6 +94,7 @@ export type CanOpinion = {
   id: string;
   sessionId: string;
   part: TeamPart;
+  step: CanStep;
   content: string;
   author: Identity;
   authorName: string;

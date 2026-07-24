@@ -124,12 +124,12 @@ export function App() {
     const id = `CAN-S-${canSessions.length + 1}`;
     const draft: CanSession = {
       id,
-      quarter: '',
       topic: '',
-      source: '직접 입력',
-      sourceRef: '',
+      teamName: '',
+      participants: '',
+      heldAt: '',
+      method: '오프라인',
       parts: ['TEST혁신파트', 'ITS혁신파트', '혁신도구파트'],
-      mode: '하이브리드',
       stage: 'setup',
       resultSummary: '',
       resultActions: [],
