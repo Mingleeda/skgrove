@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   ArrowRight,
   CheckCircle2,
@@ -90,6 +90,12 @@ export function Meetings({
   });
   const [aiSummary, setAiSummary] = useState<string | null>(null);
   const [view, setView] = useState<{ id: string; stage: CanStage } | null>(null);
+
+  // 세션 전환 시 AI 취합 결과·조회 단계를 초기화 (세션 간 상태 누수 방지)
+  useEffect(() => {
+    setAiSummary(null);
+    setView(null);
+  }, [selectedId]);
 
   const isHost = isLeader(currentUser);
   const session = sessions.find((item) => item.id === selectedId) ?? null;
