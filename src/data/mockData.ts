@@ -81,7 +81,7 @@ export const initialCanSessions: CanSession[] = [
   {
     id: 'CAN-S-2',
     topic: 'Being AX 달성을 위한 협업 방식 개선',
-    teamName: '혁신 Tribe',
+    teamName: 'AI ITS혁신팀',
     heldAt: '2026-07-10',
     method: '오프라인',
     parts: ['TEST혁신파트', 'ITS혁신파트', '혁신도구파트'],
@@ -92,7 +92,7 @@ export const initialCanSessions: CanSession[] = [
   {
     id: 'CAN-S-1',
     topic: '불필요한 회의를 줄여 집중 업무 시간 확보',
-    teamName: '혁신 Tribe',
+    teamName: 'AI ITS혁신팀',
     heldAt: '2026-04-15',
     method: '온라인',
     parts: ['TEST혁신파트', 'ITS혁신파트', '혁신도구파트'],

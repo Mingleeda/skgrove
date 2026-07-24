@@ -2591,3 +2591,41 @@ textarea {
 .can-export {
   margin-bottom: 16px;
 }
+
+.can-result-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 4px 0 8px;
+}
+
+.can-qw-tag {
+  background: #d8f06a;
+  border-radius: 999px;
+  color: #17352f;
+  font-size: 10px;
+  font-weight: 800;
+  margin-left: 6px;
+  padding: 2px 7px;
+}
+
+.can-qw-list li {
+  display: grid;
+  gap: 6px;
+}
+
+.can-qw-fields {
+  display: flex;
+  gap: 8px;
+}
+
+.can-qw-fields input {
+  max-width: 160px;
+  min-height: 34px;
+}
+
+.can-qw-meta {
+  color: #2b4a3f;
+  font-size: 12px;
+  font-weight: 700;
+}

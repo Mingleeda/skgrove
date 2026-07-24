@@ -3,7 +3,6 @@ import {
   ArrowRight,
   CheckCircle2,
   ChevronLeft,
-  ClipboardCheck,
   Clock,
   Coffee,
   Download,
@@ -43,7 +42,7 @@ const stageFlow: { id: CanStage; label: string }[] = [
 ];
 
 const stageLabelOf = (session: CanSession) => {
-  if (session.stage === 'summary' && session.resultActions.length > 0) return '완료';
+  if (session.stage === 'summary' && session.resultSummary.trim().length > 0) return '완료';
   return stageFlow.find((item) => item.id === session.stage)?.label ?? '진행 중';
 };
 
@@ -153,7 +152,7 @@ export function Meetings({
                   const picked = opinions.filter(
                     (opinion) => opinion.sessionId === item.id && opinion.selected,
                   ).length;
-                  const done = item.stage === 'summary' && item.resultActions.length > 0;
+                  const done = item.stage === 'summary' && item.resultSummary.trim().length > 0;
                   return (
                     <button className="can-session-card" key={item.id} onClick={() => onSelectSession(item.id)}>
                       <div className="can-session-top">
@@ -185,7 +184,7 @@ export function Meetings({
               const sessionOpinions = opinions.filter((opinion) => opinion.sessionId === session.id);
               const selectedOpinions = sessionOpinions.filter((opinion) => opinion.selected);
               const resultActions = session.resultActions;
-              const confirmed = resultActions.length > 0;
+              const confirmed = session.resultSummary.trim().length > 0;
 
               const setStage = (next: CanStage) => {
                 onUpdateSession({ ...session, stage: next });
@@ -219,15 +218,18 @@ export function Meetings({
                 setActionDrafts((prev) => ({ ...prev, [id]: { ...actionDraftOf(id), ...patch } }));
               };
               const confirmResult = () => {
-                const actions: ActionItem[] = selectedOpinions.map((opinion) => {
-                  const draftAction = actionDraftOf(opinion.id);
-                  return {
-                    title: opinion.content,
-                    owner: draftAction.owner.trim() || '미정',
-                    due: draftAction.due.trim() || 'D-7',
-                    status: '대기',
-                  };
-                });
+                // Quick-win(마지막 단계) 항목만 담당·기한을 붙여 액션아이템으로
+                const actions: ActionItem[] = selectedOpinions
+                  .filter((opinion) => opinion.step === quickWinStepId)
+                  .map((opinion) => {
+                    const draftAction = actionDraftOf(opinion.id);
+                    return {
+                      title: opinion.content,
+                      owner: draftAction.owner.trim() || '미정',
+                      due: draftAction.due.trim() || 'D-7',
+                      status: '대기',
+                    };
+                  });
                 onConfirmResult(session.id, aiSummary ?? session.resultSummary, actions);
               };
 
@@ -235,9 +237,11 @@ export function Meetings({
               const stepGroups = canSteps
                 .map((step) => ({
                   step,
-                  items: selectedOpinions.filter((opinion) => opinion.step === step.id).map((o) => o.content),
+                  items: selectedOpinions.filter((opinion) => opinion.step === step.id),
                 }))
                 .filter((group) => group.items.length > 0);
+              // 마지막 단계 = Quick-win(실행) 단계로 간주 → 담당·기한이 붙어 액션아이템이 됨
+              const quickWinStepId = canSteps[canSteps.length - 1]?.id ?? '';
               // 참석자: 실명 제출자에서 자동 도출
               const participants =
                 Array.from(
@@ -251,10 +255,20 @@ export function Meetings({
               // AI 취합 (자리표시): 선정 의견을 3-Step 템플릿으로 정리. 실제 LLM 연동은 예정.
               const runAiAggregate = () => {
                 const grouped = stepGroups
-                  .map((group) => `[${group.step.label}]\n` + group.items.map((c) => `· ${c}`).join('\n'))
+                  .map((group) => `[${group.step.label}]\n` + group.items.map((o) => `· ${o.content}`).join('\n'))
                   .join('\n\n');
                 setAiSummary(grouped || '선정된 의견이 없습니다.');
               };
+
+              // Quick-win 항목의 담당·기한 (미확정=입력 드래프트, 확정=저장된 액션)
+              const quickWinMeta = (opinion: CanOpinion) => {
+                if (confirmed) {
+                  const action = resultActions.find((item) => item.title === opinion.content);
+                  return { owner: action?.owner ?? '미정', due: action?.due ?? 'D-7' };
+                }
+                return actionDraftOf(opinion.id);
+              };
+              const quickWinEditable = !confirmed && isLive;
 
               const resultTemplate = () => (
                 <div className="can-template">
@@ -281,18 +295,52 @@ export function Meetings({
                   </table>
                   <table className="can-template-steps">
                     <tbody>
-                      {stepGroups.map((group) => (
-                        <tr key={group.step.id}>
-                          <th>{group.step.label}</th>
-                          <td>
-                            <ul>
-                              {group.items.map((content, index) => (
-                                <li key={index}>{content}</li>
-                              ))}
-                            </ul>
-                          </td>
-                        </tr>
-                      ))}
+                      {stepGroups.map((group) => {
+                        const isQuick = group.step.id === quickWinStepId;
+                        return (
+                          <tr key={group.step.id}>
+                            <th>
+                              {group.step.label}
+                              {isQuick && <span className="can-qw-tag">담당·기한</span>}
+                            </th>
+                            <td>
+                              <ul className={isQuick ? 'can-qw-list' : ''}>
+                                {group.items.map((opinion) => {
+                                  const meta = quickWinMeta(opinion);
+                                  return (
+                                    <li key={opinion.id}>
+                                      <span>{opinion.content}</span>
+                                      {isQuick &&
+                                        (quickWinEditable ? (
+                                          <span className="can-qw-fields">
+                                            <input
+                                              placeholder="담당"
+                                              value={meta.owner === '미정' ? '' : meta.owner}
+                                              onChange={(event) =>
+                                                setActionDraft(opinion.id, { owner: event.target.value })
+                                              }
+                                            />
+                                            <input
+                                              placeholder="기한"
+                                              value={meta.due}
+                                              onChange={(event) =>
+                                                setActionDraft(opinion.id, { due: event.target.value })
+                                              }
+                                            />
+                                          </span>
+                                        ) : (
+                                          <span className="can-qw-meta">
+                                            {meta.owner} · {meta.due}
+                                          </span>
+                                        ))}
+                                    </li>
+                                  );
+                                })}
+                              </ul>
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
@@ -306,7 +354,7 @@ export function Meetings({
                   text,
                   options: { bold: true, fill: { color: 'EFF3EC' }, color: '17352F', valign: 'middle' as const },
                 });
-                const body = (text: string) => ({ text, options: { valign: 'middle' as const } });
+                const body = (text: string) => ({ text, options: { valign: 'top' as const } });
                 const border = { type: 'solid' as const, color: 'D5DED6', pt: 1 };
 
                 slide.addText('Can Meeting 결과 정리', {
@@ -327,20 +375,20 @@ export function Meetings({
                 slide.addTable(
                   stepGroups.map((group) => [
                     head(group.step.label),
-                    body(group.items.map((c) => `• ${c}`).join('\n')),
+                    body(
+                      group.items
+                        .map((opinion) => {
+                          if (group.step.id === quickWinStepId) {
+                            const meta = quickWinMeta(opinion);
+                            return `• ${opinion.content}  (담당: ${meta.owner} / 기한: ${meta.due})`;
+                          }
+                          return `• ${opinion.content}`;
+                        })
+                        .join('\n'),
+                    ),
                   ]),
                   { x: 0.4, y: 2.4, w: 9.2, colW: [2.2, 7.0], border, fontSize: 11, valign: 'top' },
                 );
-                if (resultActions.length > 0) {
-                  slide.addText('액션아이템', { x: 0.4, y: 5.4, fontSize: 13, bold: true, color: '17352F' });
-                  slide.addTable(
-                    [
-                      [head('과제'), head('담당'), head('기한'), head('상태')],
-                      ...resultActions.map((a) => [body(a.title), body(a.owner), body(a.due), body(a.status)]),
-                    ],
-                    { x: 0.4, y: 5.7, w: 9.2, colW: [4.7, 1.5, 1.5, 1.5], border, fontSize: 10 },
-                  );
-                }
                 await pptx.writeFile({ fileName: `캔미팅_${session.teamName || 'result'}_${session.heldAt || ''}.pptx` });
               };
 
@@ -378,24 +426,6 @@ export function Meetings({
                       </div>
                     );
                   })}
-                </div>
-              );
-
-              const confirmedActions = () => (
-                <div className="can-action-result">
-                  {resultActions.map((action, index) => (
-                    <div className="action-row" key={`${action.title}-${index}`}>
-                      <CheckCircle2 size={18} />
-                      <div>
-                        <strong>{action.title}</strong>
-                        <span>
-                          {action.owner} · {action.due}
-                        </span>
-                      </div>
-                      <em>{action.status}</em>
-                    </div>
-                  ))}
-                  <p className="can-hint">대시보드 액션아이템 목록에 반영되었습니다.</p>
                 </div>
               );
 
@@ -451,7 +481,7 @@ export function Meetings({
                           팀명
                           <input
                             value={session.teamName}
-                            placeholder="예: 혁신 Tribe"
+                            placeholder="예: AI ITS혁신팀"
                             disabled={!isLive}
                             onChange={(event) => onUpdateSession({ ...session, teamName: event.target.value })}
                           />
@@ -665,82 +695,37 @@ export function Meetings({
 
                       {selectedOpinions.length === 0 ? (
                         <p className="can-empty">선정된 의견이 없습니다. 선정 단계에서 핵심 의견을 골라주세요.</p>
+                      ) : !confirmed && !aiSummary ? (
+                        <div className="can-ai">
+                          <div className="can-ai-head">
+                            {isLive && (
+                              <button className="ghost-button" onClick={runAiAggregate}>
+                                <Sparkles size={16} />
+                                AI로 취합·정리
+                              </button>
+                            )}
+                            <span className="can-ai-note">* 실제 LLM 연동 예정 — 현재는 자리표시(로컬 취합)</span>
+                          </div>
+                          <p className="can-empty">‘AI로 취합·정리’를 누르면 결과 템플릿이 작성됩니다.</p>
+                        </div>
                       ) : (
                         <>
-                          <h4 className="can-result-title">
-                            <Sparkles size={16} />
-                            종합 의견 (AI 취합)
-                          </h4>
-                          {!confirmed && !aiSummary ? (
-                            <div className="can-ai">
-                              <div className="can-ai-head">
-                                {isLive && (
-                                  <button className="ghost-button" onClick={runAiAggregate}>
-                                    <Sparkles size={16} />
-                                    AI로 취합·정리
-                                  </button>
-                                )}
-                                <span className="can-ai-note">* 실제 LLM 연동 예정 — 현재는 자리표시(로컬 취합)</span>
-                              </div>
-                              <p className="can-empty">‘AI로 취합·정리’를 누르면 결과 템플릿이 작성됩니다.</p>
-                            </div>
-                          ) : (
-                            <>
-                              {resultTemplate()}
-                              <button className="secondary-button can-export" onClick={exportPptx}>
-                                <Download size={16} />
-                                PPT로 내보내기
-                              </button>
-                            </>
+                          {resultTemplate()}
+                          {quickWinEditable && (
+                            <p className="can-hint">Quick-win 항목에 담당·기한을 입력한 뒤 확정하세요.</p>
                           )}
-
-                          <h4 className="can-result-title">
-                            <ClipboardCheck size={16} />
-                            액션아이템
-                          </h4>
-
-                          {confirmed ? (
-                            confirmedActions()
-                          ) : (
-                            <>
-                              <div className="can-action-editor">
-                                {selectedOpinions.map((opinion) => {
-                                  const draftAction = actionDraftOf(opinion.id);
-                                  return (
-                                    <div className="can-action-draft" key={opinion.id}>
-                                      <p>{opinion.content}</p>
-                                      <div className="can-action-fields">
-                                        <label>
-                                          담당
-                                          <input
-                                            value={draftAction.owner === '미정' ? '' : draftAction.owner}
-                                            placeholder="담당자"
-                                            onChange={(event) =>
-                                              setActionDraft(opinion.id, { owner: event.target.value })
-                                            }
-                                          />
-                                        </label>
-                                        <label>
-                                          기한
-                                          <input
-                                            value={draftAction.due}
-                                            placeholder="D-7"
-                                            onChange={(event) =>
-                                              setActionDraft(opinion.id, { due: event.target.value })
-                                            }
-                                          />
-                                        </label>
-                                      </div>
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                              <button className="primary-button wide" onClick={confirmResult}>
+                          <div className="can-result-actions">
+                            <button className="secondary-button" onClick={exportPptx}>
+                              <Download size={16} />
+                              PPT로 내보내기
+                            </button>
+                            {!confirmed && isLive && (
+                              <button className="primary-button" onClick={confirmResult}>
                                 결과 확정
                                 <ArrowRight size={18} />
                               </button>
-                            </>
-                          )}
+                            )}
+                          </div>
                         </>
                       )}
                     </div>
@@ -856,23 +841,16 @@ export function Meetings({
                               확정됨
                             </span>
                           </div>
-                          <h4 className="can-result-title">
-                            <Sparkles size={16} />
-                            종합 의견 (AI 취합)
-                          </h4>
                           {resultTemplate()}
-                          <button className="secondary-button can-export" onClick={exportPptx}>
-                            <Download size={16} />
-                            PPT로 내보내기
-                          </button>
-                          <h4 className="can-result-title">
-                            <ClipboardCheck size={16} />
-                            액션아이템
-                          </h4>
-                          {confirmedActions()}
+                          <div className="can-result-actions">
+                            <button className="secondary-button" onClick={exportPptx}>
+                              <Download size={16} />
+                              PPT로 내보내기
+                            </button>
+                          </div>
                         </>
                       ) : (
-                        waitingCard('진행자가 결과를 정리하고 있어요', '종합 의견과 액션아이템이 곧 공유됩니다.')
+                        waitingCard('진행자가 결과를 정리하고 있어요', '종합 의견이 곧 공유됩니다.')
                       )}
                     </div>
                   )}

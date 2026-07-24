@@ -163,7 +163,7 @@ export function App() {
   };
 
   const confirmCanResult = (sessionId: string, summary: string, actions: ActionItem[]) => {
-    if (actions.length === 0) return;
+    if (!summary.trim()) return;
     setCanSessions((prev) =>
       prev.map((session) =>
         session.id === sessionId ? { ...session, resultSummary: summary, resultActions: actions } : session,

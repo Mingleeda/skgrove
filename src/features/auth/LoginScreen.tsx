@@ -174,11 +174,9 @@ export function LoginScreen({ accounts, onLogin, onRegister }: LoginScreenProps)
           <div className="quick-login-row">
             <button
               type="button"
-              onClick={() =>
-                onLogin({ name: '김승현', email: 'k2h9205@sk.com', role: '파트리더', part: 'ITS혁신파트' })
-              }
+              onClick={() => onLogin({ name: '이선민', email: 'sunmin.l@sk.com', role: '팀리더', part: '전체' })}
             >
-              리더 · 김승현
+              리더 · 이선민
             </button>
             <button
               type="button"
