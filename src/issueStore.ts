@@ -11,8 +11,12 @@ type IssueRow = {
   category: string;
   author: Issue['author'];
   target: string;
-  status: string;
+  status: Issue['status'];
   urgency: Issue['urgency'];
+  leader_reply?: string | null;
+  one_on_one_note?: string | null;
+  action_item?: string | null;
+  leader_memo?: string | null;
   created_at?: string;
 };
 
@@ -62,6 +66,10 @@ function issueFromRow(row: IssueRow): Issue {
     target: row.target,
     status: row.status,
     urgency: row.urgency,
+    leaderReply: row.leader_reply ?? undefined,
+    oneOnOneNote: row.one_on_one_note ?? undefined,
+    actionItem: row.action_item ?? undefined,
+    leaderMemo: row.leader_memo ?? undefined,
   };
 }
 
@@ -74,5 +82,9 @@ function issueToRow(issue: Issue): IssueRow {
     target: issue.target,
     status: issue.status,
     urgency: issue.urgency,
+    leader_reply: issue.leaderReply ?? null,
+    one_on_one_note: issue.oneOnOneNote ?? null,
+    action_item: issue.actionItem ?? null,
+    leader_memo: issue.leaderMemo ?? null,
   };
 }

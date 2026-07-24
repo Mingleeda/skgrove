@@ -54,9 +54,19 @@ create table if not exists public.issues (
   target text not null,
   status text not null,
   urgency text not null check (urgency in ('낮음', '보통', '높음')),
+  leader_reply text,
+  one_on_one_note text,
+  action_item text,
+  leader_memo text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table public.issues
+  add column if not exists leader_reply text,
+  add column if not exists one_on_one_note text,
+  add column if not exists action_item text,
+  add column if not exists leader_memo text;
 
 alter table public.issues enable row level security;
 

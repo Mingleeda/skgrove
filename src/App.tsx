@@ -27,7 +27,7 @@ export function App() {
   const [matched, setMatched] = useState(initialMatches);
 
   const passedAgendaCount = agendas.filter((agenda) => agenda.status === '통과').length;
-  const openIssueCount = issues.filter((issue) => issue.status !== '완료').length;
+  const openIssueCount = issues.filter((issue) => issue.status !== '종료').length;
 
   useEffect(() => {
     let isMounted = true;
@@ -71,10 +71,16 @@ export function App() {
       },
       ...agendas,
     ]);
-    const nextIssues = issues.map((item) => (item.id === issue.id ? { ...item, status: '안건화' } : item));
+    const nextIssues: Issue[] = issues.map((item) => (item.id === issue.id ? { ...item, status: '안건화' } : item));
     setIssues(nextIssues);
     void saveIssues(nextIssues);
     setActive('agenda');
+  };
+
+  const updateIssue = (updatedIssue: Issue) => {
+    const nextIssues = issues.map((issue) => (issue.id === updatedIssue.id ? updatedIssue : issue));
+    setIssues(nextIssues);
+    void saveIssues(nextIssues);
   };
 
   const vote = (index: number, type: 'approve' | 'reject') => {
@@ -138,7 +144,9 @@ export function App() {
       {active === 'intake' && (
         <Intake identity={identity} onIdentityChange={setIdentity} onSubmitIssue={submitIssue} />
       )}
-      {active === 'leader' && isLeader(currentUser) && <LeaderInbox issues={issues} onPromoteToAgenda={promoteToAgenda} />}
+      {active === 'leader' && isLeader(currentUser) && (
+        <LeaderInbox issues={issues} onIssueUpdate={updateIssue} onPromoteToAgenda={promoteToAgenda} />
+      )}
       {active === 'agenda' && <AgendaBoard agendas={agendas} onVote={vote} />}
       {active === 'meetings' && <Meetings />}
       {active === 'profiles' && <Profiles />}

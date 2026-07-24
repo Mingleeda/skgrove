@@ -995,12 +995,81 @@ textarea {
   gap: 12px;
 }
 
+.leader-screen {
+  align-items: start;
+}
+
+.leader-summary {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.leader-summary div {
+  align-items: start;
+  background: rgba(255, 255, 255, 0.86);
+  border: 1px solid #dce2dc;
+  border-radius: 8px;
+  box-shadow: 0 14px 36px rgba(42, 58, 52, 0.08);
+  display: grid;
+  gap: 8px;
+  min-height: 116px;
+  padding: 18px;
+}
+
+.leader-summary svg {
+  color: #2f6f62;
+}
+
+.leader-summary span {
+  color: #65736d;
+  font-size: 13px;
+}
+
+.leader-summary strong {
+  font-size: 28px;
+}
+
+.leader-layout {
+  align-items: start;
+  display: grid;
+  gap: 18px;
+  grid-template-columns: minmax(0, 1fr) 380px;
+}
+
+.leader-inbox-list {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+.leader-toolbar {
+  flex-wrap: wrap;
+  width: fit-content;
+}
+
 .issue-card {
   align-items: center;
   display: grid;
   gap: 16px;
   grid-template-columns: minmax(0, 1fr) auto;
   padding: 18px;
+}
+
+.issue-card.selected {
+  border-color: #7fb597;
+  box-shadow: 0 16px 42px rgba(47, 111, 98, 0.16);
+}
+
+.issue-select {
+  background: transparent;
+  border: 0;
+  color: #1d2522;
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding: 0;
+  text-align: left;
 }
 
 .issue-main {
@@ -1042,6 +1111,94 @@ textarea {
 .status-pill {
   background: #e8f3ef;
   color: #2f6f62;
+}
+
+.issue-flags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.issue-flags span {
+  background: #eef3f0;
+  border-radius: 999px;
+  color: #65736d;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 5px 8px;
+}
+
+.issue-actions select {
+  min-height: 40px;
+  min-width: 128px;
+}
+
+.leader-workbench {
+  position: sticky;
+  top: 28px;
+}
+
+.leader-workbench,
+.leader-workbench-head,
+.leader-history {
+  display: grid;
+  gap: 14px;
+}
+
+.leader-workbench-head h2 {
+  font-size: 22px;
+  line-height: 1.35;
+}
+
+.leader-workbench-head p,
+.leader-history p,
+.empty-panel span {
+  color: #65736d;
+  line-height: 1.55;
+}
+
+.leader-action-tabs {
+  background: #e9eee8;
+  border: 1px solid #d8e0d8;
+  border-radius: 8px;
+  display: grid;
+  gap: 4px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  padding: 4px;
+}
+
+.leader-action-tabs button {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+  color: #44514d;
+  display: inline-flex;
+  gap: 6px;
+  justify-content: center;
+  min-height: 38px;
+  padding: 0 8px;
+}
+
+.leader-action-tabs .selected {
+  background: #ffffff;
+  color: #17352f;
+  font-weight: 800;
+}
+
+.leader-history {
+  background: #f7faf5;
+  border: 1px solid #e1e7df;
+  border-radius: 8px;
+  padding: 14px;
+}
+
+.empty-panel {
+  display: grid;
+  gap: 8px;
+  min-height: 220px;
+  place-content: center;
+  text-align: center;
 }
 
 .agenda-grid {
@@ -1431,10 +1588,19 @@ textarea {
 
   .stat-grid,
   .account-summary,
+  .leader-summary,
   .profile-grid,
   .memory-grid,
   .agenda-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .leader-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .leader-workbench {
+    position: static;
   }
 
   .account-table-head {
@@ -1495,6 +1661,11 @@ textarea {
   .issue-actions .secondary-button,
   .draw-controls button {
     flex: 1;
+  }
+
+  .leader-summary,
+  .leader-action-tabs {
+    grid-template-columns: 1fr;
   }
 
   .login-page {

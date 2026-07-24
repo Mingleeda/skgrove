@@ -16,6 +16,7 @@ export type AgendaStatus = '투표중' | '통과' | '부결';
 export type UserRole = '팀원' | '파트리더' | '팀리더';
 export type TeamPart = '전체' | 'TEST혁신파트' | 'ITS혁신파트' | '혁신도구파트';
 export type AccountStatus = '승인 대기' | '활성' | '비활성';
+export type IssueStatus = '접수' | '검토중' | '답변완료' | '1on1 제안' | '액션아이템' | '안건화' | '보류' | '종료';
 
 export type CurrentUser = {
   name: string;
@@ -36,8 +37,12 @@ export type Issue = {
   category: string;
   author: Identity;
   target: string;
-  status: string;
+  status: IssueStatus;
   urgency: Urgency;
+  leaderReply?: string;
+  oneOnOneNote?: string;
+  actionItem?: string;
+  leaderMemo?: string;
 };
 
 export type Agenda = {
