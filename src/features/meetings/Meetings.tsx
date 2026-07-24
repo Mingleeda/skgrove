@@ -92,10 +92,8 @@ export function Meetings({
   const [actionDrafts, setActionDrafts] = useState<Record<string, { owner: string; due: string }>>({});
   const [aiSummary, setAiSummary] = useState<string | null>(null);
   const [view, setView] = useState<{ id: string; stage: CanStage } | null>(null);
-  const [showStepEditor, setShowStepEditor] = useState(false);
 
   const isHost = isLeader(currentUser);
-  const canManageSteps = isLeader(currentUser);
   const session = sessions.find((item) => item.id === selectedId) ?? null;
 
   const stepLabelOf = (id: string) => canSteps.find((step) => step.id === id)?.label ?? id;
@@ -140,67 +138,13 @@ export function Meetings({
                   <h2>캔미팅 세션</h2>
                   <p className="can-hint">분기마다 진행되는 캔미팅을 모아봅니다.</p>
                 </div>
-                <div className="can-head-actions">
-                  {canManageSteps && (
-                    <button className="secondary-button" onClick={() => setShowStepEditor((prev) => !prev)}>
-                      <ListChecks size={16} />
-                      단계 설정
-                    </button>
-                  )}
-                  {isHost && (
-                    <button className="primary-button" onClick={onStartSession}>
-                      <Plus size={18} />
-                      신규 캔미팅 시작
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              {canManageSteps && showStepEditor && (
-                <div className="panel can-step-editor">
-                  <PanelHeader icon={ListChecks} title="캔미팅 단계 설정 (리더)" />
-                  <p className="can-hint">
-                    단계 이름·설명을 바꾸거나 추가/삭제/순서를 변경합니다. 이미 제출된 의견은 그대로 유지됩니다.
-                  </p>
-                  {canSteps.map((step, index) => (
-                    <div className="can-step-row" key={step.id}>
-                      <input
-                        value={step.label}
-                        placeholder="단계 이름"
-                        onChange={(event) => patchStep(step.id, { label: event.target.value })}
-                      />
-                      <input
-                        value={step.hint}
-                        placeholder="설명 (선택)"
-                        onChange={(event) => patchStep(step.id, { hint: event.target.value })}
-                      />
-                      <div className="can-step-row-actions">
-                        <button className="icon-button" disabled={index === 0} onClick={() => moveStep(index, -1)}>
-                          ↑
-                        </button>
-                        <button
-                          className="icon-button"
-                          disabled={index === canSteps.length - 1}
-                          onClick={() => moveStep(index, 1)}
-                        >
-                          ↓
-                        </button>
-                        <button
-                          className="secondary-button"
-                          disabled={canSteps.length <= 1}
-                          onClick={() => removeStep(step.id)}
-                        >
-                          삭제
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                  <button className="secondary-button" onClick={addStep}>
-                    <Plus size={16} />
-                    단계 추가
+                {isHost && (
+                  <button className="primary-button" onClick={onStartSession}>
+                    <Plus size={18} />
+                    신규 캔미팅 시작
                   </button>
-                </div>
-              )}
+                )}
+              </div>
               <div className="can-session-list">
                 {sessions.length === 0 && <p className="can-empty">아직 진행된 캔미팅이 없습니다.</p>}
                 {sessions.map((item) => {
@@ -460,7 +404,62 @@ export function Meetings({
                           ))}
                         </div>
                       </label>
-                      <div className="can-meta">3-Step 진행 · {canSteps.map((s) => s.label.replace(/^Step \d+ · /, '')).join(' → ')}</div>
+
+                      <label>
+                        캔미팅 단계 설정
+                        <div className="can-step-editor">
+                          <p className="can-hint can-step-editor-hint">
+                            단계 이름·설명을 바꾸거나 추가/삭제/순서를 변경합니다. 모든 캔미팅에 공통 적용되며, 이미 제출된
+                            의견은 유지됩니다.
+                          </p>
+                          {canSteps.map((step, index) => (
+                            <div className="can-step-row" key={step.id}>
+                              <input
+                                value={step.label}
+                                placeholder="단계 이름"
+                                disabled={!isLive}
+                                onChange={(event) => patchStep(step.id, { label: event.target.value })}
+                              />
+                              <input
+                                value={step.hint}
+                                placeholder="설명 (선택)"
+                                disabled={!isLive}
+                                onChange={(event) => patchStep(step.id, { hint: event.target.value })}
+                              />
+                              <div className="can-step-row-actions">
+                                <button
+                                  className="icon-button"
+                                  disabled={!isLive || index === 0}
+                                  onClick={() => moveStep(index, -1)}
+                                >
+                                  ↑
+                                </button>
+                                <button
+                                  className="icon-button"
+                                  disabled={!isLive || index === canSteps.length - 1}
+                                  onClick={() => moveStep(index, 1)}
+                                >
+                                  ↓
+                                </button>
+                                <button
+                                  className="secondary-button"
+                                  disabled={!isLive || canSteps.length <= 1}
+                                  onClick={() => removeStep(step.id)}
+                                >
+                                  삭제
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                          {isLive && (
+                            <button className="secondary-button" onClick={addStep}>
+                              <Plus size={16} />
+                              단계 추가
+                            </button>
+                          )}
+                        </div>
+                      </label>
+                      <div className="can-meta">진행 · {canSteps.map((s) => s.label.replace(/^Step \d+ · /, '')).join(' → ')}</div>
                       {isLive && (
                         <button
                           className="primary-button wide"
