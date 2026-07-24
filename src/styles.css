@@ -215,6 +215,74 @@ h1 {
   max-width: 680px;
 }
 
+.home-hero {
+  align-items: center;
+  background:
+    linear-gradient(120deg, rgba(23, 53, 47, 0.96), rgba(37, 82, 72, 0.94)),
+    linear-gradient(150deg, rgba(216, 240, 106, 0.28), transparent 42%);
+  border-radius: 8px;
+  color: #ffffff;
+  display: grid;
+  gap: 24px;
+  grid-template-columns: minmax(0, 1fr) 260px;
+  min-height: 244px;
+  padding: 28px;
+}
+
+.home-hero h2 {
+  font-size: 30px;
+  line-height: 1.25;
+  max-width: 760px;
+}
+
+.hero-copy {
+  color: #d8e8df;
+  line-height: 1.6;
+  margin-top: 12px;
+  max-width: 680px;
+}
+
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.home-hero .secondary-button {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.28);
+  color: #ffffff;
+}
+
+.home-signal {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+}
+
+.home-signal strong,
+.home-signal span {
+  align-items: center;
+  border-radius: 8px;
+  display: flex;
+  min-height: 42px;
+  padding: 0 12px;
+}
+
+.home-signal strong {
+  background: #d8f06a;
+  color: #17352f;
+}
+
+.home-signal span {
+  background: rgba(255, 255, 255, 0.12);
+  color: #eff8ef;
+}
+
 .signal-map {
   align-items: center;
   display: flex;
@@ -287,6 +355,16 @@ h1 {
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
 }
 
+.home-grid {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.85fr);
+}
+
+.agenda-panel {
+  grid-row: span 2;
+}
+
 .panel {
   min-width: 0;
   padding: 20px;
@@ -339,6 +417,116 @@ h1 {
 .action-list {
   display: grid;
   gap: 8px;
+}
+
+.home-agenda-list,
+.quick-card-list,
+.compact-profile-list {
+  display: grid;
+  gap: 10px;
+}
+
+.home-agenda-card,
+.quick-card-list button,
+.compact-profile-list button,
+.summary-strip button {
+  background: #f7faf5;
+  border: 1px solid #e1e7df;
+  border-radius: 8px;
+  color: #1d2522;
+  text-align: left;
+}
+
+.home-agenda-card {
+  display: grid;
+  gap: 13px;
+  min-height: 132px;
+  padding: 16px;
+}
+
+.home-agenda-card div:first-child {
+  display: grid;
+  gap: 5px;
+}
+
+.home-agenda-card strong {
+  font-size: 18px;
+  line-height: 1.35;
+}
+
+.home-agenda-card span,
+.home-agenda-card small,
+.quick-card-list span,
+.compact-profile-list small {
+  color: #65736d;
+  font-size: 13px;
+}
+
+.quick-card-list button,
+.compact-profile-list button {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  min-height: 70px;
+  padding: 12px;
+}
+
+.quick-card-list div,
+.compact-profile-list div {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.tiny-avatar {
+  align-items: center;
+  border-radius: 8px;
+  color: #ffffff;
+  display: flex;
+  flex: 0 0 auto;
+  font-weight: 900;
+  height: 38px;
+  justify-content: center;
+  width: 38px;
+}
+
+.tiny-avatar.green {
+  background: #2f6f62;
+}
+
+.tiny-avatar.red {
+  background: #e35d4f;
+}
+
+.tiny-avatar.blue {
+  background: #2f74c0;
+}
+
+.tiny-avatar.yellow {
+  background: #bc7a12;
+}
+
+.culture-summary {
+  padding-bottom: 18px;
+}
+
+.summary-strip {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.summary-strip button {
+  color: #65736d;
+  display: grid;
+  gap: 8px;
+  min-height: 86px;
+  padding: 14px;
+}
+
+.summary-strip strong {
+  color: #17352f;
+  font-size: 24px;
 }
 
 .action-row div {
@@ -786,6 +974,8 @@ textarea {
   }
 
   .hero-panel,
+  .home-hero,
+  .home-grid,
   .two-column,
   .form-screen {
     grid-template-columns: 1fr;
@@ -799,6 +989,10 @@ textarea {
   .profile-grid,
   .memory-grid,
   .agenda-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .summary-strip {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
@@ -846,12 +1040,25 @@ textarea {
   .agenda-grid,
   .match-list,
   .category-cloud,
+  .summary-strip,
   .report-grid {
     grid-template-columns: 1fr;
   }
 
   .hero-panel h2 {
     font-size: 23px;
+  }
+
+  .home-hero {
+    padding: 22px;
+  }
+
+  .home-hero h2 {
+    font-size: 24px;
+  }
+
+  .hero-actions {
+    display: grid;
   }
 
   .privacy-visual {
