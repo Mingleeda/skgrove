@@ -8,6 +8,7 @@ import {
   Shuffle,
   Sparkles,
   UserRound,
+  UsersRound,
   Vote,
 } from 'lucide-react';
 import type { Section } from './types';
@@ -29,4 +30,5 @@ export const sections: AppSection[] = [
   { id: 'connect', label: '커피뽑기 / 조뽑기', icon: Shuffle, owner: '김수정' },
   { id: 'memory', label: '팀 추억', icon: Sparkles, owner: '김수정' },
   { id: 'metrics', label: '파트지수 / 리포트', icon: BarChart3, owner: '김수정' },
+  { id: 'accounts', label: '계정 관리', icon: UsersRound, owner: '팀리더' },
 ];

@@ -8,6 +8,10 @@ export function isLeader(user: CurrentUser) {
   return user.role === '파트리더' || user.role === '팀리더';
 }
 
+export function isTeamLeader(user: CurrentUser) {
+  return user.role === '팀리더';
+}
+
 export function isCompanyEmail(email: string) {
   return /^[^\s@]+@sk\.com$/i.test(email.trim());
 }

@@ -1,8 +1,10 @@
-import { useState } from 'react';
-import { isLeader } from './auth';
+import { useEffect, useState } from 'react';
+import { loadAccounts, makeAccountId, saveAccounts, seedAccounts } from './accountStore';
+import { isLeader, isTeamLeader } from './auth';
 import { AppShell } from './components/AppShell';
 import { initialAgendas, initialIssues, initialMatches, matchCandidates } from './data/mockData';
 import { AgendaBoard } from './features/agenda/AgendaBoard';
+import { AccountManagement } from './features/auth/AccountManagement';
 import { LoginScreen } from './features/auth/LoginScreen';
 import { Connect } from './features/connect/Connect';
 import { Dashboard } from './features/dashboard/Dashboard';
@@ -12,9 +14,10 @@ import { Meetings } from './features/meetings/Meetings';
 import { Memory } from './features/memory/Memory';
 import { Metrics } from './features/metrics/Metrics';
 import { Profiles } from './features/profiles/Profiles';
-import type { Agenda, CurrentUser, Identity, Issue, Section } from './types';
+import type { Agenda, CurrentUser, Identity, Issue, ManagedAccount, Section } from './types';
 
 export function App() {
+  const [accounts, setAccounts] = useState<ManagedAccount[]>(seedAccounts);
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
   const [active, setActive] = useState<Section>('dashboard');
   const [issues, setIssues] = useState<Issue[]>(initialIssues);
@@ -24,6 +27,20 @@ export function App() {
 
   const passedAgendaCount = agendas.filter((agenda) => agenda.status === '통과').length;
   const openIssueCount = issues.filter((issue) => issue.status !== '완료').length;
+
+  useEffect(() => {
+    let isMounted = true;
+
+    loadAccounts().then((loadedAccounts) => {
+      if (isMounted) {
+        setAccounts(loadedAccounts);
+      }
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const submitIssue = () => {
     const next: Issue = {
@@ -69,8 +86,29 @@ export function App() {
     setMatched([...matchCandidates].sort(() => Math.random() - 0.5).slice(0, 3));
   };
 
+  const persistAccounts = (nextAccounts: ManagedAccount[]) => {
+    setAccounts(nextAccounts);
+    void saveAccounts(nextAccounts);
+  };
+
+  const registerAccount = (account: Omit<ManagedAccount, 'id' | 'joinedAt' | 'status'>) => {
+    persistAccounts([
+      ...accounts,
+      {
+        ...account,
+        id: makeAccountId(),
+        status: '승인 대기',
+        joinedAt: new Date().toISOString().slice(0, 10),
+      },
+    ]);
+  };
+
   const changeSection = (section: Section) => {
     if (section === 'leader' && currentUser && !isLeader(currentUser)) {
+      setActive('dashboard');
+      return;
+    }
+    if (section === 'accounts' && currentUser && !isTeamLeader(currentUser)) {
       setActive('dashboard');
       return;
     }
@@ -78,7 +116,7 @@ export function App() {
   };
 
   if (!currentUser) {
-    return <LoginScreen onLogin={setCurrentUser} />;
+    return <LoginScreen accounts={accounts} onLogin={setCurrentUser} onRegister={registerAccount} />;
   }
 
   return (
@@ -101,6 +139,7 @@ export function App() {
       {active === 'connect' && <Connect matched={matched} onShuffleTeams={shuffleTeams} />}
       {active === 'memory' && <Memory />}
       {active === 'metrics' && <Metrics />}
+      {active === 'accounts' && isTeamLeader(currentUser) && <AccountManagement accounts={accounts} onAccountsChange={persistAccounts} />}
     </AppShell>
   );
 }

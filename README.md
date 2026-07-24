@@ -19,6 +19,25 @@ npm run dev
 npm run build
 ```
 
+## Supabase 연결
+
+계정 가입, 로그인, 계정 관리는 Supabase 설정이 있으면 `accounts` 테이블을 사용하고, 설정이 없으면 브라우저 `localStorage`를 사용합니다.
+
+1. Supabase 프로젝트를 만든다.
+2. SQL Editor에서 `supabase-schema.sql`을 실행한다.
+3. `.env.example`을 참고해서 `.env`를 만든다.
+
+```bash
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
+```
+
+관리자 기본 계정:
+
+- 이름: `이선민`
+- 사내메일: `sunmin.l@sk.com`
+- 권한: `팀리더`
+
 ## 가벼운 폴더 구조
 
 ```text

@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { Bell, HeartHandshake, LogOut, MessageSquarePlus } from 'lucide-react';
-import { isLeader } from '../auth';
+import { isLeader, isTeamLeader } from '../auth';
 import { sections } from '../navigation';
 import type { CurrentUser, Section } from '../types';
 
@@ -15,6 +15,7 @@ type AppShellProps = {
 export function AppShell({ active, children, currentUser, onLogout, onSectionChange }: AppShellProps) {
   const currentSection = sections.find((section) => section.id === active) ?? sections[0];
   const userCanUseLeaderMenu = isLeader(currentUser);
+  const userCanUseAccountsMenu = isTeamLeader(currentUser);
 
   return (
     <div className="app">
@@ -35,7 +36,10 @@ export function AppShell({ active, children, currentUser, onLogout, onSectionCha
             return (
               <button
                 className={active === section.id ? 'nav-item active' : 'nav-item'}
-                disabled={section.id === 'leader' && !userCanUseLeaderMenu}
+                disabled={
+                  (section.id === 'leader' && !userCanUseLeaderMenu) ||
+                  (section.id === 'accounts' && !userCanUseAccountsMenu)
+                }
                 key={section.id}
                 onClick={() => onSectionChange(section.id)}
                 title={`${section.label} · ${section.owner}`}

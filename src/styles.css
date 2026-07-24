@@ -301,6 +301,59 @@ h1 {
   padding: 10px 12px;
 }
 
+.form-success {
+  background: #e8f3ef;
+  border: 1px solid #b7d8c9;
+  border-radius: 8px;
+  color: #21634f;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 10px 12px;
+}
+
+.auth-tabs {
+  background: #e9eee8;
+  border: 1px solid #d8e0d8;
+  border-radius: 8px;
+  display: grid;
+  gap: 4px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  padding: 4px;
+}
+
+.auth-tabs button {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+  color: #44514d;
+  display: inline-flex;
+  gap: 7px;
+  justify-content: center;
+  min-height: 38px;
+}
+
+.auth-tabs .selected {
+  background: #ffffff;
+  color: #17352f;
+  font-weight: 800;
+}
+
+.role-note {
+  background: #edf6ff;
+  border: 1px solid #cfe0f6;
+  border-radius: 8px;
+  color: #2f58b5;
+  display: grid;
+  gap: 5px;
+  padding: 12px;
+}
+
+.role-note span {
+  font-size: 13px;
+  line-height: 1.45;
+}
+
 .hero-panel {
   align-items: center;
   background:
@@ -653,9 +706,204 @@ h1 {
   grid-template-columns: minmax(320px, 520px) minmax(280px, 1fr);
 }
 
+.intake-screen {
+  align-items: start;
+  grid-template-columns: minmax(0, 1fr) 360px;
+}
+
+.intake-main,
+.intake-aside,
+.intake-panel {
+  display: grid;
+  gap: 16px;
+}
+
+.intake-stepper {
+  background: #e9eee8;
+  border: 1px solid #d8e0d8;
+  border-radius: 8px;
+  display: grid;
+  gap: 4px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  padding: 4px;
+}
+
+.intake-stepper button {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+  color: #65736d;
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  min-height: 42px;
+}
+
+.intake-stepper button.active {
+  background: #ffffff;
+  color: #17352f;
+  font-weight: 800;
+}
+
+.intake-stepper span {
+  align-items: center;
+  background: #dfe8dd;
+  border-radius: 999px;
+  display: flex;
+  font-size: 12px;
+  height: 24px;
+  justify-content: center;
+  width: 24px;
+}
+
+.intake-stepper .active span {
+  background: #17352f;
+  color: #ffffff;
+}
+
+.intake-choice-grid,
+.form-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.choice-card {
+  background: #f7faf5;
+  border: 1px solid #e1e7df;
+  border-radius: 8px;
+  color: #1d2522;
+  display: grid;
+  gap: 10px;
+  min-height: 150px;
+  padding: 16px;
+  text-align: left;
+}
+
+.choice-card.selected {
+  background: #edf6ef;
+  border-color: #6aaa89;
+}
+
+.choice-card svg {
+  color: #2f6f62;
+}
+
+.choice-card span,
+.privacy-list span,
+.submission-list span {
+  color: #65736d;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
 .form-panel {
   display: grid;
   gap: 14px;
+}
+
+.form-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.review-box {
+  background: #f7faf5;
+  border: 1px solid #e1e7df;
+  border-radius: 8px;
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+}
+
+.review-box > span {
+  background: #e8f3ef;
+  border-radius: 999px;
+  color: #2f6f62;
+  font-size: 12px;
+  font-weight: 900;
+  padding: 5px 10px;
+  width: fit-content;
+}
+
+.review-box h2 {
+  font-size: 22px;
+  line-height: 1.35;
+}
+
+.review-box p,
+.review-box dd {
+  color: #3d4945;
+  line-height: 1.55;
+}
+
+.review-box dl {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+}
+
+.review-box dl div {
+  display: grid;
+  gap: 4px;
+}
+
+.review-box dt {
+  color: #65736d;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.review-box dd {
+  margin: 0;
+}
+
+.notice-line {
+  align-items: center;
+  background: #fff7e6;
+  border: 1px solid #f1d390;
+  border-radius: 8px;
+  color: #76513a;
+  display: flex;
+  gap: 10px;
+  min-height: 48px;
+  padding: 10px 12px;
+}
+
+.complete-panel {
+  justify-items: start;
+  padding: 30px;
+}
+
+.complete-panel > svg {
+  color: #2f6f62;
+}
+
+.complete-panel h2 {
+  font-size: 34px;
+}
+
+.complete-panel p:last-of-type {
+  color: #3d4945;
+  line-height: 1.6;
+}
+
+.privacy-list,
+.submission-list {
+  display: grid;
+  gap: 10px;
+}
+
+.privacy-list div,
+.submission-list div {
+  background: #f7faf5;
+  border: 1px solid #e1e7df;
+  border-radius: 8px;
+  display: grid;
+  gap: 5px;
+  padding: 12px;
 }
 
 label {
@@ -1063,6 +1311,85 @@ textarea {
   font-size: 28px;
 }
 
+.account-summary {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.account-summary div {
+  background: rgba(255, 255, 255, 0.86);
+  border: 1px solid #dce2dc;
+  border-radius: 8px;
+  box-shadow: 0 14px 36px rgba(42, 58, 52, 0.08);
+  display: grid;
+  gap: 8px;
+  min-height: 118px;
+  padding: 18px;
+}
+
+.account-summary svg {
+  color: #2f6f62;
+}
+
+.account-summary span {
+  color: #65736d;
+  font-size: 13px;
+}
+
+.account-summary strong {
+  font-size: 28px;
+}
+
+.account-table {
+  display: grid;
+  gap: 8px;
+}
+
+.account-table-head,
+.account-row {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: minmax(240px, 1fr) 150px 190px 150px;
+}
+
+.account-table-head {
+  color: #65736d;
+  font-size: 12px;
+  font-weight: 900;
+  padding: 0 12px;
+}
+
+.account-row {
+  align-items: center;
+  background: #f7faf5;
+  border: 1px solid #e1e7df;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.account-row div {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.account-row span {
+  color: #65736d;
+  font-size: 13px;
+}
+
+.part-static {
+  align-items: center;
+  background: #e8f3ef;
+  border-radius: 8px;
+  color: #2f6f62;
+  display: flex;
+  font-weight: 800;
+  min-height: 42px;
+  padding: 0 12px;
+}
+
 @media (max-width: 1100px) {
   .app {
     grid-template-columns: 88px minmax(0, 1fr);
@@ -1082,6 +1409,7 @@ textarea {
   .hero-panel,
   .home-hero,
   .home-grid,
+  .intake-screen,
   .login-page,
   .two-column,
   .form-screen {
@@ -1102,10 +1430,25 @@ textarea {
   }
 
   .stat-grid,
+  .account-summary,
   .profile-grid,
   .memory-grid,
   .agenda-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .account-table-head {
+    display: none;
+  }
+
+  .account-row {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .intake-stepper,
+  .intake-choice-grid,
+  .form-grid {
+    grid-template-columns: 1fr;
   }
 
   .summary-strip {
@@ -1169,11 +1512,15 @@ textarea {
   }
 
   .stat-grid,
+  .account-summary,
   .profile-grid,
   .memory-grid,
   .agenda-grid,
   .match-list,
   .category-cloud,
+  .intake-stepper,
+  .intake-choice-grid,
+  .form-grid,
   .summary-strip,
   .report-grid {
     grid-template-columns: 1fr;
@@ -1195,11 +1542,19 @@ textarea {
     display: grid;
   }
 
+  .form-actions {
+    display: grid;
+  }
+
   .privacy-visual {
     display: none;
   }
 
   .score-row {
+    grid-template-columns: 1fr;
+  }
+
+  .account-row {
     grid-template-columns: 1fr;
   }
 }
