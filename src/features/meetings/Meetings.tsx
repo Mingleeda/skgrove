@@ -62,7 +62,6 @@ type MeetingsProps = {
 type Draft = {
   category: string;
   author: Identity;
-  authorName: string;
   content: string;
 };
 
@@ -83,7 +82,6 @@ export function Meetings({
   const [draft, setDraft] = useState<Draft>({
     category: canCategories[0],
     author: '익명',
-    authorName: '',
     content: '',
   });
   const [actionDrafts, setActionDrafts] = useState<Record<string, { owner: string; due: string }>>({});
@@ -179,9 +177,9 @@ export function Meetings({
                   category: draft.category,
                   content: draft.content.trim(),
                   author: draft.author,
-                  authorName: draft.author === '실명' ? draft.authorName.trim() : '',
+                  authorName: draft.author === '실명' ? currentUser.name : '',
                 });
-                setDraft({ ...draft, content: '', authorName: '' });
+                setDraft({ ...draft, content: '' });
               };
 
               const actionDraftOf = (id: string) => actionDrafts[id] ?? { owner: '미정', due: 'D-7' };
@@ -539,7 +537,6 @@ export function Meetings({
                     <div className="can-two">
                       <div className="panel form-panel">
                         <PanelHeader icon={Send} title="② 의견 제출" />
-                        <div className="can-meta">내 파트 · {currentUser.part}</div>
                         <label>
                           카테고리
                           <select
@@ -568,11 +565,7 @@ export function Meetings({
                         {draft.author === '실명' && (
                           <label>
                             이름
-                            <input
-                              value={draft.authorName}
-                              placeholder="실명 표시 이름"
-                              onChange={(event) => setDraft({ ...draft, authorName: event.target.value })}
-                            />
+                            <input value={currentUser.name} disabled />
                           </label>
                         )}
                         <label>
@@ -593,7 +586,7 @@ export function Meetings({
                       </div>
 
                       <div className="panel">
-                        <PanelHeader icon={UsersRound} title={`내 파트(${currentUser.part}) 의견`} />
+                        <PanelHeader icon={UsersRound} title={`${currentUser.part} 의견`} />
                         <div className="can-part-column bare">
                           {sessionOpinions.filter((opinion) => opinion.part === currentUser.part).length === 0 && (
                             <p className="can-empty">아직 제출된 의견이 없어요. 첫 의견을 남겨보세요.</p>

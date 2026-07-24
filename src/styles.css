@@ -2363,3 +2363,9 @@ textarea {
     grid-template-columns: 1fr;
   }
 }
+
+.form-panel input:disabled {
+  background: #eef2ea;
+  color: #55635d;
+  cursor: not-allowed;
+}
