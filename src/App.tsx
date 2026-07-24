@@ -2,7 +2,15 @@ import { useEffect, useState } from 'react';
 import { loadAccounts, makeAccountId, saveAccounts, seedAccounts } from './accountStore';
 import { isLeader, isTeamLeader } from './auth';
 import { AppShell } from './components/AppShell';
-import { initialAgendas, initialIssues, initialMatches, matchCandidates } from './data/mockData';
+import {
+  initialActionItems,
+  initialAgendas,
+  initialCanOpinions,
+  initialCanSessions,
+  initialIssues,
+  initialMatches,
+  matchCandidates,
+} from './data/mockData';
 import { AgendaBoard } from './features/agenda/AgendaBoard';
 import { AccountManagement } from './features/auth/AccountManagement';
 import { LoginScreen } from './features/auth/LoginScreen';
@@ -15,7 +23,18 @@ import { Memory } from './features/memory/Memory';
 import { Metrics } from './features/metrics/Metrics';
 import { Profiles } from './features/profiles/Profiles';
 import { loadIssues, makeIssueId, saveIssues } from './issueStore';
-import type { Agenda, CurrentUser, Identity, Issue, ManagedAccount, Section } from './types';
+import type {
+  ActionItem,
+  Agenda,
+  CanOpinion,
+  CanSession,
+  CanViewer,
+  CurrentUser,
+  Identity,
+  Issue,
+  ManagedAccount,
+  Section,
+} from './types';
 
 export function App() {
   const [accounts, setAccounts] = useState<ManagedAccount[]>(seedAccounts);
@@ -25,6 +44,11 @@ export function App() {
   const [agendas, setAgendas] = useState<Agenda[]>(initialAgendas);
   const [identity, setIdentity] = useState<Identity>('익명');
   const [matched, setMatched] = useState(initialMatches);
+  const [canSessions, setCanSessions] = useState<CanSession[]>(initialCanSessions);
+  const [canOpinions, setCanOpinions] = useState<CanOpinion[]>(initialCanOpinions);
+  const [selectedCanId, setSelectedCanId] = useState<string | null>(null);
+  const [actionItems, setActionItems] = useState<ActionItem[]>(initialActionItems);
+  const [canViewer, setCanViewer] = useState<CanViewer>({ role: '진행자', part: '경험' });
 
   const passedAgendaCount = agendas.filter((agenda) => agenda.status === '통과').length;
   const openIssueCount = issues.filter((issue) => issue.status !== '종료').length;
@@ -98,6 +122,48 @@ export function App() {
     setMatched([...matchCandidates].sort(() => Math.random() - 0.5).slice(0, 3));
   };
 
+  const startCanSession = () => {
+    const id = `CAN-S-${canSessions.length + 1}`;
+    const draft: CanSession = {
+      id,
+      quarter: '',
+      topic: '',
+      source: '직접 입력',
+      sourceRef: '',
+      parts: ['플랫폼', '경험', '운영', '문화'],
+      mode: '하이브리드',
+      stage: 'setup',
+      resultActions: [],
+    };
+    setCanSessions((prev) => [draft, ...prev]);
+    setSelectedCanId(id);
+  };
+
+  const updateCanSession = (session: CanSession) => {
+    setCanSessions((prev) => prev.map((item) => (item.id === session.id ? session : item)));
+  };
+
+  const addCanOpinion = (opinion: Omit<CanOpinion, 'id' | 'selected'>) => {
+    setCanOpinions((prev) => [
+      ...prev,
+      { ...opinion, id: `CAN-${String(prev.length + 1).padStart(2, '0')}`, selected: false },
+    ]);
+  };
+
+  const toggleCanOpinion = (id: string) => {
+    setCanOpinions((prev) =>
+      prev.map((opinion) => (opinion.id === id ? { ...opinion, selected: !opinion.selected } : opinion)),
+    );
+  };
+
+  const confirmCanResult = (sessionId: string, actions: ActionItem[]) => {
+    if (actions.length === 0) return;
+    setCanSessions((prev) =>
+      prev.map((session) => (session.id === sessionId ? { ...session, resultActions: actions } : session)),
+    );
+    setActionItems((prev) => [...actions, ...prev]);
+  };
+
   const persistAccounts = (nextAccounts: ManagedAccount[]) => {
     setAccounts(nextAccounts);
     void saveAccounts(nextAccounts);
@@ -138,6 +204,7 @@ export function App() {
           openIssueCount={openIssueCount}
           passedAgendaCount={passedAgendaCount}
           currentUser={currentUser}
+          actionItems={actionItems}
           onSectionChange={changeSection}
         />
       )}
@@ -148,7 +215,21 @@ export function App() {
         <LeaderInbox issues={issues} onIssueUpdate={updateIssue} onPromoteToAgenda={promoteToAgenda} />
       )}
       {active === 'agenda' && <AgendaBoard agendas={agendas} onVote={vote} />}
-      {active === 'meetings' && <Meetings />}
+      {active === 'meetings' && (
+        <Meetings
+          sessions={canSessions}
+          opinions={canOpinions}
+          selectedId={selectedCanId}
+          viewer={canViewer}
+          onSelectSession={setSelectedCanId}
+          onStartSession={startCanSession}
+          onViewerChange={setCanViewer}
+          onUpdateSession={updateCanSession}
+          onAddOpinion={addCanOpinion}
+          onToggleOpinion={toggleCanOpinion}
+          onConfirmResult={confirmCanResult}
+        />
+      )}
       {active === 'profiles' && <Profiles />}
       {active === 'connect' && <Connect matched={matched} onShuffleTeams={shuffleTeams} />}
       {active === 'memory' && <Memory />}

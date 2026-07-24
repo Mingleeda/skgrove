@@ -1,4 +1,4 @@
-import type { ActionItem, Agenda, Issue, PartScore, Profile } from '../types';
+import type { ActionItem, Agenda, CanOpinion, CanSession, Issue, Part, PartScore, Profile } from '../types';
 
 export const initialIssues: Issue[] = [
   {
@@ -54,7 +54,7 @@ export const initialAgendas: Agenda[] = [
   },
 ];
 
-export const actionItems: ActionItem[] = [
+export const initialActionItems: ActionItem[] = [
   { title: '티미팅 아젠다 3개 제한안 작성', owner: '이상협', due: 'D-3', status: '진행중' },
   { title: '캔미팅 의견 제출 양식 배포', owner: '김승현', due: 'D-5', status: '대기' },
   { title: '파트 섞기 커피챗 1차 매칭', owner: '김수정', due: 'D-7', status: '완료' },
@@ -76,3 +76,128 @@ export const partScores: PartScore[] = [
 export const initialMatches = ['김수정 · 이선민', '김승현 · 이상협', 'TEST혁신파트 · ITS혁신파트'];
 
 export const matchCandidates = ['이선민 · 김수정', '김승현 · 김수정', '이상협 · 이선민', 'ITS혁신파트 · 혁신도구파트'];
+
+export const canCategories = ['현황·문제', '개선 아이디어', '기대효과', '리스크', '기타'];
+
+export const initialCanSessions: CanSession[] = [
+  {
+    id: 'CAN-S-2',
+    quarter: '2026 Q3',
+    topic: '분기 목표 대비 협업 방식 개선',
+    source: '자료 첨부',
+    sourceRef: '2026_Q3_협업개선_킥오프.pptx',
+    parts: ['플랫폼', '경험', '운영', '문화'],
+    mode: '하이브리드',
+    stage: 'share',
+    resultActions: [],
+  },
+  {
+    id: 'CAN-S-1',
+    quarter: '2026 Q2',
+    topic: '불필요한 회의를 줄이는 방법',
+    source: '직접 입력',
+    sourceRef: '',
+    parts: ['플랫폼', '경험', '운영', '문화'],
+    mode: '하이브리드',
+    stage: 'summary',
+    resultActions: [
+      { title: '회의 없는 수요일 오후 시범 운영', owner: '이상협', due: '상시', status: '진행중' },
+      { title: '30분 기본 회의 길이 가이드 배포', owner: '김승현', due: 'D-10', status: '대기' },
+    ],
+  },
+];
+
+export const initialCanOpinions: CanOpinion[] = [
+  // CAN-S-2 (2026 Q3, 진행 중)
+  {
+    id: 'CAN-01',
+    sessionId: 'CAN-S-2',
+    part: '플랫폼',
+    category: '현황·문제',
+    content: '파트 간 API 변경 공유가 늦어 재작업이 반복됩니다.',
+    author: '실명',
+    authorName: '이선민',
+    selected: true,
+  },
+  {
+    id: 'CAN-02',
+    sessionId: 'CAN-S-2',
+    part: '플랫폼',
+    category: '개선 아이디어',
+    content: '주간 15분 파트 싱크로 변경 사항만 빠르게 공유하면 좋겠습니다.',
+    author: '익명',
+    authorName: '',
+    selected: false,
+  },
+  {
+    id: 'CAN-03',
+    sessionId: 'CAN-S-2',
+    part: '경험',
+    category: '현황·문제',
+    content: '기획-디자인-개발 핸드오프 기준이 명확하지 않습니다.',
+    author: '실명',
+    authorName: '김승현',
+    selected: true,
+  },
+  {
+    id: 'CAN-04',
+    sessionId: 'CAN-S-2',
+    part: '경험',
+    category: '기대효과',
+    content: '핸드오프 체크리스트가 생기면 리뷰 시간이 절반으로 줄 것 같습니다.',
+    author: '익명',
+    authorName: '',
+    selected: false,
+  },
+  {
+    id: 'CAN-05',
+    sessionId: 'CAN-S-2',
+    part: '운영',
+    category: '리스크',
+    content: '프로세스를 늘리면 오히려 실행 속도가 느려질 수 있습니다.',
+    author: '실명',
+    authorName: '이상협',
+    selected: false,
+  },
+  {
+    id: 'CAN-06',
+    sessionId: 'CAN-S-2',
+    part: '운영',
+    category: '개선 아이디어',
+    content: '공통 채널에 변경 로그를 남기는 규칙만 먼저 시도해봅시다.',
+    author: '익명',
+    authorName: '',
+    selected: true,
+  },
+  {
+    id: 'CAN-07',
+    sessionId: 'CAN-S-2',
+    part: '문화',
+    category: '기대효과',
+    content: '작은 성공 사례를 회고에서 공유하면 자발적 참여가 늘 것입니다.',
+    author: '실명',
+    authorName: '김수정',
+    selected: false,
+  },
+  // CAN-S-1 (2026 Q2, 완료)
+  {
+    id: 'CAN-Q2-01',
+    sessionId: 'CAN-S-1',
+    part: '운영',
+    category: '개선 아이디어',
+    content: '수요일 오후는 회의 없는 집중 시간으로 지정합시다.',
+    author: '실명',
+    authorName: '이상협',
+    selected: true,
+  },
+  {
+    id: 'CAN-Q2-02',
+    sessionId: 'CAN-S-1',
+    part: '경험',
+    category: '개선 아이디어',
+    content: '기본 회의 길이를 30분으로 줄이면 좋겠습니다.',
+    author: '익명',
+    authorName: '',
+    selected: true,
+  },
+];
