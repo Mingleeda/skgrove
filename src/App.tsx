@@ -126,7 +126,6 @@ export function App() {
       id,
       topic: '',
       teamName: '',
-      participants: '',
       heldAt: '',
       method: '오프라인',
       parts: ['TEST혁신파트', 'ITS혁신파트', '혁신도구파트'],

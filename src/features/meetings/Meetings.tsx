@@ -15,9 +15,11 @@ import {
   UsersRound,
 } from 'lucide-react';
 import { isLeader, teamParts } from '../../auth';
+import { CAN_STEPS, DEFAULT_STEP, stepLabelOf } from '../../canConfig';
 import { PanelHeader } from '../../components/PanelHeader';
 import type {
   ActionItem,
+  CanMethod,
   CanOpinion,
   CanSession,
   CanStage,
@@ -28,14 +30,7 @@ import type {
 } from '../../types';
 
 const allParts: readonly TeamPart[] = teamParts;
-
-const canSteps: { id: CanStep; label: string; hint: string }[] = [
-  { id: 'Speak-out', label: 'Step 1 · Speak-out', hint: "먼저 해결해야 할 '진짜' 문제 · Bottleneck · 비효율" },
-  { id: 'Ideation', label: 'Step 2 · Ideation', hint: '우리 팀만이 할 수 있는 해결 / 개선 방안' },
-  { id: 'Quick-win', label: 'Step 3 · Quick-win', hint: '바로 실천할 과제 (역할 · 기한 구체화)' },
-];
-
-const stepLabel = (step: CanStep) => canSteps.find((item) => item.id === step)?.label ?? step;
+const canMethods: CanMethod[] = ['온라인', '오프라인'];
 
 const stageFlow: { id: CanStage; label: string }[] = [
   { id: 'setup', label: '세션 준비' },
@@ -85,7 +80,7 @@ export function Meetings({
 }: MeetingsProps) {
   const [tab, setTab] = useState<'can' | 'tea'>('can');
   const [draft, setDraft] = useState<Draft>({
-    step: 'Speak-out',
+    step: DEFAULT_STEP,
     author: '익명',
     content: '',
   });
@@ -144,7 +139,7 @@ export function Meetings({
                       </div>
                       <h3>{item.topic || '(제목 미정)'}</h3>
                       <div className="can-session-meta">
-                        <span>{item.heldAt || '일시 미정'}</span>
+                        <span>{item.heldAt ? item.heldAt.replace('T', ' ') : '일시 미정'}</span>
                         <span>의견 {count}</span>
                         <span>선정 {picked}</span>
                       </div>
@@ -207,7 +202,7 @@ export function Meetings({
 
               // AI 취합 (자리표시): 선정 의견을 3-Step 템플릿으로 정리. 실제 LLM 연동은 예정.
               const runAiAggregate = () => {
-                const grouped = canSteps
+                const grouped = CAN_STEPS
                   .map((step) => {
                     const items = selectedOpinions.filter((opinion) => opinion.step === step.id);
                     if (items.length === 0) return null;
@@ -243,7 +238,7 @@ export function Meetings({
                         {partOpinions.map((opinion) => (
                           <article className="can-opinion" key={opinion.id}>
                             <div className="can-opinion-top">
-                              <span className="can-badge">{stepLabel(opinion.step)}</span>
+                              <span className="can-badge">{stepLabelOf(opinion.step)}</span>
                               <small>{authorLabel(opinion)}</small>
                             </div>
                             <p>{opinion.content}</p>
@@ -316,28 +311,26 @@ export function Meetings({
                           />
                         </label>
                         <label>
-                          참석자
-                          <input
-                            value={session.participants}
-                            placeholder="예: 이선민, 김승현, 이상협, 김수정"
-                            onChange={(event) => onUpdateSession({ ...session, participants: event.target.value })}
-                          />
-                        </label>
-                        <label>
                           시행일시
                           <input
+                            type="datetime-local"
                             value={session.heldAt}
-                            placeholder="예: 2026-08-01 14:00"
                             onChange={(event) => onUpdateSession({ ...session, heldAt: event.target.value })}
                           />
                         </label>
                         <label>
                           방법
-                          <input
-                            value={session.method}
-                            placeholder="예: 오프라인 / 온라인 / 하이브리드"
-                            onChange={(event) => onUpdateSession({ ...session, method: event.target.value })}
-                          />
+                          <div className="segmented">
+                            {canMethods.map((method) => (
+                              <button
+                                key={method}
+                                className={session.method === method ? 'selected' : ''}
+                                onClick={() => onUpdateSession({ ...session, method })}
+                              >
+                                {method}
+                              </button>
+                            ))}
+                          </div>
                         </label>
                       </div>
                       <label>
@@ -418,7 +411,7 @@ export function Meetings({
                             <span className="can-check">{opinion.selected ? '✓' : ''}</span>
                             <span className="can-select-body">
                               <span className="can-opinion-top">
-                                <span className="can-badge">{stepLabel(opinion.step)}</span>
+                                <span className="can-badge">{stepLabelOf(opinion.step)}</span>
                                 <span className="can-badge subtle">{opinion.part}</span>
                                 <small>{authorLabel(opinion)}</small>
                               </span>
@@ -542,7 +535,7 @@ export function Meetings({
                         <label>
                           Step
                           <div className="can-step-picker">
-                            {canSteps.map((item) => (
+                            {CAN_STEPS.map((item) => (
                               <button
                                 key={item.id}
                                 className={draft.step === item.id ? 'selected' : ''}
@@ -553,7 +546,7 @@ export function Meetings({
                             ))}
                           </div>
                         </label>
-                        <p className="can-step-hint">{canSteps.find((s) => s.id === draft.step)?.hint}</p>
+                        <p className="can-step-hint">{CAN_STEPS.find((s) => s.id === draft.step)?.hint}</p>
                         <label>
                           제출 방식
                           <div className="segmented">
@@ -602,7 +595,7 @@ export function Meetings({
                             .map((opinion) => (
                               <article className="can-opinion" key={opinion.id}>
                                 <div className="can-opinion-top">
-                                  <span className="can-badge">{stepLabel(opinion.step)}</span>
+                                  <span className="can-badge">{stepLabelOf(opinion.step)}</span>
                                   <small>{authorLabel(opinion)}</small>
                                 </div>
                                 <p>{opinion.content}</p>
