@@ -201,8 +201,14 @@ export function App() {
     setActive(section);
   };
 
+  const handleLogin = (user: CurrentUser) => {
+    setActive('dashboard');
+    setSelectedCanId(null);
+    setCurrentUser(user);
+  };
+
   if (!currentUser) {
-    return <LoginScreen accounts={accounts} onLogin={setCurrentUser} onRegister={registerAccount} />;
+    return <LoginScreen accounts={accounts} onLogin={handleLogin} onRegister={registerAccount} />;
   }
 
   return (
