@@ -10,12 +10,12 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import { PanelHeader } from '../../components/PanelHeader';
-import type { Identity, Urgency } from '../../types';
+import type { Identity, Issue, Urgency } from '../../types';
 
 type IntakeProps = {
   identity: Identity;
   onIdentityChange: (identity: Identity) => void;
-  onSubmitIssue: () => void;
+  onSubmitIssue: (issue: Omit<Issue, 'id' | 'status'>) => Issue;
 };
 
 type IntakeStep = 'scope' | 'content' | 'review' | 'complete';
@@ -44,12 +44,24 @@ export function Intake({ identity, onIdentityChange, onSubmitIssue }: IntakeProp
   const [title, setTitle] = useState('팀 티미팅 시간을 줄이고 싶어요');
   const [body, setBody] = useState('논의할 주제가 명확하지 않은 회의는 시간을 줄이고, 필요한 경우 안건함에서 먼저 투표하면 좋겠습니다.');
   const [expectedChange, setExpectedChange] = useState('회의 전 안건을 먼저 모으고, 꼭 필요한 주제만 짧게 논의하면 좋겠습니다.');
-  const receiptId = 'SOOP-148';
+  const [receiptId, setReceiptId] = useState('SOOP-148');
+  const [submissions, setSubmissions] = useState(mySubmissions);
 
   const currentStepIndex = steps.findIndex((item) => item.id === step);
 
   const submit = () => {
-    onSubmitIssue();
+    const createdIssue = onSubmitIssue({
+      title,
+      category,
+      author: identity,
+      target,
+      urgency,
+    });
+    setReceiptId(createdIssue.id);
+    setSubmissions([
+      { id: createdIssue.id, title: createdIssue.title, status: '리더 검토', date: '방금' },
+      ...submissions,
+    ]);
     setStep('complete');
   };
 
@@ -204,7 +216,7 @@ export function Intake({ identity, onIdentityChange, onSubmitIssue }: IntakeProp
         <section className="panel">
           <PanelHeader icon={Megaphone} title="내 접수 의견" />
           <div className="submission-list">
-            {mySubmissions.map((item) => (
+            {submissions.map((item) => (
               <div key={item.id}>
                 <strong>{item.title}</strong>
                 <span>{item.id} · {item.status} · {item.date}</span>

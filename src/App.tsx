@@ -14,6 +14,7 @@ import { Meetings } from './features/meetings/Meetings';
 import { Memory } from './features/memory/Memory';
 import { Metrics } from './features/metrics/Metrics';
 import { Profiles } from './features/profiles/Profiles';
+import { loadIssues, makeIssueId, saveIssues } from './issueStore';
 import type { Agenda, CurrentUser, Identity, Issue, ManagedAccount, Section } from './types';
 
 export function App() {
@@ -36,24 +37,27 @@ export function App() {
         setAccounts(loadedAccounts);
       }
     });
+    loadIssues().then((loadedIssues) => {
+      if (isMounted) {
+        setIssues(loadedIssues);
+      }
+    });
 
     return () => {
       isMounted = false;
     };
   }, []);
 
-  const submitIssue = () => {
+  const submitIssue = (issue: Omit<Issue, 'id' | 'status'>) => {
     const next: Issue = {
-      id: `SOOP-${143 + issues.length}`,
-      title: identity === '익명' ? '익명으로 접수된 새 문화 개선 의견' : '실명으로 접수된 새 문화 개선 의견',
-      category: '팀문화',
-      author: identity,
-      target: '팀장',
+      id: makeIssueId(),
+      ...issue,
       status: '접수',
-      urgency: '보통',
     };
-    setIssues([next, ...issues]);
-    setActive('leader');
+    const nextIssues = [next, ...issues];
+    setIssues(nextIssues);
+    void saveIssues(nextIssues);
+    return next;
   };
 
   const promoteToAgenda = (issue: Issue) => {
@@ -67,7 +71,9 @@ export function App() {
       },
       ...agendas,
     ]);
-    setIssues(issues.map((item) => (item.id === issue.id ? { ...item, status: '안건화' } : item)));
+    const nextIssues = issues.map((item) => (item.id === issue.id ? { ...item, status: '안건화' } : item));
+    setIssues(nextIssues);
+    void saveIssues(nextIssues);
     setActive('agenda');
   };
 

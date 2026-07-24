@@ -12,6 +12,10 @@ create table if not exists public.accounts (
 
 alter table public.accounts enable row level security;
 
+drop policy if exists "Allow prototype account reads" on public.accounts;
+drop policy if exists "Allow prototype account writes" on public.accounts;
+drop policy if exists "Allow prototype account updates" on public.accounts;
+
 create policy "Allow prototype account reads"
   on public.accounts
   for select
@@ -41,3 +45,37 @@ on conflict (id) do update set
   status = excluded.status,
   joined_at = excluded.joined_at,
   updated_at = now();
+
+create table if not exists public.issues (
+  id text primary key,
+  title text not null,
+  category text not null,
+  author text not null check (author in ('익명', '실명')),
+  target text not null,
+  status text not null,
+  urgency text not null check (urgency in ('낮음', '보통', '높음')),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+alter table public.issues enable row level security;
+
+drop policy if exists "Allow prototype issue reads" on public.issues;
+drop policy if exists "Allow prototype issue writes" on public.issues;
+drop policy if exists "Allow prototype issue updates" on public.issues;
+
+create policy "Allow prototype issue reads"
+  on public.issues
+  for select
+  using (true);
+
+create policy "Allow prototype issue writes"
+  on public.issues
+  for insert
+  with check (true);
+
+create policy "Allow prototype issue updates"
+  on public.issues
+  for update
+  using (true)
+  with check (true);
