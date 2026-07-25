@@ -31,6 +31,8 @@ const fallbackDraft: ProfileDraft = {
   part: '혁신도구파트',
   role: '팀 연결 경험과 문화 지표 기획',
   englishName: 'Crystal',
+  birthYear: '1996',
+  birthday: '11-18',
   character: 'Bright Orbit',
   trait: '관계형 촉진자',
   style: '사람 사이 연결과 분위기의 변화를 잘 봅니다.',
@@ -63,6 +65,36 @@ const feedbackChoices: SurveyChoice[] = [
   { label: '기준 중심', value: '결과물 기준과 우선순위를 함께 들으면 수정 속도가 빠릅니다.', helper: '무엇이 통과인지 선명하게' },
   { label: '근거 포함', value: '수정 이유와 기대 효과가 같이 있으면 바로 반영합니다.', helper: '왜 바꾸는지까지 이해' },
 ];
+
+function getAgeMood(birthYear: string) {
+  const year = Number(birthYear);
+
+  if (!Number.isFinite(year)) {
+    return {
+      label: '감각 미입력',
+      helper: '조섞기에서 연령대가 한쪽으로 몰리지 않게 하려면 생년을 입력해주세요.',
+    };
+  }
+
+  if (year >= 1997) {
+    return {
+      label: '새싹 감각',
+      helper: '새로운 관점과 빠른 적응력을 팀에 더해요.',
+    };
+  }
+
+  if (year >= 1990) {
+    return {
+      label: '브릿지 감각',
+      helper: '경험과 변화 사이를 자연스럽게 이어요.',
+    };
+  }
+
+  return {
+    label: '든든한 감각',
+    helper: '쌓인 맥락과 안정감을 팀에 더해요.',
+  };
+}
 
 export function Profiles({ currentUser }: ProfilesProps) {
   const [profileList, setProfileList] = useState(initialProfiles);
@@ -117,6 +149,9 @@ export function Profiles({ currentUser }: ProfilesProps) {
     ...draft,
     color: draftColor,
   };
+  const myAgeMood = myProfile ? getAgeMood(myProfile.birthYear) : undefined;
+  const previewAgeMood = getAgeMood(previewProfile.birthYear);
+  const selectedAgeMood = selectedProfile ? getAgeMood(selectedProfile.birthYear) : undefined;
 
   const updateDraft = (field: keyof ProfileDraft, value: string) => {
     setDraft((current) => ({ ...current, [field]: value }));
@@ -129,6 +164,8 @@ export function Profiles({ currentUser }: ProfilesProps) {
         part: myProfile.part,
         role: myProfile.role,
         englishName: myProfile.englishName,
+        birthYear: myProfile.birthYear,
+        birthday: myProfile.birthday,
         character: myProfile.character,
         trait: myProfile.trait,
         style: myProfile.style,
@@ -176,7 +213,10 @@ export function Profiles({ currentUser }: ProfilesProps) {
                 <strong>{myProfile.englishName} · {myProfile.character}</strong>
               </div>
             </div>
-            <p>{myProfile.trait}</p>
+            <div className="profile-mood-row">
+              <p>{myProfile.trait}</p>
+              {myAgeMood && <span className="age-mood-pill">{myAgeMood.label}</span>}
+            </div>
           </div>
           <div className="my-profile-notes">
             <div>
@@ -190,6 +230,10 @@ export function Profiles({ currentUser }: ProfilesProps) {
             <div>
               <span>피드백</span>
               <strong>{myProfile.feedback}</strong>
+            </div>
+            <div>
+              <span>조섞기 무드</span>
+              <strong>{myAgeMood?.helper}</strong>
             </div>
           </div>
         </section>
@@ -207,6 +251,28 @@ export function Profiles({ currentUser }: ProfilesProps) {
               성향 캐릭터
               <input value={draft.character} onChange={(event) => updateDraft('character', event.target.value)} />
             </label>
+          </div>
+          <div className="profile-private-fields">
+            <div>
+              <strong>조섞기용 셀프 기록</strong>
+              <span>카드에는 생년 대신 무드 라벨로만 보여요. 조섞기에서는 연령대가 한쪽으로 몰리지 않게 쓰입니다.</span>
+            </div>
+            <div className="profile-mini-fields">
+              <label>
+                태어난 연도
+                <input
+                  inputMode="numeric"
+                  maxLength={4}
+                  placeholder="1996"
+                  value={draft.birthYear}
+                  onChange={(event) => updateDraft('birthYear', event.target.value)}
+                />
+              </label>
+              <label>
+                생일
+                <input placeholder="MM-DD" value={draft.birthday} onChange={(event) => updateDraft('birthday', event.target.value)} />
+              </label>
+            </div>
           </div>
           <SurveyQuestion title="주로 맡는 역할은?" field="role" value={draft.role} choices={roleChoices} onSelect={updateDraft} />
           <SurveyQuestion title="일하는 성향에 가까운 쪽은?" field="trait" value={draft.trait} choices={traitChoices} onSelect={updateDraft} />
@@ -240,6 +306,7 @@ export function Profiles({ currentUser }: ProfilesProps) {
           </div>
           <p>{previewProfile.trait}</p>
           <div className="profile-chip-list">
+            <span>{previewAgeMood.label}</span>
             <span>{previewProfile.role}</span>
             <span>{previewProfile.collaboration}</span>
           </div>
@@ -280,7 +347,7 @@ export function Profiles({ currentUser }: ProfilesProps) {
                 <strong>{profile.name}{profile.name === currentUser.name ? ' · 나' : ''}</strong>
                 <small>{profile.part} · {profile.englishName}</small>
               </div>
-              <em>{profile.trait}</em>
+              <em>{getAgeMood(profile.birthYear).label}</em>
             </button>
           ))}
         </div>
@@ -306,6 +373,11 @@ export function Profiles({ currentUser }: ProfilesProps) {
               <Sparkles size={20} />
               <span>성향</span>
               <strong>{selectedProfile.trait}</strong>
+            </div>
+            <div>
+              <UserRound size={20} />
+              <span>조섞기 무드</span>
+              <strong>{selectedAgeMood?.label}</strong>
             </div>
             <div>
               <MessageCircle size={20} />

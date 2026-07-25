@@ -1442,7 +1442,7 @@ textarea {
 }
 
 .my-profile-notes {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .my-profile-notes div {
@@ -1466,6 +1466,24 @@ textarea {
   line-height: 1.48;
 }
 
+.profile-mood-row {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.age-mood-pill {
+  background: rgba(216, 240, 106, 0.18);
+  border: 1px solid rgba(216, 240, 106, 0.42);
+  border-radius: 999px;
+  color: #f5ffd0;
+  font-size: 12px;
+  font-weight: 900;
+  min-height: 30px;
+  padding: 6px 10px;
+}
+
 .profile-form-panel,
 .profile-side,
 .profile-directory,
@@ -1485,6 +1503,30 @@ textarea {
   display: grid;
   gap: 12px;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.profile-private-fields {
+  background: #fbfcf8;
+  border: 1px dashed #c9d6c8;
+  border-radius: 8px;
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+}
+
+.profile-private-fields > div:first-child {
+  display: grid;
+  gap: 4px;
+}
+
+.profile-private-fields strong {
+  color: #17352f;
+}
+
+.profile-private-fields span {
+  color: #65736d;
+  font-size: 13px;
+  line-height: 1.45;
 }
 
 .survey-question {
@@ -1792,7 +1834,7 @@ textarea {
 }
 
 .profile-detail-grid {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
 }
 
 .profile-detail-grid div {

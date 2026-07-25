@@ -65,6 +65,8 @@ export type Profile = {
   part: string;
   role: string;
   englishName: string;
+  birthYear: string;
+  birthday: string;
   character: string;
   trait: string;
   style: string;
