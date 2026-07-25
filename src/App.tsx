@@ -149,7 +149,7 @@ export function App() {
       )}
       {active === 'agenda' && <AgendaBoard agendas={agendas} onVote={vote} />}
       {active === 'meetings' && <Meetings />}
-      {active === 'profiles' && <Profiles />}
+      {active === 'profiles' && <Profiles currentUser={currentUser} />}
       {active === 'connect' && <Connect matched={matched} onShuffleTeams={shuffleTeams} />}
       {active === 'memory' && <Memory />}
       {active === 'metrics' && <Metrics />}

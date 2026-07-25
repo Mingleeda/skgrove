@@ -63,8 +63,14 @@ export type ActionItem = {
 export type Profile = {
   name: string;
   part: string;
+  role: string;
+  englishName: string;
+  character: string;
   trait: string;
   style: string;
+  collaboration: string;
+  feedback: string;
+  guide: string;
   color: 'green' | 'red' | 'blue' | 'yellow';
 };
 
