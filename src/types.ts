@@ -73,3 +73,30 @@ export type PartScore = {
   score: number;
   meetings: number;
 };
+
+export type CanStage = 'setup' | 'collect' | 'share' | 'select' | 'summary';
+// 단계 정의는 canConfig.ts의 CAN_STEPS가 단일 소스. step에는 그 id(문자열)를 저장.
+export type CanStep = string;
+export type CanMethod = '온라인' | '오프라인';
+
+export type CanSession = {
+  id: string;
+  topic: string;
+  teamName: string;
+  heldAt: string;
+  method: CanMethod;
+  parts: TeamPart[];
+  stage: CanStage;
+  resultSummary: string;
+};
+
+export type CanOpinion = {
+  id: string;
+  sessionId: string;
+  part: TeamPart;
+  step: CanStep;
+  content: string;
+  author: Identity;
+  authorName: string;
+  selected: boolean;
+};

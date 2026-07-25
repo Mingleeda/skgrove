@@ -1,8 +1,17 @@
 import { useEffect, useState } from 'react';
 import { loadAccounts, makeAccountId, saveAccounts, seedAccounts } from './accountStore';
-import { isLeader, isTeamLeader } from './auth';
+import { isLeader, isTeamLeader, teamParts } from './auth';
+import { loadCanSteps, saveCanSteps } from './canStepsStore';
+import type { CanStepConfig } from './canConfig';
 import { AppShell } from './components/AppShell';
-import { initialAgendas, initialIssues, initialMatches, matchCandidates } from './data/mockData';
+import {
+  initialAgendas,
+  initialCanOpinions,
+  initialCanSessions,
+  initialIssues,
+  initialMatches,
+  matchCandidates,
+} from './data/mockData';
 import { AgendaBoard } from './features/agenda/AgendaBoard';
 import { AccountManagement } from './features/auth/AccountManagement';
 import { LoginScreen } from './features/auth/LoginScreen';
@@ -15,7 +24,16 @@ import { Memory } from './features/memory/Memory';
 import { Metrics } from './features/metrics/Metrics';
 import { Profiles } from './features/profiles/Profiles';
 import { loadIssues, makeIssueId, saveIssues } from './issueStore';
-import type { Agenda, CurrentUser, Identity, Issue, ManagedAccount, Section } from './types';
+import type {
+  Agenda,
+  CanOpinion,
+  CanSession,
+  CurrentUser,
+  Identity,
+  Issue,
+  ManagedAccount,
+  Section,
+} from './types';
 
 export function App() {
   const [accounts, setAccounts] = useState<ManagedAccount[]>(seedAccounts);
@@ -25,6 +43,10 @@ export function App() {
   const [agendas, setAgendas] = useState<Agenda[]>(initialAgendas);
   const [identity, setIdentity] = useState<Identity>('익명');
   const [matched, setMatched] = useState(initialMatches);
+  const [canSessions, setCanSessions] = useState<CanSession[]>(initialCanSessions);
+  const [canOpinions, setCanOpinions] = useState<CanOpinion[]>(initialCanOpinions);
+  const [selectedCanId, setSelectedCanId] = useState<string | null>(null);
+  const [canSteps, setCanSteps] = useState<CanStepConfig[]>(loadCanSteps);
 
   const passedAgendaCount = agendas.filter((agenda) => agenda.status === '통과').length;
   const openIssueCount = issues.filter((issue) => issue.status !== '종료').length;
@@ -98,6 +120,51 @@ export function App() {
     setMatched([...matchCandidates].sort(() => Math.random() - 0.5).slice(0, 3));
   };
 
+  const startCanSession = () => {
+    const id = `CAN-S-${canSessions.length + 1}`;
+    const draft: CanSession = {
+      id,
+      topic: '',
+      teamName: '',
+      heldAt: new Date().toISOString().slice(0, 10),
+      method: '오프라인',
+      parts: [...teamParts],
+      stage: 'setup',
+      resultSummary: '',
+    };
+    setCanSessions((prev) => [draft, ...prev]);
+    setSelectedCanId(id);
+  };
+
+  const updateCanSession = (session: CanSession) => {
+    setCanSessions((prev) => prev.map((item) => (item.id === session.id ? session : item)));
+  };
+
+  const addCanOpinion = (opinion: Omit<CanOpinion, 'id' | 'selected'>) => {
+    setCanOpinions((prev) => [
+      ...prev,
+      { ...opinion, id: `CAN-${String(prev.length + 1).padStart(2, '0')}`, selected: false },
+    ]);
+  };
+
+  const toggleCanOpinion = (id: string) => {
+    setCanOpinions((prev) =>
+      prev.map((opinion) => (opinion.id === id ? { ...opinion, selected: !opinion.selected } : opinion)),
+    );
+  };
+
+  const updateCanSteps = (steps: CanStepConfig[]) => {
+    setCanSteps(steps);
+    saveCanSteps(steps);
+  };
+
+  const confirmCanResult = (sessionId: string, summary: string) => {
+    if (!summary.trim()) return;
+    setCanSessions((prev) =>
+      prev.map((session) => (session.id === sessionId ? { ...session, resultSummary: summary } : session)),
+    );
+  };
+
   const persistAccounts = (nextAccounts: ManagedAccount[]) => {
     setAccounts(nextAccounts);
     void saveAccounts(nextAccounts);
@@ -127,8 +194,14 @@ export function App() {
     setActive(section);
   };
 
+  const handleLogin = (user: CurrentUser) => {
+    setActive('dashboard');
+    setSelectedCanId(null);
+    setCurrentUser(user);
+  };
+
   if (!currentUser) {
-    return <LoginScreen accounts={accounts} onLogin={setCurrentUser} onRegister={registerAccount} />;
+    return <LoginScreen accounts={accounts} onLogin={handleLogin} onRegister={registerAccount} />;
   }
 
   return (
@@ -148,7 +221,22 @@ export function App() {
         <LeaderInbox issues={issues} onIssueUpdate={updateIssue} onPromoteToAgenda={promoteToAgenda} />
       )}
       {active === 'agenda' && <AgendaBoard agendas={agendas} onVote={vote} />}
-      {active === 'meetings' && <Meetings />}
+      {active === 'meetings' && (
+        <Meetings
+          sessions={canSessions}
+          opinions={canOpinions}
+          selectedId={selectedCanId}
+          currentUser={currentUser}
+          canSteps={canSteps}
+          onSelectSession={setSelectedCanId}
+          onStartSession={startCanSession}
+          onUpdateSession={updateCanSession}
+          onAddOpinion={addCanOpinion}
+          onToggleOpinion={toggleCanOpinion}
+          onConfirmResult={confirmCanResult}
+          onCanStepsChange={updateCanSteps}
+        />
+      )}
       {active === 'profiles' && <Profiles />}
       {active === 'connect' && <Connect matched={matched} onShuffleTeams={shuffleTeams} />}
       {active === 'memory' && <Memory />}
