@@ -5,6 +5,7 @@ import { loadCanSteps, saveCanSteps } from './canStepsStore';
 import type { CanStepConfig } from './canConfig';
 import { AppShell } from './components/AppShell';
 import {
+  initialActionItems,
   initialAgendas,
   initialCanOpinions,
   initialCanSessions,
@@ -25,7 +26,9 @@ import { Metrics } from './features/metrics/Metrics';
 import { Profiles } from './features/profiles/Profiles';
 import { loadIssues, makeIssueId, saveIssues } from './issueStore';
 import type {
+  ActionItem,
   Agenda,
+  CanFollowRoute,
   CanOpinion,
   CanSession,
   CurrentUser,
@@ -46,6 +49,7 @@ export function App() {
   const [canSessions, setCanSessions] = useState<CanSession[]>(initialCanSessions);
   const [canOpinions, setCanOpinions] = useState<CanOpinion[]>(initialCanOpinions);
   const [selectedCanId, setSelectedCanId] = useState<string | null>(null);
+  const [actionItems, setActionItems] = useState<ActionItem[]>(initialActionItems);
   const [canSteps, setCanSteps] = useState<CanStepConfig[]>(loadCanSteps);
 
   const passedAgendaCount = agendas.filter((agenda) => agenda.status === '통과').length;
@@ -131,6 +135,7 @@ export function App() {
       parts: [...teamParts],
       stage: 'setup',
       resultSummary: '',
+      followUp: null,
     };
     setCanSessions((prev) => [draft, ...prev]);
     setSelectedCanId(id);
@@ -162,6 +167,38 @@ export function App() {
     if (!summary.trim()) return;
     setCanSessions((prev) =>
       prev.map((session) => (session.id === sessionId ? { ...session, resultSummary: summary } : session)),
+    );
+  };
+
+  // 캔미팅 결과 후속 조치: 선택 항목을 안건함/액션아이템으로 반영 + 세션에 적용 기록
+  const applyCanFollowUp = (
+    sessionId: string,
+    data: {
+      sessionTopic: string;
+      agendaTitles: string[];
+      actions: ActionItem[];
+      routes: Record<string, CanFollowRoute>;
+      actionMeta: Record<string, { owner: string; due: string }>;
+    },
+  ) => {
+    if (canSessions.find((session) => session.id === sessionId)?.followUp) return; // 이미 적용됨 → 중복 방지
+    const { sessionTopic, agendaTitles, actions, routes, actionMeta } = data;
+    if (agendaTitles.length === 0 && actions.length === 0) return;
+    if (agendaTitles.length > 0) {
+      const newAgendas: Agenda[] = agendaTitles.map((title) => ({
+        title,
+        source: `캔미팅 · ${sessionTopic}`,
+        approve: 0,
+        reject: 0,
+        status: '투표중',
+      }));
+      setAgendas((prev) => [...newAgendas, ...prev]);
+    }
+    if (actions.length > 0) {
+      setActionItems((prev) => [...actions, ...prev]);
+    }
+    setCanSessions((prev) =>
+      prev.map((session) => (session.id === sessionId ? { ...session, followUp: { routes, actionMeta } } : session)),
     );
   };
 
@@ -211,6 +248,7 @@ export function App() {
           openIssueCount={openIssueCount}
           passedAgendaCount={passedAgendaCount}
           currentUser={currentUser}
+          actionItems={actionItems}
           onSectionChange={changeSection}
         />
       )}
@@ -234,6 +272,7 @@ export function App() {
           onAddOpinion={addCanOpinion}
           onToggleOpinion={toggleCanOpinion}
           onConfirmResult={confirmCanResult}
+          onApplyFollowUp={applyCanFollowUp}
           onCanStepsChange={updateCanSteps}
         />
       )}

@@ -87,6 +87,7 @@ export const initialCanSessions: CanSession[] = [
     parts: ['TEST혁신파트', 'ITS혁신파트', '혁신도구파트'],
     stage: 'share',
     resultSummary: '',
+    followUp: null,
   },
   {
     id: 'CAN-S-1',
@@ -98,6 +99,7 @@ export const initialCanSessions: CanSession[] = [
     stage: 'summary',
     resultSummary:
       '[Step 1 · Speak-out]\n· 목적이 불분명한 정기회의가 많아 집중 업무 시간이 끊깁니다.\n\n[Step 2 · Ideation]\n· 회의 없는 수요일 오후를 지정하고 기본 회의를 30분으로 제한합니다.\n\n[Step 3 · Quick-win]\n· 회의 없는 수요일 오후 시범 운영 / 30분 기본 회의 가이드 배포',
+    followUp: null,
   },
 ];
 

@@ -19,6 +19,8 @@ import type { CanStepConfig } from '../../canConfig';
 import { makeStepId } from '../../canStepsStore';
 import { PanelHeader } from '../../components/PanelHeader';
 import type {
+  ActionItem,
+  CanFollowRoute,
   CanMethod,
   CanOpinion,
   CanSession,
@@ -28,6 +30,8 @@ import type {
   Identity,
   TeamPart,
 } from '../../types';
+
+type FollowRoute = CanFollowRoute;
 
 const canMethods: CanMethod[] = ['온라인', '오프라인'];
 
@@ -58,6 +62,16 @@ type MeetingsProps = {
   onAddOpinion: (opinion: Omit<CanOpinion, 'id' | 'selected'>) => void;
   onToggleOpinion: (id: string) => void;
   onConfirmResult: (sessionId: string, summary: string) => void;
+  onApplyFollowUp: (
+    sessionId: string,
+    data: {
+      sessionTopic: string;
+      agendaTitles: string[];
+      actions: ActionItem[];
+      routes: Record<string, FollowRoute>;
+      actionMeta: Record<string, { owner: string; due: string }>;
+    },
+  ) => void;
   onCanStepsChange: (steps: CanStepConfig[]) => void;
 };
 
@@ -79,6 +93,7 @@ export function Meetings({
   onAddOpinion,
   onToggleOpinion,
   onConfirmResult,
+  onApplyFollowUp,
   onCanStepsChange,
 }: MeetingsProps) {
   const [tab, setTab] = useState<'can' | 'tea'>('can');
@@ -89,11 +104,15 @@ export function Meetings({
   });
   const [aiSummary, setAiSummary] = useState<string | null>(null);
   const [view, setView] = useState<{ id: string; stage: CanStage } | null>(null);
+  const [followRouting, setFollowRouting] = useState<Record<string, FollowRoute>>({});
+  const [followDrafts, setFollowDrafts] = useState<Record<string, { owner: string; due: string }>>({});
 
-  // 세션 전환 시 AI 취합 결과·조회 단계를 초기화 (세션 간 상태 누수 방지)
+  // 세션 전환 시 AI 취합 결과·조회 단계·후속 조치 입력값을 초기화 (세션 간 상태 누수 방지)
   useEffect(() => {
     setAiSummary(null);
     setView(null);
+    setFollowRouting({});
+    setFollowDrafts({});
   }, [selectedId]);
 
   const isHost = isLeader(currentUser);
@@ -225,6 +244,54 @@ export function Meetings({
               const confirmResult = () => {
                 onConfirmResult(session.id, aiSummary ?? session.resultSummary);
               };
+
+              // 후속 조치: 선정 의견을 항목별로 안건/액션/생략 라우팅
+              const routeOf = (id: string): FollowRoute => followRouting[id] ?? 'skip';
+              const setRoute = (id: string, route: FollowRoute) =>
+                setFollowRouting((prev) => ({ ...prev, [id]: route }));
+              const followDraftOf = (id: string) => followDrafts[id] ?? { owner: '', due: '' };
+              const setFollowDraft = (id: string, patch: Partial<{ owner: string; due: string }>) =>
+                setFollowDrafts((prev) => ({ ...prev, [id]: { ...followDraftOf(id), ...patch } }));
+              const applyFollowUp = () => {
+                const routes: Record<string, FollowRoute> = {};
+                const actionMeta: Record<string, { owner: string; due: string }> = {};
+                selectedOpinions.forEach((o) => {
+                  const route = routeOf(o.id);
+                  routes[o.id] = route;
+                  if (route === 'action') {
+                    const d = followDraftOf(o.id);
+                    actionMeta[o.id] = { owner: d.owner.trim(), due: d.due.trim() };
+                  }
+                });
+                const agendaTitles = selectedOpinions
+                  .filter((o) => routes[o.id] === 'agenda')
+                  .map((o) => o.content);
+                const actions: ActionItem[] = selectedOpinions
+                  .filter((o) => routes[o.id] === 'action')
+                  .map((o) => {
+                    const m = actionMeta[o.id];
+                    return { title: o.content, owner: m.owner || '미정', due: m.due || '-', status: '대기' };
+                  });
+                if (agendaTitles.length === 0 && actions.length === 0) return;
+                onApplyFollowUp(session.id, { sessionTopic: session.topic, agendaTitles, actions, routes, actionMeta });
+              };
+              const followUp = session.followUp;
+              // 액션으로 라우팅된 항목은 담당·기한 필수, 최소 1건 라우팅 필요
+              const routedCount = selectedOpinions.filter((o) => routeOf(o.id) !== 'skip').length;
+              const actionItemsIncomplete = selectedOpinions.some((o) => {
+                if (routeOf(o.id) !== 'action') return false;
+                const d = followDraftOf(o.id);
+                return !d.owner.trim() || !d.due.trim();
+              });
+              const applyDisabled = routedCount === 0 || actionItemsIncomplete;
+
+              // 후속 라우팅 결과 조회 (참여자·확정 후 공통, opinion id 기준)
+              const followRouteOf = (opinion: CanOpinion): FollowRoute | null =>
+                followUp ? followUp.routes[opinion.id] ?? 'skip' : null;
+              const followActionMeta = (opinion: CanOpinion) => followUp?.actionMeta[opinion.id] ?? null;
+              const followCount = (route: FollowRoute) =>
+                followUp ? Object.values(followUp.routes).filter((r) => r === route).length : 0;
+              const routeLabel: Record<FollowRoute, string> = { agenda: '안건', action: '액션', skip: '생략' };
 
               // 선정 의견을 단계별로 묶은 구조 (템플릿·PPT 공통 소스)
               const stepGroups = canSteps
@@ -662,6 +729,107 @@ export function Meetings({
                               </button>
                             )}
                           </div>
+
+                          {confirmed && (
+                            <div className="can-followup">
+                              <h4 className="can-result-title">
+                                <Share2 size={16} />
+                                후속 조치
+                              </h4>
+                              {followUp ? (
+                                <>
+                                  <p className="can-followup-done">
+                                    ✓ 안건 {followCount('agenda')}건 · 액션아이템 {followCount('action')}건 반영됨
+                                    (안건함 / 대시보드에서 확인)
+                                  </p>
+                                  <div className="can-followup-result">
+                                    {selectedOpinions.map((opinion) => {
+                                      const r = followRouteOf(opinion);
+                                      const meta = followActionMeta(opinion);
+                                      return (
+                                        <div className="can-followup-resultrow" key={opinion.id}>
+                                          <span className={`can-route-badge ${r}`}>{r ? routeLabel[r] : '-'}</span>
+                                          <span className="can-followup-rc">{opinion.content}</span>
+                                          {r === 'action' && meta && (
+                                            <small>
+                                              {meta.owner} · {meta.due}
+                                            </small>
+                                          )}
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                </>
+                              ) : (
+                                <>
+                                  <p className="can-hint">
+                                    선정 의견을 팀 안건(투표)으로 올리거나 액션아이템으로 연결하세요. (액션은 담당·기한
+                                    필수)
+                                  </p>
+                                  <div className="can-followup-list">
+                                    {selectedOpinions.map((opinion) => {
+                                      const route = routeOf(opinion.id);
+                                      const fd = followDraftOf(opinion.id);
+                                      return (
+                                        <div className="can-followup-row" key={opinion.id}>
+                                          <div className="can-followup-main">
+                                            <span className="can-badge">{stepLabelOf(opinion.step)}</span>
+                                            <span>{opinion.content}</span>
+                                          </div>
+                                          <div className="segmented can-followup-seg">
+                                            {(
+                                              [
+                                                ['agenda', '안건'],
+                                                ['action', '액션'],
+                                                ['skip', '생략'],
+                                              ] as const
+                                            ).map(([val, label]) => (
+                                              <button
+                                                key={val}
+                                                className={route === val ? 'selected' : ''}
+                                                onClick={() => setRoute(opinion.id, val)}
+                                              >
+                                                {label}
+                                              </button>
+                                            ))}
+                                          </div>
+                                          {route === 'action' && (
+                                            <div className="can-followup-fields">
+                                              <input
+                                                placeholder="담당"
+                                                value={fd.owner}
+                                                onChange={(event) =>
+                                                  setFollowDraft(opinion.id, { owner: event.target.value })
+                                                }
+                                              />
+                                              <input
+                                                type="date"
+                                                aria-label="기한"
+                                                value={fd.due}
+                                                onChange={(event) =>
+                                                  setFollowDraft(opinion.id, { due: event.target.value })
+                                                }
+                                              />
+                                            </div>
+                                          )}
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                  <button
+                                    className="primary-button"
+                                    disabled={applyDisabled}
+                                    onClick={applyFollowUp}
+                                  >
+                                    적용
+                                  </button>
+                                  {actionItemsIncomplete && (
+                                    <p className="can-followup-warn">액션 항목은 담당·기한을 모두 입력해야 적용됩니다.</p>
+                                  )}
+                                </>
+                              )}
+                            </div>
+                          )}
                         </>
                       )}
                     </div>
@@ -774,6 +942,31 @@ export function Meetings({
                               PPT로 내보내기
                             </button>
                           </div>
+                          {followUp && (
+                            <div className="can-followup">
+                              <h4 className="can-result-title">
+                                <Share2 size={16} />
+                                후속 조치 결과
+                              </h4>
+                              <div className="can-followup-result">
+                                {selectedOpinions.map((opinion) => {
+                                  const r = followRouteOf(opinion);
+                                  const meta = followActionMeta(opinion);
+                                  return (
+                                    <div className="can-followup-resultrow" key={opinion.id}>
+                                      <span className={`can-route-badge ${r}`}>{r ? routeLabel[r] : '-'}</span>
+                                      <span className="can-followup-rc">{opinion.content}</span>
+                                      {r === 'action' && meta && (
+                                        <small>
+                                          {meta.owner} · {meta.due}
+                                        </small>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
                         </>
                       ) : (
                         waitingCard('진행자가 결과를 정리하고 있어요', '종합 의견이 곧 공유됩니다.')
