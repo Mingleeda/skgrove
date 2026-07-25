@@ -63,6 +63,7 @@ export type ActionItem = {
 export type Profile = {
   name: string;
   part: string;
+  birthYear: string;
   trait: string;
   style: string;
   color: 'green' | 'red' | 'blue' | 'yellow';
