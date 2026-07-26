@@ -63,8 +63,16 @@ export type ActionItem = {
 export type Profile = {
   name: string;
   part: string;
+  role: string;
+  englishName: string;
+  birthYear: string;
+  birthday: string;
+  character: string;
   trait: string;
   style: string;
+  collaboration: string;
+  feedback: string;
+  guide: string;
   color: 'green' | 'red' | 'blue' | 'yellow';
 };
 
@@ -72,4 +80,38 @@ export type PartScore = {
   name: string;
   score: number;
   meetings: number;
+};
+
+export type CanStage = 'setup' | 'collect' | 'share' | 'select' | 'summary';
+// 단계 정의는 canConfig.ts의 CAN_STEPS가 단일 소스. step에는 그 id(문자열)를 저장.
+export type CanStep = string;
+export type CanMethod = '온라인' | '오프라인';
+export type CanFollowRoute = 'agenda' | 'action' | 'skip';
+// 후속 라우팅은 opinion id 기준으로 저장(내용 중복에도 정확)
+export type CanFollowUp = {
+  routes: Record<string, CanFollowRoute>;
+  actionMeta: Record<string, { owner: string; due: string }>;
+};
+
+export type CanSession = {
+  id: string;
+  topic: string;
+  teamName: string;
+  heldAt: string;
+  method: CanMethod;
+  parts: TeamPart[];
+  stage: CanStage;
+  resultSummary: string;
+  followUp: CanFollowUp | null;
+};
+
+export type CanOpinion = {
+  id: string;
+  sessionId: string;
+  part: TeamPart;
+  step: CanStep;
+  content: string;
+  author: Identity;
+  authorName: string;
+  selected: boolean;
 };
