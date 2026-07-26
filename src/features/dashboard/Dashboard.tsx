@@ -11,22 +11,29 @@ import {
   Vote,
 } from 'lucide-react';
 import { PanelHeader } from '../../components/PanelHeader';
-import { actionItems, initialAgendas, profiles } from '../../data/mockData';
-import type { CurrentUser, Section } from '../../types';
+import { initialAgendas, profiles } from '../../data/mockData';
+import type { ActionItem, CurrentUser, Section } from '../../types';
 
 type DashboardProps = {
   openIssueCount: number;
   passedAgendaCount: number;
   currentUser: CurrentUser;
+  actionItems: ActionItem[];
   onSectionChange: (section: Section) => void;
 };
 
-export function Dashboard({ openIssueCount, passedAgendaCount, currentUser, onSectionChange }: DashboardProps) {
+export function Dashboard({
+  openIssueCount,
+  passedAgendaCount,
+  currentUser,
+  actionItems,
+  onSectionChange,
+}: DashboardProps) {
   const stats = [
     { label: '접수 의견', value: openIssueCount, icon: Inbox, tone: 'mint' },
     { label: '투표 안건', value: 4, icon: Vote, tone: 'violet' },
     { label: '통과 안건', value: passedAgendaCount, icon: CheckCircle2, tone: 'blue' },
-    { label: '진행 액션', value: 5, icon: FileCheck2, tone: 'amber' },
+    { label: '진행 액션', value: actionItems.length, icon: FileCheck2, tone: 'amber' },
   ];
   const activeAgendas = initialAgendas.filter((agenda) => agenda.status === '투표중').slice(0, 2);
   const featuredProfiles = profiles.slice(0, 3);
