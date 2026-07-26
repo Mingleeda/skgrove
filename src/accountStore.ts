@@ -31,7 +31,7 @@ export const seedAccounts: ManagedAccount[] = [
     email: 'crystalk@sk.com',
     role: '팀원',
     part: '혁신도구파트',
-    status: '승인 대기',
+    status: '활성',
     joinedAt: '2026-07-24',
   },
   {

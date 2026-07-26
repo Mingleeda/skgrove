@@ -276,7 +276,7 @@ export function App() {
           onCanStepsChange={updateCanSteps}
         />
       )}
-      {active === 'profiles' && <Profiles />}
+      {active === 'profiles' && <Profiles currentUser={currentUser} />}
       {active === 'connect' && <Connect matched={matched} onShuffleTeams={shuffleTeams} />}
       {active === 'memory' && <Memory />}
       {active === 'metrics' && <Metrics />}
