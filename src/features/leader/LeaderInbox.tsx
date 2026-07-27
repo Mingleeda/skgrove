@@ -181,8 +181,15 @@ export function LeaderInbox({ issues, onIssueUpdate, onPromoteToAgenda }: Leader
                 {selectedIssue.oneOnOneNote && <p>1on1: {selectedIssue.oneOnOneNote}</p>}
                 {selectedIssue.actionItem && <p>액션아이템: {selectedIssue.actionItem}</p>}
                 {selectedIssue.leaderMemo && <p>리더 메모: {selectedIssue.leaderMemo}</p>}
-                {selectedIssue.oneOnOneResponse && <p>팀원 1on1 응답: {selectedIssue.oneOnOneResponse}</p>}
-                {selectedIssue.submitterResponse && <p>팀원 후속 응답: {selectedIssue.submitterResponse}</p>}
+                {selectedIssue.oneOnOneResponse && (
+                  <p>
+                    팀원 1on1 응답: {selectedIssue.oneOnOneResponse}
+                    {selectedIssue.submitterResponse ? ` · ${selectedIssue.submitterResponse}` : ''}
+                  </p>
+                )}
+                {!selectedIssue.oneOnOneResponse && selectedIssue.submitterResponse && (
+                  <p>팀원 후속 응답: {selectedIssue.submitterResponse}</p>
+                )}
                 {!selectedIssue.leaderReply &&
                   !selectedIssue.oneOnOneNote &&
                   !selectedIssue.actionItem &&

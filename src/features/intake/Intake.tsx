@@ -77,7 +77,15 @@ export function Intake({ identity, currentUser, issues, onIdentityChange, onIssu
   };
 
   const respondToOneOnOne = (issue: Issue, oneOnOneResponse: Issue['oneOnOneResponse']) => {
-    onIssueUpdate({ ...issue, oneOnOneResponse });
+    const response = responseDrafts[issue.id]?.trim();
+    onIssueUpdate({
+      ...issue,
+      oneOnOneResponse,
+      submitterResponse: response || issue.submitterResponse,
+    });
+    if (response) {
+      setResponseDrafts((drafts) => ({ ...drafts, [issue.id]: '' }));
+    }
   };
 
   return (
