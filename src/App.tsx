@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { loadAccounts, makeAccountId, saveAccounts, seedAccounts } from './accountStore';
+import { loadActionItems, makeActionItemId, saveActionItems } from './actionItemStore';
 import { finalStatus, isOpen, liveStatus, settleAgendas } from './agendaRules';
 import { loadAgendas, makeAgendaId, saveAgendas } from './agendaStore';
 import { hasVoted, loadBallots, makeVoterKey, saveBallots } from './ballotStore';
@@ -16,6 +17,8 @@ import {
   initialMatches,
   matchCandidates,
 } from './data/mockData';
+import { ActionBoard } from './features/actions/ActionBoard';
+import { ActionCreateForm } from './features/actions/ActionCreateForm';
 import { AgendaBoard } from './features/agenda/AgendaBoard';
 import { AccountManagement } from './features/auth/AccountManagement';
 import { LoginScreen } from './features/auth/LoginScreen';
@@ -67,6 +70,14 @@ export function App() {
   const [canSteps, setCanSteps] = useState<CanStepConfig[]>(loadCanSteps);
 
   const [votedAgendaIds, setVotedAgendaIds] = useState<string[]>([]);
+  const [agendaForActions, setAgendaForActions] = useState<Agenda | null>(null);
+
+  const actionCountByAgenda = actionItems.reduce<Record<string, number>>((acc, item) => {
+    if (item.sourceKind === '안건' && item.sourceId) {
+      acc[item.sourceId] = (acc[item.sourceId] ?? 0) + 1;
+    }
+    return acc;
+  }, {});
 
   const passedAgendaCount = agendas.filter((agenda) => agenda.status === '통과').length;
   const openIssueCount = issues.filter((issue) => issue.status !== '종료').length;
@@ -94,6 +105,11 @@ export function App() {
     loadBallots().then((loadedBallots) => {
       if (isMounted) {
         setBallots(loadedBallots);
+      }
+    });
+    loadActionItems().then((loadedItems) => {
+      if (isMounted) {
+        setActionItems(loadedItems);
       }
     });
 
@@ -329,11 +345,44 @@ export function App() {
       persistAgendas([...newAgendas, ...agendas]);
     }
     if (actions.length > 0) {
-      setActionItems((prev) => [...actions, ...prev]);
+      persistActionItems([...actions, ...actionItems]);
     }
     setCanSessions((prev) =>
       prev.map((session) => (session.id === sessionId ? { ...session, followUp: { routes, actionMeta } } : session)),
     );
+  };
+
+  const persistActionItems = (nextItems: ActionItem[]) => {
+    setActionItems(nextItems);
+    void saveActionItems(nextItems);
+  };
+
+  // SKSOOP-53: 통과된 안건에서 액션아이템을 만든다.
+  // 캔미팅 경로(applyCanFollowUp)와 같은 목록에 합류하되 출처로 구분된다.
+  const createActionItemsFromAgenda = (agenda: Agenda, drafts: Array<Pick<ActionItem, 'title' | 'owner' | 'due'>>) => {
+    const usable = drafts.filter((draft) => draft.title.trim());
+    if (usable.length === 0) return;
+
+    const created: ActionItem[] = usable.map((draft) => ({
+      id: makeActionItemId(),
+      title: draft.title.trim(),
+      owner: draft.owner.trim() || '미정',
+      due: draft.due,
+      status: '대기',
+      sourceKind: '안건',
+      sourceId: agenda.id,
+      sourceLabel: agenda.title,
+      createdAt: today(),
+      outcome: '',
+      reviewReason: '',
+    }));
+
+    persistActionItems([...created, ...actionItems]);
+    setActive('actions');
+  };
+
+  const updateActionItem = (updated: ActionItem) => {
+    persistActionItems(actionItems.map((item) => (item.id === updated.id ? updated : item)));
   };
 
   const persistAccounts = (nextAccounts: ManagedAccount[]) => {
@@ -393,7 +442,7 @@ export function App() {
       {active === 'leader' && isLeader(currentUser) && (
         <LeaderInbox issues={issues} onIssueUpdate={updateIssue} onPromoteToAgenda={promoteToAgenda} />
       )}
-      {active === 'agenda' && (
+      {active === 'agenda' && !agendaForActions && (
         <AgendaBoard
           agendas={agendas}
           currentUser={currentUser}
@@ -403,6 +452,31 @@ export function App() {
           onVote={vote}
           onCloseAgenda={closeAgenda}
           onCreateAgenda={createAgenda}
+          actionCountByAgenda={actionCountByAgenda}
+          onCreateActions={setAgendaForActions}
+        />
+      )}
+      {active === 'agenda' && agendaForActions && (
+        <section className="screen">
+          <ActionCreateForm
+            agenda={agendaForActions}
+            accounts={accounts}
+            today={today()}
+            onCreate={(agenda, drafts) => {
+              createActionItemsFromAgenda(agenda, drafts);
+              setAgendaForActions(null);
+            }}
+            onCancel={() => setAgendaForActions(null)}
+          />
+        </section>
+      )}
+      {active === 'actions' && (
+        <ActionBoard
+          items={actionItems}
+          accounts={accounts}
+          currentUser={currentUser}
+          today={today()}
+          onUpdate={updateActionItem}
         />
       )}
       {active === 'meetings' && (

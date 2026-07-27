@@ -3,6 +3,7 @@ export type Section =
   | 'intake'
   | 'leader'
   | 'agenda'
+  | 'actions'
   | 'meetings'
   | 'profiles'
   | 'connect'
@@ -81,11 +82,30 @@ export type AgendaBallot = {
   createdAt: string;
 };
 
+// 재검토는 '보류'가 아니라 별도 상태다. 적용해봤는데 효과가 없어 되돌아온 것과
+// 아직 시작하지 않은 것은 리더가 다르게 다뤄야 한다.
+export type ActionStatus = '대기' | '진행중' | '완료' | '재검토';
+
+export type ActionSourceKind = '안건' | '캔미팅' | '직접';
+
 export type ActionItem = {
+  id: string;
   title: string;
+  // '미정'을 허용한다. 담당자 없이 먼저 만들어두고 나중에 지정하는 흐름이 실제로 있다.
   owner: string;
+  // 'YYYY-MM-DD'. 빈 문자열이면 목표일 미정.
+  // 예전에는 'D-3' 같은 상대 문자열이라 지연 여부를 계산할 수 없었다.
   due: string;
-  status: string;
+  status: ActionStatus;
+  sourceKind: ActionSourceKind;
+  // 출처 식별자(안건 id 등). 어디서 비롯됐는지 되짚기 위한 값이라 없을 수 있다.
+  sourceId: string;
+  sourceLabel: string;
+  createdAt: string;
+  // 적용 결과 기록(SKSOOP-57). 완료 처리할 때 무엇이 어떻게 바뀌었는지 남긴다.
+  outcome: string;
+  // 재검토 사유(SKSOOP-58). 왜 다시 봐야 하는지 없으면 재검토가 방치로 끝난다.
+  reviewReason: string;
 };
 
 export type Profile = {

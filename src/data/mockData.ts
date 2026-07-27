@@ -85,9 +85,45 @@ export const initialAgendas: Agenda[] = [
 ];
 
 export const initialActionItems: ActionItem[] = [
-  { title: '티미팅 아젠다 3개 제한안 작성', owner: '이상협', due: 'D-3', status: '진행중' },
-  { title: '캔미팅 의견 제출 양식 배포', owner: '김승현', due: 'D-5', status: '대기' },
-  { title: '파트 섞기 커피챗 1차 매칭', owner: '김수정', due: 'D-7', status: '완료' },
+  {
+    id: 'ACT-0001',
+    title: '티미팅 아젠다 3개 제한안 작성',
+    owner: '이상협',
+    due: '2026-07-30',
+    status: '진행중',
+    sourceKind: '안건',
+    sourceId: 'AGD-0001',
+    sourceLabel: '팀 티미팅 간소화',
+    createdAt: '2026-07-24',
+    outcome: '',
+    reviewReason: '',
+  },
+  {
+    id: 'ACT-0002',
+    title: '캔미팅 의견 제출 양식 배포',
+    owner: '김승현',
+    due: '2026-08-01',
+    status: '대기',
+    sourceKind: '캔미팅',
+    sourceId: 'CAN-S-1',
+    sourceLabel: '캔미팅 · 상반기 회고',
+    createdAt: '2026-07-24',
+    outcome: '',
+    reviewReason: '',
+  },
+  {
+    id: 'ACT-0003',
+    title: '파트 섞기 커피챗 1차 매칭',
+    owner: '김수정',
+    due: '2026-07-26',
+    status: '완료',
+    sourceKind: '안건',
+    sourceId: 'AGD-0002',
+    sourceLabel: '월 1회 파트 섞기 커피챗 운영',
+    createdAt: '2026-07-20',
+    outcome: '3개 파트 12명을 랜덤 매칭해 1차 커피챗을 진행했습니다. 참여율 75%.',
+    reviewReason: '',
+  },
 ];
 
 type ProfileSeed = Pick<Profile, 'name' | 'part' | 'birthYear' | 'trait' | 'style' | 'color'> &
