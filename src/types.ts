@@ -46,11 +46,20 @@ export type Issue = {
 };
 
 export type Agenda = {
+  id: string;
   title: string;
+  description: string;
+  category: string;
+  // 안건이 어디서 왔는지(대나무숲 SOOP-142 / 캔미팅 · 주제 / 직접 등록)
   source: string;
+  part: TeamPart;
+  author: Identity;
+  // 익명 안건이면 빈 문자열. 상세 화면은 author를 보고 노출 여부를 정한다.
+  authorName: string;
   approve: number;
   reject: number;
   status: AgendaStatus;
+  createdAt: string;
 };
 
 export type ActionItem = {

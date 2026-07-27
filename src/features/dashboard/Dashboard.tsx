@@ -11,12 +11,13 @@ import {
   Vote,
 } from 'lucide-react';
 import { PanelHeader } from '../../components/PanelHeader';
-import { initialAgendas, profiles } from '../../data/mockData';
-import type { ActionItem, CurrentUser, Section } from '../../types';
+import { profiles } from '../../data/mockData';
+import type { ActionItem, Agenda, CurrentUser, Section } from '../../types';
 
 type DashboardProps = {
   openIssueCount: number;
   passedAgendaCount: number;
+  agendas: Agenda[];
   currentUser: CurrentUser;
   actionItems: ActionItem[];
   onSectionChange: (section: Section) => void;
@@ -25,17 +26,19 @@ type DashboardProps = {
 export function Dashboard({
   openIssueCount,
   passedAgendaCount,
+  agendas,
   currentUser,
   actionItems,
   onSectionChange,
 }: DashboardProps) {
+  const votingAgendas = agendas.filter((agenda) => agenda.status === '투표중');
   const stats = [
     { label: '접수 의견', value: openIssueCount, icon: Inbox, tone: 'mint' },
-    { label: '투표 안건', value: 4, icon: Vote, tone: 'violet' },
+    { label: '투표 안건', value: votingAgendas.length, icon: Vote, tone: 'violet' },
     { label: '통과 안건', value: passedAgendaCount, icon: CheckCircle2, tone: 'blue' },
     { label: '진행 액션', value: actionItems.length, icon: FileCheck2, tone: 'amber' },
   ];
-  const activeAgendas = initialAgendas.filter((agenda) => agenda.status === '투표중').slice(0, 2);
+  const activeAgendas = votingAgendas.slice(0, 2);
   const featuredProfiles = profiles.slice(0, 3);
 
   return (
@@ -87,7 +90,7 @@ export function Dashboard({
               const total = agenda.approve + agenda.reject || 1;
               const approveRate = Math.round((agenda.approve / total) * 100);
               return (
-                <button className="home-agenda-card" key={agenda.title} onClick={() => onSectionChange('agenda')}>
+                <button className="home-agenda-card" key={agenda.id} onClick={() => onSectionChange('agenda')}>
                   <div>
                     <strong>{agenda.title}</strong>
                     <span>{agenda.source}</span>

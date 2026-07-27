@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { loadAccounts, makeAccountId, saveAccounts, seedAccounts } from './accountStore';
+import { loadAgendas, makeAgendaId, saveAgendas } from './agendaStore';
 import { isLeader, isTeamLeader, teamParts } from './auth';
 import { loadCanSteps, saveCanSteps } from './canStepsStore';
 import type { CanStepConfig } from './canConfig';
@@ -38,6 +39,8 @@ import type {
   Section,
 } from './types';
 
+const today = () => new Date().toISOString().slice(0, 10);
+
 export function App() {
   const [accounts, setAccounts] = useState<ManagedAccount[]>(seedAccounts);
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
@@ -68,6 +71,11 @@ export function App() {
         setIssues(loadedIssues);
       }
     });
+    loadAgendas().then((loadedAgendas) => {
+      if (isMounted) {
+        setAgendas(loadedAgendas);
+      }
+    });
 
     return () => {
       isMounted = false;
@@ -86,14 +94,42 @@ export function App() {
     return next;
   };
 
+  const persistAgendas = (nextAgendas: Agenda[]) => {
+    setAgendas(nextAgendas);
+    void saveAgendas(nextAgendas);
+  };
+
+  // 안건 직접 등록(안건함 화면). 익명이면 작성자 이름은 저장하지 않는다.
+  const createAgenda = (draft: Pick<Agenda, 'title' | 'description' | 'category' | 'part' | 'author'>) => {
+    const next: Agenda = {
+      ...draft,
+      id: makeAgendaId(),
+      source: '직접 등록',
+      authorName: draft.author === '실명' ? (currentUser?.name ?? '') : '',
+      approve: 0,
+      reject: 0,
+      status: '투표중',
+      createdAt: today(),
+    };
+    persistAgendas([next, ...agendas]);
+    return next;
+  };
+
   const promoteToAgenda = (issue: Issue) => {
-    setAgendas([
+    persistAgendas([
       {
+        id: makeAgendaId(),
         title: issue.title,
+        description: issue.leaderReply ?? '',
+        category: issue.category,
         source: `대나무숲 ${issue.id}`,
+        part: '전체',
+        author: issue.author,
+        authorName: '',
         approve: 0,
         reject: 0,
         status: '투표중',
+        createdAt: today(),
       },
       ...agendas,
     ]);
@@ -109,10 +145,11 @@ export function App() {
     void saveIssues(nextIssues);
   };
 
-  const vote = (index: number, type: 'approve' | 'reject') => {
-    setAgendas(
-      agendas.map((agenda, agendaIndex) => {
-        if (agendaIndex !== index || agenda.status !== '투표중') return agenda;
+  // 목록에 필터/정렬이 붙어도 안전하도록 index가 아닌 id로 대상을 찾는다.
+  const vote = (id: string, type: 'approve' | 'reject') => {
+    persistAgendas(
+      agendas.map((agenda) => {
+        if (agenda.id !== id || agenda.status !== '투표중') return agenda;
         const next = { ...agenda, [type]: agenda[type] + 1 };
         const total = next.approve + next.reject;
         return total >= 10 && next.approve > total / 2 ? { ...next, status: '통과' } : next;
@@ -186,13 +223,20 @@ export function App() {
     if (agendaTitles.length === 0 && actions.length === 0) return;
     if (agendaTitles.length > 0) {
       const newAgendas: Agenda[] = agendaTitles.map((title) => ({
+        id: makeAgendaId(),
         title,
+        description: '',
+        category: '회의문화',
         source: `캔미팅 · ${sessionTopic}`,
+        part: '전체',
+        author: '익명',
+        authorName: '',
         approve: 0,
         reject: 0,
         status: '투표중',
+        createdAt: today(),
       }));
-      setAgendas((prev) => [...newAgendas, ...prev]);
+      persistAgendas([...newAgendas, ...agendas]);
     }
     if (actions.length > 0) {
       setActionItems((prev) => [...actions, ...prev]);
@@ -247,6 +291,7 @@ export function App() {
         <Dashboard
           openIssueCount={openIssueCount}
           passedAgendaCount={passedAgendaCount}
+          agendas={agendas}
           currentUser={currentUser}
           actionItems={actionItems}
           onSectionChange={changeSection}
@@ -258,7 +303,9 @@ export function App() {
       {active === 'leader' && isLeader(currentUser) && (
         <LeaderInbox issues={issues} onIssueUpdate={updateIssue} onPromoteToAgenda={promoteToAgenda} />
       )}
-      {active === 'agenda' && <AgendaBoard agendas={agendas} onVote={vote} />}
+      {active === 'agenda' && (
+        <AgendaBoard agendas={agendas} currentUser={currentUser} onVote={vote} onCreateAgenda={createAgenda} />
+      )}
       {active === 'meetings' && (
         <Meetings
           sessions={canSessions}
