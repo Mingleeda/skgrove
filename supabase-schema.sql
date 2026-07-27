@@ -130,7 +130,9 @@ create policy "Allow prototype agenda updates"
 
 alter table public.agendas
   add column if not exists deadline date,
-  add column if not exists closed_at date;
+  add column if not exists closed_at date,
+  -- 등록 시점의 투표 대상 인원. 계정 변동에 과거 안건의 정족수/참여율이 흔들리지 않도록 스냅샷으로 둔다.
+  add column if not exists eligible_count integer not null default 0;
 
 -- 투표용지. 익명성을 위해 "누가 투표했는가"만 담고 선택(찬성/반대)은 담지 않는다.
 -- 선택은 agendas.approve / agendas.reject 카운터에만 반영되므로

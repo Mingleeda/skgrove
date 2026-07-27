@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { CheckCircle2, FileCheck2, FilePlus2, Search, ThumbsDown, ThumbsUp, Timer } from 'lucide-react';
-import { daysLeft, isOpen } from '../../agendaRules';
+import { daysLeft, isOpen, voteTotal } from '../../agendaRules';
 import { teamParts } from '../../auth';
 import type { Agenda, CurrentUser, TeamPart, VoteChoice } from '../../types';
 import { AgendaDetail } from './AgendaDetail';
@@ -11,7 +11,6 @@ import {
   approveRate,
   filterAgendas,
   sortAgendas,
-  voteTotal,
   type AgendaSort,
   type AgendaStatusFilter,
 } from './agendaSort';
