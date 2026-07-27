@@ -906,6 +906,31 @@ h1 {
   padding: 12px;
 }
 
+.submission-card {
+  align-items: start;
+}
+
+.submission-card-top {
+  align-items: start;
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+}
+
+.submission-card-top strong {
+  line-height: 1.35;
+}
+
+.submission-card p {
+  color: #3d4945;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.submission-card .status-pill {
+  flex: 0 0 auto;
+}
+
 label {
   color: #46544f;
   display: grid;
