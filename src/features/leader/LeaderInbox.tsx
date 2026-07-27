@@ -18,7 +18,8 @@ export function LeaderInbox({ issues, onIssueUpdate, onPromoteToAgenda }: Leader
   const [activeAction, setActiveAction] = useState<LeaderAction>('reply');
   const [draft, setDraft] = useState('');
 
-  const visibleIssues = filter === '전체' ? issues : issues.filter((issue) => issue.status === filter);
+  const visibleIssues =
+    filter === '전체' ? issues.filter((issue) => issue.status !== '회수') : issues.filter((issue) => issue.status === filter);
   const selectedIssue = visibleIssues.find((issue) => issue.id === selectedIssueId) ?? visibleIssues[0];
   const waitingCount = issues.filter((issue) => issue.status === '접수' || issue.status === '검토중').length;
   const answeredCount = issues.filter((issue) => issue.leaderReply).length;
