@@ -4,7 +4,7 @@ import { PanelHeader } from '../../components/PanelHeader';
 import { teamParts } from '../../auth';
 import type { Agenda, Identity, TeamPart } from '../../types';
 
-export type AgendaDraft = Pick<Agenda, 'title' | 'description' | 'category' | 'part' | 'author'>;
+export type AgendaDraft = Pick<Agenda, 'title' | 'description' | 'category' | 'part' | 'author' | 'deadline'>;
 
 type AgendaFormProps = {
   onSubmit: (draft: AgendaDraft) => void;
@@ -15,12 +15,16 @@ const categories = ['회의문화', '협업', '업무방식', '갈등', '성장/
 // auth.teamParts에는 '전체'가 없다. 안건은 팀 전체 대상이 기본이라 앞에 붙여 쓴다.
 const agendaParts: TeamPart[] = ['전체', ...teamParts];
 
+const DEFAULT_VOTING_DAYS = 7;
+const addDays = (days: number) => new Date(Date.now() + days * 86400000).toISOString().slice(0, 10);
+
 export function AgendaForm({ onSubmit, onCancel }: AgendaFormProps) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState(categories[0]);
   const [part, setPart] = useState<TeamPart>('전체');
   const [author, setAuthor] = useState<Identity>('익명');
+  const [deadline, setDeadline] = useState(addDays(DEFAULT_VOTING_DAYS));
   const [error, setError] = useState('');
 
   const submit = () => {
@@ -37,8 +41,13 @@ export function AgendaForm({ onSubmit, onCancel }: AgendaFormProps) {
       return;
     }
 
+    if (deadline && deadline <= addDays(0)) {
+      setError('마감일은 내일 이후로 정해주세요. 오늘 마감이면 투표할 시간이 없습니다.');
+      return;
+    }
+
     setError('');
-    onSubmit({ title: trimmedTitle, description: trimmedDescription, category, part, author });
+    onSubmit({ title: trimmedTitle, description: trimmedDescription, category, part, author, deadline });
   };
 
   return (
@@ -81,6 +90,11 @@ export function AgendaForm({ onSubmit, onCancel }: AgendaFormProps) {
           </select>
         </label>
       </div>
+
+      <label>
+        투표 마감일
+        <input type="date" value={deadline} min={addDays(1)} onChange={(event) => setDeadline(event.target.value)} />
+      </label>
 
       <label>
         안건 제목

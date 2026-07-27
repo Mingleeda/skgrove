@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { loadAccounts, makeAccountId, saveAccounts, seedAccounts } from './accountStore';
+import { closeExpiredAgendas, finalStatus, isOpen, liveStatus } from './agendaRules';
 import { loadAgendas, makeAgendaId, saveAgendas } from './agendaStore';
+import { hasVoted, loadBallots, makeVoterKey, saveBallots } from './ballotStore';
 import { isLeader, isTeamLeader, teamParts } from './auth';
 import { loadCanSteps, saveCanSteps } from './canStepsStore';
 import type { CanStepConfig } from './canConfig';
@@ -29,6 +31,7 @@ import { loadIssues, makeIssueId, saveIssues } from './issueStore';
 import type {
   ActionItem,
   Agenda,
+  AgendaBallot,
   CanFollowRoute,
   CanOpinion,
   CanSession,
@@ -37,9 +40,16 @@ import type {
   Issue,
   ManagedAccount,
   Section,
+  VoteChoice,
 } from './types';
 
 const today = () => new Date().toISOString().slice(0, 10);
+
+// 대나무숲/캔미팅에서 자동 생성된 안건의 기본 투표 기간(7일).
+// 사람이 마감일을 정할 기회가 없는 경로라 기한 없이 방치되는 것을 막는다.
+const DEFAULT_VOTING_DAYS = 7;
+const defaultDeadline = () =>
+  new Date(Date.now() + DEFAULT_VOTING_DAYS * 86400000).toISOString().slice(0, 10);
 
 export function App() {
   const [accounts, setAccounts] = useState<ManagedAccount[]>(seedAccounts);
@@ -47,6 +57,7 @@ export function App() {
   const [active, setActive] = useState<Section>('dashboard');
   const [issues, setIssues] = useState<Issue[]>(initialIssues);
   const [agendas, setAgendas] = useState<Agenda[]>(initialAgendas);
+  const [ballots, setBallots] = useState<AgendaBallot[]>([]);
   const [identity, setIdentity] = useState<Identity>('익명');
   const [matched, setMatched] = useState(initialMatches);
   const [canSessions, setCanSessions] = useState<CanSession[]>(initialCanSessions);
@@ -54,6 +65,8 @@ export function App() {
   const [selectedCanId, setSelectedCanId] = useState<string | null>(null);
   const [actionItems, setActionItems] = useState<ActionItem[]>(initialActionItems);
   const [canSteps, setCanSteps] = useState<CanStepConfig[]>(loadCanSteps);
+
+  const [votedAgendaIds, setVotedAgendaIds] = useState<string[]>([]);
 
   const passedAgendaCount = agendas.filter((agenda) => agenda.status === '통과').length;
   const openIssueCount = issues.filter((issue) => issue.status !== '종료').length;
@@ -72,8 +85,15 @@ export function App() {
       }
     });
     loadAgendas().then((loadedAgendas) => {
+      if (!isMounted) return;
+      // 마감일이 지난 안건은 열어보는 시점에 닫는다(서버 배치가 없는 구조).
+      const settled = closeExpiredAgendas(loadedAgendas, today());
+      setAgendas(settled);
+      if (settled !== loadedAgendas) void saveAgendas(settled);
+    });
+    loadBallots().then((loadedBallots) => {
       if (isMounted) {
-        setAgendas(loadedAgendas);
+        setBallots(loadedBallots);
       }
     });
 
@@ -94,13 +114,40 @@ export function App() {
     return next;
   };
 
+  // voterKey는 해시라 비동기다. 화면마다 계산하지 않도록 여기서 한 번 풀어 내려보낸다.
+  useEffect(() => {
+    if (!currentUser) {
+      setVotedAgendaIds([]);
+      return;
+    }
+
+    let isMounted = true;
+
+    Promise.all(
+      agendas.map(async (agenda) => {
+        const voterKey = await makeVoterKey(currentUser.email, agenda.id);
+        return hasVoted(ballots, agenda.id, voterKey) ? agenda.id : null;
+      }),
+    ).then((ids) => {
+      if (isMounted) {
+        setVotedAgendaIds(ids.filter((id): id is string => id !== null));
+      }
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [agendas, ballots, currentUser]);
+
   const persistAgendas = (nextAgendas: Agenda[]) => {
     setAgendas(nextAgendas);
     void saveAgendas(nextAgendas);
   };
 
   // 안건 직접 등록(안건함 화면). 익명이면 작성자 이름은 저장하지 않는다.
-  const createAgenda = (draft: Pick<Agenda, 'title' | 'description' | 'category' | 'part' | 'author'>) => {
+  const createAgenda = (
+    draft: Pick<Agenda, 'title' | 'description' | 'category' | 'part' | 'author' | 'deadline'>,
+  ) => {
     const next: Agenda = {
       ...draft,
       id: makeAgendaId(),
@@ -110,6 +157,7 @@ export function App() {
       reject: 0,
       status: '투표중',
       createdAt: today(),
+      closedAt: '',
     };
     persistAgendas([next, ...agendas]);
     return next;
@@ -130,6 +178,8 @@ export function App() {
         reject: 0,
         status: '투표중',
         createdAt: today(),
+        deadline: defaultDeadline(),
+        closedAt: '',
       },
       ...agendas,
     ]);
@@ -146,14 +196,41 @@ export function App() {
   };
 
   // 목록에 필터/정렬이 붙어도 안전하도록 index가 아닌 id로 대상을 찾는다.
-  const vote = (id: string, type: 'approve' | 'reject') => {
+  //
+  // 투표는 두 갈래로 기록된다.
+  //  - 선택(찬성/반대)은 안건의 카운터에만 더한다. 누가 골랐는지는 남기지 않는다.
+  //  - "이 사람이 투표했다"는 사실만 투표용지에 남긴다. 무엇을 골랐는지는 담지 않는다.
+  // 두 기록이 만나지 않으므로 중복은 막으면서 선택은 익명으로 남는다.
+  const vote = async (id: string, type: VoteChoice) => {
+    if (!currentUser) return;
+
+    const target = agendas.find((agenda) => agenda.id === id);
+    if (!target || !isOpen(target)) return;
+
+    const voterKey = await makeVoterKey(currentUser.email, id);
+    if (hasVoted(ballots, id, voterKey)) return;
+
     persistAgendas(
       agendas.map((agenda) => {
-        if (agenda.id !== id || agenda.status !== '투표중') return agenda;
+        if (agenda.id !== id) return agenda;
         const next = { ...agenda, [type]: agenda[type] + 1 };
-        const total = next.approve + next.reject;
-        return total >= 10 && next.approve > total / 2 ? { ...next, status: '통과' } : next;
+        return { ...next, status: liveStatus(next.approve, next.reject) };
       }),
+    );
+
+    const nextBallots = [...ballots, { agendaId: id, voterKey, createdAt: today() }];
+    setBallots(nextBallots);
+    void saveBallots(nextBallots);
+  };
+
+  // 마감: 참여 수와 무관하게 과반 여부로 최종 상태를 확정한다.
+  const closeAgenda = (id: string) => {
+    persistAgendas(
+      agendas.map((agenda) =>
+        agenda.id === id && isOpen(agenda)
+          ? { ...agenda, status: finalStatus(agenda.approve, agenda.reject), closedAt: today() }
+          : agenda,
+      ),
     );
   };
 
@@ -235,6 +312,8 @@ export function App() {
         reject: 0,
         status: '투표중',
         createdAt: today(),
+        deadline: defaultDeadline(),
+        closedAt: '',
       }));
       persistAgendas([...newAgendas, ...agendas]);
     }
@@ -304,7 +383,16 @@ export function App() {
         <LeaderInbox issues={issues} onIssueUpdate={updateIssue} onPromoteToAgenda={promoteToAgenda} />
       )}
       {active === 'agenda' && (
-        <AgendaBoard agendas={agendas} currentUser={currentUser} onVote={vote} onCreateAgenda={createAgenda} />
+        <AgendaBoard
+          agendas={agendas}
+          currentUser={currentUser}
+          votedAgendaIds={votedAgendaIds}
+          canClose={isLeader(currentUser)}
+          today={today()}
+          onVote={vote}
+          onCloseAgenda={closeAgenda}
+          onCreateAgenda={createAgenda}
+        />
       )}
       {active === 'meetings' && (
         <Meetings

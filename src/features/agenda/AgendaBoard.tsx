@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { FileCheck2, FilePlus2, Search, ThumbsDown, ThumbsUp } from 'lucide-react';
+import { CheckCircle2, FileCheck2, FilePlus2, Search, ThumbsDown, ThumbsUp, Timer } from 'lucide-react';
+import { daysLeft, isOpen } from '../../agendaRules';
 import { teamParts } from '../../auth';
-import type { Agenda, CurrentUser, TeamPart } from '../../types';
+import type { Agenda, CurrentUser, TeamPart, VoteChoice } from '../../types';
 import { AgendaDetail } from './AgendaDetail';
 import { AgendaForm, type AgendaDraft } from './AgendaForm';
 import {
@@ -18,7 +19,11 @@ import {
 type AgendaBoardProps = {
   agendas: Agenda[];
   currentUser: CurrentUser;
-  onVote: (id: string, type: 'approve' | 'reject') => void;
+  votedAgendaIds: string[];
+  canClose: boolean;
+  today: string;
+  onVote: (id: string, choice: VoteChoice) => void;
+  onCloseAgenda: (id: string) => void;
   onCreateAgenda: (draft: AgendaDraft) => Agenda;
 };
 
@@ -26,7 +31,16 @@ type BoardView = 'list' | 'create' | 'detail';
 
 const partFilters: TeamPart[] = ['전체', ...teamParts];
 
-export function AgendaBoard({ agendas, currentUser, onVote, onCreateAgenda }: AgendaBoardProps) {
+export function AgendaBoard({
+  agendas,
+  currentUser,
+  votedAgendaIds,
+  canClose,
+  today,
+  onVote,
+  onCloseAgenda,
+  onCreateAgenda,
+}: AgendaBoardProps) {
   const [view, setView] = useState<BoardView>('list');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [status, setStatus] = useState<AgendaStatusFilter>('전체');
@@ -34,6 +48,7 @@ export function AgendaBoard({ agendas, currentUser, onVote, onCreateAgenda }: Ag
   const [sort, setSort] = useState<AgendaSort>('최신순');
   const [keyword, setKeyword] = useState('');
 
+  const voted = new Set(votedAgendaIds);
   const visibleAgendas = sortAgendas(filterAgendas(agendas, { status, part, keyword }), sort);
   // 목록 필터에서 빠졌더라도 열어둔 상세는 유지되어야 하므로 전체 목록에서 찾는다.
   const selectedAgenda = agendas.find((agenda) => agenda.id === selectedId) ?? null;
@@ -60,7 +75,15 @@ export function AgendaBoard({ agendas, currentUser, onVote, onCreateAgenda }: Ag
   if (view === 'detail' && selectedAgenda) {
     return (
       <section className="screen">
-        <AgendaDetail agenda={selectedAgenda} onVote={onVote} onBack={() => setView('list')} />
+        <AgendaDetail
+          agenda={selectedAgenda}
+          alreadyVoted={voted.has(selectedAgenda.id)}
+          canClose={canClose}
+          today={today}
+          onVote={onVote}
+          onClose={onCloseAgenda}
+          onBack={() => setView('list')}
+        />
       </section>
     );
   }
@@ -107,6 +130,9 @@ export function AgendaBoard({ agendas, currentUser, onVote, onCreateAgenda }: Ag
         <div className="agenda-grid">
           {visibleAgendas.map((agenda) => {
             const rate = approveRate(agenda);
+            const open = isOpen(agenda);
+            const remaining = daysLeft(agenda, today);
+
             return (
               <article className="agenda-card" key={agenda.id}>
                 <button className="agenda-open" onClick={() => openDetail(agenda.id)}>
@@ -118,6 +144,12 @@ export function AgendaBoard({ agendas, currentUser, onVote, onCreateAgenda }: Ag
                   <p className="agenda-card-meta">
                     {agenda.category} · {agenda.part} · {agenda.createdAt} · {voteTotal(agenda)}표
                   </p>
+                  {open && remaining !== null && (
+                    <p className="agenda-deadline">
+                      <Timer size={14} />
+                      {remaining <= 0 ? '오늘 마감' : `${remaining}일 남음`}
+                    </p>
+                  )}
                   <div className="vote-bar">
                     <span style={{ width: `${rate}%` }} />
                   </div>
@@ -126,7 +158,18 @@ export function AgendaBoard({ agendas, currentUser, onVote, onCreateAgenda }: Ag
                     <span>반대 {agenda.reject}</span>
                   </div>
                 </button>
-                {agenda.status === '투표중' ? (
+
+                {!open ? (
+                  <div className="passed-box">
+                    <FileCheck2 size={18} />
+                    {agenda.status === '통과' ? '액션아이템 생성 대상' : '부결된 안건'}
+                  </div>
+                ) : voted.has(agenda.id) ? (
+                  <div className="voted-box">
+                    <CheckCircle2 size={18} />
+                    투표 완료
+                  </div>
+                ) : (
                   <div className="vote-actions">
                     <button onClick={() => onVote(agenda.id, 'approve')}>
                       <ThumbsUp size={17} />
@@ -136,11 +179,6 @@ export function AgendaBoard({ agendas, currentUser, onVote, onCreateAgenda }: Ag
                       <ThumbsDown size={17} />
                       반대
                     </button>
-                  </div>
-                ) : (
-                  <div className="passed-box">
-                    <FileCheck2 size={18} />
-                    {agenda.status === '통과' ? '액션아이템 생성 대상' : '부결된 안건'}
                   </div>
                 )}
               </article>
