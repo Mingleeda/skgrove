@@ -258,6 +258,7 @@ export function App() {
           identity={identity}
           issues={issues}
           onIdentityChange={setIdentity}
+          onIssueUpdate={updateIssue}
           onSubmitIssue={submitIssue}
         />
       )}

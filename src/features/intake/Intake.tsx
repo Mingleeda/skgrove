@@ -17,6 +17,7 @@ type IntakeProps = {
   currentUser: CurrentUser;
   issues: Issue[];
   onIdentityChange: (identity: Identity) => void;
+  onIssueUpdate: (issue: Issue) => void;
   onSubmitIssue: (issue: Omit<Issue, 'id' | 'status'>) => Issue;
 };
 
@@ -32,7 +33,7 @@ const steps: Array<{ id: IntakeStep; label: string }> = [
   { id: 'complete', label: '접수 완료' },
 ];
 
-export function Intake({ identity, currentUser, issues, onIdentityChange, onSubmitIssue }: IntakeProps) {
+export function Intake({ identity, currentUser, issues, onIdentityChange, onIssueUpdate, onSubmitIssue }: IntakeProps) {
   const [step, setStep] = useState<IntakeStep>('scope');
   const [target, setTarget] = useState<Target>('팀리더');
   const [visibility, setVisibility] = useState<Visibility>('리더만 보기');
@@ -42,6 +43,7 @@ export function Intake({ identity, currentUser, issues, onIdentityChange, onSubm
   const [body, setBody] = useState('논의할 주제가 명확하지 않은 회의는 시간을 줄이고, 필요한 경우 안건함에서 먼저 투표하면 좋겠습니다.');
   const [expectedChange, setExpectedChange] = useState('회의 전 안건을 먼저 모으고, 꼭 필요한 주제만 짧게 논의하면 좋겠습니다.');
   const [receiptId, setReceiptId] = useState('SOOP-148');
+  const [responseDrafts, setResponseDrafts] = useState<Record<string, string>>({});
 
   const currentStepIndex = steps.findIndex((item) => item.id === step);
   const myIssues = issues.filter(
@@ -61,6 +63,21 @@ export function Intake({ identity, currentUser, issues, onIdentityChange, onSubm
     });
     setReceiptId(createdIssue.id);
     setStep('complete');
+  };
+
+  const updateResponseDraft = (issueId: string, value: string) => {
+    setResponseDrafts((drafts) => ({ ...drafts, [issueId]: value }));
+  };
+
+  const saveSubmitterResponse = (issue: Issue) => {
+    const response = responseDrafts[issue.id]?.trim();
+    if (!response) return;
+    onIssueUpdate({ ...issue, submitterResponse: response });
+    setResponseDrafts((drafts) => ({ ...drafts, [issue.id]: '' }));
+  };
+
+  const respondToOneOnOne = (issue: Issue, oneOnOneResponse: Issue['oneOnOneResponse']) => {
+    onIssueUpdate({ ...issue, oneOnOneResponse });
   };
 
   return (
@@ -228,6 +245,30 @@ export function Intake({ identity, currentUser, issues, onIdentityChange, onSubm
                   {issue.leaderReply && <p>답변: {issue.leaderReply}</p>}
                   {issue.oneOnOneNote && <p>1on1: {issue.oneOnOneNote}</p>}
                   {issue.actionItem && <p>액션아이템: {issue.actionItem}</p>}
+                  {issue.submitterResponse && <p>내 응답: {issue.submitterResponse}</p>}
+                  {issue.oneOnOneResponse && <p>1on1 응답: {issue.oneOnOneResponse}</p>}
+                  {(issue.leaderReply || issue.oneOnOneNote || issue.actionItem) && (
+                    <div className="submission-followup">
+                      {issue.oneOnOneNote && (
+                        <div className="submission-followup-actions">
+                          <button className="secondary-button" onClick={() => respondToOneOnOne(issue, '수락')}>
+                            1on1 수락
+                          </button>
+                          <button className="secondary-button" onClick={() => respondToOneOnOne(issue, '일정 조율 요청')}>
+                            일정 조율 요청
+                          </button>
+                        </div>
+                      )}
+                      <textarea
+                        value={responseDrafts[issue.id] ?? ''}
+                        onChange={(event) => updateResponseDraft(issue.id, event.target.value)}
+                        placeholder="리더 답변에 대한 확인, 추가 의견, 가능한 일정 등을 남겨주세요."
+                      />
+                      <button className="primary-button wide" onClick={() => saveSubmitterResponse(issue)}>
+                        후속 응답 남기기
+                      </button>
+                    </div>
+                  )}
                   {!issue.leaderReply && !issue.oneOnOneNote && !issue.actionItem && (
                     <p>아직 리더가 남긴 답변이나 후속 액션이 없습니다.</p>
                   )}

@@ -61,6 +61,8 @@ create table if not exists public.issues (
   one_on_one_note text,
   action_item text,
   leader_memo text,
+  submitter_response text,
+  one_on_one_response text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -72,7 +74,9 @@ alter table public.issues
   add column if not exists leader_reply text,
   add column if not exists one_on_one_note text,
   add column if not exists action_item text,
-  add column if not exists leader_memo text;
+  add column if not exists leader_memo text,
+  add column if not exists submitter_response text,
+  add column if not exists one_on_one_response text;
 
 alter table public.issues enable row level security;
 

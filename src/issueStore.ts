@@ -20,6 +20,8 @@ type IssueRow = {
   one_on_one_note?: string | null;
   action_item?: string | null;
   leader_memo?: string | null;
+  submitter_response?: string | null;
+  one_on_one_response?: Issue['oneOnOneResponse'] | null;
   created_at?: string;
 };
 
@@ -76,6 +78,8 @@ function issueFromRow(row: IssueRow): Issue {
     oneOnOneNote: row.one_on_one_note ?? undefined,
     actionItem: row.action_item ?? undefined,
     leaderMemo: row.leader_memo ?? undefined,
+    submitterResponse: row.submitter_response ?? undefined,
+    oneOnOneResponse: row.one_on_one_response ?? undefined,
   };
 }
 
@@ -95,5 +99,7 @@ function issueToRow(issue: Issue): IssueRow {
     one_on_one_note: issue.oneOnOneNote ?? null,
     action_item: issue.actionItem ?? null,
     leader_memo: issue.leaderMemo ?? null,
+    submitter_response: issue.submitterResponse ?? null,
+    one_on_one_response: issue.oneOnOneResponse ?? null,
   };
 }

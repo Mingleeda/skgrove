@@ -46,6 +46,8 @@ export type Issue = {
   oneOnOneNote?: string;
   actionItem?: string;
   leaderMemo?: string;
+  submitterResponse?: string;
+  oneOnOneResponse?: '수락' | '일정 조율 요청';
 };
 
 export type Agenda = {
