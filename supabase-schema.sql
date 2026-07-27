@@ -66,7 +66,12 @@ alter table public.issues
   add column if not exists leader_reply text,
   add column if not exists one_on_one_note text,
   add column if not exists action_item text,
-  add column if not exists leader_memo text;
+  add column if not exists leader_memo text,
+  -- 접수 화면에서 받던 본문·기대 변화·공개 범위. 예전에는 저장되지 않고 폐기됐다.
+  add column if not exists body text not null default '',
+  add column if not exists expected_change text not null default '',
+  -- 공개 범위를 모르는 과거 행은 공개하지 않는 쪽으로 채운다.
+  add column if not exists visibility text not null default '리더만 보기';
 
 alter table public.issues enable row level security;
 

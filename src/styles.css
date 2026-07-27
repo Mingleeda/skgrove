@@ -1417,6 +1417,41 @@ textarea {
   gap: 6px;
 }
 
+.issue-body-box {
+  background: #f7faf5;
+  border: 1px solid #e1e7df;
+  border-radius: 8px;
+  display: grid;
+  gap: 6px;
+  padding: 14px;
+}
+
+.issue-body-box strong {
+  color: #4d5c56;
+  font-size: 12px;
+  letter-spacing: 0.02em;
+}
+
+.issue-body-box p {
+  color: #37443f;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.issue-body-box p + strong {
+  margin-top: 6px;
+}
+
+.issue-locked {
+  align-items: center;
+  color: #8a9490;
+  display: inline-flex;
+  font-size: 13px;
+  font-weight: 700;
+  gap: 6px;
+  white-space: nowrap;
+}
+
 .action-form-panel {
   display: grid;
   gap: 16px;

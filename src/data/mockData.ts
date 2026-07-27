@@ -9,6 +9,9 @@ export const initialIssues: Issue[] = [
     target: '팀장',
     status: '접수',
     urgency: '높음',
+    body: '티미팅이 한 시간을 넘기는 날이 많아 오후 집중 시간이 통째로 끊깁니다. 안건이 정리되지 않은 채 시작하는 게 원인 같습니다.',
+    expectedChange: '아젠다를 미리 공유하고 30분 안에 끝내면 좋겠습니다.',
+    visibility: '안건 후보로 공개 가능',
   },
   {
     id: 'SOOP-141',
@@ -18,6 +21,9 @@ export const initialIssues: Issue[] = [
     target: '파트장',
     status: '검토중',
     urgency: '보통',
+    body: '다른 파트가 무슨 일을 하는지 몰라 협업 요청을 언제 해야 할지 판단하기 어렵습니다.',
+    expectedChange: '격주로 15분쯤 파트별 진행 상황을 공유하는 자리가 있으면 좋겠습니다.',
+    visibility: '리더만 보기',
   },
   {
     id: 'SOOP-139',
@@ -27,6 +33,9 @@ export const initialIssues: Issue[] = [
     target: '리더',
     status: '안건화',
     urgency: '보통',
+    body: '캔미팅에서 좋은 의견이 나와도 그 뒤에 무엇이 됐는지 알기 어렵습니다.',
+    expectedChange: '선정된 의견이 안건이나 액션아이템으로 어떻게 이어졌는지 보이면 좋겠습니다.',
+    visibility: '안건 후보로 공개 가능',
   },
 ];
 

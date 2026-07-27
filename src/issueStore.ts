@@ -13,6 +13,9 @@ type IssueRow = {
   target: string;
   status: Issue['status'];
   urgency: Issue['urgency'];
+  body?: string | null;
+  expected_change?: string | null;
+  visibility?: Issue['visibility'] | null;
   leader_reply?: string | null;
   one_on_one_note?: string | null;
   action_item?: string | null;
@@ -66,6 +69,11 @@ function issueFromRow(row: IssueRow): Issue {
     target: row.target,
     status: row.status,
     urgency: row.urgency,
+    body: row.body ?? '',
+    expectedChange: row.expected_change ?? '',
+    // 공개 범위가 기록되지 않은 과거 데이터는 접수자의 선택을 알 수 없다.
+    // 모르면 공개하지 않는 쪽으로 기운다.
+    visibility: row.visibility ?? '리더만 보기',
     leaderReply: row.leader_reply ?? undefined,
     oneOnOneNote: row.one_on_one_note ?? undefined,
     actionItem: row.action_item ?? undefined,
@@ -82,6 +90,9 @@ function issueToRow(issue: Issue): IssueRow {
     target: issue.target,
     status: issue.status,
     urgency: issue.urgency,
+    body: issue.body,
+    expected_change: issue.expectedChange,
+    visibility: issue.visibility,
     leader_reply: issue.leaderReply ?? null,
     one_on_one_note: issue.oneOnOneNote ?? null,
     action_item: issue.actionItem ?? null,

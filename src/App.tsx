@@ -187,11 +187,17 @@ export function App() {
   };
 
   const promoteToAgenda = (issue: Issue) => {
+    // 접수자가 '리더만 보기'로 낸 의견은 공개 안건이 될 수 없다.
+    // 화면에서도 막지만, 호출 경로가 늘어나도 약속이 깨지지 않도록 여기서 한 번 더 막는다.
+    if (issue.visibility !== '안건 후보로 공개 가능') return;
+
     persistAgendas([
       {
         id: makeAgendaId(),
         title: issue.title,
-        description: issue.leaderReply ?? '',
+        // 접수자가 쓴 본문이 안건의 배경 설명이 된다.
+        // 본문이 없을 때만 리더 답변으로 대체한다.
+        description: [issue.body, issue.expectedChange].filter(Boolean).join('\n\n') || issue.leaderReply || '',
         category: issue.category,
         source: `대나무숲 ${issue.id}`,
         part: '전체',

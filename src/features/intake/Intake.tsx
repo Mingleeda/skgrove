@@ -10,7 +10,7 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import { PanelHeader } from '../../components/PanelHeader';
-import type { Identity, Issue, Urgency } from '../../types';
+import type { Identity, Issue, IssueVisibility, Urgency } from '../../types';
 
 type IntakeProps = {
   identity: Identity;
@@ -19,7 +19,6 @@ type IntakeProps = {
 };
 
 type IntakeStep = 'scope' | 'content' | 'review' | 'complete';
-type Visibility = '리더만 보기' | '안건 후보로 공개 가능';
 type Target = '팀리더' | '파트리더' | '리더 전체';
 
 const categories = ['회의문화', '협업', '업무방식', '갈등', '성장/피드백', '복지/분위기', '기타'];
@@ -38,7 +37,7 @@ const mySubmissions = [
 export function Intake({ identity, onIdentityChange, onSubmitIssue }: IntakeProps) {
   const [step, setStep] = useState<IntakeStep>('scope');
   const [target, setTarget] = useState<Target>('팀리더');
-  const [visibility, setVisibility] = useState<Visibility>('리더만 보기');
+  const [visibility, setVisibility] = useState<IssueVisibility>('리더만 보기');
   const [category, setCategory] = useState(categories[0]);
   const [urgency, setUrgency] = useState<Urgency>('보통');
   const [title, setTitle] = useState('팀 티미팅 시간을 줄이고 싶어요');
@@ -56,6 +55,9 @@ export function Intake({ identity, onIdentityChange, onSubmitIssue }: IntakeProp
       author: identity,
       target,
       urgency,
+      body,
+      expectedChange,
+      visibility,
     });
     setReceiptId(createdIssue.id);
     setSubmissions([
@@ -101,7 +103,7 @@ export function Intake({ identity, onIdentityChange, onSubmitIssue }: IntakeProp
               </label>
               <label>
                 공개 범위
-                <select value={visibility} onChange={(event) => setVisibility(event.target.value as Visibility)}>
+                <select value={visibility} onChange={(event) => setVisibility(event.target.value as IssueVisibility)}>
                   <option>리더만 보기</option>
                   <option>안건 후보로 공개 가능</option>
                 </select>
