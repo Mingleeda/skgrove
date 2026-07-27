@@ -1303,6 +1303,311 @@ textarea {
   padding: 0 12px;
 }
 
+.agenda-toolbar {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.agenda-toolbar-right {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* 전역 input/select는 width:100%라 툴바 안에서 줄바꿈된다. 내용 폭으로 되돌린다. */
+.agenda-toolbar-right select {
+  min-height: 40px;
+  min-width: 140px;
+  width: auto;
+}
+
+.agenda-search {
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid #d8e0d8;
+  border-radius: 8px;
+  color: #65736d;
+  display: inline-flex;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 12px;
+}
+
+.agenda-search input {
+  background: transparent;
+  border: 0;
+  min-height: auto;
+  padding: 0;
+  width: 160px;
+}
+
+.agenda-open {
+  background: transparent;
+  border: 0;
+  display: grid;
+  gap: 12px;
+  padding: 0;
+  text-align: left;
+  width: 100%;
+}
+
+.agenda-card-meta {
+  color: #65736d;
+  font-size: 13px;
+}
+
+.agenda-form-panel,
+.agenda-detail-panel {
+  display: grid;
+  gap: 16px;
+  margin: 0 auto;
+  max-width: 720px;
+}
+
+.agenda-detail-head {
+  display: grid;
+  gap: 8px;
+}
+
+.agenda-detail-meta {
+  color: #65736d;
+  font-size: 13px;
+}
+
+.agenda-detail-author {
+  align-items: center;
+  color: #4d5c56;
+  display: flex;
+  font-size: 13px;
+  font-weight: 700;
+  gap: 6px;
+}
+
+.agenda-detail-body {
+  background: #f7faf5;
+  border: 1px solid #e1e7df;
+  border-radius: 8px;
+  color: #37443f;
+  line-height: 1.65;
+  padding: 16px;
+  white-space: pre-wrap;
+}
+
+.agenda-detail-vote {
+  display: grid;
+  gap: 10px;
+}
+
+.agenda-detail-summary {
+  color: #65736d;
+  font-size: 13px;
+}
+
+.agenda-deadline {
+  align-items: center;
+  color: #76513a;
+  display: flex;
+  font-size: 13px;
+  font-weight: 700;
+  gap: 6px;
+}
+
+.issue-body-box {
+  background: #f7faf5;
+  border: 1px solid #e1e7df;
+  border-radius: 8px;
+  display: grid;
+  gap: 6px;
+  padding: 14px;
+}
+
+.issue-body-box strong {
+  color: #4d5c56;
+  font-size: 12px;
+  letter-spacing: 0.02em;
+}
+
+.issue-body-box p {
+  color: #37443f;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.issue-body-box p + strong {
+  margin-top: 6px;
+}
+
+.issue-locked {
+  align-items: center;
+  color: #8a9490;
+  display: inline-flex;
+  font-size: 13px;
+  font-weight: 700;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.action-form-panel {
+  display: grid;
+  gap: 16px;
+  margin: 0 auto;
+  max-width: 860px;
+}
+
+.action-form-source {
+  background: #edf6ff;
+  border: 1px solid #cfe0f6;
+  border-radius: 8px;
+  color: #2f58b5;
+  font-weight: 700;
+  padding: 12px;
+}
+
+.action-form-source span {
+  color: #5c7bbf;
+  font-weight: 600;
+}
+
+.action-draft-list {
+  display: grid;
+  gap: 12px;
+}
+
+.action-draft-row {
+  align-items: end;
+  background: #f7faf5;
+  border: 1px solid #e1e7df;
+  border-radius: 8px;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr) auto;
+  padding: 12px;
+}
+
+.action-draft-remove {
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid #e0d3d3;
+  border-radius: 8px;
+  color: #a5514a;
+  display: flex;
+  justify-content: center;
+  min-height: 42px;
+  width: 42px;
+}
+
+.action-board-list {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.action-card {
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+}
+
+.action-card.overdue {
+  border-color: #e6c7bd;
+}
+
+.action-card-head {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+}
+
+.action-card-head small {
+  color: #65736d;
+  font-size: 12px;
+  text-align: right;
+}
+
+.action-card-meta {
+  color: #4d5c56;
+  font-size: 13px;
+}
+
+.status-pill.action-진행중 {
+  background: #eaf0ff;
+  color: #2f58b5;
+}
+
+.status-pill.action-완료 {
+  background: #eef4ec;
+  color: #2f6f62;
+}
+
+.status-pill.action-재검토 {
+  background: #fbeee7;
+  color: #a5644a;
+}
+
+.action-note {
+  align-items: start;
+  background: #f7faf5;
+  border: 1px solid #e1e7df;
+  border-radius: 8px;
+  color: #37443f;
+  display: flex;
+  font-size: 13px;
+  gap: 8px;
+  line-height: 1.55;
+  padding: 10px 12px;
+}
+
+.action-note.review {
+  background: #fbeee7;
+  border-color: #efd9cc;
+  color: #7a4a33;
+}
+
+.action-assign-row {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.action-transitions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.action-note-editor {
+  display: grid;
+  gap: 10px;
+}
+
+.action-note-editor textarea {
+  min-height: 90px;
+}
+
+.action-overdue-notice {
+  margin-bottom: 16px;
+}
+
+.voted-box {
+  align-items: center;
+  background: #eef4ec;
+  border: 1px solid #d5e2d2;
+  border-radius: 8px;
+  color: #2f6f62;
+  display: flex;
+  font-size: 14px;
+  gap: 8px;
+  line-height: 1.5;
+  min-height: 42px;
+  padding: 10px 12px;
+}
+
 .meeting-lane,
 .category-cloud,
 .match-list,

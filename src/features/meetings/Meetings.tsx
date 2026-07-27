@@ -18,6 +18,7 @@ import { isLeader, teamParts } from '../../auth';
 import type { CanStepConfig } from '../../canConfig';
 import { makeStepId } from '../../canStepsStore';
 import { PanelHeader } from '../../components/PanelHeader';
+import { makeActionItemId } from '../../actionItemStore';
 import { teamRoster } from '../../data/mockData';
 import type {
   ActionItem,
@@ -325,7 +326,20 @@ export function Meetings({
                   .filter((o) => routes[o.id] === 'action')
                   .map((o) => {
                     const m = actionMeta[o.id];
-                    return { title: o.content, owner: m.owner || '미정', due: m.due || '-', status: '대기' };
+                    return {
+                      id: makeActionItemId(),
+                      title: o.content,
+                      owner: m.owner || '미정',
+                      // 기한 입력은 type="date"라 그대로 'YYYY-MM-DD'. 비면 미정으로 둔다.
+                      due: m.due || '',
+                      status: '대기',
+                      sourceKind: '캔미팅',
+                      sourceId: session.id,
+                      sourceLabel: `캔미팅 · ${session.topic}`,
+                      createdAt: new Date().toISOString().slice(0, 10),
+                      outcome: '',
+                      reviewReason: '',
+                    };
                   });
                 if (agendaTitles.length === 0 && actions.length === 0) return;
                 onApplyFollowUp(session.id, { sessionTopic: session.topic, agendaTitles, actions, routes, actionMeta });

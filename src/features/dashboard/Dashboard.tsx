@@ -11,12 +11,13 @@ import {
   Vote,
 } from 'lucide-react';
 import { PanelHeader } from '../../components/PanelHeader';
-import { initialAgendas, profiles } from '../../data/mockData';
-import type { ActionItem, CurrentUser, Section } from '../../types';
+import { profiles } from '../../data/mockData';
+import type { ActionItem, Agenda, CurrentUser, Section } from '../../types';
 
 type DashboardProps = {
   openIssueCount: number;
   passedAgendaCount: number;
+  agendas: Agenda[];
   currentUser: CurrentUser;
   actionItems: ActionItem[];
   onSectionChange: (section: Section) => void;
@@ -25,17 +26,20 @@ type DashboardProps = {
 export function Dashboard({
   openIssueCount,
   passedAgendaCount,
+  agendas,
   currentUser,
   actionItems,
   onSectionChange,
 }: DashboardProps) {
+  const votingAgendas = agendas.filter((agenda) => agenda.status === '투표중');
   const stats = [
     { label: '접수 의견', value: openIssueCount, icon: Inbox, tone: 'mint' },
-    { label: '투표 안건', value: 4, icon: Vote, tone: 'violet' },
+    { label: '투표 안건', value: votingAgendas.length, icon: Vote, tone: 'violet' },
     { label: '통과 안건', value: passedAgendaCount, icon: CheckCircle2, tone: 'blue' },
-    { label: '진행 액션', value: actionItems.length, icon: FileCheck2, tone: 'amber' },
+    // '진행 액션'이므로 완료된 것은 빼야 한다. 전체 개수를 세면 아무것도 안 해도 숫자가 유지된다.
+    { label: '진행 액션', value: actionItems.filter((item) => item.status !== '완료').length, icon: FileCheck2, tone: 'amber' },
   ];
-  const activeAgendas = initialAgendas.filter((agenda) => agenda.status === '투표중').slice(0, 2);
+  const activeAgendas = votingAgendas.slice(0, 2);
   const featuredProfiles = profiles.slice(0, 3);
 
   return (
@@ -87,7 +91,7 @@ export function Dashboard({
               const total = agenda.approve + agenda.reject || 1;
               const approveRate = Math.round((agenda.approve / total) * 100);
               return (
-                <button className="home-agenda-card" key={agenda.title} onClick={() => onSectionChange('agenda')}>
+                <button className="home-agenda-card" key={agenda.id} onClick={() => onSectionChange('agenda')}>
                   <div>
                     <strong>{agenda.title}</strong>
                     <span>{agenda.source}</span>
@@ -106,12 +110,12 @@ export function Dashboard({
           <PanelHeader icon={FileCheck2} title="액션아이템" />
           <div className="action-list">
             {actionItems.map((item) => (
-              <div className="action-row" key={item.title}>
+              <div className="action-row" key={item.id}>
                 <CheckCircle2 size={18} />
                 <div>
                   <strong>{item.title}</strong>
                   <span>
-                    {item.owner} · {item.due}
+                    {item.owner} · {item.due || '목표일 미정'}
                   </span>
                 </div>
                 <em>{item.status}</em>

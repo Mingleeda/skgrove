@@ -2,6 +2,7 @@ import type { ElementType } from 'react';
 import {
   BarChart3,
   CalendarDays,
+  FileCheck2,
   Home,
   Inbox,
   MessageSquarePlus,
@@ -25,6 +26,7 @@ export const sections: AppSection[] = [
   { id: 'intake', label: '대나무숲 접수', icon: MessageSquarePlus, owner: '이선민' },
   { id: 'leader', label: '리더 관리함', icon: Inbox, owner: '김승현' },
   { id: 'agenda', label: '안건함 / 투표', icon: Vote, owner: '이상협' },
+  { id: 'actions', label: '액션아이템', icon: FileCheck2, owner: '이상협' },
   { id: 'meetings', label: '캔미팅 / 티미팅', icon: CalendarDays, owner: '김승현 · 이상협' },
   { id: 'profiles', label: '동료 성향', icon: UserRound, owner: '김수정' },
   { id: 'connect', label: '커피뽑기 / 조뽑기', icon: Shuffle, owner: '김수정' },

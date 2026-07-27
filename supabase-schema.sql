@@ -66,7 +66,12 @@ alter table public.issues
   add column if not exists leader_reply text,
   add column if not exists one_on_one_note text,
   add column if not exists action_item text,
-  add column if not exists leader_memo text;
+  add column if not exists leader_memo text,
+  -- 접수 화면에서 받던 본문·기대 변화·공개 범위. 예전에는 저장되지 않고 폐기됐다.
+  add column if not exists body text not null default '',
+  add column if not exists expected_change text not null default '',
+  -- 공개 범위를 모르는 과거 행은 공개하지 않는 쪽으로 채운다.
+  add column if not exists visibility text not null default '리더만 보기';
 
 alter table public.issues enable row level security;
 
@@ -86,6 +91,115 @@ create policy "Allow prototype issue writes"
 
 create policy "Allow prototype issue updates"
   on public.issues
+  for update
+  using (true)
+  with check (true);
+
+create table if not exists public.agendas (
+  id text primary key,
+  title text not null,
+  description text not null default '',
+  category text not null,
+  source text not null,
+  part text not null check (part in ('전체', 'TEST혁신파트', 'ITS혁신파트', '혁신도구파트')),
+  author text not null check (author in ('익명', '실명')),
+  author_name text not null default '',
+  approve integer not null default 0,
+  reject integer not null default 0,
+  status text not null check (status in ('투표중', '통과', '부결')),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+alter table public.agendas enable row level security;
+
+drop policy if exists "Allow prototype agenda reads" on public.agendas;
+drop policy if exists "Allow prototype agenda writes" on public.agendas;
+drop policy if exists "Allow prototype agenda updates" on public.agendas;
+
+create policy "Allow prototype agenda reads"
+  on public.agendas
+  for select
+  using (true);
+
+create policy "Allow prototype agenda writes"
+  on public.agendas
+  for insert
+  with check (true);
+
+create policy "Allow prototype agenda updates"
+  on public.agendas
+  for update
+  using (true)
+  with check (true);
+
+alter table public.agendas
+  add column if not exists deadline date,
+  add column if not exists closed_at date,
+  -- 등록 시점의 투표 대상 인원. 계정 변동에 과거 안건의 정족수/참여율이 흔들리지 않도록 스냅샷으로 둔다.
+  add column if not exists eligible_count integer not null default 0;
+
+-- 투표용지. 익명성을 위해 "누가 투표했는가"만 담고 선택(찬성/반대)은 담지 않는다.
+-- 선택은 agendas.approve / agendas.reject 카운터에만 반영되므로
+-- 이 테이블의 어떤 행도 사람과 선택을 이어주지 못한다.
+create table if not exists public.agenda_ballots (
+  agenda_id text not null references public.agendas(id) on delete cascade,
+  -- sha256(agenda_id + 소문자 이메일). 안건마다 값이 달라 투표 이력이 연결되지 않는다.
+  voter_key text not null,
+  created_at timestamptz not null default now(),
+  primary key (agenda_id, voter_key)
+);
+
+alter table public.agenda_ballots enable row level security;
+
+drop policy if exists "Allow prototype ballot reads" on public.agenda_ballots;
+drop policy if exists "Allow prototype ballot writes" on public.agenda_ballots;
+
+create policy "Allow prototype ballot reads"
+  on public.agenda_ballots
+  for select
+  using (true);
+
+create policy "Allow prototype ballot writes"
+  on public.agenda_ballots
+  for insert
+  with check (true);
+
+create table if not exists public.action_items (
+  id text primary key,
+  title text not null,
+  owner text not null default '미정',
+  -- 목표일 미정을 허용한다. 담당자 없이 먼저 만들어두는 흐름이 실제로 있다.
+  due date,
+  status text not null check (status in ('대기', '진행중', '완료', '재검토')),
+  source_kind text not null check (source_kind in ('안건', '캔미팅', '직접')),
+  source_id text,
+  source_label text,
+  -- 적용 결과와 재검토 사유. 완료/재검토로 넘길 때 무엇이 왜 그랬는지 남긴다.
+  outcome text,
+  review_reason text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+alter table public.action_items enable row level security;
+
+drop policy if exists "Allow prototype action reads" on public.action_items;
+drop policy if exists "Allow prototype action writes" on public.action_items;
+drop policy if exists "Allow prototype action updates" on public.action_items;
+
+create policy "Allow prototype action reads"
+  on public.action_items
+  for select
+  using (true);
+
+create policy "Allow prototype action writes"
+  on public.action_items
+  for insert
+  with check (true);
+
+create policy "Allow prototype action updates"
+  on public.action_items
   for update
   using (true)
   with check (true);
