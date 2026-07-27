@@ -44,6 +44,8 @@ export const initialAgendas: Agenda[] = [
     reject: 5,
     status: '투표중',
     createdAt: '2026-07-20',
+    deadline: '2026-08-05',
+    closedAt: '',
   },
   {
     id: 'AGD-0002',
@@ -58,6 +60,8 @@ export const initialAgendas: Agenda[] = [
     reject: 3,
     status: '통과',
     createdAt: '2026-07-18',
+    deadline: '2026-07-25',
+    closedAt: '2026-07-25',
   },
   {
     id: 'AGD-0003',
@@ -72,6 +76,8 @@ export const initialAgendas: Agenda[] = [
     reject: 13,
     status: '부결',
     createdAt: '2026-07-15',
+    deadline: '2026-07-22',
+    closedAt: '2026-07-22',
   },
 ];
 

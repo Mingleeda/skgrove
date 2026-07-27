@@ -1408,6 +1408,29 @@ textarea {
   font-size: 13px;
 }
 
+.agenda-deadline {
+  align-items: center;
+  color: #76513a;
+  display: flex;
+  font-size: 13px;
+  font-weight: 700;
+  gap: 6px;
+}
+
+.voted-box {
+  align-items: center;
+  background: #eef4ec;
+  border: 1px solid #d5e2d2;
+  border-radius: 8px;
+  color: #2f6f62;
+  display: flex;
+  font-size: 14px;
+  gap: 8px;
+  line-height: 1.5;
+  min-height: 42px;
+  padding: 10px 12px;
+}
+
 .meeting-lane,
 .category-cloud,
 .match-list,

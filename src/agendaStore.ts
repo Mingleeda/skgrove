@@ -18,6 +18,8 @@ type AgendaRow = {
   reject: number;
   status: Agenda['status'];
   created_at?: string;
+  deadline?: string | null;
+  closed_at?: string | null;
 };
 
 export async function loadAgendas() {
@@ -76,6 +78,8 @@ function agendaFromRow(row: AgendaRow): Agenda {
     reject: row.reject,
     status: row.status,
     createdAt: row.created_at?.slice(0, 10) ?? '',
+    deadline: row.deadline?.slice(0, 10) ?? '',
+    closedAt: row.closed_at?.slice(0, 10) ?? '',
   };
 }
 

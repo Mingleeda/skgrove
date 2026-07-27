@@ -127,3 +127,33 @@ create policy "Allow prototype agenda updates"
   for update
   using (true)
   with check (true);
+
+alter table public.agendas
+  add column if not exists deadline date,
+  add column if not exists closed_at date;
+
+-- 투표용지. 익명성을 위해 "누가 투표했는가"만 담고 선택(찬성/반대)은 담지 않는다.
+-- 선택은 agendas.approve / agendas.reject 카운터에만 반영되므로
+-- 이 테이블의 어떤 행도 사람과 선택을 이어주지 못한다.
+create table if not exists public.agenda_ballots (
+  agenda_id text not null references public.agendas(id) on delete cascade,
+  -- sha256(agenda_id + 소문자 이메일). 안건마다 값이 달라 투표 이력이 연결되지 않는다.
+  voter_key text not null,
+  created_at timestamptz not null default now(),
+  primary key (agenda_id, voter_key)
+);
+
+alter table public.agenda_ballots enable row level security;
+
+drop policy if exists "Allow prototype ballot reads" on public.agenda_ballots;
+drop policy if exists "Allow prototype ballot writes" on public.agenda_ballots;
+
+create policy "Allow prototype ballot reads"
+  on public.agenda_ballots
+  for select
+  using (true);
+
+create policy "Allow prototype ballot writes"
+  on public.agenda_ballots
+  for insert
+  with check (true);

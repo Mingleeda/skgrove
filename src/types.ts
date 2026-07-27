@@ -60,6 +60,22 @@ export type Agenda = {
   reject: number;
   status: AgendaStatus;
   createdAt: string;
+  // 'YYYY-MM-DD'. 빈 문자열이면 마감일 없이 수동 마감만 가능하다.
+  deadline: string;
+  // 마감 처리된 날짜. 빈 문자열이면 아직 열려 있다.
+  closedAt: string;
+};
+
+export type VoteChoice = 'approve' | 'reject';
+
+// 익명성 유지를 위해 "누가 투표했는가"와 "무엇을 골랐는가"를 분리한다.
+// 투표용지(ballot)는 선택을 담지 않고, 선택은 Agenda의 approve/reject 카운터로만 남는다.
+// 따라서 어떤 행 하나도 사람과 선택을 이어주지 못한다.
+export type AgendaBallot = {
+  agendaId: string;
+  // 안건마다 다른 값이 나오는 단방향 해시. 안건 간 투표 이력 연결을 막는다.
+  voterKey: string;
+  createdAt: string;
 };
 
 export type ActionItem = {
