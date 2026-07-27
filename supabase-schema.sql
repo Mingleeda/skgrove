@@ -89,3 +89,41 @@ create policy "Allow prototype issue updates"
   for update
   using (true)
   with check (true);
+
+create table if not exists public.agendas (
+  id text primary key,
+  title text not null,
+  description text not null default '',
+  category text not null,
+  source text not null,
+  part text not null check (part in ('전체', 'TEST혁신파트', 'ITS혁신파트', '혁신도구파트')),
+  author text not null check (author in ('익명', '실명')),
+  author_name text not null default '',
+  approve integer not null default 0,
+  reject integer not null default 0,
+  status text not null check (status in ('투표중', '통과', '부결')),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+alter table public.agendas enable row level security;
+
+drop policy if exists "Allow prototype agenda reads" on public.agendas;
+drop policy if exists "Allow prototype agenda writes" on public.agendas;
+drop policy if exists "Allow prototype agenda updates" on public.agendas;
+
+create policy "Allow prototype agenda reads"
+  on public.agendas
+  for select
+  using (true);
+
+create policy "Allow prototype agenda writes"
+  on public.agendas
+  for insert
+  with check (true);
+
+create policy "Allow prototype agenda updates"
+  on public.agendas
+  for update
+  using (true)
+  with check (true);
