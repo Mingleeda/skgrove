@@ -32,6 +32,9 @@ export type ManagedAccount = CurrentUser & {
   joinedAt: string;
 };
 
+// 접수자가 고른 공개 범위. '리더만 보기'는 안건 전환을 막는 약속이므로 저장해야 한다.
+export type IssueVisibility = '리더만 보기' | '안건 후보로 공개 가능';
+
 export type Issue = {
   id: string;
   title: string;
@@ -40,6 +43,11 @@ export type Issue = {
   target: string;
   status: IssueStatus;
   urgency: Urgency;
+  // 접수자가 작성한 본문과 기대 변화. 예전에는 화면 state에만 있다가 폐기돼
+  // 리더가 읽을 수도, 안건 배경 설명으로 승계할 수도 없었다.
+  body: string;
+  expectedChange: string;
+  visibility: IssueVisibility;
   leaderReply?: string;
   oneOnOneNote?: string;
   actionItem?: string;

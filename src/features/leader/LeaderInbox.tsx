@@ -1,4 +1,4 @@
-import { CalendarPlus, FileCheck2, MessageSquareText, PenLine, Send, UserRoundCheck, Vote } from 'lucide-react';
+import { CalendarPlus, FileCheck2, Lock, MessageSquareText, PenLine, Send, UserRoundCheck, Vote } from 'lucide-react';
 import { useState } from 'react';
 import type { Issue, IssueStatus } from '../../types';
 
@@ -109,10 +109,19 @@ export function LeaderInbox({ issues, onIssueUpdate, onPromoteToAgenda }: Leader
                         <option key={status}>{status}</option>
                       ))}
                   </select>
-                  <button className="secondary-button" onClick={() => onPromoteToAgenda(issue)}>
-                    <Vote size={17} />
-                    안건화
-                  </button>
+                  {issue.visibility === '안건 후보로 공개 가능' ? (
+                    <button className="secondary-button" onClick={() => onPromoteToAgenda(issue)}>
+                      <Vote size={17} />
+                      안건화
+                    </button>
+                  ) : (
+                    // 접수자가 '리더만 보기'를 골랐다면 공개 안건으로 올릴 수 없다.
+                    // 접수 화면이 한 약속이라 리더 권한으로도 뒤집지 않는다.
+                    <span className="issue-locked" title="접수자가 '리더만 보기'로 제출했습니다.">
+                      <Lock size={15} />
+                      안건화 불가
+                    </span>
+                  )}
                 </div>
               </article>
             ))}
@@ -126,8 +135,21 @@ export function LeaderInbox({ issues, onIssueUpdate, onPromoteToAgenda }: Leader
                 <span className="status-pill">{selectedIssue.status}</span>
                 <h2>{selectedIssue.title}</h2>
                 <p>
-                  {selectedIssue.id} · {selectedIssue.category} · {selectedIssue.author} · {selectedIssue.target}
+                  {selectedIssue.id} · {selectedIssue.category} · {selectedIssue.author} · {selectedIssue.target} ·{' '}
+                  {selectedIssue.visibility}
                 </p>
+              </div>
+
+              {/* 리더가 답변하려면 접수자가 무엇을 썼는지 읽을 수 있어야 한다. */}
+              <div className="issue-body-box">
+                <strong>접수 내용</strong>
+                <p>{selectedIssue.body || '작성된 내용이 없습니다.'}</p>
+                {selectedIssue.expectedChange && (
+                  <>
+                    <strong>기대 변화</strong>
+                    <p>{selectedIssue.expectedChange}</p>
+                  </>
+                )}
               </div>
 
               <div className="leader-action-tabs">

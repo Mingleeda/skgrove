@@ -1,8 +1,8 @@
 import { FormEvent, useState } from 'react';
 import { HeartHandshake, LogIn, ShieldCheck, UserPlus } from 'lucide-react';
 import { seedAccounts } from '../../accountStore';
-import { teamParts, userRoles, isCompanyEmail } from '../../auth';
-import type { CurrentUser, ManagedAccount, TeamPart, UserRole } from '../../types';
+import { teamParts, isCompanyEmail } from '../../auth';
+import type { CurrentUser, ManagedAccount, TeamPart } from '../../types';
 
 const toCurrentUser = (account: ManagedAccount): CurrentUser => ({
   name: account.name,
@@ -25,7 +25,6 @@ export function LoginScreen({ accounts, onLogin, onRegister }: LoginScreenProps)
   const [mode, setMode] = useState<AuthMode>('login');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const [role, setRole] = useState<UserRole>('팀원');
   const [part, setPart] = useState<TeamPart>('TEST혁신파트');
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
@@ -81,7 +80,8 @@ export function LoginScreen({ accounts, onLogin, onRegister }: LoginScreenProps)
 
     setError('');
     setNotice('가입 요청이 접수됐어요. 팀리더가 계정 관리에서 활성 처리하면 로그인할 수 있어요.');
-    onRegister({ name: trimmedName, email: trimmedEmail, role, part: role === '팀리더' ? '전체' : part });
+    // 권한은 항상 '팀원'으로 고정한다. 클라이언트가 보낸 값을 신뢰하지 않는다.
+    onRegister({ name: trimmedName, email: trimmedEmail, role: '팀원', part });
     setMode('login');
   };
 
@@ -145,29 +145,23 @@ export function LoginScreen({ accounts, onLogin, onRegister }: LoginScreenProps)
         {mode === 'signup' && (
           <>
             <label>
-              권한
-              <select value={role} onChange={(event) => setRole(event.target.value as UserRole)}>
-                {userRoles.map((item) => (
+              소속 파트
+              <select value={part} onChange={(event) => setPart(event.target.value as TeamPart)}>
+                {teamParts.map((item) => (
                   <option key={item}>{item}</option>
                 ))}
               </select>
             </label>
 
-            {role !== '팀리더' ? (
-              <label>
-                소속 파트
-                <select value={part} onChange={(event) => setPart(event.target.value as TeamPart)}>
-                  {teamParts.map((item) => (
-                    <option key={item}>{item}</option>
-                  ))}
-                </select>
-              </label>
-            ) : (
-              <div className="role-note">
-                <strong>팀리더 권한</strong>
-                <span>팀리더는 특정 파트 소속을 선택하지 않고 전체 팀 기준으로 계정과 리더 관리함을 볼 수 있어요.</span>
-              </div>
-            )}
+            {/*
+              권한은 가입 폼에서 고르지 않는다. 신청자가 '팀리더'를 선택할 수 있으면
+              승인자가 권한 항목을 눈여겨보지 않는 순간 그대로 통과한다.
+              권한 상향은 계정 관리 화면에서 팀리더가 명시적으로 처리한다.
+            */}
+            <div className="role-note">
+              <strong>권한은 팀원으로 시작합니다</strong>
+              <span>파트리더·팀리더 권한이 필요하면 가입 승인 후 팀리더가 계정 관리에서 변경합니다.</span>
+            </div>
           </>
         )}
 
