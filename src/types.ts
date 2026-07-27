@@ -115,3 +115,26 @@ export type CanOpinion = {
   authorName: string;
   selected: boolean;
 };
+
+// ===== 티미팅 =====
+// 2주 주기로 세션(기술세미나·여행기·팀워크샵·팀내공유) 1개를 진행하는 문화.
+// 팀원이 세션을 자발 제안하고, 리더(커넥셔너)가 이번 회차 세션 선정 + 파트 믹스 그룹 편성 + 슬랙 공지를 한다.
+export type TeaSessionStatus = '제안' | '채택' | '완료' | '보류';
+
+export type TeaSession = {
+  id: string;
+  title: string;
+  type: string; // 세션 유형(teaStore가 관리): 기술세미나/여행기/팀워크샵/팀내공유사항
+  presenter: string; // 발표자 = 제안자(실명)
+  part: TeamPart;
+  desc: string; // 간단 설명(선택)
+  status: TeaSessionStatus;
+  memo: string; // 세션 후기 메모 (SKSOOP-71)
+};
+
+// 파트를 섞어 편성한 티미팅 그룹 (SKSOOP-70)
+// part는 실제 파트 구성(ITS혁신/TEST혁신/PM혁신) 문자열 — 앱의 TeamPart enum과 별개.
+export type TeaGroup = {
+  name: string;
+  members: { name: string; part: string }[];
+};

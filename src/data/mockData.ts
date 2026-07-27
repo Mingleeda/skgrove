@@ -1,4 +1,13 @@
-import type { ActionItem, Agenda, CanOpinion, CanSession, Issue, PartScore, Profile } from '../types';
+import type {
+  ActionItem,
+  Agenda,
+  CanOpinion,
+  CanSession,
+  Issue,
+  PartScore,
+  Profile,
+  TeaSession,
+} from '../types';
 
 export const initialIssues: Issue[] = [
   {
@@ -235,5 +244,94 @@ export const initialCanOpinions: CanOpinion[] = [
     author: '익명',
     authorName: '',
     selected: true,
+  },
+];
+
+// ===== 티미팅 =====
+// 실제 파트 구성(2026). 괄호로 표기된 인원은 제외. 티미팅 그룹 편성(SKSOOP-70)에 사용.
+// 파트명은 실제 조직 기준(ITS혁신/TEST혁신/PM혁신)이며 앱의 TeamPart enum과 별개.
+export const teamRoster: { name: string; part: string }[] = [
+  // ITS혁신 (11)
+  { name: '박완배', part: 'ITS혁신' },
+  { name: '문성욱', part: 'ITS혁신' },
+  { name: '김영석', part: 'ITS혁신' },
+  { name: '이관국', part: 'ITS혁신' },
+  { name: '최근화', part: 'ITS혁신' },
+  { name: '김태한', part: 'ITS혁신' },
+  { name: '김승현', part: 'ITS혁신' },
+  { name: '이상협', part: 'ITS혁신' },
+  { name: '이승주', part: 'ITS혁신' },
+  { name: '이소정', part: 'ITS혁신' },
+  { name: '박창헌', part: 'ITS혁신' },
+  // TEST혁신 (8)
+  { name: '곽민성', part: 'TEST혁신' },
+  { name: '노현희', part: 'TEST혁신' },
+  { name: '최중현', part: 'TEST혁신' },
+  { name: '김수정', part: 'TEST혁신' },
+  { name: '임성빈', part: 'TEST혁신' },
+  { name: '양권상', part: 'TEST혁신' },
+  { name: '이수현', part: 'TEST혁신' },
+  { name: '심인수', part: 'TEST혁신' },
+  // PM혁신 (8)
+  { name: '심진영', part: 'PM혁신' },
+  { name: '김정태', part: 'PM혁신' },
+  { name: '최종건', part: 'PM혁신' },
+  { name: '박소연', part: 'PM혁신' },
+  { name: '김기주', part: 'PM혁신' },
+  { name: '김금', part: 'PM혁신' },
+  { name: '이선민', part: 'PM혁신' },
+  { name: '박동진', part: 'PM혁신' },
+];
+
+export const initialTeaSessions: TeaSession[] = [
+  {
+    id: 'TEA-01',
+    title: 'LLM 사내 활용 사례 공유',
+    type: '기술세미나',
+    presenter: '김승현',
+    part: 'ITS혁신파트',
+    desc: '실무에 붙여 쓴 프롬프트·자동화 사례를 데모와 함께 공유합니다.',
+    status: '채택',
+    memo: '',
+  },
+  {
+    id: 'TEA-02',
+    title: '포르투갈 한 달 살기 여행기',
+    type: '여행기',
+    presenter: '정다은',
+    part: 'TEST혁신파트',
+    desc: '리스본·포르투 소도시 위주의 사진과 팁.',
+    status: '제안',
+    memo: '',
+  },
+  {
+    id: 'TEA-03',
+    title: '분기 팀워크샵 아이스브레이킹 설계',
+    type: '팀워크샵',
+    presenter: '김수정',
+    part: 'TEST혁신파트',
+    desc: '',
+    status: '제안',
+    memo: '',
+  },
+  {
+    id: 'TEA-04',
+    title: '테스트 자동화 파이프라인 회고',
+    type: '팀내공유사항',
+    presenter: '이상협',
+    part: '혁신도구파트',
+    desc: '지난 분기 도입 결과와 남은 과제.',
+    status: '완료',
+    memo: '반응이 좋아 다음 회차에 실습 세션으로 이어가기로 함. 파트별 러너 1명씩 지정.',
+  },
+  {
+    id: 'TEA-05',
+    title: '사내 디자인 시스템 맛보기',
+    type: '기술세미나',
+    presenter: '박지훈',
+    part: 'ITS혁신파트',
+    desc: '',
+    status: '보류',
+    memo: '',
   },
 ];

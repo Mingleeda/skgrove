@@ -5123,3 +5123,221 @@ textarea {
   background: #eef1ee;
   color: #8a948d;
 }
+
+/* ===== 티미팅 운영 보드 ===== */
+.tea-form-row {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.tea-form-row select {
+  min-height: 42px;
+}
+
+.tea-list-head {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.tea-filter {
+  flex: none;
+  min-height: 40px;
+  width: auto;
+}
+
+.tea-topic-list {
+  display: grid;
+  gap: 10px;
+}
+
+.tea-topic-item {
+  background: #f7faf5;
+  border: 1px solid #e1e7df;
+  border-radius: 10px;
+  display: grid;
+  gap: 10px;
+  padding: 12px 14px;
+}
+
+.tea-topic-row {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.tea-topic-desc {
+  color: #5a655f;
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 2px 0 0;
+}
+
+.tea-topic-main {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.tea-topic-main strong {
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.tea-topic-tags {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.tea-topic-tags small {
+  color: #6b776f;
+}
+
+.tea-status-seg {
+  flex: none;
+}
+
+.tea-status-badge {
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 4px 10px;
+}
+
+.tea-status-badge.제안 {
+  background: #eaf1ff;
+  color: #2f58b5;
+}
+
+.tea-status-badge.채택 {
+  background: #eaf1e6;
+  color: #2b4a3f;
+}
+
+.tea-status-badge.완료 {
+  background: #e6f4ea;
+  color: #1f7a43;
+}
+
+.tea-status-badge.보류 {
+  background: #eef1ee;
+  color: #8a948d;
+}
+
+.tea-cat-row {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.tea-group-controls {
+  align-items: flex-end;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.tea-group-controls label {
+  flex: none;
+}
+
+.tea-group-controls input {
+  min-height: 40px;
+  width: 88px;
+}
+
+.tea-group-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+}
+
+.tea-group-card {
+  background: #f7faf5;
+  border: 1px solid #e1e7df;
+  border-radius: 10px;
+  display: grid;
+  gap: 8px;
+  padding: 12px 14px;
+}
+
+.tea-group-card h4 {
+  align-items: baseline;
+  color: #17352f;
+  display: flex;
+  gap: 6px;
+  justify-content: space-between;
+  margin: 0;
+}
+
+.tea-group-card h4 span {
+  color: #6b776f;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.tea-group-member {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+  justify-content: space-between;
+}
+
+.tea-memo-label textarea {
+  min-height: 60px;
+}
+
+/* 이번 회차 구성 + 슬랙 공지 */
+.tea-round {
+  display: grid;
+  gap: 12px;
+}
+
+.tea-round .secondary-button {
+  justify-self: flex-start;
+}
+
+.tea-announce-head {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  margin-top: 4px;
+}
+
+.tea-announce {
+  background: #17352f;
+  border-radius: 10px;
+  color: #eaf3ee;
+  font-family: 'SFMono-Regular', ui-monospace, Menlo, Consolas, monospace;
+  font-size: 12.5px;
+  line-height: 1.65;
+  margin: 0;
+  overflow-x: auto;
+  padding: 14px 16px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.tea-copy-notice {
+  color: #1f7a43;
+  font-size: 12px;
+  font-weight: 700;
+  margin: 0;
+}
+
+@media (max-width: 720px) {
+  .tea-form-row,
+  .tea-group-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .tea-status-seg {
+    flex: 1 1 100%;
+  }
+}
