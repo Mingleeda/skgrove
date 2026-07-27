@@ -19,6 +19,7 @@ import type { CanStepConfig } from '../../canConfig';
 import { makeStepId } from '../../canStepsStore';
 import { PanelHeader } from '../../components/PanelHeader';
 import { makeActionItemId } from '../../actionItemStore';
+import { teamRoster } from '../../data/mockData';
 import type {
   ActionItem,
   CanFollowRoute,
@@ -29,6 +30,9 @@ import type {
   CanStep,
   CurrentUser,
   Identity,
+  TeaGroup,
+  TeaSession,
+  TeaSessionStatus,
   TeamPart,
 } from '../../types';
 
@@ -48,8 +52,6 @@ const stageLabelOf = (session: CanSession) => {
   if (session.stage === 'summary' && session.resultSummary.trim().length > 0) return '완료';
   return stageFlow.find((item) => item.id === session.stage)?.label ?? '진행 중';
 };
-
-const teaMeetingCategories = ['필요성', '회의문화', '파트섞기', '자발 제안', '결과 메모', '액션 연결'];
 
 type MeetingsProps = {
   sessions: CanSession[];
@@ -74,6 +76,13 @@ type MeetingsProps = {
     },
   ) => void;
   onCanStepsChange: (steps: CanStepConfig[]) => void;
+  // ===== 티미팅 =====
+  teaSessions: TeaSession[];
+  teaSessionTypes: string[];
+  onAddTeaSession: (session: Omit<TeaSession, 'id' | 'status' | 'memo'>) => void;
+  onUpdateTeaStatus: (id: string, status: TeaSessionStatus) => void;
+  onSetTeaMemo: (id: string, memo: string) => void;
+  onTeaTypesChange: (types: string[]) => void;
 };
 
 type Draft = {
@@ -96,6 +105,12 @@ export function Meetings({
   onConfirmResult,
   onApplyFollowUp,
   onCanStepsChange,
+  teaSessions,
+  teaSessionTypes,
+  onAddTeaSession,
+  onUpdateTeaStatus,
+  onSetTeaMemo,
+  onTeaTypesChange,
 }: MeetingsProps) {
   const [tab, setTab] = useState<'can' | 'tea'>('can');
   const [draft, setDraft] = useState<Draft>({
@@ -107,6 +122,19 @@ export function Meetings({
   const [view, setView] = useState<{ id: string; stage: CanStage } | null>(null);
   const [followRouting, setFollowRouting] = useState<Record<string, FollowRoute>>({});
   const [followDrafts, setFollowDrafts] = useState<Record<string, { owner: string; due: string }>>({});
+  // 티미팅 로컬 상태 (세션 제안은 실명 고정: 누가 제안했는지 알아야 준비를 시킬 수 있으므로)
+  const [teaDraft, setTeaDraft] = useState<{ title: string; type: string; desc: string }>({
+    title: '',
+    type: '',
+    desc: '',
+  });
+  const [teaFilter, setTeaFilter] = useState<string>('전체');
+  const [teaGroups, setTeaGroups] = useState<TeaGroup[] | null>(null);
+  const [teaMemoDrafts, setTeaMemoDrafts] = useState<Record<string, string>>({});
+  const [teaRoundDate, setTeaRoundDate] = useState<string>(() => new Date().toISOString().slice(0, 10));
+  const [teaRoundSessionId, setTeaRoundSessionId] = useState<string>('');
+  const [teaGroupCount, setTeaGroupCount] = useState<number>(5);
+  const [teaCopyNotice, setTeaCopyNotice] = useState<string>('');
 
   // 세션 전환 시 AI 취합 결과·조회 단계·후속 조치 입력값을 초기화 (세션 간 상태 누수 방지)
   useEffect(() => {
@@ -145,6 +173,33 @@ export function Meetings({
     const next = [...canSteps];
     [next[index], next[target]] = [next[target], next[index]];
     onCanStepsChange(next);
+  };
+
+  // ===== 티미팅 헬퍼 =====
+  const patchTeaType = (index: number, value: string) =>
+    onTeaTypesChange(teaSessionTypes.map((type, i) => (i === index ? value : type)));
+  const addTeaType = () => onTeaTypesChange([...teaSessionTypes, `새 유형 ${teaSessionTypes.length + 1}`]);
+  const removeTeaType = (index: number) => onTeaTypesChange(teaSessionTypes.filter((_, i) => i !== index));
+  // 파트를 섞어 그룹 편성 (SKSOOP-70): 실제 파트별로 셔플 후 라운드로빈 배정 → 각 조에 파트가 고루 섞임
+  const formTeaGroups = () => {
+    setTeaCopyNotice(''); // 그룹이 바뀌면 이전 복사 안내는 무효
+    const count = Math.min(Math.max(2, teaGroupCount), teamRoster.length);
+    const groups: TeaGroup[] = Array.from({ length: count }, (_, index) => ({
+      name: `${index + 1}조`,
+      members: [],
+    }));
+    const parts = Array.from(new Set(teamRoster.map((member) => member.part)));
+    let cursor = 0;
+    parts.forEach((part) => {
+      teamRoster
+        .filter((member) => member.part === part)
+        .sort(() => Math.random() - 0.5)
+        .forEach((member) => {
+          groups[cursor % count].members.push(member);
+          cursor += 1;
+        });
+    });
+    setTeaGroups(groups);
   };
 
   return (
@@ -993,16 +1048,301 @@ export function Meetings({
         </div>
       )}
 
-      {tab === 'tea' && (
-        <section className="panel">
-          <PanelHeader icon={Coffee} title="티미팅" />
-          <div className="category-cloud">
-            {teaMeetingCategories.map((item) => (
-              <button key={item}>{item}</button>
-            ))}
-          </div>
-        </section>
-      )}
+      {tab === 'tea' &&
+        (() => {
+          const statusFlow: TeaSessionStatus[] = ['제안', '채택', '완료', '보류'];
+          const filtered = teaFilter === '전체' ? teaSessions : teaSessions.filter((s) => s.type === teaFilter);
+          const roundCandidates = teaSessions.filter((s) => s.status === '제안' || s.status === '채택');
+          const roundSession = teaSessions.find((s) => s.id === teaRoundSessionId) ?? null;
+          const partShort = (part: string) => part.replace('혁신파트', '').replace('혁신', '').replace('파트', '');
+
+          const submitTeaSession = () => {
+            if (!teaDraft.title.trim()) return;
+            onAddTeaSession({
+              title: teaDraft.title.trim(),
+              type: teaDraft.type || teaSessionTypes[0] || '기타',
+              presenter: currentUser.name,
+              part: currentUser.part,
+              desc: teaDraft.desc.trim(),
+            });
+            setTeaDraft({ title: '', type: '', desc: '' });
+          };
+
+          // 이번 회차(날짜+세션+그룹)로 슬랙 공지문 생성
+          const announceText = () => {
+            const lines: string[] = [];
+            lines.push(`📢 이번 티미팅 안내 (${teaRoundDate || '날짜 미정'})`);
+            if (roundSession) {
+              lines.push(`🍵 세션: [${roundSession.type}] ${roundSession.title}`);
+              lines.push(`🙋 발표자: ${roundSession.presenter} (${roundSession.part})`);
+              if (roundSession.desc.trim()) lines.push(`· ${roundSession.desc.trim()}`);
+            } else {
+              lines.push('🍵 세션: (미선정)');
+            }
+            lines.push('');
+            lines.push('👥 티미팅 그룹 (파트 믹스)');
+            if (teaGroups && teaGroups.length > 0) {
+              teaGroups.forEach((group) => {
+                lines.push(
+                  `- ${group.name}: ${group.members.map((m) => `${m.name}(${partShort(m.part)})`).join(', ')}`,
+                );
+              });
+            } else {
+              lines.push('- (그룹 미편성)');
+            }
+            lines.push('');
+            lines.push('📍 회의실 · 티와 함께 1시간');
+            return lines.join('\n');
+          };
+
+          const copyAnnounce = async () => {
+            try {
+              await navigator.clipboard.writeText(announceText());
+              setTeaCopyNotice('공지문을 복사했어요. 슬랙 채널에 붙여넣으세요.');
+            } catch {
+              setTeaCopyNotice('복사에 실패했어요. 아래 내용을 직접 선택해 복사해주세요.');
+            }
+          };
+
+          return (
+            <div className="can-flow tea-board">
+              {/* ① 세션 제안 · 자발 채널 (전원) */}
+              <section className="panel form-panel">
+                <PanelHeader icon={Send} title="세션 제안 · 자발 채널" />
+                <p className="can-hint">
+                  티미팅에서 발표하고 싶은 세션을 상시 제안할 수 있어요. 발표자를 준비시켜야 하므로 실명(본인)으로 제안됩니다.
+                </p>
+                <label>
+                  세션 제목
+                  <input
+                    value={teaDraft.title}
+                    placeholder="예) LLM 사내 활용 사례 공유"
+                    onChange={(event) => setTeaDraft({ ...teaDraft, title: event.target.value })}
+                  />
+                </label>
+                <div className="tea-form-row">
+                  <label>
+                    세션 유형
+                    <select
+                      value={teaDraft.type || teaSessionTypes[0] || ''}
+                      onChange={(event) => setTeaDraft({ ...teaDraft, type: event.target.value })}
+                    >
+                      {teaSessionTypes.map((type) => (
+                        <option key={type} value={type}>
+                          {type}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label>
+                    발표자 (실명)
+                    <input value={currentUser.name} disabled />
+                  </label>
+                </div>
+                <label>
+                  간단 설명 (선택)
+                  <textarea
+                    value={teaDraft.desc}
+                    placeholder="세션에서 다룰 내용을 한두 줄로 적어주세요"
+                    onChange={(event) => setTeaDraft({ ...teaDraft, desc: event.target.value })}
+                  />
+                </label>
+                <button className="primary-button wide" disabled={!teaDraft.title.trim()} onClick={submitTeaSession}>
+                  <Plus size={18} />
+                  세션 제안
+                </button>
+              </section>
+
+              {/* ② 세션 유형 관리 (리더) */}
+              {isHost && (
+                <section className="panel">
+                  <PanelHeader icon={ListChecks} title="세션 유형 관리" />
+                  <div className="can-step-editor">
+                    <p className="can-hint can-step-editor-hint">세션 유형(기술세미나·여행기 등)을 추가·수정·삭제합니다.</p>
+                    {teaSessionTypes.map((type, index) => (
+                      <div className="can-step-row tea-cat-row" key={index}>
+                        <input value={type} onChange={(event) => patchTeaType(index, event.target.value)} />
+                        <div className="can-step-row-actions">
+                          <button
+                            className="secondary-button"
+                            disabled={teaSessionTypes.length <= 1}
+                            onClick={() => removeTeaType(index)}
+                          >
+                            삭제
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                    <button className="secondary-button" onClick={addTeaType}>
+                      <Plus size={16} />
+                      유형 추가
+                    </button>
+                  </div>
+                </section>
+              )}
+
+              {/* ③ 제안된 세션 목록 */}
+              <section className="panel">
+                <div className="tea-list-head">
+                  <PanelHeader icon={FileText} title={`제안된 세션 · ${teaSessions.length}건`} />
+                  <select className="tea-filter" value={teaFilter} onChange={(event) => setTeaFilter(event.target.value)}>
+                    <option value="전체">전체</option>
+                    {teaSessionTypes.map((type) => (
+                      <option key={type} value={type}>
+                        {type}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="tea-topic-list">
+                  {filtered.length === 0 && <p className="can-empty">해당 유형의 세션이 없습니다.</p>}
+                  {filtered.map((session) => {
+                    const memo = teaMemoDrafts[session.id] ?? session.memo;
+                    const showMemo = session.status === '완료' && (isHost || session.memo.trim().length > 0);
+                    return (
+                      <div className="tea-topic-item" key={session.id}>
+                        <div className="tea-topic-row">
+                          <div className="tea-topic-main">
+                            <div className="tea-topic-tags">
+                              <span className="can-badge">{session.type}</span>
+                              <span className="can-badge subtle">{session.part}</span>
+                              <small>발표 {session.presenter}</small>
+                            </div>
+                            <strong>{session.title}</strong>
+                            {session.desc.trim() && <p className="tea-topic-desc">{session.desc}</p>}
+                          </div>
+                          {isHost ? (
+                            <div className="segmented tea-status-seg">
+                              {statusFlow.map((st) => (
+                                <button
+                                  key={st}
+                                  className={session.status === st ? 'selected' : ''}
+                                  onClick={() => onUpdateTeaStatus(session.id, st)}
+                                >
+                                  {st}
+                                </button>
+                              ))}
+                            </div>
+                          ) : (
+                            <span className={`tea-status-badge ${session.status}`}>{session.status}</span>
+                          )}
+                        </div>
+                        {showMemo && (
+                          <label className="tea-memo-label">
+                            세션 후기 메모
+                            <textarea
+                              value={memo}
+                              placeholder="세션 후기를 기록하세요"
+                              disabled={!isHost}
+                              onChange={(event) =>
+                                setTeaMemoDrafts((prev) => ({ ...prev, [session.id]: event.target.value }))
+                              }
+                              onBlur={() => {
+                                if (isHost && memo !== session.memo) onSetTeaMemo(session.id, memo);
+                              }}
+                            />
+                          </label>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
+
+              {/* ④ 이번 티미팅 구성 — 세션 선정 + 그룹 편성 + 슬랙 공지 (리더) */}
+              {isHost && (
+                <section className="panel tea-round">
+                  <PanelHeader icon={Sparkles} title="이번 티미팅 구성" />
+                  <p className="can-hint">
+                    이번 회차 세션을 정하고 파트를 섞어 그룹을 편성한 뒤, 슬랙에 붙일 공지문을 생성합니다.
+                  </p>
+                  <div className="tea-form-row">
+                    <label>
+                      회차 날짜
+                      <input
+                        type="date"
+                        value={teaRoundDate}
+                        onChange={(event) => {
+                          setTeaRoundDate(event.target.value);
+                          setTeaCopyNotice('');
+                        }}
+                      />
+                    </label>
+                    <label>
+                      이번 세션
+                      <select
+                        value={teaRoundSessionId}
+                        onChange={(event) => {
+                          setTeaRoundSessionId(event.target.value);
+                          setTeaCopyNotice('');
+                        }}
+                      >
+                        <option value="">세션 선택</option>
+                        {roundCandidates.map((session) => (
+                          <option key={session.id} value={session.id}>
+                            [{session.type}] {session.title}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  </div>
+                  <div className="tea-group-controls">
+                    <label>
+                      조 개수
+                      <input
+                        type="number"
+                        min={2}
+                        max={teamRoster.length}
+                        value={teaGroupCount}
+                        onChange={(event) => {
+                          setTeaGroupCount(Number(event.target.value));
+                          setTeaCopyNotice('');
+                        }}
+                        onBlur={(event) => {
+                          const n = Number(event.target.value);
+                          setTeaGroupCount(Math.min(Math.max(2, Number.isFinite(n) ? n : 2), teamRoster.length));
+                        }}
+                      />
+                    </label>
+                    <button className="secondary-button" onClick={formTeaGroups}>
+                      <UsersRound size={16} />
+                      파트 섞어 그룹 편성 ({teamRoster.length}명)
+                    </button>
+                  </div>
+                  {teaGroups && (
+                    <div className="tea-group-grid">
+                      {teaGroups.map((group) => (
+                        <div className="tea-group-card" key={group.name}>
+                          <h4>
+                            {group.name} <span>{group.members.length}명</span>
+                          </h4>
+                          {group.members.map((member) => (
+                            <div className="tea-group-member" key={member.name}>
+                              <span>{member.name}</span>
+                              <span className="can-badge subtle">{partShort(member.part)}</span>
+                            </div>
+                          ))}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <div className="tea-announce-head">
+                    <h4 className="can-result-title">
+                      <Share2 size={16} />
+                      슬랙 공지 미리보기
+                    </h4>
+                    <button className="secondary-button" onClick={copyAnnounce}>
+                      <Download size={16} />
+                      공지문 복사
+                    </button>
+                  </div>
+                  <pre className="tea-announce">{announceText()}</pre>
+                  {teaCopyNotice && <p className="tea-copy-notice">{teaCopyNotice}</p>}
+                </section>
+              )}
+            </div>
+          );
+        })()}
     </section>
   );
 }

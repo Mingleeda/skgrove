@@ -6,6 +6,7 @@ import { loadAgendas, makeAgendaId, saveAgendas } from './agendaStore';
 import { hasVoted, loadBallots, makeVoterKey, saveBallots } from './ballotStore';
 import { isLeader, isTeamLeader, teamParts } from './auth';
 import { loadCanSteps, saveCanSteps } from './canStepsStore';
+import { loadTeaSessionTypes, makeTeaSessionId, saveTeaSessionTypes } from './teaStore';
 import type { CanStepConfig } from './canConfig';
 import { AppShell } from './components/AppShell';
 import {
@@ -15,6 +16,7 @@ import {
   initialCanSessions,
   initialIssues,
   initialMatches,
+  initialTeaSessions,
   matchCandidates,
 } from './data/mockData';
 import { ActionBoard } from './features/actions/ActionBoard';
@@ -43,6 +45,8 @@ import type {
   Issue,
   ManagedAccount,
   Section,
+  TeaSession,
+  TeaSessionStatus,
   VoteChoice,
 } from './types';
 
@@ -68,6 +72,8 @@ export function App() {
   const [selectedCanId, setSelectedCanId] = useState<string | null>(null);
   const [actionItems, setActionItems] = useState<ActionItem[]>(initialActionItems);
   const [canSteps, setCanSteps] = useState<CanStepConfig[]>(loadCanSteps);
+  const [teaSessions, setTeaSessions] = useState<TeaSession[]>(initialTeaSessions);
+  const [teaSessionTypes, setTeaSessionTypes] = useState<string[]>(loadTeaSessionTypes);
 
   const [votedAgendaIds, setVotedAgendaIds] = useState<string[]>([]);
   const [agendaForActions, setAgendaForActions] = useState<Agenda | null>(null);
@@ -391,6 +397,24 @@ export function App() {
     persistActionItems(actionItems.map((item) => (item.id === updated.id ? updated : item)));
   };
 
+  // ===== 티미팅 =====
+  const addTeaSession = (session: Omit<TeaSession, 'id' | 'status' | 'memo'>) => {
+    setTeaSessions((prev) => [{ ...session, id: makeTeaSessionId(), status: '제안', memo: '' }, ...prev]);
+  };
+
+  const updateTeaSessionStatus = (id: string, status: TeaSessionStatus) => {
+    setTeaSessions((prev) => prev.map((session) => (session.id === id ? { ...session, status } : session)));
+  };
+
+  const setTeaSessionMemo = (id: string, memo: string) => {
+    setTeaSessions((prev) => prev.map((session) => (session.id === id ? { ...session, memo } : session)));
+  };
+
+  const updateTeaSessionTypes = (types: string[]) => {
+    setTeaSessionTypes(types);
+    saveTeaSessionTypes(types);
+  };
+
   const persistAccounts = (nextAccounts: ManagedAccount[]) => {
     setAccounts(nextAccounts);
     void saveAccounts(nextAccounts);
@@ -500,6 +524,12 @@ export function App() {
           onConfirmResult={confirmCanResult}
           onApplyFollowUp={applyCanFollowUp}
           onCanStepsChange={updateCanSteps}
+          teaSessions={teaSessions}
+          teaSessionTypes={teaSessionTypes}
+          onAddTeaSession={addTeaSession}
+          onUpdateTeaStatus={updateTeaSessionStatus}
+          onSetTeaMemo={setTeaSessionMemo}
+          onTeaTypesChange={updateTeaSessionTypes}
         />
       )}
       {active === 'profiles' && <Profiles currentUser={currentUser} />}
