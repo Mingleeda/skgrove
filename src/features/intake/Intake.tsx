@@ -2,6 +2,8 @@ import { useState } from 'react';
 import {
   AlertTriangle,
   CheckCircle2,
+  ChevronDown,
+  ChevronRight,
   EyeOff,
   FileText,
   Megaphone,
@@ -24,6 +26,7 @@ type IntakeProps = {
 type IntakeStep = 'scope' | 'content' | 'review' | 'complete';
 type Visibility = '리더만 보기' | '안건 후보로 공개 가능';
 type Target = '팀리더' | '파트리더' | '리더 전체';
+type MyIssueFilter = '전체' | '답변 대기' | '1on1' | '완료';
 
 const categories = ['회의문화', '협업', '업무방식', '갈등', '성장/피드백', '복지/분위기', '기타'];
 const steps: Array<{ id: IntakeStep; label: string }> = [
@@ -44,11 +47,19 @@ export function Intake({ identity, currentUser, issues, onIdentityChange, onIssu
   const [expectedChange, setExpectedChange] = useState('회의 전 안건을 먼저 모으고, 꼭 필요한 주제만 짧게 논의하면 좋겠습니다.');
   const [receiptId, setReceiptId] = useState('SOOP-148');
   const [responseDrafts, setResponseDrafts] = useState<Record<string, string>>({});
+  const [myIssueFilter, setMyIssueFilter] = useState<MyIssueFilter>('전체');
+  const [expandedIssueIds, setExpandedIssueIds] = useState<Record<string, boolean>>({});
 
   const currentStepIndex = steps.findIndex((item) => item.id === step);
   const myIssues = issues.filter(
     (issue) => issue.author === '실명' && issue.submitterEmail?.toLowerCase() === currentUser.email.toLowerCase(),
   );
+  const visibleMyIssues = myIssues.filter((issue) => {
+    if (myIssueFilter === '답변 대기') return !issue.leaderReply && !issue.oneOnOneNote && !issue.actionItem;
+    if (myIssueFilter === '1on1') return Boolean(issue.oneOnOneNote);
+    if (myIssueFilter === '완료') return issue.status === '종료' || issue.status === '답변완료' || issue.status === '액션아이템';
+    return true;
+  });
 
   const submit = () => {
     const createdIssue = onSubmitIssue({
@@ -86,6 +97,10 @@ export function Intake({ identity, currentUser, issues, onIdentityChange, onIssu
     if (response) {
       setResponseDrafts((drafts) => ({ ...drafts, [issue.id]: '' }));
     }
+  };
+
+  const toggleIssue = (issueId: string) => {
+    setExpandedIssueIds((ids) => ({ ...ids, [issueId]: !ids[issueId] }));
   };
 
   return (
@@ -227,6 +242,83 @@ export function Intake({ identity, currentUser, issues, onIdentityChange, onIssu
             </button>
           </section>
         )}
+
+        <section className="panel intake-panel my-issues-panel">
+          <div className="my-issues-header">
+            <PanelHeader icon={Megaphone} title="내 접수 현황" />
+            <div className="toolbar my-issues-toolbar">
+              {(['전체', '답변 대기', '1on1', '완료'] as const).map((item) => (
+                <button
+                  className={myIssueFilter === item ? 'filter active' : 'filter'}
+                  key={item}
+                  onClick={() => setMyIssueFilter(item)}
+                >
+                  {item}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="submission-list">
+            {visibleMyIssues.length > 0 ? (
+              visibleMyIssues.map((issue) => {
+                const isExpanded = expandedIssueIds[issue.id] ?? visibleMyIssues.length === 1;
+                return (
+                  <article className="submission-card" key={issue.id}>
+                    <button className="submission-summary" onClick={() => toggleIssue(issue.id)}>
+                      {isExpanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
+                      <div>
+                        <strong>{issue.title}</strong>
+                        <span>{issue.id} · {issue.category} · {issue.target}</span>
+                      </div>
+                      <span className="status-pill">{issue.status}</span>
+                    </button>
+
+                    {isExpanded && (
+                      <div className="submission-detail">
+                        {issue.leaderReply && <p>답변: {issue.leaderReply}</p>}
+                        {issue.oneOnOneNote && <p>1on1: {issue.oneOnOneNote}</p>}
+                        {issue.actionItem && <p>액션아이템: {issue.actionItem}</p>}
+                        {issue.submitterResponse && <p>내 응답: {issue.submitterResponse}</p>}
+                        {issue.oneOnOneResponse && <p>1on1 응답: {issue.oneOnOneResponse}</p>}
+                        {(issue.leaderReply || issue.oneOnOneNote || issue.actionItem) && (
+                          <div className="submission-followup">
+                            {issue.oneOnOneNote && (
+                              <div className="submission-followup-actions">
+                                <button className="secondary-button" onClick={() => respondToOneOnOne(issue, '수락')}>
+                                  1on1 수락
+                                </button>
+                                <button className="secondary-button" onClick={() => respondToOneOnOne(issue, '일정 조율 요청')}>
+                                  일정 조율 요청
+                                </button>
+                              </div>
+                            )}
+                            <textarea
+                              value={responseDrafts[issue.id] ?? ''}
+                              onChange={(event) => updateResponseDraft(issue.id, event.target.value)}
+                              placeholder="리더 답변에 대한 확인, 추가 의견, 가능한 일정 등을 남겨주세요."
+                            />
+                            <button className="primary-button wide" onClick={() => saveSubmitterResponse(issue)}>
+                              후속 응답 남기기
+                            </button>
+                          </div>
+                        )}
+                        {!issue.leaderReply && !issue.oneOnOneNote && !issue.actionItem && (
+                          <p>아직 리더가 남긴 답변이나 후속 액션이 없습니다.</p>
+                        )}
+                      </div>
+                    )}
+                  </article>
+                );
+              })
+            ) : (
+              <div className="submission-card empty-submission">
+                <strong>표시할 접수 의견이 없습니다.</strong>
+                <span>실명으로 접수한 의견은 이곳에서 상태와 리더 답변을 확인할 수 있어요.</span>
+              </div>
+            )}
+          </div>
+        </section>
       </div>
 
       <aside className="intake-aside">
@@ -240,54 +332,10 @@ export function Intake({ identity, currentUser, issues, onIdentityChange, onIssu
         </section>
 
         <section className="panel">
-          <PanelHeader icon={Megaphone} title="내 접수 의견" />
-          <div className="submission-list">
-            {myIssues.length > 0 ? (
-              myIssues.map((issue) => (
-                <div className="submission-card" key={issue.id}>
-                  <div className="submission-card-top">
-                    <strong>{issue.title}</strong>
-                    <span className="status-pill">{issue.status}</span>
-                  </div>
-                  <span>{issue.id} · {issue.category} · {issue.target}</span>
-                  {issue.leaderReply && <p>답변: {issue.leaderReply}</p>}
-                  {issue.oneOnOneNote && <p>1on1: {issue.oneOnOneNote}</p>}
-                  {issue.actionItem && <p>액션아이템: {issue.actionItem}</p>}
-                  {issue.submitterResponse && <p>내 응답: {issue.submitterResponse}</p>}
-                  {issue.oneOnOneResponse && <p>1on1 응답: {issue.oneOnOneResponse}</p>}
-                  {(issue.leaderReply || issue.oneOnOneNote || issue.actionItem) && (
-                    <div className="submission-followup">
-                      {issue.oneOnOneNote && (
-                        <div className="submission-followup-actions">
-                          <button className="secondary-button" onClick={() => respondToOneOnOne(issue, '수락')}>
-                            1on1 수락
-                          </button>
-                          <button className="secondary-button" onClick={() => respondToOneOnOne(issue, '일정 조율 요청')}>
-                            일정 조율 요청
-                          </button>
-                        </div>
-                      )}
-                      <textarea
-                        value={responseDrafts[issue.id] ?? ''}
-                        onChange={(event) => updateResponseDraft(issue.id, event.target.value)}
-                        placeholder="리더 답변에 대한 확인, 추가 의견, 가능한 일정 등을 남겨주세요."
-                      />
-                      <button className="primary-button wide" onClick={() => saveSubmitterResponse(issue)}>
-                        후속 응답 남기기
-                      </button>
-                    </div>
-                  )}
-                  {!issue.leaderReply && !issue.oneOnOneNote && !issue.actionItem && (
-                    <p>아직 리더가 남긴 답변이나 후속 액션이 없습니다.</p>
-                  )}
-                </div>
-              ))
-            ) : (
-              <div className="submission-card">
-                <strong>아직 확인할 수 있는 실명 접수 의견이 없습니다.</strong>
-                <span>실명으로 접수한 의견은 이곳에서 상태와 리더 답변을 확인할 수 있어요.</span>
-              </div>
-            )}
+          <PanelHeader icon={Megaphone} title="내 접수 현황" />
+          <div className="privacy-list">
+            <div><strong>실명 접수만 추적</strong><span>내 접수 현황은 사내메일 기준으로 실명 접수 건만 보여줍니다.</span></div>
+            <div><strong>답변 후 후속 응답</strong><span>리더 답변이나 1on1 제안이 오면 메인 현황에서 바로 응답할 수 있습니다.</span></div>
           </div>
         </section>
       </aside>

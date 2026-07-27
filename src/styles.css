@@ -910,18 +910,50 @@ h1 {
   align-items: start;
 }
 
-.submission-card-top {
+.my-issues-header {
   align-items: start;
   display: flex;
   gap: 10px;
   justify-content: space-between;
 }
 
-.submission-card-top strong {
+.my-issues-toolbar {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.submission-summary {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  color: #1d2522;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  padding: 0;
+  text-align: left;
+  width: 100%;
+}
+
+.submission-summary div {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.submission-summary strong {
   line-height: 1.35;
 }
 
-.submission-card p {
+.submission-detail {
+  border-top: 1px solid #e1e7df;
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 10px;
+}
+
+.submission-detail p {
   color: #3d4945;
   font-size: 13px;
   line-height: 1.5;
@@ -953,6 +985,11 @@ h1 {
   min-height: 36px;
   padding: 0 10px;
   white-space: nowrap;
+}
+
+.empty-submission {
+  min-height: 104px;
+  place-content: center;
 }
 
 label {
@@ -4158,6 +4195,14 @@ textarea {
     grid-template-columns: 1fr;
   }
 
+  .my-issues-header {
+    display: grid;
+  }
+
+  .my-issues-toolbar {
+    justify-content: flex-start;
+  }
+
   .summary-strip {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -4272,6 +4317,20 @@ textarea {
 
   .hero-actions {
     display: grid;
+  }
+
+  .submission-summary {
+    align-items: start;
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .submission-summary .status-pill {
+    grid-column: 2;
+    justify-self: start;
+  }
+
+  .submission-followup-actions {
+    grid-template-columns: 1fr;
   }
 
   .form-actions {
