@@ -1,4 +1,14 @@
-import { ArrowLeft, CheckCircle2, EyeOff, FileCheck2, Gavel, ThumbsDown, ThumbsUp, Timer } from 'lucide-react';
+import {
+  ArrowLeft,
+  CheckCircle2,
+  EyeOff,
+  FileCheck2,
+  Gavel,
+  ListPlus,
+  ThumbsDown,
+  ThumbsUp,
+  Timer,
+} from 'lucide-react';
 import {
   daysLeft,
   isOpen,
@@ -15,8 +25,10 @@ type AgendaDetailProps = {
   alreadyVoted: boolean;
   canClose: boolean;
   today: string;
+  actionCount: number;
   onVote: (id: string, choice: VoteChoice) => void;
   onClose: (id: string) => void;
+  onCreateActions: (agenda: Agenda) => void;
   onBack: () => void;
 };
 
@@ -25,8 +37,10 @@ export function AgendaDetail({
   alreadyVoted,
   canClose,
   today,
+  actionCount,
   onVote,
   onClose,
+  onCreateActions,
   onBack,
 }: AgendaDetailProps) {
   const total = voteTotal(agenda);
@@ -97,10 +111,22 @@ export function AgendaDetail({
       </div>
 
       {!open ? (
-        <div className="passed-box">
-          <FileCheck2 size={18} />
-          {agenda.status === '통과' ? '통과된 안건입니다. 액션아이템 생성 대상이에요.' : '부결된 안건입니다.'}
-        </div>
+        <>
+          <div className="passed-box">
+            <FileCheck2 size={18} />
+            {agenda.status === '통과'
+              ? actionCount > 0
+                ? `통과된 안건입니다. 액션아이템 ${actionCount}건이 만들어졌어요.`
+                : '통과된 안건입니다. 액션아이템 생성 대상이에요.'
+              : '부결된 안건입니다.'}
+          </div>
+          {agenda.status === '통과' && (
+            <button className="primary-button" onClick={() => onCreateActions(agenda)}>
+              <ListPlus size={18} />
+              {actionCount > 0 ? '액션아이템 추가 생성' : '액션아이템 생성'}
+            </button>
+          )}
+        </>
       ) : alreadyVoted ? (
         <div className="voted-box">
           <CheckCircle2 size={18} />

@@ -159,3 +159,42 @@ create policy "Allow prototype ballot writes"
   on public.agenda_ballots
   for insert
   with check (true);
+
+create table if not exists public.action_items (
+  id text primary key,
+  title text not null,
+  owner text not null default '미정',
+  -- 목표일 미정을 허용한다. 담당자 없이 먼저 만들어두는 흐름이 실제로 있다.
+  due date,
+  status text not null check (status in ('대기', '진행중', '완료', '재검토')),
+  source_kind text not null check (source_kind in ('안건', '캔미팅', '직접')),
+  source_id text,
+  source_label text,
+  -- 적용 결과와 재검토 사유. 완료/재검토로 넘길 때 무엇이 왜 그랬는지 남긴다.
+  outcome text,
+  review_reason text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+alter table public.action_items enable row level security;
+
+drop policy if exists "Allow prototype action reads" on public.action_items;
+drop policy if exists "Allow prototype action writes" on public.action_items;
+drop policy if exists "Allow prototype action updates" on public.action_items;
+
+create policy "Allow prototype action reads"
+  on public.action_items
+  for select
+  using (true);
+
+create policy "Allow prototype action writes"
+  on public.action_items
+  for insert
+  with check (true);
+
+create policy "Allow prototype action updates"
+  on public.action_items
+  for update
+  using (true)
+  with check (true);

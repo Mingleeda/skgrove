@@ -24,6 +24,9 @@ type AgendaBoardProps = {
   onVote: (id: string, choice: VoteChoice) => void;
   onCloseAgenda: (id: string) => void;
   onCreateAgenda: (draft: AgendaDraft) => Agenda;
+  // 안건별로 이미 만들어진 액션아이템 수. 중복 생성 여부를 사용자가 판단할 근거가 된다.
+  actionCountByAgenda: Record<string, number>;
+  onCreateActions: (agenda: Agenda) => void;
 };
 
 type BoardView = 'list' | 'create' | 'detail';
@@ -39,6 +42,8 @@ export function AgendaBoard({
   onVote,
   onCloseAgenda,
   onCreateAgenda,
+  actionCountByAgenda,
+  onCreateActions,
 }: AgendaBoardProps) {
   const [view, setView] = useState<BoardView>('list');
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -79,8 +84,10 @@ export function AgendaBoard({
           alreadyVoted={voted.has(selectedAgenda.id)}
           canClose={canClose}
           today={today}
+          actionCount={actionCountByAgenda[selectedAgenda.id] ?? 0}
           onVote={onVote}
           onClose={onCloseAgenda}
+          onCreateActions={onCreateActions}
           onBack={() => setView('list')}
         />
       </section>
