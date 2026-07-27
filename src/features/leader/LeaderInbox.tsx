@@ -10,7 +10,7 @@ type LeaderInboxProps = {
 
 type LeaderAction = 'reply' | 'oneOnOne' | 'actionItem' | 'memo';
 
-const filters: Array<'전체' | IssueStatus> = ['전체', '접수', '검토중', '답변완료', '1on1 제안', '액션아이템', '안건화', '보류', '종료'];
+const filters: Array<'전체' | IssueStatus> = ['전체', '접수', '검토중', '답변완료', '1on1 제안', '액션아이템', '안건화', '보류', '회수', '종료'];
 
 export function LeaderInbox({ issues, onIssueUpdate, onPromoteToAgenda }: LeaderInboxProps) {
   const [filter, setFilter] = useState<'전체' | IssueStatus>('전체');
@@ -117,7 +117,7 @@ export function LeaderInbox({ issues, onIssueUpdate, onPromoteToAgenda }: Leader
                         <option key={status}>{status}</option>
                       ))}
                   </select>
-                  <button className="secondary-button" onClick={() => onPromoteToAgenda(issue)}>
+                  <button className="secondary-button" disabled={issue.status === '회수'} onClick={() => onPromoteToAgenda(issue)}>
                     <Vote size={17} />
                     안건화
                   </button>

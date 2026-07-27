@@ -55,9 +55,11 @@ export function Intake({ identity, currentUser, issues, onIdentityChange, onIssu
     (issue) => issue.author === '실명' && issue.submitterEmail?.toLowerCase() === currentUser.email.toLowerCase(),
   );
   const visibleMyIssues = myIssues.filter((issue) => {
-    if (myIssueFilter === '답변 대기') return !issue.leaderReply && !issue.oneOnOneNote && !issue.actionItem;
+    if (myIssueFilter === '답변 대기') {
+      return issue.status !== '회수' && !issue.leaderReply && !issue.oneOnOneNote && !issue.actionItem;
+    }
     if (myIssueFilter === '1on1') return Boolean(issue.oneOnOneNote);
-    if (myIssueFilter === '완료') return issue.status === '종료' || issue.status === '답변완료' || issue.status === '액션아이템';
+    if (myIssueFilter === '완료') return issue.status === '회수' || issue.status === '종료' || issue.status === '답변완료' || issue.status === '액션아이템';
     return true;
   });
 
@@ -101,6 +103,24 @@ export function Intake({ identity, currentUser, issues, onIdentityChange, onIssu
 
   const toggleIssue = (issueId: string) => {
     setExpandedIssueIds((ids) => ({ ...ids, [issueId]: !ids[issueId] }));
+  };
+
+  const canWithdraw = (issue: Issue) => {
+    return (
+      (issue.status === '접수' || issue.status === '검토중') &&
+      !issue.leaderReply &&
+      !issue.oneOnOneNote &&
+      !issue.actionItem &&
+      !issue.leaderMemo
+    );
+  };
+
+  const withdrawIssue = (issue: Issue) => {
+    onIssueUpdate({
+      ...issue,
+      status: '회수',
+      submitterResponse: '작성자가 접수 의견을 회수했습니다.',
+    });
   };
 
   return (
@@ -303,7 +323,16 @@ export function Intake({ identity, currentUser, issues, onIdentityChange, onIssu
                             </button>
                           </div>
                         )}
-                        {!issue.leaderReply && !issue.oneOnOneNote && !issue.actionItem && (
+                        {canWithdraw(issue) && (
+                          <div className="submission-withdraw">
+                            <span>리더가 아직 답변이나 후속 조치를 남기기 전이라 회수할 수 있습니다.</span>
+                            <button className="secondary-button" onClick={() => withdrawIssue(issue)}>
+                              접수 회수
+                            </button>
+                          </div>
+                        )}
+                        {issue.status === '회수' && <p>이 접수 의견은 작성자가 회수했습니다.</p>}
+                        {issue.status !== '회수' && !issue.leaderReply && !issue.oneOnOneNote && !issue.actionItem && (
                           <p>아직 리더가 남긴 답변이나 후속 액션이 없습니다.</p>
                         )}
                       </div>
