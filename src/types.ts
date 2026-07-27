@@ -36,6 +36,9 @@ export type Issue = {
   title: string;
   category: string;
   author: Identity;
+  submitterName?: string;
+  submitterEmail?: string;
+  submitterPart?: TeamPart;
   target: string;
   status: IssueStatus;
   urgency: Urgency;

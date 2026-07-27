@@ -51,6 +51,9 @@ create table if not exists public.issues (
   title text not null,
   category text not null,
   author text not null check (author in ('익명', '실명')),
+  submitter_name text,
+  submitter_email text,
+  submitter_part text,
   target text not null,
   status text not null,
   urgency text not null check (urgency in ('낮음', '보통', '높음')),
@@ -63,6 +66,9 @@ create table if not exists public.issues (
 );
 
 alter table public.issues
+  add column if not exists submitter_name text,
+  add column if not exists submitter_email text,
+  add column if not exists submitter_part text,
   add column if not exists leader_reply text,
   add column if not exists one_on_one_note text,
   add column if not exists action_item text,

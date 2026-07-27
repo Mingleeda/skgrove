@@ -253,7 +253,7 @@ export function App() {
         />
       )}
       {active === 'intake' && (
-        <Intake identity={identity} onIdentityChange={setIdentity} onSubmitIssue={submitIssue} />
+        <Intake currentUser={currentUser} identity={identity} onIdentityChange={setIdentity} onSubmitIssue={submitIssue} />
       )}
       {active === 'leader' && isLeader(currentUser) && (
         <LeaderInbox issues={issues} onIssueUpdate={updateIssue} onPromoteToAgenda={promoteToAgenda} />

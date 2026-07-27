@@ -10,6 +10,9 @@ type IssueRow = {
   title: string;
   category: string;
   author: Issue['author'];
+  submitter_name?: string | null;
+  submitter_email?: string | null;
+  submitter_part?: Issue['submitterPart'] | null;
   target: string;
   status: Issue['status'];
   urgency: Issue['urgency'];
@@ -63,6 +66,9 @@ function issueFromRow(row: IssueRow): Issue {
     title: row.title,
     category: row.category,
     author: row.author,
+    submitterName: row.submitter_name ?? undefined,
+    submitterEmail: row.submitter_email ?? undefined,
+    submitterPart: row.submitter_part ?? undefined,
     target: row.target,
     status: row.status,
     urgency: row.urgency,
@@ -79,6 +85,9 @@ function issueToRow(issue: Issue): IssueRow {
     title: issue.title,
     category: issue.category,
     author: issue.author,
+    submitter_name: issue.submitterName ?? null,
+    submitter_email: issue.submitterEmail ?? null,
+    submitter_part: issue.submitterPart ?? null,
     target: issue.target,
     status: issue.status,
     urgency: issue.urgency,

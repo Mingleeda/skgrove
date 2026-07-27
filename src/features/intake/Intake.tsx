@@ -10,10 +10,11 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import { PanelHeader } from '../../components/PanelHeader';
-import type { Identity, Issue, Urgency } from '../../types';
+import type { CurrentUser, Identity, Issue, Urgency } from '../../types';
 
 type IntakeProps = {
   identity: Identity;
+  currentUser: CurrentUser;
   onIdentityChange: (identity: Identity) => void;
   onSubmitIssue: (issue: Omit<Issue, 'id' | 'status'>) => Issue;
 };
@@ -35,7 +36,7 @@ const mySubmissions = [
   { id: 'SOOP-139', title: '캔미팅 결과가 액션아이템으로 이어지는 과정이 잘 안 보여요', status: '안건화', date: '어제' },
 ];
 
-export function Intake({ identity, onIdentityChange, onSubmitIssue }: IntakeProps) {
+export function Intake({ identity, currentUser, onIdentityChange, onSubmitIssue }: IntakeProps) {
   const [step, setStep] = useState<IntakeStep>('scope');
   const [target, setTarget] = useState<Target>('팀리더');
   const [visibility, setVisibility] = useState<Visibility>('리더만 보기');
@@ -54,6 +55,9 @@ export function Intake({ identity, onIdentityChange, onSubmitIssue }: IntakeProp
       title,
       category,
       author: identity,
+      submitterName: identity === '실명' ? currentUser.name : undefined,
+      submitterEmail: identity === '실명' ? currentUser.email : undefined,
+      submitterPart: identity === '실명' ? currentUser.part : undefined,
       target,
       urgency,
     });
@@ -167,6 +171,9 @@ export function Intake({ identity, onIdentityChange, onSubmitIssue }: IntakeProp
               <h2>{title}</h2>
               <p>{body}</p>
               <dl>
+                {identity === '실명' && (
+                  <div><dt>작성자</dt><dd>{currentUser.name} · {currentUser.part} · {currentUser.email}</dd></div>
+                )}
                 <div><dt>전달 대상</dt><dd>{target}</dd></div>
                 <div><dt>카테고리</dt><dd>{category}</dd></div>
                 <div><dt>긴급도</dt><dd>{urgency}</dd></div>

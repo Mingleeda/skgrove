@@ -92,8 +92,16 @@ export function LeaderInbox({ issues, onIssueUpdate, onPromoteToAgenda }: Leader
                   <span className={`priority ${issue.urgency}`}>{issue.urgency}</span>
                   <h2>{issue.title}</h2>
                   <p>
-                    {issue.id} · {issue.category} · {issue.author} · {issue.target}
+                    {issue.id} · {issue.category} · {getAuthorLabel(issue)} · {issue.target}
                   </p>
+                  {issue.author === '실명' && issue.submitterName && (
+                    <div className="author-card">
+                      <strong>{issue.submitterName}</strong>
+                      <span>
+                        {issue.submitterPart} · {issue.submitterEmail}
+                      </span>
+                    </div>
+                  )}
                   <div className="issue-flags">
                     {issue.leaderReply && <span>답변 있음</span>}
                     {issue.oneOnOneNote && <span>1on1 제안</span>}
@@ -126,8 +134,16 @@ export function LeaderInbox({ issues, onIssueUpdate, onPromoteToAgenda }: Leader
                 <span className="status-pill">{selectedIssue.status}</span>
                 <h2>{selectedIssue.title}</h2>
                 <p>
-                  {selectedIssue.id} · {selectedIssue.category} · {selectedIssue.author} · {selectedIssue.target}
+                  {selectedIssue.id} · {selectedIssue.category} · {getAuthorLabel(selectedIssue)} · {selectedIssue.target}
                 </p>
+                {selectedIssue.author === '실명' && selectedIssue.submitterName && (
+                  <div className="author-card prominent">
+                    <strong>{selectedIssue.submitterName}</strong>
+                    <span>
+                      {selectedIssue.submitterPart} · {selectedIssue.submitterEmail}
+                    </span>
+                  </div>
+                )}
               </div>
 
               <div className="leader-action-tabs">
@@ -194,4 +210,9 @@ function getActionPlaceholder(action: LeaderAction) {
   if (action === 'oneOnOne') return '대화 목적, 제안 일정, 참여 대상을 적어주세요.';
   if (action === 'actionItem') return '담당자, 완료 기준, 희망 일정을 포함해 적어주세요.';
   return '리더끼리 공유할 판단 근거를 남겨주세요.';
+}
+
+function getAuthorLabel(issue: Issue) {
+  if (issue.author === '익명') return '익명';
+  return issue.submitterName ? `실명 ${issue.submitterName}` : '실명';
 }
