@@ -60,6 +60,9 @@ export type Agenda = {
   reject: number;
   status: AgendaStatus;
   createdAt: string;
+  // 등록 시점의 투표 대상 인원 스냅샷.
+  // 계정이 늘거나 줄어도 과거 안건의 정족수와 참여율이 소급해 흔들리지 않도록 값으로 박아둔다.
+  eligibleCount: number;
   // 'YYYY-MM-DD'. 빈 문자열이면 마감일 없이 수동 마감만 가능하다.
   deadline: string;
   // 마감 처리된 날짜. 빈 문자열이면 아직 열려 있다.

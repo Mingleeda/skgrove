@@ -1,3 +1,4 @@
+import { voteTotal } from '../../agendaRules';
 import type { Agenda, AgendaStatus, TeamPart } from '../../types';
 
 export type AgendaStatusFilter = '전체' | AgendaStatus;
@@ -5,10 +6,6 @@ export type AgendaSort = '최신순' | '참여순' | '찬성률순';
 
 export const agendaStatusFilters: AgendaStatusFilter[] = ['전체', '투표중', '통과', '부결'];
 export const agendaSorts: AgendaSort[] = ['최신순', '참여순', '찬성률순'];
-
-export function voteTotal(agenda: Agenda) {
-  return agenda.approve + agenda.reject;
-}
 
 export function approveRate(agenda: Agenda) {
   const total = voteTotal(agenda);

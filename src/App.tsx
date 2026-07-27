@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { loadAccounts, makeAccountId, saveAccounts, seedAccounts } from './accountStore';
-import { closeExpiredAgendas, finalStatus, isOpen, liveStatus } from './agendaRules';
+import { finalStatus, isOpen, liveStatus, settleAgendas } from './agendaRules';
 import { loadAgendas, makeAgendaId, saveAgendas } from './agendaStore';
 import { hasVoted, loadBallots, makeVoterKey, saveBallots } from './ballotStore';
 import { isLeader, isTeamLeader, teamParts } from './auth';
@@ -86,8 +86,8 @@ export function App() {
     });
     loadAgendas().then((loadedAgendas) => {
       if (!isMounted) return;
-      // 마감일이 지난 안건은 열어보는 시점에 닫는다(서버 배치가 없는 구조).
-      const settled = closeExpiredAgendas(loadedAgendas, today());
+      // 서버 배치가 없으므로 마감일 경과와 조기 확정을 열어보는 시점에 함께 반영한다.
+      const settled = settleAgendas(loadedAgendas, today());
       setAgendas(settled);
       if (settled !== loadedAgendas) void saveAgendas(settled);
     });
@@ -144,6 +144,12 @@ export function App() {
     void saveAgendas(nextAgendas);
   };
 
+  // 투표 대상 인원. 파트 한정 안건은 해당 파트 + 전체 소속(팀리더)만 센다.
+  const eligibleCountFor = (part: Agenda['part']) =>
+    accounts.filter(
+      (account) => account.status === '활성' && (part === '전체' || account.part === part || account.part === '전체'),
+    ).length;
+
   // 안건 직접 등록(안건함 화면). 익명이면 작성자 이름은 저장하지 않는다.
   const createAgenda = (
     draft: Pick<Agenda, 'title' | 'description' | 'category' | 'part' | 'author' | 'deadline'>,
@@ -157,6 +163,7 @@ export function App() {
       reject: 0,
       status: '투표중',
       createdAt: today(),
+      eligibleCount: eligibleCountFor(draft.part),
       closedAt: '',
     };
     persistAgendas([next, ...agendas]);
@@ -178,6 +185,7 @@ export function App() {
         reject: 0,
         status: '투표중',
         createdAt: today(),
+        eligibleCount: eligibleCountFor('전체'),
         deadline: defaultDeadline(),
         closedAt: '',
       },
@@ -214,7 +222,9 @@ export function App() {
       agendas.map((agenda) => {
         if (agenda.id !== id) return agenda;
         const next = { ...agenda, [type]: agenda[type] + 1 };
-        return { ...next, status: liveStatus(next.approve, next.reject) };
+        const status = liveStatus(next);
+        // 조기 확정된 경우에만 마감 처리한다. 아직 뒤집힐 수 있으면 열어둔다.
+        return status === '투표중' ? next : { ...next, status, closedAt: today() };
       }),
     );
 
@@ -228,7 +238,7 @@ export function App() {
     persistAgendas(
       agendas.map((agenda) =>
         agenda.id === id && isOpen(agenda)
-          ? { ...agenda, status: finalStatus(agenda.approve, agenda.reject), closedAt: today() }
+          ? { ...agenda, status: finalStatus(agenda), closedAt: today() }
           : agenda,
       ),
     );
@@ -312,6 +322,7 @@ export function App() {
         reject: 0,
         status: '투표중',
         createdAt: today(),
+        eligibleCount: eligibleCountFor('전체'),
         deadline: defaultDeadline(),
         closedAt: '',
       }));

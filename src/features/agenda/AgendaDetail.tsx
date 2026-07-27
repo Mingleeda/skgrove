@@ -1,7 +1,14 @@
 import { ArrowLeft, CheckCircle2, EyeOff, FileCheck2, Gavel, ThumbsDown, ThumbsUp, Timer } from 'lucide-react';
-import { daysLeft, isOpen, MIN_VOTES_TO_PASS } from '../../agendaRules';
+import {
+  daysLeft,
+  isOpen,
+  participationRate,
+  remainingVoters,
+  voteTotal,
+  votesShortOfQuorum,
+} from '../../agendaRules';
 import type { Agenda, VoteChoice } from '../../types';
-import { approveRate, voteTotal } from './agendaSort';
+import { approveRate } from './agendaSort';
 
 type AgendaDetailProps = {
   agenda: Agenda;
@@ -26,7 +33,8 @@ export function AgendaDetail({
   const rate = approveRate(agenda);
   const remaining = daysLeft(agenda, today);
   const open = isOpen(agenda);
-  const shortOfQuorum = Math.max(0, MIN_VOTES_TO_PASS - total);
+  const shortOfQuorum = votesShortOfQuorum(agenda);
+  const notVotedYet = remainingVoters(agenda);
 
   return (
     <section className="panel agenda-detail-panel">
@@ -76,8 +84,16 @@ export function AgendaDetail({
         </div>
         <p className="agenda-detail-summary">
           {total === 0 ? '아직 투표가 없습니다.' : `총 ${total}표 · 찬성률 ${rate}%`}
-          {open && shortOfQuorum > 0 && ` · 통과까지 최소 ${shortOfQuorum}표 더 필요`}
+          {agenda.eligibleCount > 0 &&
+            ` · 대상 ${agenda.eligibleCount}명 중 ${total}명 참여(${participationRate(agenda)}%)`}
         </p>
+        {open && (
+          <p className="agenda-detail-summary">
+            {shortOfQuorum > 0
+              ? `성립까지 ${shortOfQuorum}표 더 필요 · 아직 ${notVotedYet}명이 투표하지 않았습니다.`
+              : `정족수를 채웠습니다. 남은 ${notVotedYet}명의 표로 결과가 바뀔 수 있습니다.`}
+          </p>
+        )}
       </div>
 
       {!open ? (

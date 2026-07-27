@@ -18,6 +18,7 @@ type AgendaRow = {
   reject: number;
   status: Agenda['status'];
   created_at?: string;
+  eligible_count?: number | null;
   deadline?: string | null;
   closed_at?: string | null;
 };
@@ -78,6 +79,7 @@ function agendaFromRow(row: AgendaRow): Agenda {
     reject: row.reject,
     status: row.status,
     createdAt: row.created_at?.slice(0, 10) ?? '',
+    eligibleCount: row.eligible_count ?? 0,
     deadline: row.deadline?.slice(0, 10) ?? '',
     closedAt: row.closed_at?.slice(0, 10) ?? '',
   };
@@ -97,5 +99,9 @@ function agendaToRow(agenda: Agenda): AgendaRow {
     reject: agenda.reject,
     status: agenda.status,
     created_at: agenda.createdAt || undefined,
+    eligible_count: agenda.eligibleCount,
+    // 날짜 컬럼에 빈 문자열을 넣으면 Postgres가 거부한다. 없으면 null로 보낸다.
+    deadline: agenda.deadline || null,
+    closed_at: agenda.closedAt || null,
   };
 }
