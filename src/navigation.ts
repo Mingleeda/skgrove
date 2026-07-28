@@ -1,6 +1,7 @@
 import type { ElementType } from 'react';
 import {
   BarChart3,
+  Bell,
   CalendarDays,
   FileCheck2,
   Home,
@@ -32,5 +33,6 @@ export const sections: AppSection[] = [
   { id: 'connect', label: '커피뽑기 / 조뽑기', icon: Shuffle, owner: '김수정' },
   { id: 'memory', label: '팀 추억', icon: Sparkles, owner: '김수정' },
   { id: 'metrics', label: '파트지수 / 리포트', icon: BarChart3, owner: '김수정' },
+  { id: 'notifications', label: '알림 / 메시지', icon: Bell, owner: '김승현' },
   { id: 'accounts', label: '계정 관리', icon: UsersRound, owner: '팀리더' },
 ];

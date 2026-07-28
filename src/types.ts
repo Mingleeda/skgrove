@@ -9,7 +9,8 @@ export type Section =
   | 'connect'
   | 'memory'
   | 'metrics'
-  | 'accounts';
+  | 'accounts'
+  | 'notifications';
 
 export type Identity = '익명' | '실명';
 export type Urgency = '낮음' | '보통' | '높음';
@@ -193,4 +194,22 @@ export type TeaSession = {
 export type TeaGroup = {
   name: string;
   members: { name: string; part: string }[];
+};
+
+// ===== 알림 / 메시지 (SKSOOP-21) =====
+// 시스템 알림(issue/agenda/deadline/action/tea)과 사람이 보내는 DM(message).
+export type NotificationKind = 'issue' | 'agenda' | 'deadline' | 'action' | 'tea' | 'message';
+
+export type AppNotification = {
+  id: string;
+  kind: NotificationKind;
+  recipientName: string; // 수신자(account name) — currentUser 매칭 기준
+  fromName: string; // 발신자(메시지) 또는 '시스템'
+  title: string;
+  body: string;
+  section: Section; // 클릭 시 이동할 화면
+  sourceId: string; // 관련 엔티티 id(issue/agenda/action) 또는 메시지 고유 id
+  dedupeKey: string; // 중복 생성 방지 키(특히 마감 임박)
+  createdAt: string; // 'YYYY-MM-DD'
+  read: boolean;
 };

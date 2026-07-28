@@ -5610,9 +5610,34 @@ textarea {
 .tea-announce-head {
   align-items: center;
   display: flex;
+  flex-wrap: wrap;
   gap: 12px;
   justify-content: space-between;
   margin-top: 4px;
+}
+
+.tea-announce-actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tea-announce-confirm {
+  align-items: center;
+  background: #f2f7ff;
+  border: 1px solid #c9dcff;
+  border-radius: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 6px 8px 6px 12px;
+}
+
+.tea-announce-confirm > span {
+  color: #2f4a7a;
+  font-size: 13px;
+  font-weight: 700;
 }
 
 .tea-announce {
@@ -5645,4 +5670,131 @@ textarea {
   .tea-status-seg {
     flex: 1 1 100%;
   }
+}
+
+/* ===== 알림 / 메시지 ===== */
+.icon-button.has-badge {
+  position: relative;
+}
+
+.notif-badge {
+  align-items: center;
+  background: #d64545;
+  border-radius: 999px;
+  color: #fff;
+  display: flex;
+  font-size: 10px;
+  font-weight: 800;
+  height: 16px;
+  justify-content: center;
+  min-width: 16px;
+  padding: 0 4px;
+  position: absolute;
+  right: -4px;
+  top: -4px;
+}
+
+.notif-head {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.notif-list {
+  display: grid;
+  gap: 8px;
+}
+
+.notif-row {
+  align-items: flex-start;
+  background: #fff;
+  border: 1px solid #e1e7df;
+  border-radius: 10px;
+  display: flex;
+  gap: 12px;
+  padding: 12px 14px;
+  text-align: left;
+  width: 100%;
+}
+
+button.notif-row {
+  cursor: pointer;
+}
+
+.notif-row.unread {
+  background: #f2f7ff;
+  border-color: #c9dcff;
+}
+
+.notif-kind {
+  align-items: center;
+  background: #eef1ee;
+  border-radius: 999px;
+  color: #55635c;
+  display: inline-flex;
+  flex: none;
+  font-size: 11px;
+  font-weight: 800;
+  gap: 4px;
+  padding: 4px 10px;
+}
+
+.notif-kind.issue {
+  background: #eaf1ff;
+  color: #2f58b5;
+}
+.notif-kind.agenda {
+  background: #eef0ff;
+  color: #4b45b5;
+}
+.notif-kind.deadline {
+  background: #fdeede;
+  color: #a4622a;
+}
+.notif-kind.action {
+  background: #eaf1e6;
+  color: #2b4a3f;
+}
+.notif-kind.tea {
+  background: #f3ecff;
+  color: #6b46b5;
+}
+.notif-kind.message {
+  background: #e7f3ee;
+  color: #1f7a52;
+}
+
+.notif-body {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.notif-body strong {
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.notif-body span {
+  color: #4d5852;
+  font-size: 13px;
+  line-height: 1.5;
+  white-space: pre-line;
+}
+
+.notif-body small {
+  color: #8a948d;
+  font-size: 11px;
+}
+
+.notif-dot {
+  align-self: center;
+  background: #2f6bff;
+  border-radius: 999px;
+  flex: none;
+  height: 8px;
+  margin-left: auto;
+  width: 8px;
 }

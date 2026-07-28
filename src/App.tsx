@@ -6,7 +6,13 @@ import { loadAgendas, makeAgendaId, saveAgendas } from './agendaStore';
 import { hasVoted, loadBallots, makeVoterKey, saveBallots } from './ballotStore';
 import { isLeader, isTeamLeader, teamParts } from './auth';
 import { loadCanSteps, saveCanSteps } from './canStepsStore';
-import { loadTeaSessionTypes, makeTeaSessionId, saveTeaSessionTypes } from './teaStore';
+import {
+  loadTeaSessionTypes,
+  loadTeaSessions,
+  makeTeaSessionId,
+  saveTeaSessionTypes,
+  saveTeaSessions,
+} from './teaStore';
 import type { CanStepConfig } from './canConfig';
 import { AppShell } from './components/AppShell';
 import {
@@ -16,7 +22,6 @@ import {
   initialCanSessions,
   initialIssues,
   initialMatches,
-  initialTeaSessions,
   matchCandidates,
 } from './data/mockData';
 import { ActionBoard } from './features/actions/ActionBoard';
@@ -31,12 +36,30 @@ import { LeaderInbox } from './features/leader/LeaderInbox';
 import { Meetings } from './features/meetings/Meetings';
 import { Memory } from './features/memory/Memory';
 import { Metrics } from './features/metrics/Metrics';
+import { NotificationCenter } from './features/notifications/NotificationCenter';
 import { Profiles } from './features/profiles/Profiles';
 import { loadIssues, makeIssueId, saveIssues } from './issueStore';
+import { deliverDm, deliverToSlack, sendAnnouncement } from './notificationDelivery';
+import {
+  actionDraft,
+  agendaAudience,
+  agendaDrafts,
+  deadlineDrafts,
+  isDeadlineSoon,
+  issueDrafts,
+  leadersFor,
+  messageDraft,
+  ownerAccount,
+  slackChannelForKind,
+  teaProposalDrafts,
+  type NotificationDraft,
+} from './notificationRules';
+import { loadNotifications, makeNotificationId, saveNotifications } from './notificationStore';
 import type {
   ActionItem,
   Agenda,
   AgendaBallot,
+  AppNotification,
   CanFollowRoute,
   CanOpinion,
   CanSession,
@@ -58,6 +81,23 @@ const DEFAULT_VOTING_DAYS = 7;
 const defaultDeadline = () =>
   new Date(Date.now() + DEFAULT_VOTING_DAYS * 86400000).toISOString().slice(0, 10);
 
+// 슬랙 등 외부 링크의 #해시로 특정 화면에 바로 진입(딥링크). '#meetings-tea'는 meetings 진입 후 티미팅 탭.
+const SECTION_BY_HASH: Record<string, Section> = {
+  '#dashboard': 'dashboard',
+  '#intake': 'intake',
+  '#leader': 'leader',
+  '#agenda': 'agenda',
+  '#actions': 'actions',
+  '#meetings': 'meetings',
+  '#meetings-tea': 'meetings',
+  '#profiles': 'profiles',
+  '#connect': 'connect',
+  '#memory': 'memory',
+  '#metrics': 'metrics',
+  '#accounts': 'accounts',
+  '#notifications': 'notifications',
+};
+
 export function App() {
   const [accounts, setAccounts] = useState<ManagedAccount[]>(seedAccounts);
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
@@ -72,8 +112,9 @@ export function App() {
   const [selectedCanId, setSelectedCanId] = useState<string | null>(null);
   const [actionItems, setActionItems] = useState<ActionItem[]>(initialActionItems);
   const [canSteps, setCanSteps] = useState<CanStepConfig[]>(loadCanSteps);
-  const [teaSessions, setTeaSessions] = useState<TeaSession[]>(initialTeaSessions);
+  const [teaSessions, setTeaSessions] = useState<TeaSession[]>(loadTeaSessions);
   const [teaSessionTypes, setTeaSessionTypes] = useState<string[]>(loadTeaSessionTypes);
+  const [notifications, setNotifications] = useState<AppNotification[]>(loadNotifications);
 
   const [votedAgendaIds, setVotedAgendaIds] = useState<string[]>([]);
   const [agendaForActions, setAgendaForActions] = useState<Agenda | null>(null);
@@ -133,6 +174,8 @@ export function App() {
     const nextIssues = [next, ...issues];
     setIssues(nextIssues);
     void saveIssues(nextIssues);
+    // 111: 의견 접수 → 대상 리더에게 알림
+    notify(issueDrafts(next, leadersFor(accounts, next.target), today()));
     return next;
   };
 
@@ -166,6 +209,54 @@ export function App() {
     void saveAgendas(nextAgendas);
   };
 
+  // ===== 알림 / 메시지 (SKSOOP-21) =====
+  const persistNotifications = (next: AppNotification[]) => {
+    setNotifications(next);
+    saveNotifications(next);
+  };
+
+  // draft들을 dedupe 후 id 부여해 추가하고, 각 건을 전송 어댑터로 흘려보낸다.
+  // 같은 tick에 여러 이벤트가 있으면 반드시 한 번의 notify(배열)로 넘긴다(중간 상태 클로버 방지).
+  const notify = (drafts: NotificationDraft[]) => {
+    const seen = new Set(notifications.map((item) => item.dedupeKey));
+    const fresh = drafts
+      .filter((draft) => !seen.has(draft.dedupeKey))
+      .map((draft) => ({ ...draft, id: makeNotificationId() }));
+    if (fresh.length === 0) return;
+    const next = [...fresh, ...notifications];
+    persistNotifications(next);
+    // 슬랙: 이벤트(kind:sourceId)당 1회, 채널 라우팅. fresh는 최초 1회만 생기므로 슬랙도 이벤트당 1회.
+    const events = new Map<string, AppNotification>();
+    fresh.forEach((item) => {
+      const key = `${item.kind}:${item.sourceId}`;
+      if (!events.has(key)) events.set(key, item);
+    });
+    events.forEach((rep) => {
+      // 개인 메시지(DM): 수신자 이메일로 슬랙 DM 경로. 실제 발송은 프록시(SLACK_DM_ENABLED)에서 잠금.
+      if (rep.kind === 'message') {
+        const email = accounts.find((account) => account.name === rep.recipientName)?.email;
+        if (email) deliverDm(email, rep.kind, rep.title, rep.body, rep.fromName);
+        return;
+      }
+      const channel = slackChannelForKind(rep.kind);
+      if (channel) deliverToSlack(channel, rep.kind, rep.title, rep.body, rep.fromName);
+    });
+  };
+
+  // 투표 마감 임박(113): 서버 타이머가 없으므로 안건이 로드/변경될 때 기회적으로 계산한다.
+  // dedupeKey가 이미 만든 알림의 재생성을 막으므로 로드마다 중복 생성되지 않는다.
+  useEffect(() => {
+    const drafts: NotificationDraft[] = [];
+    agendas.forEach((agenda) => {
+      if (isDeadlineSoon(agenda, today())) {
+        drafts.push(...deadlineDrafts(agenda, agendaAudience(accounts, agenda.part), today()));
+      }
+    });
+    if (drafts.length > 0) notify(drafts);
+    // notify는 최신 notifications 클로저를 쓰며, 이 effect는 알림 변경으로 재실행되지 않는다.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [agendas, accounts]);
+
   // 투표 대상 인원. 파트 한정 안건은 해당 파트 + 전체 소속(팀리더)만 센다.
   const eligibleCountFor = (part: Agenda['part']) =>
     accounts.filter(
@@ -189,6 +280,8 @@ export function App() {
       closedAt: '',
     };
     persistAgendas([next, ...agendas]);
+    // 112: 안건 등록 → 해당 파트 팀원에게 알림
+    notify(agendaDrafts(next, agendaAudience(accounts, next.part), today()));
     return next;
   };
 
@@ -197,32 +290,32 @@ export function App() {
     // 화면에서도 막지만, 호출 경로가 늘어나도 약속이 깨지지 않도록 여기서 한 번 더 막는다.
     if (issue.visibility !== '안건 후보로 공개 가능') return;
 
-    persistAgendas([
-      {
-        id: makeAgendaId(),
-        title: issue.title,
-        // 접수자가 쓴 본문이 안건의 배경 설명이 된다.
-        // 본문이 없을 때만 리더 답변으로 대체한다.
-        description: [issue.body, issue.expectedChange].filter(Boolean).join('\n\n') || issue.leaderReply || '',
-        category: issue.category,
-        source: `대나무숲 ${issue.id}`,
-        part: '전체',
-        author: issue.author,
-        authorName: '',
-        approve: 0,
-        reject: 0,
-        status: '투표중',
-        createdAt: today(),
-        eligibleCount: eligibleCountFor('전체'),
-        deadline: defaultDeadline(),
-        closedAt: '',
-      },
-      ...agendas,
-    ]);
+    const promoted: Agenda = {
+      id: makeAgendaId(),
+      title: issue.title,
+      // 접수자가 쓴 본문이 안건의 배경 설명이 된다.
+      // 본문이 없을 때만 리더 답변으로 대체한다.
+      description: [issue.body, issue.expectedChange].filter(Boolean).join('\n\n') || issue.leaderReply || '',
+      category: issue.category,
+      source: `대나무숲 ${issue.id}`,
+      part: '전체',
+      author: issue.author,
+      authorName: '',
+      approve: 0,
+      reject: 0,
+      status: '투표중',
+      createdAt: today(),
+      eligibleCount: eligibleCountFor('전체'),
+      deadline: defaultDeadline(),
+      closedAt: '',
+    };
+    persistAgendas([promoted, ...agendas]);
     const nextIssues: Issue[] = issues.map((item) => (item.id === issue.id ? { ...item, status: '안건화' } : item));
     setIssues(nextIssues);
     void saveIssues(nextIssues);
     setActive('agenda');
+    // 112: 대나무숲 → 안건 승격도 팀원 알림
+    notify(agendaDrafts(promoted, agendaAudience(accounts, promoted.part), today()));
   };
 
   const updateIssue = (updatedIssue: Issue) => {
@@ -336,6 +429,7 @@ export function App() {
     if (canSessions.find((session) => session.id === sessionId)?.followUp) return; // 이미 적용됨 → 중복 방지
     const { sessionTopic, agendaTitles, actions, routes, actionMeta } = data;
     if (agendaTitles.length === 0 && actions.length === 0) return;
+    const followDrafts: NotificationDraft[] = [];
     if (agendaTitles.length > 0) {
       const newAgendas: Agenda[] = agendaTitles.map((title) => ({
         id: makeAgendaId(),
@@ -355,13 +449,22 @@ export function App() {
         closedAt: '',
       }));
       persistAgendas([...newAgendas, ...agendas]);
+      newAgendas.forEach((agenda) =>
+        followDrafts.push(...agendaDrafts(agenda, agendaAudience(accounts, agenda.part), today())),
+      );
     }
     if (actions.length > 0) {
       persistActionItems([...actions, ...actionItems]);
+      actions.forEach((item) => {
+        const owner = ownerAccount(accounts, item.owner);
+        if (owner) followDrafts.push(actionDraft(item, owner, today()));
+      });
     }
     setCanSessions((prev) =>
       prev.map((session) => (session.id === sessionId ? { ...session, followUp: { routes, actionMeta } } : session)),
     );
+    // 112/114: 캔미팅 후속으로 만든 안건·액션도 동일하게 알림
+    if (followDrafts.length > 0) notify(followDrafts);
   };
 
   const persistActionItems = (nextItems: ActionItem[]) => {
@@ -391,28 +494,71 @@ export function App() {
 
     persistActionItems([...created, ...actionItems]);
     setActive('actions');
+    // 114: 담당자 지정된 액션은 그 담당자에게 알림
+    const ownerNotifs = created
+      .map((item) => {
+        const owner = ownerAccount(accounts, item.owner);
+        return owner ? actionDraft(item, owner, today()) : null;
+      })
+      .filter((draft): draft is NotificationDraft => draft !== null);
+    if (ownerNotifs.length > 0) notify(ownerNotifs);
   };
 
   const updateActionItem = (updated: ActionItem) => {
+    const previous = actionItems.find((item) => item.id === updated.id);
     persistActionItems(actionItems.map((item) => (item.id === updated.id ? updated : item)));
+    // 114: 담당자가 새로 지정/변경되면 알림
+    if (previous && previous.owner !== updated.owner) {
+      const owner = ownerAccount(accounts, updated.owner);
+      if (owner) notify([actionDraft(updated, owner, today())]);
+    }
   };
 
   // ===== 티미팅 =====
+  const persistTeaSessions = (next: TeaSession[]) => {
+    setTeaSessions(next);
+    saveTeaSessions(next);
+  };
+
   const addTeaSession = (session: Omit<TeaSession, 'id' | 'status' | 'memo'>) => {
-    setTeaSessions((prev) => [{ ...session, id: makeTeaSessionId(), status: '제안', memo: '' }, ...prev]);
+    const created: TeaSession = { ...session, id: makeTeaSessionId(), status: '제안', memo: '' };
+    persistTeaSessions([created, ...teaSessions]);
+    // 티미팅 세션 제안 → 커넥셔너 대행 리더에게 알림(인앱) + 커넥셔너 채널(슬랙 1회)
+    notify(teaProposalDrafts(created, leadersFor(accounts, '리더 전체'), today()));
   };
 
   const updateTeaSessionStatus = (id: string, status: TeaSessionStatus) => {
-    setTeaSessions((prev) => prev.map((session) => (session.id === id ? { ...session, status } : session)));
+    persistTeaSessions(teaSessions.map((session) => (session.id === id ? { ...session, status } : session)));
   };
 
   const setTeaSessionMemo = (id: string, memo: string) => {
-    setTeaSessions((prev) => prev.map((session) => (session.id === id ? { ...session, memo } : session)));
+    persistTeaSessions(teaSessions.map((session) => (session.id === id ? { ...session, memo } : session)));
   };
 
   const updateTeaSessionTypes = (types: string[]) => {
     setTeaSessionTypes(types);
     saveTeaSessionTypes(types);
+  };
+
+  // 이번 티미팅 공지문을 팀 전체 채널로 전송.
+  const announceTeaToSlack = (text: string) => sendAnnouncement('team', text);
+
+  // 115: 특정 대상에게 직접 메시지
+  const sendMessage = (recipientName: string, body: string) => {
+    if (!currentUser || !recipientName || !body.trim()) return;
+    const messageId = makeNotificationId();
+    notify([messageDraft(currentUser.name, recipientName, body.trim(), today(), messageId)]);
+  };
+
+  const markNotificationRead = (id: string) => {
+    persistNotifications(notifications.map((item) => (item.id === id ? { ...item, read: true } : item)));
+  };
+
+  const markAllNotificationsRead = () => {
+    if (!currentUser) return;
+    persistNotifications(
+      notifications.map((item) => (item.recipientName === currentUser.name ? { ...item, read: true } : item)),
+    );
   };
 
   const persistAccounts = (nextAccounts: ManagedAccount[]) => {
@@ -444,6 +590,19 @@ export function App() {
     setActive(section);
   };
 
+  // 딥링크: 로그인 상태에서 #해시가 있으면 해당 화면으로 이동(슬랙 알림 링크 진입점).
+  useEffect(() => {
+    if (!currentUser) return;
+    const applyHash = () => {
+      const target = SECTION_BY_HASH[window.location.hash];
+      if (target) changeSection(target);
+    };
+    applyHash();
+    window.addEventListener('hashchange', applyHash);
+    return () => window.removeEventListener('hashchange', applyHash);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentUser]);
+
   const handleLogin = (user: CurrentUser) => {
     setActive('dashboard');
     setSelectedCanId(null);
@@ -454,8 +613,18 @@ export function App() {
     return <LoginScreen accounts={accounts} onLogin={handleLogin} onRegister={registerAccount} />;
   }
 
+  const unreadCount = notifications.filter(
+    (item) => item.recipientName === currentUser.name && !item.read,
+  ).length;
+
   return (
-    <AppShell active={active} currentUser={currentUser} onLogout={() => setCurrentUser(null)} onSectionChange={changeSection}>
+    <AppShell
+      active={active}
+      currentUser={currentUser}
+      unreadCount={unreadCount}
+      onLogout={() => setCurrentUser(null)}
+      onSectionChange={changeSection}
+    >
       {active === 'dashboard' && (
         <Dashboard
           openIssueCount={openIssueCount}
@@ -530,6 +699,18 @@ export function App() {
           onUpdateTeaStatus={updateTeaSessionStatus}
           onSetTeaMemo={setTeaSessionMemo}
           onTeaTypesChange={updateTeaSessionTypes}
+          onAnnounceToSlack={announceTeaToSlack}
+        />
+      )}
+      {active === 'notifications' && (
+        <NotificationCenter
+          notifications={notifications}
+          currentUser={currentUser}
+          accounts={accounts}
+          onMarkRead={markNotificationRead}
+          onMarkAllRead={markAllNotificationsRead}
+          onSend={sendMessage}
+          onOpen={changeSection}
         />
       )}
       {active === 'profiles' && <Profiles currentUser={currentUser} />}
