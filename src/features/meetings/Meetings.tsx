@@ -83,6 +83,7 @@ type MeetingsProps = {
   onUpdateTeaStatus: (id: string, status: TeaSessionStatus) => void;
   onSetTeaMemo: (id: string, memo: string) => void;
   onTeaTypesChange: (types: string[]) => void;
+  onAnnounceToSlack: (text: string) => Promise<'sent' | 'failed' | 'disabled'>;
 };
 
 type Draft = {
@@ -111,8 +112,12 @@ export function Meetings({
   onUpdateTeaStatus,
   onSetTeaMemo,
   onTeaTypesChange,
+  onAnnounceToSlack,
 }: MeetingsProps) {
-  const [tab, setTab] = useState<'can' | 'tea'>('can');
+  // '#meetings-tea' 딥링크로 들어오면 티미팅 탭으로 시작.
+  const [tab, setTab] = useState<'can' | 'tea'>(
+    typeof window !== 'undefined' && window.location.hash.includes('tea') ? 'tea' : 'can',
+  );
   const [draft, setDraft] = useState<Draft>({
     step: '',
     author: '익명',
@@ -135,6 +140,7 @@ export function Meetings({
   const [teaRoundSessionId, setTeaRoundSessionId] = useState<string>('');
   const [teaGroupCount, setTeaGroupCount] = useState<number>(5);
   const [teaCopyNotice, setTeaCopyNotice] = useState<string>('');
+  const [teaAnnounceConfirm, setTeaAnnounceConfirm] = useState<boolean>(false);
 
   // 세션 전환 시 AI 취합 결과·조회 단계·후속 조치 입력값을 초기화 (세션 간 상태 누수 방지)
   useEffect(() => {
@@ -1071,16 +1077,16 @@ export function Meetings({
           // 이번 회차(날짜+세션+그룹)로 슬랙 공지문 생성
           const announceText = () => {
             const lines: string[] = [];
-            lines.push(`📢 이번 티미팅 안내 (${teaRoundDate || '날짜 미정'})`);
+            lines.push(`📢 *이번 티미팅 안내* (${teaRoundDate || '날짜 미정'})`);
             if (roundSession) {
-              lines.push(`🍵 세션: [${roundSession.type}] ${roundSession.title}`);
-              lines.push(`🙋 발표자: ${roundSession.presenter} (${roundSession.part})`);
-              if (roundSession.desc.trim()) lines.push(`· ${roundSession.desc.trim()}`);
+              lines.push(`☕ *세션:* [${roundSession.type}] ${roundSession.title}`);
+              lines.push(`🙋 *발표자:* ${roundSession.presenter} (${roundSession.part})`);
+              lines.push('📍 *회의실:* 2309 회의실');
             } else {
-              lines.push('🍵 세션: (미선정)');
+              lines.push('☕ *세션:* (미선정)');
             }
             lines.push('');
-            lines.push('👥 티미팅 그룹 (파트 믹스)');
+            lines.push('👥 *티미팅 그룹 (파트 믹스)*');
             if (teaGroups && teaGroups.length > 0) {
               teaGroups.forEach((group) => {
                 lines.push(
@@ -1090,8 +1096,6 @@ export function Meetings({
             } else {
               lines.push('- (그룹 미편성)');
             }
-            lines.push('');
-            lines.push('📍 회의실 · 티와 함께 1시간');
             return lines.join('\n');
           };
 
@@ -1102,6 +1106,18 @@ export function Meetings({
             } catch {
               setTeaCopyNotice('복사에 실패했어요. 아래 내용을 직접 선택해 복사해주세요.');
             }
+          };
+
+          const sendAnnounce = async () => {
+            setTeaCopyNotice('#팀전체 채널로 공지를 보내는 중…');
+            const result = await onAnnounceToSlack(announceText());
+            setTeaCopyNotice(
+              result === 'sent'
+                ? '#팀전체 채널로 공지를 보냈어요.'
+                : result === 'disabled'
+                  ? '슬랙 전송이 설정되어 있지 않아요 (지금은 복사만 가능).'
+                  : '슬랙 전송에 실패했어요. 잠시 후 다시 시도해 주세요.',
+            );
           };
 
           return (
@@ -1331,12 +1347,36 @@ export function Meetings({
                       <Share2 size={16} />
                       슬랙 공지 미리보기
                     </h4>
-                    <button className="secondary-button" onClick={copyAnnounce}>
-                      <Download size={16} />
-                      공지문 복사
-                    </button>
+                    <div className="tea-announce-actions">
+                      <button className="secondary-button" onClick={copyAnnounce}>
+                        <Download size={16} />
+                        공지문 복사
+                      </button>
+                      {teaAnnounceConfirm ? (
+                        <span className="tea-announce-confirm">
+                          <span>#팀전체 채널에 공지할까요?</span>
+                          <button
+                            className="primary-button"
+                            onClick={() => {
+                              setTeaAnnounceConfirm(false);
+                              void sendAnnounce();
+                            }}
+                          >
+                            전송
+                          </button>
+                          <button className="secondary-button" onClick={() => setTeaAnnounceConfirm(false)}>
+                            취소
+                          </button>
+                        </span>
+                      ) : (
+                        <button className="primary-button" onClick={() => setTeaAnnounceConfirm(true)}>
+                          <Send size={16} />
+                          슬랙으로 공지 (#팀전체)
+                        </button>
+                      )}
+                    </div>
                   </div>
-                  <pre className="tea-announce">{announceText()}</pre>
+                  <pre className="tea-announce">{announceText().replace(/\*/g, '')}</pre>
                   {teaCopyNotice && <p className="tea-copy-notice">{teaCopyNotice}</p>}
                 </section>
               )}

@@ -8,11 +8,12 @@ type AppShellProps = {
   active: Section;
   children: ReactNode;
   currentUser: CurrentUser;
+  unreadCount: number;
   onLogout: () => void;
   onSectionChange: (section: Section) => void;
 };
 
-export function AppShell({ active, children, currentUser, onLogout, onSectionChange }: AppShellProps) {
+export function AppShell({ active, children, currentUser, unreadCount, onLogout, onSectionChange }: AppShellProps) {
   const currentSection = sections.find((section) => section.id === active) ?? sections[0];
   const userCanUseLeaderMenu = isLeader(currentUser);
   const userCanUseAccountsMenu = isTeamLeader(currentUser);
@@ -71,8 +72,13 @@ export function AppShell({ active, children, currentUser, onLogout, onSectionCha
                 {currentUser.role} · {currentUser.part}
               </span>
             </div>
-            <button className="icon-button" title="알림">
+            <button
+              className={active === 'notifications' ? 'icon-button has-badge active' : 'icon-button has-badge'}
+              title="알림 / 메시지"
+              onClick={() => onSectionChange('notifications')}
+            >
               <Bell size={19} />
+              {unreadCount > 0 && <span className="notif-badge">{unreadCount > 99 ? '99+' : unreadCount}</span>}
             </button>
             <button className="primary-button" onClick={() => onSectionChange('intake')}>
               <MessageSquarePlus size={18} />

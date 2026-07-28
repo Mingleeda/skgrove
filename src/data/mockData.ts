@@ -1,6 +1,7 @@
 import type {
   ActionItem,
   Agenda,
+  AppNotification,
   CanOpinion,
   CanSession,
   Issue,
@@ -408,5 +409,49 @@ export const initialTeaSessions: TeaSession[] = [
     desc: '',
     status: '보류',
     memo: '',
+  },
+];
+
+// ===== 알림 / 메시지 (SKSOOP-21) =====
+// 데모용 초기 알림. seed 계정(이선민/김승현/김수정/이두민)에 맞춰 수신자를 둔다.
+export const initialNotifications: AppNotification[] = [
+  {
+    id: 'NTF-SEED-1',
+    kind: 'message',
+    recipientName: '김승현',
+    fromName: '이선민',
+    title: '이선민님의 메시지',
+    body: '이번 주 액션아이템 진행 상황 공유 부탁해요.',
+    section: 'notifications',
+    sourceId: 'MSG-SEED-1',
+    dedupeKey: 'seed-1',
+    createdAt: '2026-07-27',
+    read: false,
+  },
+  {
+    id: 'NTF-SEED-2',
+    kind: 'agenda',
+    recipientName: '이두민',
+    fromName: '시스템',
+    title: '새 안건 · 팀 티미팅 간소화',
+    body: '투표에 참여해 주세요.',
+    section: 'agenda',
+    sourceId: 'AGD-SEED',
+    dedupeKey: 'seed-2',
+    createdAt: '2026-07-26',
+    read: false,
+  },
+  {
+    id: 'NTF-SEED-3',
+    kind: 'action',
+    recipientName: '김수정',
+    fromName: '시스템',
+    title: '액션아이템 배정 · 파트 섞기 커피챗 1차 매칭',
+    body: '담당자로 지정되었어요.',
+    section: 'actions',
+    sourceId: 'ACT-SEED',
+    dedupeKey: 'seed-3',
+    createdAt: '2026-07-25',
+    read: true,
   },
 ];
