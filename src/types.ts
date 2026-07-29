@@ -133,6 +133,18 @@ export type Profile = {
   color: 'green' | 'red' | 'blue' | 'yellow';
 };
 
+export type ConnectResultMode = 'coffee' | 'teams';
+
+export type SavedDrawResult = {
+  id: string;
+  mode: ConnectResultMode;
+  title: string;
+  createdAt: string;
+  summary: string;
+  shareText: string;
+  shareUrl: string;
+};
+
 export type PartScore = {
   name: string;
   score: number;

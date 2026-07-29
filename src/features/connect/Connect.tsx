@@ -1,8 +1,15 @@
 import { BadgeCheck, ClipboardCopy, Coffee, Dice5, Save, Search, Shuffle, Sparkles, UsersRound } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { PanelHeader } from '../../components/PanelHeader';
+import {
+  clearConnectResults,
+  loadConnectResults,
+  makeConnectResultId,
+  makeConnectShareUrl,
+  saveConnectResults,
+} from '../../connectResultStore';
 import { profiles } from '../../data/mockData';
-import type { Profile } from '../../types';
+import type { Profile, SavedDrawResult } from '../../types';
 
 type ConnectProps = {
   matched: string[];
@@ -16,15 +23,6 @@ type TeamBasis = 'count' | 'size';
 type TeamGroup = {
   id: number;
   members: Profile[];
-};
-
-type SavedDrawResult = {
-  id: string;
-  mode: ConnectMode;
-  title: string;
-  createdAt: string;
-  summary: string;
-  shareText: string;
 };
 
 type TeamInsight = {
@@ -42,7 +40,6 @@ type ProfileSignal = {
   weight: number;
 };
 
-const savedResultStorageKey = 'skgrove:connect-results';
 const participantNames = profiles.map((profile) => profile.name);
 const partOrder = ['TEST혁신파트', 'ITS혁신파트', '혁신도구파트'];
 
@@ -274,21 +271,6 @@ function analyzeAllTeams(groups: TeamGroup[]) {
   };
 }
 
-function loadSavedResults() {
-  if (typeof window === 'undefined') return [];
-
-  try {
-    const saved = window.localStorage.getItem(savedResultStorageKey);
-    return saved ? JSON.parse(saved) as SavedDrawResult[] : [];
-  } catch {
-    return [];
-  }
-}
-
-function persistSavedResults(results: SavedDrawResult[]) {
-  window.localStorage.setItem(savedResultStorageKey, JSON.stringify(results));
-}
-
 export function Connect({ matched: _matched, onShuffleTeams: _onShuffleTeams }: ConnectProps) {
   const [mode, setMode] = useState<ConnectMode>('teams');
   const [selectedNames, setSelectedNames] = useState(participantNames);
@@ -303,8 +285,20 @@ export function Connect({ matched: _matched, onShuffleTeams: _onShuffleTeams }: 
   const [coffeeRound, setCoffeeRound] = useState(0);
   const [coffeeSpotlight, setCoffeeSpotlight] = useState<Profile | null>(null);
   const [participantSearch, setParticipantSearch] = useState('');
-  const [savedResults, setSavedResults] = useState<SavedDrawResult[]>(loadSavedResults);
+  const [savedResults, setSavedResults] = useState<SavedDrawResult[]>([]);
   const [shareNotice, setShareNotice] = useState('');
+
+  useEffect(() => {
+    let isMounted = true;
+
+    loadConnectResults().then((results) => {
+      if (isMounted) setSavedResults(results);
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const selectedParticipants = useMemo(() => {
     return profiles.filter((profile) => selectedNames.includes(profile.name));
@@ -406,35 +400,41 @@ export function Connect({ matched: _matched, onShuffleTeams: _onShuffleTeams }: 
   };
 
   const saveResult = (result: SavedDrawResult) => {
-    const nextResults = [result, ...savedResults].slice(0, 6);
+    const nextResults = [result, ...savedResults.filter((item) => item.id !== result.id)].slice(0, 6);
     setSavedResults(nextResults);
-    persistSavedResults(nextResults);
-    setShareNotice('최근 결과에 저장했어요');
+    void saveConnectResults(nextResults);
+    setShareNotice('최근 결과에 저장했고 고정 공유 URL을 만들었어요');
   };
 
   const saveTeamResult = () => {
     if (teams.length === 0) return;
+    const id = makeConnectResultId('teams');
+    const shareUrl = makeConnectShareUrl(id);
 
     saveResult({
-      id: `team-${Date.now()}`,
+      id,
       mode: 'teams',
       title: `${teams.length}개 조 편성`,
       createdAt: new Date().toISOString(),
       summary: `${getBalanceRuleLabel(balanceRule)} · ${getTeamBasisLabel(teamBasis, teamValue)}`,
-      shareText: teamShareText,
+      shareText: `${teamShareText}\n공유 URL: ${shareUrl}`,
+      shareUrl,
     });
   };
 
   const saveCoffeeResult = () => {
     if (!coffeeBuyer) return;
+    const id = makeConnectResultId('coffee');
+    const shareUrl = makeConnectShareUrl(id);
 
     saveResult({
-      id: `coffee-${Date.now()}`,
+      id,
       mode: 'coffee',
       title: `커피 담당 ${coffeeBuyer.name}`,
       createdAt: new Date().toISOString(),
       summary: `${coffeeBuyer.part} · ${getAgeMood(coffeeBuyer.birthYear).label}`,
-      shareText: coffeeShareText,
+      shareText: `${coffeeShareText}\n공유 URL: ${shareUrl}`,
+      shareUrl,
     });
   };
 
@@ -447,7 +447,7 @@ export function Connect({ matched: _matched, onShuffleTeams: _onShuffleTeams }: 
 
   const clearSavedResults = () => {
     setSavedResults([]);
-    persistSavedResults([]);
+    void clearConnectResults();
     setShareNotice('저장된 결과를 비웠어요');
   };
 
@@ -675,6 +675,7 @@ export function Connect({ matched: _matched, onShuffleTeams: _onShuffleTeams }: 
                         <span>{result.mode === 'teams' ? '조뽑기' : '커피뽑기'} · {formatSavedTime(result.createdAt)}</span>
                         <strong>{result.title}</strong>
                         <p>{result.summary}</p>
+                        <small>{result.shareUrl}</small>
                       </div>
                       <button className="secondary-button" onClick={() => void copyShareText(result.shareText)} type="button">
                         <ClipboardCopy size={16} />
