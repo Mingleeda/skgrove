@@ -86,21 +86,46 @@ export function App() {
     return next;
   };
 
-  const promoteToAgenda = (issue: Issue) => {
-    setAgendas([
+  const promoteToAgenda = (issue: Issue, agendaDraft: Omit<Agenda, 'approve' | 'reject' | 'status'>) => {
+    setAgendas((prev) => [
       {
-        title: issue.title,
-        source: `대나무숲 ${issue.id}`,
+        ...agendaDraft,
         approve: 0,
         reject: 0,
         status: '투표중',
       },
-      ...agendas,
+      ...prev,
     ]);
     const nextIssues: Issue[] = issues.map((item) => (item.id === issue.id ? { ...item, status: '안건화' } : item));
     setIssues(nextIssues);
     void saveIssues(nextIssues);
     setActive('agenda');
+  };
+
+  const createAgenda = (agendaDraft: Omit<Agenda, 'approve' | 'reject' | 'status'>) => {
+    setAgendas((prev) => [
+      {
+        ...agendaDraft,
+        approve: 0,
+        reject: 0,
+        status: '투표중',
+      },
+      ...prev,
+    ]);
+  };
+
+  const updateAgendaDueDate = (index: number, dueDate: string) => {
+    setAgendas((prev) => prev.map((agenda, agendaIndex) => (agendaIndex === index ? { ...agenda, dueDate } : agenda)));
+  };
+
+  const closeAgendaVoting = (index: number) => {
+    setAgendas(
+      agendas.map((agenda, agendaIndex) => {
+        if (agendaIndex !== index || agenda.status !== '투표중') return agenda;
+        if (agenda.approve === agenda.reject) return { ...agenda, status: '종료' };
+        return { ...agenda, status: agenda.approve > agenda.reject ? '통과' : '부결' };
+      }),
+    );
   };
 
   const updateIssue = (updatedIssue: Issue) => {
@@ -258,7 +283,16 @@ export function App() {
       {active === 'leader' && isLeader(currentUser) && (
         <LeaderInbox issues={issues} onIssueUpdate={updateIssue} onPromoteToAgenda={promoteToAgenda} />
       )}
-      {active === 'agenda' && <AgendaBoard agendas={agendas} onVote={vote} />}
+      {active === 'agenda' && (
+        <AgendaBoard
+          agendas={agendas}
+          canManage={isTeamLeader(currentUser)}
+          onCloseVoting={closeAgendaVoting}
+          onCreateAgenda={createAgenda}
+          onUpdateDueDate={updateAgendaDueDate}
+          onVote={vote}
+        />
+      )}
       {active === 'meetings' && (
         <Meetings
           sessions={canSessions}

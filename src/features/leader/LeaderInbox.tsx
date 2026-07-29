@@ -1,14 +1,14 @@
 import { CalendarPlus, FileCheck2, MessageSquareText, PenLine, Send, UserRoundCheck, Vote } from 'lucide-react';
 import { useState } from 'react';
-import type { Issue, IssueStatus } from '../../types';
+import type { Agenda, Issue, IssueStatus } from '../../types';
 
 type LeaderInboxProps = {
   issues: Issue[];
   onIssueUpdate: (issue: Issue) => void;
-  onPromoteToAgenda: (issue: Issue) => void;
+  onPromoteToAgenda: (issue: Issue, agendaDraft: Omit<Agenda, 'approve' | 'reject' | 'status'>) => void;
 };
 
-type LeaderAction = 'reply' | 'oneOnOne' | 'actionItem' | 'memo';
+type LeaderAction = 'reply' | 'oneOnOne' | 'actionItem' | 'memo' | 'agenda';
 
 const filters: Array<'전체' | IssueStatus> = ['전체', '접수', '검토중', '답변완료', '1on1 제안', '액션아이템', '안건화', '보류', '종료'];
 
@@ -17,6 +17,7 @@ export function LeaderInbox({ issues, onIssueUpdate, onPromoteToAgenda }: Leader
   const [selectedIssueId, setSelectedIssueId] = useState(issues[0]?.id ?? '');
   const [activeAction, setActiveAction] = useState<LeaderAction>('reply');
   const [draft, setDraft] = useState('');
+  const [agendaDrafts, setAgendaDrafts] = useState<Record<string, { title: string; description: string; dueDate: string }>>({});
 
   const visibleIssues = filter === '전체' ? issues : issues.filter((issue) => issue.status === filter);
   const selectedIssue = visibleIssues.find((issue) => issue.id === selectedIssueId) ?? visibleIssues[0];
@@ -27,6 +28,14 @@ export function LeaderInbox({ issues, onIssueUpdate, onPromoteToAgenda }: Leader
   const chooseIssue = (issue: Issue) => {
     setSelectedIssueId(issue.id);
     setDraft('');
+    setAgendaDrafts((drafts) => ({
+      ...drafts,
+      [issue.id]: drafts[issue.id] ?? {
+        title: issue.title,
+        description: `${issue.category} 관련 접수 의견을 팀 안건으로 논의합니다.`,
+        dueDate: getDefaultDueDate(),
+      },
+    }));
   };
 
   const changeStatus = (issue: Issue, status: IssueStatus) => {
@@ -53,6 +62,31 @@ export function LeaderInbox({ issues, onIssueUpdate, onPromoteToAgenda }: Leader
     }
 
     setDraft('');
+  };
+
+  const updateAgendaDraft = (issue: Issue, field: 'title' | 'description' | 'dueDate', value: string) => {
+    const currentDraft = agendaDrafts[issue.id] ?? {
+      title: issue.title,
+      description: `${issue.category} 관련 접수 의견을 팀 안건으로 논의합니다.`,
+      dueDate: getDefaultDueDate(),
+    };
+    setAgendaDrafts((drafts) => ({ ...drafts, [issue.id]: { ...currentDraft, [field]: value } }));
+  };
+
+  const promoteSelectedIssue = () => {
+    if (!selectedIssue) return;
+    const agendaDraft = agendaDrafts[selectedIssue.id] ?? {
+      title: selectedIssue.title,
+      description: `${selectedIssue.category} 관련 접수 의견을 팀 안건으로 논의합니다.`,
+      dueDate: getDefaultDueDate(),
+    };
+    if (!agendaDraft.title.trim() || !agendaDraft.dueDate) return;
+    onPromoteToAgenda(selectedIssue, {
+      title: agendaDraft.title.trim(),
+      description: agendaDraft.description.trim(),
+      dueDate: agendaDraft.dueDate,
+      source: `대나무숲 ${selectedIssue.id}`,
+    });
   };
 
   return (
@@ -109,7 +143,13 @@ export function LeaderInbox({ issues, onIssueUpdate, onPromoteToAgenda }: Leader
                         <option key={status}>{status}</option>
                       ))}
                   </select>
-                  <button className="secondary-button" onClick={() => onPromoteToAgenda(issue)}>
+                  <button
+                    className="secondary-button"
+                    onClick={() => {
+                      chooseIssue(issue);
+                      setActiveAction('agenda');
+                    }}
+                  >
                     <Vote size={17} />
                     안건화
                   </button>
@@ -147,17 +187,54 @@ export function LeaderInbox({ issues, onIssueUpdate, onPromoteToAgenda }: Leader
                   <PenLine size={17} />
                   메모
                 </button>
+                <button className={activeAction === 'agenda' ? 'selected' : ''} onClick={() => setActiveAction('agenda')}>
+                  <Vote size={17} />
+                  안건
+                </button>
               </div>
 
-              <label>
-                {getActionLabel(activeAction)}
-                <textarea value={draft} onChange={(event) => setDraft(event.target.value)} placeholder={getActionPlaceholder(activeAction)} />
-              </label>
+              {activeAction === 'agenda' ? (
+                <div className="agenda-draft-form">
+                  <label>
+                    안건 제목
+                    <input
+                      value={(agendaDrafts[selectedIssue.id]?.title ?? selectedIssue.title)}
+                      onChange={(event) => updateAgendaDraft(selectedIssue, 'title', event.target.value)}
+                    />
+                  </label>
+                  <label>
+                    안건 설명
+                    <textarea
+                      value={(agendaDrafts[selectedIssue.id]?.description ?? `${selectedIssue.category} 관련 접수 의견을 팀 안건으로 논의합니다.`)}
+                      onChange={(event) => updateAgendaDraft(selectedIssue, 'description', event.target.value)}
+                    />
+                  </label>
+                  <label>
+                    투표 기한
+                    <input
+                      type="date"
+                      value={(agendaDrafts[selectedIssue.id]?.dueDate ?? getDefaultDueDate())}
+                      onChange={(event) => updateAgendaDraft(selectedIssue, 'dueDate', event.target.value)}
+                    />
+                  </label>
+                  <button className="primary-button wide" onClick={promoteSelectedIssue}>
+                    <Vote size={18} />
+                    정제한 안건으로 올리기
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <label>
+                    {getActionLabel(activeAction)}
+                    <textarea value={draft} onChange={(event) => setDraft(event.target.value)} placeholder={getActionPlaceholder(activeAction)} />
+                  </label>
 
-              <button className="primary-button wide" onClick={saveAction}>
-                <UserRoundCheck size={18} />
-                처리 기록 남기기
-              </button>
+                  <button className="primary-button wide" onClick={saveAction}>
+                    <UserRoundCheck size={18} />
+                    처리 기록 남기기
+                  </button>
+                </>
+              )}
 
               <div className="leader-history">
                 <strong>처리 기록</strong>
@@ -194,4 +271,10 @@ function getActionPlaceholder(action: LeaderAction) {
   if (action === 'oneOnOne') return '대화 목적, 제안 일정, 참여 대상을 적어주세요.';
   if (action === 'actionItem') return '담당자, 완료 기준, 희망 일정을 포함해 적어주세요.';
   return '리더끼리 공유할 판단 근거를 남겨주세요.';
+}
+
+function getDefaultDueDate() {
+  const dueDate = new Date();
+  dueDate.setDate(dueDate.getDate() + 7);
+  return dueDate.toISOString().slice(0, 10);
 }

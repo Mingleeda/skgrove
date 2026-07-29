@@ -34,6 +34,8 @@ export const initialAgendas: Agenda[] = [
   {
     title: '팀 티미팅 간소화',
     source: '대나무숲 SOOP-142',
+    description: '티미팅 시간을 줄이고 사전 안건 중심으로 운영하는 방식을 팀 단위로 시범 적용합니다.',
+    dueDate: '2026-08-05',
     approve: 18,
     reject: 5,
     status: '투표중',
@@ -41,6 +43,8 @@ export const initialAgendas: Agenda[] = [
   {
     title: '월 1회 파트 섞기 커피챗 운영',
     source: '티미팅 제안',
+    description: '파트 간 업무 맥락을 자연스럽게 공유하기 위해 월 1회 랜덤 커피챗을 운영합니다.',
+    dueDate: '2026-08-02',
     approve: 21,
     reject: 3,
     status: '통과',
@@ -48,6 +52,8 @@ export const initialAgendas: Agenda[] = [
   {
     title: '회의 없는 금요일 오후 시범 운영',
     source: '캔미팅',
+    description: '집중 업무 시간을 확보하기 위해 금요일 오후 회의 제한을 한 달간 실험합니다.',
+    dueDate: '2026-07-31',
     approve: 12,
     reject: 13,
     status: '부결',
