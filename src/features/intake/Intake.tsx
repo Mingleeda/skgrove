@@ -6,6 +6,7 @@ import {
   ChevronRight,
   EyeOff,
   FileText,
+  KeyRound,
   Megaphone,
   MessageSquarePlus,
   Send,
@@ -46,9 +47,14 @@ export function Intake({ identity, currentUser, issues, onIdentityChange, onIssu
   const [body, setBody] = useState('논의할 주제가 명확하지 않은 회의는 시간을 줄이고, 필요한 경우 안건함에서 먼저 투표하면 좋겠습니다.');
   const [expectedChange, setExpectedChange] = useState('회의 전 안건을 먼저 모으고, 꼭 필요한 주제만 짧게 논의하면 좋겠습니다.');
   const [receiptId, setReceiptId] = useState('SOOP-148');
+  const [receiptAccessCode, setReceiptAccessCode] = useState('');
   const [responseDrafts, setResponseDrafts] = useState<Record<string, string>>({});
   const [myIssueFilter, setMyIssueFilter] = useState<MyIssueFilter>('전체');
   const [expandedIssueIds, setExpandedIssueIds] = useState<Record<string, boolean>>({});
+  const [anonymousReceiptId, setAnonymousReceiptId] = useState('');
+  const [anonymousAccessCode, setAnonymousAccessCode] = useState('');
+  const [anonymousLookupError, setAnonymousLookupError] = useState('');
+  const [anonymousIssueId, setAnonymousIssueId] = useState('');
 
   const currentStepIndex = steps.findIndex((item) => item.id === step);
   const myIssues = issues.filter(
@@ -64,10 +70,12 @@ export function Intake({ identity, currentUser, issues, onIdentityChange, onIssu
   });
 
   const submit = () => {
+    const nextAnonymousCode = identity === '익명' ? makeAnonymousAccessCode() : undefined;
     const createdIssue = onSubmitIssue({
       title,
       category,
       author: identity,
+      anonymousAccessCode: nextAnonymousCode,
       submitterName: identity === '실명' ? currentUser.name : undefined,
       submitterEmail: identity === '실명' ? currentUser.email : undefined,
       submitterPart: identity === '실명' ? currentUser.part : undefined,
@@ -75,6 +83,12 @@ export function Intake({ identity, currentUser, issues, onIdentityChange, onIssu
       urgency,
     });
     setReceiptId(createdIssue.id);
+    setReceiptAccessCode(nextAnonymousCode ?? '');
+    if (nextAnonymousCode) {
+      setAnonymousReceiptId(createdIssue.id);
+      setAnonymousAccessCode(nextAnonymousCode);
+      setAnonymousIssueId(createdIssue.id);
+    }
     setStep('complete');
   };
 
@@ -122,6 +136,25 @@ export function Intake({ identity, currentUser, issues, onIdentityChange, onIssu
       submitterResponse: '작성자가 접수 의견을 회수했습니다.',
     });
   };
+
+  const lookupAnonymousIssue = () => {
+    const receipt = anonymousReceiptId.trim().toUpperCase();
+    const code = anonymousAccessCode.trim().toUpperCase();
+    const issue = issues.find(
+      (item) => item.author === '익명' && item.id.toUpperCase() === receipt && item.anonymousAccessCode === code,
+    );
+
+    if (!issue) {
+      setAnonymousIssueId('');
+      setAnonymousLookupError('접수번호와 확인 코드가 일치하는 익명 접수 건을 찾을 수 없어요.');
+      return;
+    }
+
+    setAnonymousIssueId(issue.id);
+    setAnonymousLookupError('');
+  };
+
+  const anonymousIssue = issues.find((issue) => issue.id === anonymousIssueId);
 
   return (
     <section className="screen intake-screen">
@@ -256,7 +289,18 @@ export function Intake({ identity, currentUser, issues, onIdentityChange, onIssu
             <CheckCircle2 size={42} />
             <p className="eyebrow">접수 완료</p>
             <h2>{receiptId}</h2>
-            <p>의견이 리더 관리함으로 전달되었습니다. 접수 상태는 아래 목록에서 계속 확인할 수 있어요.</p>
+            {receiptAccessCode && (
+              <div className="anonymous-receipt">
+                <strong>익명 확인 코드</strong>
+                <span>{receiptAccessCode}</span>
+                <small>이 코드는 다시 보여주지 않는 값으로 가정하고 꼭 따로 보관해주세요.</small>
+              </div>
+            )}
+            <p>
+              {receiptAccessCode
+                ? '의견이 리더 관리함으로 전달되었습니다. 접수번호와 확인 코드로 익명 접수 조회에서 후속 조치를 확인할 수 있어요.'
+                : '의견이 리더 관리함으로 전달되었습니다. 접수 상태는 아래 목록에서 계속 확인할 수 있어요.'}
+            </p>
             <button className="primary-button" onClick={() => setStep('scope')}>
               새 의견 접수
             </button>
@@ -367,7 +411,71 @@ export function Intake({ identity, currentUser, issues, onIdentityChange, onIssu
             <div><strong>답변 후 후속 응답</strong><span>리더 답변이나 1on1 제안이 오면 메인 현황에서 바로 응답할 수 있습니다.</span></div>
           </div>
         </section>
+
+        <section className="panel">
+          <PanelHeader icon={KeyRound} title="익명 접수 조회" />
+          <div className="anonymous-lookup">
+            <label>
+              접수번호
+              <input
+                value={anonymousReceiptId}
+                onChange={(event) => setAnonymousReceiptId(event.target.value.toUpperCase())}
+                placeholder="SOOP-..."
+              />
+            </label>
+            <label>
+              확인 코드
+              <input
+                value={anonymousAccessCode}
+                onChange={(event) => setAnonymousAccessCode(event.target.value.toUpperCase())}
+                placeholder="AB12CD"
+              />
+            </label>
+            <button className="primary-button wide" onClick={lookupAnonymousIssue}>
+              조회하기
+            </button>
+            {anonymousLookupError && <p className="form-error">{anonymousLookupError}</p>}
+            {anonymousIssue && (
+              <div className="anonymous-result">
+                <div className="submission-summary static">
+                  <KeyRound size={18} />
+                  <div>
+                    <strong>{anonymousIssue.title}</strong>
+                    <span>{anonymousIssue.id} · {anonymousIssue.category} · {anonymousIssue.target}</span>
+                  </div>
+                  <span className="status-pill">{anonymousIssue.status}</span>
+                </div>
+                <div className="submission-detail">
+                  {anonymousIssue.leaderReply && <p>답변: {anonymousIssue.leaderReply}</p>}
+                  {anonymousIssue.oneOnOneNote && <p>익명 추가 대화 제안: {anonymousIssue.oneOnOneNote}</p>}
+                  {anonymousIssue.actionItem && <p>액션아이템: {anonymousIssue.actionItem}</p>}
+                  {anonymousIssue.submitterResponse && <p>내 익명 응답: {anonymousIssue.submitterResponse}</p>}
+                  {(anonymousIssue.leaderReply || anonymousIssue.oneOnOneNote || anonymousIssue.actionItem) && (
+                    <div className="submission-followup">
+                      <textarea
+                        value={responseDrafts[anonymousIssue.id] ?? ''}
+                        onChange={(event) => updateResponseDraft(anonymousIssue.id, event.target.value)}
+                        placeholder="익명 상태로 추가 의견을 남겨주세요."
+                      />
+                      <button className="primary-button wide" onClick={() => saveSubmitterResponse(anonymousIssue)}>
+                        익명 후속 응답 남기기
+                      </button>
+                    </div>
+                  )}
+                  {!anonymousIssue.leaderReply && !anonymousIssue.oneOnOneNote && !anonymousIssue.actionItem && (
+                    <p>아직 리더가 남긴 답변이나 후속 액션이 없습니다.</p>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </section>
       </aside>
     </section>
   );
+}
+
+function makeAnonymousAccessCode() {
+  const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  return Array.from({ length: 6 }, () => alphabet[Math.floor(Math.random() * alphabet.length)]).join('');
 }

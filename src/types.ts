@@ -36,6 +36,7 @@ export type Issue = {
   title: string;
   category: string;
   author: Identity;
+  anonymousAccessCode?: string;
   submitterName?: string;
   submitterEmail?: string;
   submitterPart?: TeamPart;

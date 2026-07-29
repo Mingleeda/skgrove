@@ -51,6 +51,7 @@ create table if not exists public.issues (
   title text not null,
   category text not null,
   author text not null check (author in ('익명', '실명')),
+  anonymous_access_code text,
   submitter_name text,
   submitter_email text,
   submitter_part text,
@@ -68,6 +69,7 @@ create table if not exists public.issues (
 );
 
 alter table public.issues
+  add column if not exists anonymous_access_code text,
   add column if not exists submitter_name text,
   add column if not exists submitter_email text,
   add column if not exists submitter_part text,

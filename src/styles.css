@@ -895,6 +895,33 @@ h1 {
   line-height: 1.6;
 }
 
+.anonymous-receipt {
+  background: #fff7e6;
+  border: 1px solid #f1d390;
+  border-radius: 8px;
+  display: grid;
+  gap: 4px;
+  padding: 12px 14px;
+}
+
+.anonymous-receipt strong {
+  color: #76513a;
+  font-size: 13px;
+}
+
+.anonymous-receipt span {
+  color: #1d2522;
+  font-size: 24px;
+  font-weight: 900;
+  letter-spacing: 0;
+}
+
+.anonymous-receipt small {
+  color: #76513a;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
 .privacy-list,
 .submission-list {
   display: grid;
@@ -938,6 +965,10 @@ h1 {
   padding: 0;
   text-align: left;
   width: 100%;
+}
+
+.submission-summary.static {
+  cursor: default;
 }
 
 .submission-summary div {
@@ -1018,6 +1049,19 @@ h1 {
 .empty-submission {
   min-height: 104px;
   place-content: center;
+}
+
+.anonymous-lookup,
+.anonymous-result {
+  display: grid;
+  gap: 12px;
+}
+
+.anonymous-result {
+  background: #f7faf5;
+  border: 1px solid #e1e7df;
+  border-radius: 8px;
+  padding: 12px;
 }
 
 label {

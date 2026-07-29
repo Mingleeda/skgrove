@@ -10,6 +10,7 @@ type IssueRow = {
   title: string;
   category: string;
   author: Issue['author'];
+  anonymous_access_code?: string | null;
   submitter_name?: string | null;
   submitter_email?: string | null;
   submitter_part?: Issue['submitterPart'] | null;
@@ -68,6 +69,7 @@ function issueFromRow(row: IssueRow): Issue {
     title: row.title,
     category: row.category,
     author: row.author,
+    anonymousAccessCode: row.anonymous_access_code ?? undefined,
     submitterName: row.submitter_name ?? undefined,
     submitterEmail: row.submitter_email ?? undefined,
     submitterPart: row.submitter_part ?? undefined,
@@ -89,6 +91,7 @@ function issueToRow(issue: Issue): IssueRow {
     title: issue.title,
     category: issue.category,
     author: issue.author,
+    anonymous_access_code: issue.anonymousAccessCode ?? null,
     submitter_name: issue.submitterName ?? null,
     submitter_email: issue.submitterEmail ?? null,
     submitter_part: issue.submitterPart ?? null,

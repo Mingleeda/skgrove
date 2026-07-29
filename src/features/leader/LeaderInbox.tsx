@@ -19,7 +19,9 @@ export function LeaderInbox({ issues, onIssueUpdate, onPromoteToAgenda }: Leader
   const [draft, setDraft] = useState('');
 
   const visibleIssues =
-    filter === '전체' ? issues.filter((issue) => issue.status !== '회수') : issues.filter((issue) => issue.status === filter);
+    filter === '전체'
+      ? issues.filter((issue) => issue.status !== '회수' && issue.status !== '종료')
+      : issues.filter((issue) => issue.status === filter);
   const selectedIssue = visibleIssues.find((issue) => issue.id === selectedIssueId) ?? visibleIssues[0];
   const waitingCount = issues.filter((issue) => issue.status === '접수' || issue.status === '검토중').length;
   const answeredCount = issues.filter((issue) => issue.leaderReply).length;
@@ -175,6 +177,12 @@ export function LeaderInbox({ issues, onIssueUpdate, onPromoteToAgenda }: Leader
                 <UserRoundCheck size={18} />
                 처리 기록 남기기
               </button>
+
+              {selectedIssue.status !== '종료' && selectedIssue.status !== '회수' && (
+                <button className="secondary-button wide" onClick={() => onIssueUpdate({ ...selectedIssue, status: '종료' })}>
+                  종료 처리
+                </button>
+              )}
 
               <div className="leader-history">
                 <strong>처리 기록</strong>
