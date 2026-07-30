@@ -1,5 +1,6 @@
 import { BadgeCheck, ClipboardCopy, Coffee, Dice5, Save, Search, Shuffle, Sparkles, UsersRound } from 'lucide-react';
 import { useMemo, useState } from 'react';
+import { Avatar } from '../../components/Avatar';
 import { PanelHeader } from '../../components/PanelHeader';
 import { profiles } from '../../data/mockData';
 import type { Profile } from '../../types';
@@ -522,7 +523,7 @@ export function Connect({ matched: _matched, onShuffleTeams: _onShuffleTeams }: 
                             onClick={() => toggleParticipant(profile.name)}
                             type="button"
                           >
-                            <span className={`tiny-avatar ${profile.color}`}>{profile.name.slice(0, 1)}</span>
+                            <Avatar name={profile.name} color={profile.color} />
                             <div>
                               <strong>{profile.name}</strong>
                               <small>{ageMood.label}</small>
@@ -593,7 +594,7 @@ export function Connect({ matched: _matched, onShuffleTeams: _onShuffleTeams }: 
                       <div className="team-member-list">
                         {team.members.map((member) => (
                           <div key={member.name}>
-                            <span className={`tiny-avatar ${member.color}`}>{member.name.slice(0, 1)}</span>
+                            <Avatar name={member.name} color={member.color} />
                             <div>
                               <strong>{member.name}</strong>
                               <small>{member.part} · {getAgeMood(member.birthYear).label}</small>

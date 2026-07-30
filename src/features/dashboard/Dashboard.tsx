@@ -10,6 +10,7 @@ import {
   UserRound,
   Vote,
 } from 'lucide-react';
+import { Avatar } from '../../components/Avatar';
 import { PanelHeader } from '../../components/PanelHeader';
 import { profiles } from '../../data/mockData';
 import type { ActionItem, Agenda, CurrentUser, Section } from '../../types';
@@ -149,7 +150,7 @@ export function Dashboard({
           <div className="compact-profile-list">
             {featuredProfiles.map((profile) => (
               <button key={profile.name} onClick={() => onSectionChange('profiles')}>
-                <span className={`tiny-avatar ${profile.color}`}>{profile.name.slice(0, 1)}</span>
+                <Avatar name={profile.name} color={profile.color} />
                 <div>
                   <strong>{profile.name}</strong>
                   <small>{profile.trait}</small>
