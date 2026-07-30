@@ -1,5 +1,18 @@
 import { BarChart3, CalendarClock, CheckCircle2, Gauge, Settings2, Sparkles, UsersRound } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { loadActionItems } from '../../actionItemStore';
+import { loadAgendas } from '../../agendaStore';
+import { loadBallots } from '../../ballotStore';
+import {
+  initialAgendas,
+  initialCanOpinions,
+  initialCanSessions,
+  initialIssues,
+  profiles,
+} from '../../data/mockData';
+import { loadIssues } from '../../issueStore';
+import { loadTeaSessions } from '../../teaStore';
+import type { ActionItem, Agenda, AgendaBallot, CanOpinion, CanSession, Issue, Profile, TeaSession } from '../../types';
 
 type PartMetric = {
   name: string;
@@ -38,65 +51,29 @@ const initialWeights: MetricWeights = {
   rewardScore: 82,
 };
 
-const partMetrics: PartMetric[] = [
-  {
-    name: 'TEST혁신파트',
-    members: 10,
-    opinionSubmitted: 18,
-    reflectedOpinions: 12,
-    voteParticipation: 88,
-    coffeeParticipation: 74,
-    oneOnOneMinutes: 360,
-    partMeetingMinutes: 410,
-    longMeetingRate: 18,
-    meetingTrend: '원온원은 충분하고 파트회의 길이는 안정권이에요.',
-    profileColors: [
-      { label: '맥락형', value: 34, color: 'green' },
-      { label: '실행형', value: 23, color: 'red' },
-      { label: '구조형', value: 28, color: 'blue' },
-      { label: '연결형', value: 15, color: 'yellow' },
-    ],
-    traits: ['질문을 촘촘히 쌓음', '리스크를 먼저 발견', '합의 후 실행이 빠름'],
-  },
-  {
-    name: 'ITS혁신파트',
-    members: 9,
-    opinionSubmitted: 13,
-    reflectedOpinions: 9,
-    voteParticipation: 79,
-    coffeeParticipation: 68,
-    oneOnOneMinutes: 280,
-    partMeetingMinutes: 620,
-    longMeetingRate: 36,
-    meetingTrend: '파트회의가 길어지는 편이라 45분 컷 운영을 권장해요.',
-    profileColors: [
-      { label: '맥락형', value: 18, color: 'green' },
-      { label: '실행형', value: 38, color: 'red' },
-      { label: '구조형', value: 19, color: 'blue' },
-      { label: '연결형', value: 25, color: 'yellow' },
-    ],
-    traits: ['빠른 이슈 분해', '실행 실험 선호', '분위기 전환이 좋음'],
-  },
-  {
-    name: '혁신도구파트',
-    members: 11,
-    opinionSubmitted: 16,
-    reflectedOpinions: 8,
-    voteParticipation: 73,
-    coffeeParticipation: 82,
-    oneOnOneMinutes: 310,
-    partMeetingMinutes: 540,
-    longMeetingRate: 29,
-    meetingTrend: '파트 연결 활동은 강하지만 의견 반영 속도는 조금 더 보이면 좋아요.',
-    profileColors: [
-      { label: '맥락형', value: 20, color: 'green' },
-      { label: '실행형', value: 18, color: 'red' },
-      { label: '구조형', value: 42, color: 'blue' },
-      { label: '연결형', value: 20, color: 'yellow' },
-    ],
-    traits: ['복잡한 흐름 구조화', '도구화 감각', '파트 간 연결에 적극적'],
-  },
-];
+const partNames = ['TEST혁신파트', 'ITS혁신파트', '혁신도구파트'];
+
+type MetricsActivity = {
+  actionItems: ActionItem[];
+  agendas: Agenda[];
+  ballots: AgendaBallot[];
+  canOpinions: CanOpinion[];
+  canSessions: CanSession[];
+  connectShareTexts: string[];
+  issues: Issue[];
+  teaSessions: TeaSession[];
+};
+
+const initialActivity: MetricsActivity = {
+  actionItems: [],
+  agendas: initialAgendas,
+  ballots: [],
+  canOpinions: initialCanOpinions,
+  canSessions: initialCanSessions,
+  connectShareTexts: [],
+  issues: initialIssues,
+  teaSessions: [],
+};
 
 function clampScore(score: number) {
   return Math.max(0, Math.min(100, Math.round(score)));
@@ -109,6 +86,7 @@ function getMeetingHealth(part: PartMetric) {
 }
 
 function getReflectionRate(part: PartMetric) {
+  if (part.opinionSubmitted === 0) return 0;
   return Math.round((part.reflectedOpinions / part.opinionSubmitted) * 100);
 }
 
@@ -133,9 +111,151 @@ function getDominantTone(part: PartMetric) {
   return [...part.profileColors].sort((a, b) => b.value - a.value)[0];
 }
 
+function getProfileTone(profile: Profile): PartMetric['profileColors'][number] {
+  const source = `${profile.trait} ${profile.style} ${profile.role}`;
+
+  if (/품질|기준|테스트|판단|재현|리스크/.test(source)) {
+    return { label: '맥락형', value: 0, color: 'green' };
+  }
+  if (/빠르게|실행|실험|피드백|개선|시도/.test(source)) {
+    return { label: '실행형', value: 0, color: 'red' };
+  }
+  if (/구조|룰|운영|프로세스|정리|흐름|도구/.test(source)) {
+    return { label: '구조형', value: 0, color: 'blue' };
+  }
+  return { label: '연결형', value: 0, color: 'yellow' };
+}
+
+function getProfilePalette(members: Profile[]) {
+  const base: PartMetric['profileColors'] = [
+    { label: '맥락형', value: 0, color: 'green' },
+    { label: '실행형', value: 0, color: 'red' },
+    { label: '구조형', value: 0, color: 'blue' },
+    { label: '연결형', value: 0, color: 'yellow' },
+  ];
+
+  members.forEach((member) => {
+    const tone = getProfileTone(member);
+    const target = base.find((item) => item.label === tone.label);
+    if (target) target.value += 1;
+  });
+
+  return base.map((item) => ({
+    ...item,
+    value: members.length > 0 ? Math.round((item.value / members.length) * 100) : 0,
+  }));
+}
+
+function getTraits(members: Profile[]) {
+  return members
+    .map((member) => member.style)
+    .filter(Boolean)
+    .slice(0, 3);
+}
+
+function getConnectParticipation(partMembers: Profile[], shareTexts: string[]) {
+  if (shareTexts.length === 0 || partMembers.length === 0) return 0;
+
+  const participated = new Set<string>();
+  shareTexts.forEach((text) => {
+    partMembers.forEach((member) => {
+      if (text.includes(member.name)) participated.add(member.name);
+    });
+  });
+
+  return Math.round((participated.size / partMembers.length) * 100);
+}
+
+function getVoteParticipation(partAgendas: Agenda[], allAgendas: Agenda[], ballots: AgendaBallot[]) {
+  const targetAgendas = partAgendas.length > 0 ? partAgendas : allAgendas;
+  const eligibleCount = targetAgendas.reduce((sum, agenda) => sum + Math.max(agenda.eligibleCount, 0), 0);
+  const visibleVoteCount = targetAgendas.reduce((sum, agenda) => sum + agenda.approve + agenda.reject, 0);
+  const anonymousBallotHint = allAgendas.length > 0 ? Math.round(ballots.length / allAgendas.length) : 0;
+
+  if (eligibleCount <= 0) return 0;
+  return clampScore(((visibleVoteCount + anonymousBallotHint) / eligibleCount) * 100);
+}
+
+function getMeetingTrend(partMeetingMinutes: number, longMeetingRate: number) {
+  if (longMeetingRate >= 35) return '긴 회의 비율이 높아 45분 컷 운영을 권장해요.';
+  if (partMeetingMinutes >= 520) return '파트회의 총량이 높아 안건 사전 정리를 붙이면 좋아요.';
+  return '원온원과 파트회의 길이가 안정권이에요.';
+}
+
+function readConnectShareTexts() {
+  try {
+    const saved = window.localStorage.getItem('skgrove:connect-results');
+    if (!saved) return [];
+    const parsed = JSON.parse(saved) as { shareText?: string }[];
+    return parsed.map((item) => item.shareText ?? '').filter(Boolean);
+  } catch {
+    return [];
+  }
+}
+
+function buildPartMetrics(activity: MetricsActivity): PartMetric[] {
+  return partNames.map((partName) => {
+    const members = profiles.filter((profile) => profile.part === partName);
+    const canOpinions = activity.canOpinions.filter((opinion) => opinion.part === partName);
+    const partAgendas = activity.agendas.filter((agenda) => agenda.part === partName || agenda.part === '전체');
+    const partActions = activity.actionItems.filter((item) => members.some((member) => item.owner === member.name));
+    const reflectedFromCan = canOpinions.filter((opinion) => opinion.selected).length;
+    const reflectedFromActions = partActions.filter((item) => item.status === '완료' || item.status === '진행중').length;
+    const issuePressure = activity.issues.filter((issue) => issue.target === '파트장' || issue.target.includes(partName)).length;
+    const teaCount = activity.teaSessions.filter((session) => session.part === partName || members.some((member) => member.name === session.presenter)).length;
+    const canSessionCount = activity.canSessions.filter((session) => session.parts.includes(partName as never)).length;
+    const oneOnOneMinutes = members.length * 25 + issuePressure * 20;
+    const partMeetingMinutes = canSessionCount * 80 + teaCount * 45 + canOpinions.length * 12;
+    const longMeetingRate = clampScore((canSessionCount * 8 + teaCount * 4 + issuePressure * 3) / Math.max(1, members.length) * 5);
+
+    return {
+      name: partName,
+      members: members.length,
+      opinionSubmitted: canOpinions.length + issuePressure,
+      reflectedOpinions: reflectedFromCan + reflectedFromActions,
+      voteParticipation: getVoteParticipation(partAgendas, activity.agendas, activity.ballots),
+      coffeeParticipation: getConnectParticipation(members, activity.connectShareTexts),
+      oneOnOneMinutes,
+      partMeetingMinutes,
+      longMeetingRate,
+      meetingTrend: getMeetingTrend(partMeetingMinutes, longMeetingRate),
+      profileColors: getProfilePalette(members),
+      traits: getTraits(members),
+    };
+  });
+}
+
 export function Metrics() {
-  const [selectedPart, setSelectedPart] = useState(partMetrics[0].name);
+  const [partMetrics, setPartMetrics] = useState<PartMetric[]>(() => buildPartMetrics(initialActivity));
+  const [selectedPart, setSelectedPart] = useState(partNames[0]);
   const [weights, setWeights] = useState(initialWeights);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    Promise.all([
+      loadIssues(),
+      loadAgendas(),
+      loadBallots(),
+      loadActionItems(),
+    ]).then(([issues, agendas, ballots, actionItems]) => {
+      if (!isMounted) return;
+      setPartMetrics(buildPartMetrics({
+        actionItems,
+        agendas,
+        ballots,
+        canOpinions: initialCanOpinions,
+        canSessions: initialCanSessions,
+        connectShareTexts: readConnectShareTexts(),
+        issues,
+        teaSessions: loadTeaSessions(),
+      }));
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const scoredParts = useMemo(
     () =>
@@ -156,6 +276,7 @@ export function Metrics() {
   const totalOpinions = scoredParts.reduce((sum, part) => sum + part.opinionSubmitted, 0);
   const reflectedOpinions = scoredParts.reduce((sum, part) => sum + part.reflectedOpinions, 0);
   const averageMeetingHealth = Math.round(scoredParts.reduce((sum, part) => sum + part.meetingHealth, 0) / scoredParts.length);
+  const reflectionRate = totalOpinions > 0 ? Math.round((reflectedOpinions / totalOpinions) * 100) : 0;
 
   const updateWeight = (key: keyof MetricWeights, value: number) => {
     setWeights({ ...weights, [key]: value });
@@ -167,7 +288,7 @@ export function Metrics() {
         <div>
           <p className="eyebrow">CULTURE HEALTH REPORT</p>
           <h2>파트의 회의 습관, 의견 반영, 성향 색을 함께 봅니다.</h2>
-          <p>구글캘린더 연결 전에는 샘플 회의 데이터를 기준으로 분석하고, 연결 후에는 원온원과 파트회의 시간이 자동 반영됩니다.</p>
+          <p>대나무숲, 캔미팅, 안건 투표, 액션아이템, 티미팅, 커넥트 결과를 모아 파트별 문화 흐름을 계산합니다.</p>
         </div>
         <div className="calendar-sync-card">
           <CalendarClock size={22} />
@@ -185,7 +306,7 @@ export function Metrics() {
         <div>
           <CheckCircle2 size={20} />
           반영률
-          <strong>{Math.round((reflectedOpinions / totalOpinions) * 100)}%</strong>
+          <strong>{reflectionRate}%</strong>
         </div>
         <div>
           <Gauge size={20} />
