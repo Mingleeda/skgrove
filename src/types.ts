@@ -135,6 +135,18 @@ export type Profile = {
   photoUrl?: string; // 프로필 사진(직접 이미지 URL). 없으면 이니셜 칩으로 폴백.
 };
 
+export type ConnectResultMode = 'coffee' | 'teams';
+
+export type SavedDrawResult = {
+  id: string;
+  mode: ConnectResultMode;
+  title: string;
+  createdAt: string;
+  summary: string;
+  shareText: string;
+  shareUrl: string;
+};
+
 export type MemoryReaction = '좋아요' | '웃겨요' | '또가요';
 export type MemoryEmoji = '👍' | '👏' | '😂' | '🔥' | '💚';
 

@@ -204,6 +204,45 @@ create policy "Allow prototype action updates"
   using (true)
   with check (true);
 
+create table if not exists public.connect_results (
+  id text primary key,
+  mode text not null check (mode in ('coffee', 'teams')),
+  title text not null,
+  summary text not null default '',
+  share_text text not null default '',
+  share_url text not null default '',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+alter table public.connect_results enable row level security;
+
+drop policy if exists "Allow prototype connect result reads" on public.connect_results;
+drop policy if exists "Allow prototype connect result writes" on public.connect_results;
+drop policy if exists "Allow prototype connect result updates" on public.connect_results;
+drop policy if exists "Allow prototype connect result deletes" on public.connect_results;
+
+create policy "Allow prototype connect result reads"
+  on public.connect_results
+  for select
+  using (true);
+
+create policy "Allow prototype connect result writes"
+  on public.connect_results
+  for insert
+  with check (true);
+
+create policy "Allow prototype connect result updates"
+  on public.connect_results
+  for update
+  using (true)
+  with check (true);
+
+create policy "Allow prototype connect result deletes"
+  on public.connect_results
+  for delete
+  using (true);
+
 create table if not exists public.team_memories (
   id bigint primary key,
   title text not null,
