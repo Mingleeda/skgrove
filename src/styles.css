@@ -1151,7 +1151,7 @@ textarea {
 .leader-inbox-list .issue-actions {
   display: grid;
   gap: 10px;
-  grid-template-columns: 58px minmax(140px, 1fr) 100px;
+  grid-template-columns: 58px minmax(140px, 1fr) 136px;
   justify-self: end;
   width: 100%;
 }
@@ -1167,7 +1167,7 @@ textarea {
 }
 
 .leader-inbox-list .issue-actions .secondary-button {
-  min-width: 100px;
+  min-width: 136px;
   padding: 0 12px;
   white-space: nowrap;
 }
@@ -1202,7 +1202,7 @@ textarea {
   border-radius: 8px;
   display: grid;
   gap: 4px;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   padding: 4px;
 }
 
@@ -1230,6 +1230,17 @@ textarea {
   border: 1px solid #e1e7df;
   border-radius: 8px;
   padding: 14px;
+}
+
+.agenda-refine-form {
+  display: grid;
+  gap: 12px;
+}
+
+.agenda-refine-grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .empty-panel {
@@ -1449,6 +1460,20 @@ textarea {
 
 .issue-body-box p + strong {
   margin-top: 6px;
+}
+
+.privacy-promotion-note {
+  align-items: center;
+  background: #eef8f2;
+  border: 1px solid #bfe2ca;
+  border-radius: 8px;
+  color: #21634f;
+  display: flex;
+  font-size: 13px;
+  font-weight: 800;
+  gap: 10px;
+  line-height: 1.45;
+  padding: 12px;
 }
 
 .issue-locked {

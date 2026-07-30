@@ -1,25 +1,35 @@
-import { CalendarPlus, FileCheck2, Lock, MessageSquareText, PenLine, Send, UserRoundCheck, Vote } from 'lucide-react';
+import { CalendarPlus, FileCheck2, MessageSquareText, PenLine, Send, ShieldCheck, UserRoundCheck, Vote } from 'lucide-react';
 import { useState } from 'react';
-import type { Issue, IssueStatus } from '../../types';
+import { teamParts } from '../../auth';
+import type { Agenda, Identity, Issue, IssueStatus, TeamPart } from '../../types';
 
 type LeaderInboxProps = {
   issues: Issue[];
   onIssueUpdate: (issue: Issue) => void;
-  onPromoteToAgenda: (issue: Issue) => void;
+  onPromoteToAgenda: (
+    issue: Issue,
+    draft: Pick<Agenda, 'title' | 'description' | 'category' | 'part' | 'author' | 'deadline'>,
+  ) => void;
 };
 
-type LeaderAction = 'reply' | 'oneOnOne' | 'actionItem' | 'memo';
+type AgendaDraft = Pick<Agenda, 'title' | 'description' | 'category' | 'part' | 'author' | 'deadline'>;
+type LeaderAction = 'reply' | 'oneOnOne' | 'actionItem' | 'agenda' | 'memo';
 
 const filters: Array<'전체' | IssueStatus> = ['전체', '접수', '검토중', '답변완료', '1on1 제안', '액션아이템', '안건화', '보류', '종료'];
+const agendaParts: TeamPart[] = ['전체', ...teamParts];
+const DEFAULT_VOTING_DAYS = 7;
+const addDays = (days: number) => new Date(Date.now() + days * 86400000).toISOString().slice(0, 10);
 
 export function LeaderInbox({ issues, onIssueUpdate, onPromoteToAgenda }: LeaderInboxProps) {
   const [filter, setFilter] = useState<'전체' | IssueStatus>('전체');
   const [selectedIssueId, setSelectedIssueId] = useState(issues[0]?.id ?? '');
   const [activeAction, setActiveAction] = useState<LeaderAction>('reply');
   const [draft, setDraft] = useState('');
+  const [agendaDrafts, setAgendaDrafts] = useState<Record<string, AgendaDraft>>({});
 
   const visibleIssues = filter === '전체' ? issues : issues.filter((issue) => issue.status === filter);
   const selectedIssue = visibleIssues.find((issue) => issue.id === selectedIssueId) ?? visibleIssues[0];
+  const agendaDraft = selectedIssue ? agendaDrafts[selectedIssue.id] ?? makeAgendaDraft(selectedIssue) : null;
   const waitingCount = issues.filter((issue) => issue.status === '접수' || issue.status === '검토중').length;
   const answeredCount = issues.filter((issue) => issue.leaderReply).length;
   const followUpCount = issues.filter((issue) => issue.oneOnOneNote || issue.actionItem).length;
@@ -27,10 +37,20 @@ export function LeaderInbox({ issues, onIssueUpdate, onPromoteToAgenda }: Leader
   const chooseIssue = (issue: Issue) => {
     setSelectedIssueId(issue.id);
     setDraft('');
+    setAgendaDrafts((current) => ({ ...current, [issue.id]: current[issue.id] ?? makeAgendaDraft(issue) }));
   };
 
   const changeStatus = (issue: Issue, status: IssueStatus) => {
     onIssueUpdate({ ...issue, status });
+  };
+
+  const updateAgendaDraft = (patch: Partial<AgendaDraft>) => {
+    if (!selectedIssue || !agendaDraft) return;
+
+    setAgendaDrafts((current) => ({
+      ...current,
+      [selectedIssue.id]: { ...agendaDraft, ...patch },
+    }));
   };
 
   const saveAction = () => {
@@ -53,6 +73,29 @@ export function LeaderInbox({ issues, onIssueUpdate, onPromoteToAgenda }: Leader
     }
 
     setDraft('');
+  };
+
+  const submitAgendaDraft = () => {
+    if (!selectedIssue || !agendaDraft) return;
+
+    const nextDraft: AgendaDraft = {
+      ...agendaDraft,
+      title: agendaDraft.title.trim(),
+      description: agendaDraft.description.trim(),
+      category: agendaDraft.category.trim() || selectedIssue.category,
+      author: selectedIssue.visibility === '리더만 보기' ? '익명' : agendaDraft.author,
+      deadline: agendaDraft.deadline || addDays(DEFAULT_VOTING_DAYS),
+    };
+
+    if (!nextDraft.title || !nextDraft.description) return;
+
+    onPromoteToAgenda(selectedIssue, nextDraft);
+    setAgendaDrafts((current) => {
+      const next = { ...current };
+      delete next[selectedIssue.id];
+      return next;
+    });
+    setActiveAction('reply');
   };
 
   return (
@@ -109,19 +152,21 @@ export function LeaderInbox({ issues, onIssueUpdate, onPromoteToAgenda }: Leader
                         <option key={status}>{status}</option>
                       ))}
                   </select>
-                  {issue.visibility === '안건 후보로 공개 가능' ? (
-                    <button className="secondary-button" onClick={() => onPromoteToAgenda(issue)}>
-                      <Vote size={17} />
-                      안건화
-                    </button>
-                  ) : (
-                    // 접수자가 '리더만 보기'를 골랐다면 공개 안건으로 올릴 수 없다.
-                    // 접수 화면이 한 약속이라 리더 권한으로도 뒤집지 않는다.
-                    <span className="issue-locked" title="접수자가 '리더만 보기'로 제출했습니다.">
-                      <Lock size={15} />
-                      안건화 불가
-                    </span>
-                  )}
+                  <button
+                    className="secondary-button"
+                    onClick={() => {
+                      chooseIssue(issue);
+                      setActiveAction('agenda');
+                    }}
+                    title={
+                      issue.visibility === '리더만 보기'
+                        ? '원문과 작성자 정보는 공개하지 않고 정제한 익명 안건을 만듭니다.'
+                        : '접수 의견을 정제해 안건 후보로 전환합니다.'
+                    }
+                  >
+                    {issue.visibility === '리더만 보기' ? <ShieldCheck size={17} /> : <Vote size={17} />}
+                    {issue.visibility === '리더만 보기' ? '정제 후 안건화' : '안건화'}
+                  </button>
                 </div>
               </article>
             ))}
@@ -139,6 +184,13 @@ export function LeaderInbox({ issues, onIssueUpdate, onPromoteToAgenda }: Leader
                   {selectedIssue.visibility}
                 </p>
               </div>
+
+              {selectedIssue.visibility === '리더만 보기' && (
+                <div className="privacy-promotion-note">
+                  <ShieldCheck size={18} />
+                  <span>이 접수 건은 원문 작성자 정보를 공개하지 않고, 리더가 정제한 익명 안건으로만 전환됩니다.</span>
+                </div>
+              )}
 
               {/* 리더가 답변하려면 접수자가 무엇을 썼는지 읽을 수 있어야 한다. */}
               <div className="issue-body-box">
@@ -165,21 +217,103 @@ export function LeaderInbox({ issues, onIssueUpdate, onPromoteToAgenda }: Leader
                   <FileCheck2 size={17} />
                   액션
                 </button>
+                <button className={activeAction === 'agenda' ? 'selected' : ''} onClick={() => setActiveAction('agenda')}>
+                  <Vote size={17} />
+                  안건
+                </button>
                 <button className={activeAction === 'memo' ? 'selected' : ''} onClick={() => setActiveAction('memo')}>
                   <PenLine size={17} />
                   메모
                 </button>
               </div>
 
-              <label>
-                {getActionLabel(activeAction)}
-                <textarea value={draft} onChange={(event) => setDraft(event.target.value)} placeholder={getActionPlaceholder(activeAction)} />
-              </label>
+              {activeAction === 'agenda' && agendaDraft ? (
+                <div className="agenda-refine-form">
+                  <label>
+                    안건 제목
+                    <input
+                      value={agendaDraft.title}
+                      onChange={(event) => updateAgendaDraft({ title: event.target.value })}
+                      placeholder="팀원이 투표할 수 있는 안건 제목으로 정리해주세요."
+                    />
+                  </label>
 
-              <button className="primary-button wide" onClick={saveAction}>
-                <UserRoundCheck size={18} />
-                처리 기록 남기기
-              </button>
+                  <label>
+                    안건 설명
+                    <textarea
+                      value={agendaDraft.description}
+                      onChange={(event) => updateAgendaDraft({ description: event.target.value })}
+                      placeholder="원문을 그대로 옮기지 말고, 투표 가능한 배경과 기대 변화를 정제해주세요."
+                    />
+                  </label>
+
+                  <div className="agenda-refine-grid">
+                    <label>
+                      카테고리
+                      <input value={agendaDraft.category} onChange={(event) => updateAgendaDraft({ category: event.target.value })} />
+                    </label>
+                    <label>
+                      투표 대상
+                      <select value={agendaDraft.part} onChange={(event) => updateAgendaDraft({ part: event.target.value as TeamPart })}>
+                        {agendaParts.map((part) => (
+                          <option key={part}>{part}</option>
+                        ))}
+                      </select>
+                    </label>
+                  </div>
+
+                  <div className="agenda-refine-grid">
+                    <label>
+                      공개 방식
+                      <select
+                        value={selectedIssue.visibility === '리더만 보기' ? '익명' : agendaDraft.author}
+                        disabled={selectedIssue.visibility === '리더만 보기'}
+                        onChange={(event) => updateAgendaDraft({ author: event.target.value as Identity })}
+                      >
+                        <option>익명</option>
+                        <option>실명</option>
+                      </select>
+                    </label>
+                    <label>
+                      투표 마감일
+                      <input
+                        type="date"
+                        min={addDays(1)}
+                        value={agendaDraft.deadline}
+                        onChange={(event) => updateAgendaDraft({ deadline: event.target.value })}
+                      />
+                    </label>
+                  </div>
+
+                  {selectedIssue.visibility === '리더만 보기' && (
+                    <div className="privacy-promotion-note">
+                      <ShieldCheck size={18} />
+                      <span>원문과 작성자 정보는 공개되지 않습니다. 리더가 정제한 별도 안건만 안건함에 올라갑니다.</span>
+                    </div>
+                  )}
+
+                  <button
+                    className="primary-button wide"
+                    disabled={!agendaDraft.title.trim() || !agendaDraft.description.trim()}
+                    onClick={submitAgendaDraft}
+                  >
+                    <ShieldCheck size={18} />
+                    {selectedIssue.visibility === '리더만 보기' ? '익명화해 안건 후보로 만들기' : '정제한 안건 후보로 만들기'}
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <label>
+                    {getActionLabel(activeAction)}
+                    <textarea value={draft} onChange={(event) => setDraft(event.target.value)} placeholder={getActionPlaceholder(activeAction)} />
+                  </label>
+
+                  <button className="primary-button wide" onClick={saveAction}>
+                    <UserRoundCheck size={18} />
+                    처리 기록 남기기
+                  </button>
+                </>
+              )}
 
               <div className="leader-history">
                 <strong>처리 기록</strong>
@@ -202,6 +336,24 @@ export function LeaderInbox({ issues, onIssueUpdate, onPromoteToAgenda }: Leader
       </div>
     </section>
   );
+}
+
+function makeAgendaDraft(issue: Issue): AgendaDraft {
+  const description = [
+    issue.body,
+    issue.expectedChange ? `기대 변화\n${issue.expectedChange}` : '',
+  ]
+    .filter(Boolean)
+    .join('\n\n');
+
+  return {
+    title: issue.title,
+    description,
+    category: issue.category,
+    part: '전체',
+    author: issue.visibility === '리더만 보기' ? '익명' : issue.author,
+    deadline: addDays(DEFAULT_VOTING_DAYS),
+  };
 }
 
 function getActionLabel(action: LeaderAction) {
