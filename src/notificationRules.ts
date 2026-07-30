@@ -1,7 +1,7 @@
 // 알림 기준 정의 (SKSOOP-110). "어떤 이벤트가 → 누구에게 → 어떤 알림을" 을 한 곳에 명문화.
 // 순수 함수만 두어 단위 테스트로 회귀 검증한다(팀 관례: *Rules.ts). React·상태 의존 없음.
 import { daysLeft, isOpen } from './agendaRules';
-import type { ActionItem, Agenda, AppNotification, Issue, ManagedAccount, TeaSession } from './types';
+import type { ActionItem, Agenda, AppNotification, HumorPost, Issue, ManagedAccount, TeaSession } from './types';
 
 // 마감 며칠 전부터 "임박" 알림을 낼지.
 export const DEADLINE_SOON_DAYS = 2;
@@ -139,6 +139,27 @@ export function teaProposalDrafts(
     createdAt: now,
     read: false,
   }));
+}
+
+// 유머게시판: 내 글에 댓글이 달리면 작성자에게 알림(인앱 전용, 슬랙 미전송).
+export function humorCommentDraft(
+  post: HumorPost,
+  commenterName: string,
+  now: string,
+  commentId: string,
+): NotificationDraft {
+  return {
+    kind: 'humor',
+    recipientName: post.author,
+    fromName: commenterName,
+    title: '유머게시판 · 내 글에 댓글이 달렸어요',
+    body: post.body.length > 40 ? `${post.body.slice(0, 40)}…` : post.body,
+    section: 'humor',
+    sourceId: commentId,
+    dedupeKey: dedupeKey('humor', commentId, post.author),
+    createdAt: now,
+    read: false,
+  };
 }
 
 export function messageDraft(

@@ -4,6 +4,8 @@ import type {
   AppNotification,
   CanOpinion,
   CanSession,
+  HumorComment,
+  HumorPost,
   Issue,
   PartScore,
   Profile,
@@ -146,7 +148,7 @@ export const initialActionItems: ActionItem[] = [
 ];
 
 type ProfileSeed = Pick<Profile, 'name' | 'part' | 'birthYear' | 'trait' | 'style' | 'color'> &
-  Partial<Pick<Profile, 'role' | 'englishName' | 'birthday' | 'character' | 'collaboration' | 'feedback' | 'guide'>>;
+  Partial<Pick<Profile, 'role' | 'englishName' | 'birthday' | 'character' | 'collaboration' | 'feedback' | 'guide' | 'photoUrl'>>;
 
 const profileFromSeed = (profile: ProfileSeed): Profile => ({
   role: '팀 문화와 협업 흐름 참여',
@@ -190,6 +192,8 @@ export const profiles: Profile[] = [
   profileFromSeed({ name: '최유라', part: 'TEST혁신파트', birthYear: '1995', trait: 'Gentle Fix', style: '불편한 흐름을 작은 개선으로 바꿈', color: 'yellow' }),
   profileFromSeed({ name: '하준영', part: 'ITS혁신파트', birthYear: '1991', trait: 'System Eyes', style: '서비스 전체 영향을 먼저 계산함', color: 'green' }),
   profileFromSeed({ name: '홍세아', part: '혁신도구파트', birthYear: '1999', trait: 'Fresh Note', style: '새로운 관점을 쉽게 기록하고 공유함', color: 'blue' }),
+  profileFromSeed({ name: '김영석', part: 'ITS혁신파트', birthYear: '1985', trait: 'Prime Mover', style: '핵심을 먼저 짚고 팀을 밀어붙임', color: 'red', photoUrl: 'https://telinfo.skax.co.kr/servlet/PictureServlet?picGubun=1&empNo=08215' }),
+  profileFromSeed({ name: '문성욱', part: 'ITS혁신파트', birthYear: '1986', trait: 'Steady Spark', style: '차분하게 아이디어를 계속 던짐', color: 'green', photoUrl: 'https://telinfo.skax.co.kr/servlet/PictureServlet?picGubun=1&empNo=08194' }),
 ];
 
 export const partScores: PartScore[] = [
@@ -454,4 +458,87 @@ export const initialNotifications: AppNotification[] = [
     createdAt: '2026-07-25',
     read: true,
   },
+];
+
+// ===== 유머게시판 =====
+export const initialHumorPosts: HumorPost[] = [
+  {
+    id: 'HUM-06',
+    author: '김영석',
+    body: '연차 쓴 날 아침에 눈 번쩍 떠지는 사람 손.jpg 🙋 (나만 그런 거 아니지?)',
+    mediaUrl: 'https://picsum.photos/seed/skgrove-yeongseok/640/420',
+    createdAt: '2026-07-29',
+    likedBy: ['이선민', '김승현', '김수정', '이상협', '이두민', '정다은', '박지훈', '최하늘'],
+  },
+  {
+    id: 'HUM-07',
+    author: '문성욱',
+    body: '월급날 통장: 스쳐 지나가는 인연 👋 (짧고 굵었다)',
+    mediaUrl: '',
+    createdAt: '2026-07-29',
+    likedBy: ['김승현', '김수정', '이상협', '이선민'],
+  },
+  {
+    id: 'HUM-08',
+    author: '문성욱',
+    body: '재택근무 복장 레벨: 상의 셔츠 / 하의 잠옷. 화상회의만 아니면 완벽.',
+    mediaUrl: '',
+    createdAt: '2026-07-28',
+    likedBy: ['이두민', '정다은'],
+  },
+  {
+    id: 'HUM-09',
+    author: '문성욱',
+    body: '"이번엔 진짜 일찍 잔다" 하고 새벽 3시에 유튜브 보는 나에게.',
+    mediaUrl: '',
+    createdAt: '2026-07-27',
+    likedBy: ['박지훈'],
+  },
+  {
+    id: 'HUM-01',
+    author: '김수정',
+    body: '월요일 아침의 나 vs 금요일 저녁의 나.jpg',
+    mediaUrl: 'https://picsum.photos/seed/skgrove-humor/640/420',
+    createdAt: '2026-07-27',
+    likedBy: ['이선민', '김승현', '이상협', '이두민'],
+  },
+  {
+    id: 'HUM-02',
+    author: '김승현',
+    body: '오늘 배포 성공해서 기분 좋아 커피 쐈습니다 ☕ 다들 픽업하세요~',
+    mediaUrl: '',
+    createdAt: '2026-07-28',
+    likedBy: ['이선민', '김수정', '이상협', '이두민', '정다은', '박지훈'],
+  },
+  {
+    id: 'HUM-03',
+    author: '이상협',
+    body: '팀 회식 다음날 우리 팀 단톡방 상태.mp4 (feat. 무한 정적)',
+    mediaUrl: 'https://youtu.be/dQw4w9WgXcQ',
+    createdAt: '2026-07-26',
+    likedBy: ['김수정', '김승현'],
+  },
+  {
+    id: 'HUM-04',
+    author: '김수정',
+    body: '점심 뭐 먹지 고민하다 점심시간 끝냄. 이것도 능력.',
+    mediaUrl: '',
+    createdAt: '2026-07-25',
+    likedBy: ['이두민'],
+  },
+  {
+    id: 'HUM-05',
+    author: '이두민',
+    body: '제주도 여행 티미팅 세션 준비 중인데 사진이 300장이라 행복한 고민 중입니다',
+    mediaUrl: '',
+    createdAt: '2026-07-24',
+    likedBy: ['김수정', '이선민'],
+  },
+];
+
+export const initialHumorComments: HumorComment[] = [
+  { id: 'HMC-01', postId: 'HUM-02', author: '이선민', body: '커피 감사합니다 ☕ 잘 마실게요', createdAt: '2026-07-28' },
+  { id: 'HMC-02', postId: 'HUM-01', author: '이선민', body: 'ㅋㅋㅋ 너무 공감돼요', createdAt: '2026-07-27' },
+  { id: 'HMC-03', postId: 'HUM-03', author: '이선민', body: '그건 명백한 스펙입니다', createdAt: '2026-07-26' },
+  { id: 'HMC-04', postId: 'HUM-01', author: '이두민', body: '저장했습니다', createdAt: '2026-07-27' },
 ];

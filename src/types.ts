@@ -10,7 +10,8 @@ export type Section =
   | 'memory'
   | 'metrics'
   | 'accounts'
-  | 'notifications';
+  | 'notifications'
+  | 'humor';
 
 export type Identity = '익명' | '실명';
 export type Urgency = '낮음' | '보통' | '높음';
@@ -131,6 +132,7 @@ export type Profile = {
   feedback: string;
   guide: string;
   color: 'green' | 'red' | 'blue' | 'yellow';
+  photoUrl?: string; // 프로필 사진(직접 이미지 URL). 없으면 이니셜 칩으로 폴백.
 };
 
 export type PartScore = {
@@ -197,8 +199,8 @@ export type TeaGroup = {
 };
 
 // ===== 알림 / 메시지 (SKSOOP-21) =====
-// 시스템 알림(issue/agenda/deadline/action/tea)과 사람이 보내는 DM(message).
-export type NotificationKind = 'issue' | 'agenda' | 'deadline' | 'action' | 'tea' | 'message';
+// 시스템 알림(issue/agenda/deadline/action/tea/humor)과 사람이 보내는 DM(message).
+export type NotificationKind = 'issue' | 'agenda' | 'deadline' | 'action' | 'tea' | 'humor' | 'message';
 
 export type AppNotification = {
   id: string;
@@ -212,4 +214,24 @@ export type AppNotification = {
   dedupeKey: string; // 중복 생성 방지 키(특히 마감 임박)
   createdAt: string; // 'YYYY-MM-DD'
   read: boolean;
+};
+
+// ===== 유머게시판 =====
+// 팀원이 재미있는 글을 실명으로 올리고 좋아요·댓글로 반응. 이번 달 랭커를 상단에 노출.
+// 카테고리는 오픈 초기엔 단일 게시판으로 운영(나중에 사용 보고 분리 판단).
+export type HumorPost = {
+  id: string;
+  author: string; // 실명(로그인 사용자)
+  body: string;
+  mediaUrl: string; // 선택 — 이미지 주소·유튜브·영상 링크. 렌더 시 자동 판별.
+  createdAt: string; // 'YYYY-MM-DD'
+  likedBy: string[]; // 좋아요 누른 사람 이름 — 토글·집계·랭킹 소스
+};
+
+export type HumorComment = {
+  id: string;
+  postId: string;
+  author: string;
+  body: string;
+  createdAt: string;
 };

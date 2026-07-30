@@ -31,6 +31,7 @@ import { AccountManagement } from './features/auth/AccountManagement';
 import { LoginScreen } from './features/auth/LoginScreen';
 import { Connect } from './features/connect/Connect';
 import { Dashboard } from './features/dashboard/Dashboard';
+import { HumorBoard } from './features/humor/HumorBoard';
 import { Intake } from './features/intake/Intake';
 import { LeaderInbox } from './features/leader/LeaderInbox';
 import { Meetings } from './features/meetings/Meetings';
@@ -45,6 +46,7 @@ import {
   agendaAudience,
   agendaDrafts,
   deadlineDrafts,
+  humorCommentDraft,
   isDeadlineSoon,
   issueDrafts,
   leadersFor,
@@ -55,6 +57,14 @@ import {
   type NotificationDraft,
 } from './notificationRules';
 import { loadNotifications, makeNotificationId, saveNotifications } from './notificationStore';
+import {
+  loadHumorComments,
+  loadHumorPosts,
+  makeHumorCommentId,
+  makeHumorId,
+  saveHumorComments,
+  saveHumorPosts,
+} from './humorStore';
 import type {
   ActionItem,
   Agenda,
@@ -64,6 +74,8 @@ import type {
   CanOpinion,
   CanSession,
   CurrentUser,
+  HumorComment,
+  HumorPost,
   Identity,
   Issue,
   ManagedAccount,
@@ -96,6 +108,7 @@ const SECTION_BY_HASH: Record<string, Section> = {
   '#metrics': 'metrics',
   '#accounts': 'accounts',
   '#notifications': 'notifications',
+  '#humor': 'humor',
 };
 
 export function App() {
@@ -115,6 +128,8 @@ export function App() {
   const [teaSessions, setTeaSessions] = useState<TeaSession[]>(loadTeaSessions);
   const [teaSessionTypes, setTeaSessionTypes] = useState<string[]>(loadTeaSessionTypes);
   const [notifications, setNotifications] = useState<AppNotification[]>(loadNotifications);
+  const [humorPosts, setHumorPosts] = useState<HumorPost[]>(loadHumorPosts);
+  const [humorComments, setHumorComments] = useState<HumorComment[]>(loadHumorComments);
 
   const [votedAgendaIds, setVotedAgendaIds] = useState<string[]>([]);
   const [agendaForActions, setAgendaForActions] = useState<Agenda | null>(null);
@@ -543,6 +558,71 @@ export function App() {
   // 이번 티미팅 공지문을 팀 전체 채널로 전송.
   const announceTeaToSlack = (text: string) => sendAnnouncement('team', text);
 
+  // ===== 유머게시판 =====
+  const persistHumorPosts = (next: HumorPost[]) => {
+    setHumorPosts(next);
+    saveHumorPosts(next);
+  };
+  const persistHumorComments = (next: HumorComment[]) => {
+    setHumorComments(next);
+    saveHumorComments(next);
+  };
+
+  const addHumorPost = (draft: { body: string; mediaUrl: string }) => {
+    if (!currentUser || !draft.body.trim()) return;
+    const post: HumorPost = {
+      id: makeHumorId(),
+      author: currentUser.name,
+      body: draft.body.trim(),
+      mediaUrl: draft.mediaUrl.trim(),
+      createdAt: today(),
+      likedBy: [],
+    };
+    persistHumorPosts([post, ...humorPosts]);
+  };
+
+  const toggleHumorLike = (postId: string) => {
+    if (!currentUser) return;
+    const me = currentUser.name;
+    persistHumorPosts(
+      humorPosts.map((post) =>
+        post.id === postId
+          ? {
+              ...post,
+              likedBy: post.likedBy.includes(me) ? post.likedBy.filter((n) => n !== me) : [...post.likedBy, me],
+            }
+          : post,
+      ),
+    );
+  };
+
+  const addHumorComment = (postId: string, body: string) => {
+    if (!currentUser || !body.trim()) return;
+    const commentId = makeHumorCommentId();
+    const comment: HumorComment = { id: commentId, postId, author: currentUser.name, body: body.trim(), createdAt: today() };
+    persistHumorComments([...humorComments, comment]);
+    // 남의 글에 댓글 → 작성자에게 인앱 알림
+    const post = humorPosts.find((item) => item.id === postId);
+    if (post && post.author !== currentUser.name) {
+      notify([humorCommentDraft(post, currentUser.name, today(), commentId)]);
+    }
+  };
+
+  const deleteHumorPost = (postId: string) => {
+    const post = humorPosts.find((item) => item.id === postId);
+    if (!post || !currentUser) return;
+    if (post.author !== currentUser.name && !isTeamLeader(currentUser)) return; // 본인·팀리더만
+    persistHumorPosts(humorPosts.filter((item) => item.id !== postId));
+    persistHumorComments(humorComments.filter((item) => item.postId !== postId));
+  };
+
+  const deleteHumorComment = (commentId: string) => {
+    const comment = humorComments.find((item) => item.id === commentId);
+    if (!comment || !currentUser) return;
+    if (comment.author !== currentUser.name && !isTeamLeader(currentUser)) return;
+    persistHumorComments(humorComments.filter((item) => item.id !== commentId));
+  };
+
   // 115: 특정 대상에게 직접 메시지
   const sendMessage = (recipientName: string, body: string) => {
     if (!currentUser || !recipientName || !body.trim()) return;
@@ -711,6 +791,19 @@ export function App() {
           onMarkAllRead={markAllNotificationsRead}
           onSend={sendMessage}
           onOpen={changeSection}
+        />
+      )}
+      {active === 'humor' && (
+        <HumorBoard
+          posts={humorPosts}
+          comments={humorComments}
+          currentUser={currentUser}
+          canModerate={isTeamLeader(currentUser)}
+          onAddPost={addHumorPost}
+          onToggleLike={toggleHumorLike}
+          onAddComment={addHumorComment}
+          onDeletePost={deleteHumorPost}
+          onDeleteComment={deleteHumorComment}
         />
       )}
       {active === 'profiles' && <Profiles currentUser={currentUser} />}
