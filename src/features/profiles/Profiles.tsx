@@ -8,6 +8,7 @@ import {
   UserRound,
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import { Avatar } from '../../components/Avatar';
 import { PanelHeader } from '../../components/PanelHeader';
 import { profiles as initialProfiles } from '../../data/mockData';
 import { loadProfiles, saveProfileForUser } from '../../profileStore';
@@ -376,7 +377,7 @@ export function Profiles({ currentUser }: ProfilesProps) {
         <div className="profile-list-grid">
           {filteredProfiles.map((profile) => (
             <button className={selectedProfile?.name === profile.name ? 'selected' : ''} key={profile.name} onClick={() => setSelectedName(profile.name)}>
-              <span className={`tiny-avatar ${profile.color}`}>{profile.name.slice(0, 1)}</span>
+              <Avatar name={profile.name} color={profile.color} />
               <div>
                 <strong>{profile.name}{profile.name === currentUser.name ? ' · 나' : ''}</strong>
                 <small>{profile.part} · {profile.englishName}</small>
