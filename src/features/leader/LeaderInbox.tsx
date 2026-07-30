@@ -15,7 +15,7 @@ type LeaderInboxProps = {
 type AgendaDraft = Pick<Agenda, 'title' | 'description' | 'category' | 'part' | 'author' | 'deadline'>;
 type LeaderAction = 'reply' | 'oneOnOne' | 'actionItem' | 'agenda' | 'memo';
 
-const filters: Array<'전체' | IssueStatus> = ['전체', '접수', '검토중', '답변완료', '1on1 제안', '액션아이템', '안건화', '보류', '종료'];
+const filters: Array<'전체' | IssueStatus> = ['전체', '접수', '검토중', '답변완료', '1on1 제안', '액션아이템', '안건화', '보류', '회수', '종료'];
 const agendaParts: TeamPart[] = ['전체', ...teamParts];
 const DEFAULT_VOTING_DAYS = 7;
 const addDays = (days: number) => new Date(Date.now() + days * 86400000).toISOString().slice(0, 10);
@@ -27,7 +27,10 @@ export function LeaderInbox({ issues, onIssueUpdate, onPromoteToAgenda }: Leader
   const [draft, setDraft] = useState('');
   const [agendaDrafts, setAgendaDrafts] = useState<Record<string, AgendaDraft>>({});
 
-  const visibleIssues = filter === '전체' ? issues : issues.filter((issue) => issue.status === filter);
+  const visibleIssues =
+    filter === '전체'
+      ? issues.filter((issue) => issue.status !== '회수' && issue.status !== '종료')
+      : issues.filter((issue) => issue.status === filter);
   const selectedIssue = visibleIssues.find((issue) => issue.id === selectedIssueId) ?? visibleIssues[0];
   const agendaDraft = selectedIssue ? agendaDrafts[selectedIssue.id] ?? makeAgendaDraft(selectedIssue) : null;
   const waitingCount = issues.filter((issue) => issue.status === '접수' || issue.status === '검토중').length;
@@ -135,8 +138,16 @@ export function LeaderInbox({ issues, onIssueUpdate, onPromoteToAgenda }: Leader
                   <span className={`priority ${issue.urgency}`}>{issue.urgency}</span>
                   <h2>{issue.title}</h2>
                   <p>
-                    {issue.id} · {issue.category} · {issue.author} · {issue.target}
+                    {issue.id} · {issue.category} · {getAuthorLabel(issue)} · {issue.target}
                   </p>
+                  {issue.author === '실명' && issue.submitterName && (
+                    <div className="author-card">
+                      <strong>{issue.submitterName}</strong>
+                      <span>
+                        {issue.submitterPart} · {issue.submitterEmail}
+                      </span>
+                    </div>
+                  )}
                   <div className="issue-flags">
                     {issue.leaderReply && <span>답변 있음</span>}
                     {issue.oneOnOneNote && <span>1on1 제안</span>}
@@ -154,6 +165,7 @@ export function LeaderInbox({ issues, onIssueUpdate, onPromoteToAgenda }: Leader
                   </select>
                   <button
                     className="secondary-button"
+                    disabled={issue.status === '회수'}
                     onClick={() => {
                       chooseIssue(issue);
                       setActiveAction('agenda');
@@ -180,9 +192,17 @@ export function LeaderInbox({ issues, onIssueUpdate, onPromoteToAgenda }: Leader
                 <span className="status-pill">{selectedIssue.status}</span>
                 <h2>{selectedIssue.title}</h2>
                 <p>
-                  {selectedIssue.id} · {selectedIssue.category} · {selectedIssue.author} · {selectedIssue.target} ·{' '}
+                  {selectedIssue.id} · {selectedIssue.category} · {getAuthorLabel(selectedIssue)} · {selectedIssue.target} ·{' '}
                   {selectedIssue.visibility}
                 </p>
+                {selectedIssue.author === '실명' && selectedIssue.submitterName && (
+                  <div className="author-card prominent">
+                    <strong>{selectedIssue.submitterName}</strong>
+                    <span>
+                      {selectedIssue.submitterPart} · {selectedIssue.submitterEmail}
+                    </span>
+                  </div>
+                )}
               </div>
 
               {selectedIssue.visibility === '리더만 보기' && (
@@ -315,13 +335,33 @@ export function LeaderInbox({ issues, onIssueUpdate, onPromoteToAgenda }: Leader
                 </>
               )}
 
+              {selectedIssue.status !== '종료' && selectedIssue.status !== '회수' && (
+                <button className="secondary-button wide" onClick={() => onIssueUpdate({ ...selectedIssue, status: '종료' })}>
+                  종료 처리
+                </button>
+              )}
+
               <div className="leader-history">
                 <strong>처리 기록</strong>
                 {selectedIssue.leaderReply && <p>답변: {selectedIssue.leaderReply}</p>}
                 {selectedIssue.oneOnOneNote && <p>1on1: {selectedIssue.oneOnOneNote}</p>}
                 {selectedIssue.actionItem && <p>액션아이템: {selectedIssue.actionItem}</p>}
                 {selectedIssue.leaderMemo && <p>리더 메모: {selectedIssue.leaderMemo}</p>}
-                {!selectedIssue.leaderReply && !selectedIssue.oneOnOneNote && !selectedIssue.actionItem && !selectedIssue.leaderMemo && (
+                {selectedIssue.oneOnOneResponse && (
+                  <p>
+                    팀원 1on1 응답: {selectedIssue.oneOnOneResponse}
+                    {selectedIssue.submitterResponse ? ` · ${selectedIssue.submitterResponse}` : ''}
+                  </p>
+                )}
+                {!selectedIssue.oneOnOneResponse && selectedIssue.submitterResponse && (
+                  <p>팀원 후속 응답: {selectedIssue.submitterResponse}</p>
+                )}
+                {!selectedIssue.leaderReply &&
+                  !selectedIssue.oneOnOneNote &&
+                  !selectedIssue.actionItem &&
+                  !selectedIssue.leaderMemo &&
+                  !selectedIssue.oneOnOneResponse &&
+                  !selectedIssue.submitterResponse && (
                   <p>아직 남긴 처리 기록이 없습니다.</p>
                 )}
               </div>
@@ -368,4 +408,9 @@ function getActionPlaceholder(action: LeaderAction) {
   if (action === 'oneOnOne') return '대화 목적, 제안 일정, 참여 대상을 적어주세요.';
   if (action === 'actionItem') return '담당자, 완료 기준, 희망 일정을 포함해 적어주세요.';
   return '리더끼리 공유할 판단 근거를 남겨주세요.';
+}
+
+function getAuthorLabel(issue: Issue) {
+  if (issue.author === '익명') return '익명';
+  return issue.submitterName ? `실명 ${issue.submitterName}` : '실명';
 }

@@ -2,24 +2,31 @@ import { useState } from 'react';
 import {
   AlertTriangle,
   CheckCircle2,
+  ChevronDown,
+  ChevronRight,
   EyeOff,
   FileText,
+  KeyRound,
   Megaphone,
   MessageSquarePlus,
   Send,
   ShieldCheck,
 } from 'lucide-react';
 import { PanelHeader } from '../../components/PanelHeader';
-import type { Identity, Issue, IssueVisibility, Urgency } from '../../types';
+import type { CurrentUser, Identity, Issue, IssueVisibility, Urgency } from '../../types';
 
 type IntakeProps = {
   identity: Identity;
+  currentUser: CurrentUser;
+  issues: Issue[];
   onIdentityChange: (identity: Identity) => void;
+  onIssueUpdate: (issue: Issue) => void;
   onSubmitIssue: (issue: Omit<Issue, 'id' | 'status'>) => Issue;
 };
 
 type IntakeStep = 'scope' | 'content' | 'review' | 'complete';
 type Target = '팀리더' | '파트리더' | '리더 전체';
+type MyIssueFilter = '전체' | '답변 대기' | '1on1' | '완료';
 
 const categories = ['회의문화', '협업', '업무방식', '갈등', '성장/피드백', '복지/분위기', '기타'];
 const steps: Array<{ id: IntakeStep; label: string }> = [
@@ -29,12 +36,7 @@ const steps: Array<{ id: IntakeStep; label: string }> = [
   { id: 'complete', label: '접수 완료' },
 ];
 
-const mySubmissions = [
-  { id: 'SOOP-142', title: '팀 티미팅 시간이 길어져 집중 업무 시간이 끊겨요', status: '리더 검토', date: '오늘' },
-  { id: 'SOOP-139', title: '캔미팅 결과가 액션아이템으로 이어지는 과정이 잘 안 보여요', status: '안건화', date: '어제' },
-];
-
-export function Intake({ identity, onIdentityChange, onSubmitIssue }: IntakeProps) {
+export function Intake({ identity, currentUser, issues, onIdentityChange, onIssueUpdate, onSubmitIssue }: IntakeProps) {
   const [step, setStep] = useState<IntakeStep>('scope');
   const [target, setTarget] = useState<Target>('팀리더');
   const [visibility, setVisibility] = useState<IssueVisibility>('리더만 보기');
@@ -44,15 +46,38 @@ export function Intake({ identity, onIdentityChange, onSubmitIssue }: IntakeProp
   const [body, setBody] = useState('논의할 주제가 명확하지 않은 회의는 시간을 줄이고, 필요한 경우 안건함에서 먼저 투표하면 좋겠습니다.');
   const [expectedChange, setExpectedChange] = useState('회의 전 안건을 먼저 모으고, 꼭 필요한 주제만 짧게 논의하면 좋겠습니다.');
   const [receiptId, setReceiptId] = useState('SOOP-148');
-  const [submissions, setSubmissions] = useState(mySubmissions);
+  const [receiptAccessCode, setReceiptAccessCode] = useState('');
+  const [responseDrafts, setResponseDrafts] = useState<Record<string, string>>({});
+  const [myIssueFilter, setMyIssueFilter] = useState<MyIssueFilter>('전체');
+  const [expandedIssueIds, setExpandedIssueIds] = useState<Record<string, boolean>>({});
+  const [anonymousReceiptId, setAnonymousReceiptId] = useState('');
+  const [anonymousAccessCode, setAnonymousAccessCode] = useState('');
+  const [anonymousLookupError, setAnonymousLookupError] = useState('');
+  const [anonymousIssueId, setAnonymousIssueId] = useState('');
 
   const currentStepIndex = steps.findIndex((item) => item.id === step);
+  const myIssues = issues.filter(
+    (issue) => issue.author === '실명' && issue.submitterEmail?.toLowerCase() === currentUser.email.toLowerCase(),
+  );
+  const visibleMyIssues = myIssues.filter((issue) => {
+    if (myIssueFilter === '답변 대기') {
+      return issue.status !== '회수' && !issue.leaderReply && !issue.oneOnOneNote && !issue.actionItem;
+    }
+    if (myIssueFilter === '1on1') return Boolean(issue.oneOnOneNote);
+    if (myIssueFilter === '완료') return issue.status === '회수' || issue.status === '종료' || issue.status === '답변완료' || issue.status === '액션아이템';
+    return true;
+  });
 
   const submit = () => {
+    const nextAnonymousCode = identity === '익명' ? makeAnonymousAccessCode() : undefined;
     const createdIssue = onSubmitIssue({
       title,
       category,
       author: identity,
+      anonymousAccessCode: nextAnonymousCode,
+      submitterName: identity === '실명' ? currentUser.name : undefined,
+      submitterEmail: identity === '실명' ? currentUser.email : undefined,
+      submitterPart: identity === '실명' ? currentUser.part : undefined,
       target,
       urgency,
       body,
@@ -60,12 +85,78 @@ export function Intake({ identity, onIdentityChange, onSubmitIssue }: IntakeProp
       visibility,
     });
     setReceiptId(createdIssue.id);
-    setSubmissions([
-      { id: createdIssue.id, title: createdIssue.title, status: '리더 검토', date: '방금' },
-      ...submissions,
-    ]);
+    setReceiptAccessCode(nextAnonymousCode ?? '');
+    if (nextAnonymousCode) {
+      setAnonymousReceiptId(createdIssue.id);
+      setAnonymousAccessCode(nextAnonymousCode);
+      setAnonymousIssueId(createdIssue.id);
+    }
     setStep('complete');
   };
+
+  const updateResponseDraft = (issueId: string, value: string) => {
+    setResponseDrafts((drafts) => ({ ...drafts, [issueId]: value }));
+  };
+
+  const saveSubmitterResponse = (issue: Issue) => {
+    const response = responseDrafts[issue.id]?.trim();
+    if (!response) return;
+    onIssueUpdate({ ...issue, submitterResponse: response });
+    setResponseDrafts((drafts) => ({ ...drafts, [issue.id]: '' }));
+  };
+
+  const respondToOneOnOne = (issue: Issue, oneOnOneResponse: Issue['oneOnOneResponse']) => {
+    const response = responseDrafts[issue.id]?.trim();
+    onIssueUpdate({
+      ...issue,
+      oneOnOneResponse,
+      submitterResponse: response || issue.submitterResponse,
+    });
+    if (response) {
+      setResponseDrafts((drafts) => ({ ...drafts, [issue.id]: '' }));
+    }
+  };
+
+  const toggleIssue = (issueId: string) => {
+    setExpandedIssueIds((ids) => ({ ...ids, [issueId]: !ids[issueId] }));
+  };
+
+  const canWithdraw = (issue: Issue) => {
+    return (
+      (issue.status === '접수' || issue.status === '검토중') &&
+      !issue.leaderReply &&
+      !issue.oneOnOneNote &&
+      !issue.actionItem &&
+      !issue.leaderMemo
+    );
+  };
+
+  const withdrawIssue = (issue: Issue) => {
+    onIssueUpdate({
+      ...issue,
+      status: '회수',
+      submitterResponse: '작성자가 접수 의견을 회수했습니다.',
+    });
+  };
+
+  const lookupAnonymousIssue = () => {
+    const receipt = anonymousReceiptId.trim().toUpperCase();
+    const code = anonymousAccessCode.trim().toUpperCase();
+    const issue = issues.find(
+      (item) => item.author === '익명' && item.id.toUpperCase() === receipt && item.anonymousAccessCode === code,
+    );
+
+    if (!issue) {
+      setAnonymousIssueId('');
+      setAnonymousLookupError('접수번호와 확인 코드가 일치하는 익명 접수 건을 찾을 수 없어요.');
+      return;
+    }
+
+    setAnonymousIssueId(issue.id);
+    setAnonymousLookupError('');
+  };
+
+  const anonymousIssue = issues.find((issue) => issue.id === anonymousIssueId);
 
   return (
     <section className="screen intake-screen">
@@ -169,6 +260,9 @@ export function Intake({ identity, onIdentityChange, onSubmitIssue }: IntakeProp
               <h2>{title}</h2>
               <p>{body}</p>
               <dl>
+                {identity === '실명' && (
+                  <div><dt>작성자</dt><dd>{currentUser.name} · {currentUser.part} · {currentUser.email}</dd></div>
+                )}
                 <div><dt>전달 대상</dt><dd>{target}</dd></div>
                 <div><dt>카테고리</dt><dd>{category}</dd></div>
                 <div><dt>긴급도</dt><dd>{urgency}</dd></div>
@@ -197,12 +291,109 @@ export function Intake({ identity, onIdentityChange, onSubmitIssue }: IntakeProp
             <CheckCircle2 size={42} />
             <p className="eyebrow">접수 완료</p>
             <h2>{receiptId}</h2>
-            <p>의견이 리더 관리함으로 전달되었습니다. 접수 상태는 아래 목록에서 계속 확인할 수 있어요.</p>
+            {receiptAccessCode && (
+              <div className="anonymous-receipt">
+                <strong>익명 확인 코드</strong>
+                <span>{receiptAccessCode}</span>
+                <small>이 코드는 다시 보여주지 않는 값으로 가정하고 꼭 따로 보관해주세요.</small>
+              </div>
+            )}
+            <p>
+              {receiptAccessCode
+                ? '의견이 리더 관리함으로 전달되었습니다. 접수번호와 확인 코드로 익명 접수 조회에서 후속 조치를 확인할 수 있어요.'
+                : '의견이 리더 관리함으로 전달되었습니다. 접수 상태는 아래 목록에서 계속 확인할 수 있어요.'}
+            </p>
             <button className="primary-button" onClick={() => setStep('scope')}>
               새 의견 접수
             </button>
           </section>
         )}
+
+        <section className="panel intake-panel my-issues-panel">
+          <div className="my-issues-header">
+            <PanelHeader icon={Megaphone} title="내 접수 현황" />
+            <div className="toolbar my-issues-toolbar">
+              {(['전체', '답변 대기', '1on1', '완료'] as const).map((item) => (
+                <button
+                  className={myIssueFilter === item ? 'filter active' : 'filter'}
+                  key={item}
+                  onClick={() => setMyIssueFilter(item)}
+                >
+                  {item}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="submission-list">
+            {visibleMyIssues.length > 0 ? (
+              visibleMyIssues.map((issue) => {
+                const isExpanded = expandedIssueIds[issue.id] ?? visibleMyIssues.length === 1;
+                return (
+                  <article className="submission-card" key={issue.id}>
+                    <button className="submission-summary" onClick={() => toggleIssue(issue.id)}>
+                      {isExpanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
+                      <div>
+                        <strong>{issue.title}</strong>
+                        <span>{issue.id} · {issue.category} · {issue.target}</span>
+                      </div>
+                      <span className="status-pill">{issue.status}</span>
+                    </button>
+
+                    {isExpanded && (
+                      <div className="submission-detail">
+                        {issue.leaderReply && <p>답변: {issue.leaderReply}</p>}
+                        {issue.oneOnOneNote && <p>1on1: {issue.oneOnOneNote}</p>}
+                        {issue.actionItem && <p>액션아이템: {issue.actionItem}</p>}
+                        {issue.submitterResponse && <p>내 응답: {issue.submitterResponse}</p>}
+                        {issue.oneOnOneResponse && <p>1on1 응답: {issue.oneOnOneResponse}</p>}
+                        {(issue.leaderReply || issue.oneOnOneNote || issue.actionItem) && (
+                          <div className="submission-followup">
+                            {issue.oneOnOneNote && (
+                              <div className="submission-followup-actions">
+                                <button className="secondary-button" onClick={() => respondToOneOnOne(issue, '수락')}>
+                                  1on1 수락
+                                </button>
+                                <button className="secondary-button" onClick={() => respondToOneOnOne(issue, '일정 조율 요청')}>
+                                  일정 조율 요청
+                                </button>
+                              </div>
+                            )}
+                            <textarea
+                              value={responseDrafts[issue.id] ?? ''}
+                              onChange={(event) => updateResponseDraft(issue.id, event.target.value)}
+                              placeholder="리더 답변에 대한 확인, 추가 의견, 가능한 일정 등을 남겨주세요."
+                            />
+                            <button className="primary-button wide" onClick={() => saveSubmitterResponse(issue)}>
+                              후속 응답 남기기
+                            </button>
+                          </div>
+                        )}
+                        {canWithdraw(issue) && (
+                          <div className="submission-withdraw">
+                            <span>리더가 아직 답변이나 후속 조치를 남기기 전이라 회수할 수 있습니다.</span>
+                            <button className="secondary-button" onClick={() => withdrawIssue(issue)}>
+                              접수 회수
+                            </button>
+                          </div>
+                        )}
+                        {issue.status === '회수' && <p>이 접수 의견은 작성자가 회수했습니다.</p>}
+                        {issue.status !== '회수' && !issue.leaderReply && !issue.oneOnOneNote && !issue.actionItem && (
+                          <p>아직 리더가 남긴 답변이나 후속 액션이 없습니다.</p>
+                        )}
+                      </div>
+                    )}
+                  </article>
+                );
+              })
+            ) : (
+              <div className="submission-card empty-submission">
+                <strong>표시할 접수 의견이 없습니다.</strong>
+                <span>실명으로 접수한 의견은 이곳에서 상태와 리더 답변을 확인할 수 있어요.</span>
+              </div>
+            )}
+          </div>
+        </section>
       </div>
 
       <aside className="intake-aside">
@@ -216,17 +407,77 @@ export function Intake({ identity, onIdentityChange, onSubmitIssue }: IntakeProp
         </section>
 
         <section className="panel">
-          <PanelHeader icon={Megaphone} title="내 접수 의견" />
-          <div className="submission-list">
-            {submissions.map((item) => (
-              <div key={item.id}>
-                <strong>{item.title}</strong>
-                <span>{item.id} · {item.status} · {item.date}</span>
+          <PanelHeader icon={Megaphone} title="내 접수 현황" />
+          <div className="privacy-list">
+            <div><strong>실명 접수만 추적</strong><span>내 접수 현황은 사내메일 기준으로 실명 접수 건만 보여줍니다.</span></div>
+            <div><strong>답변 후 후속 응답</strong><span>리더 답변이나 1on1 제안이 오면 메인 현황에서 바로 응답할 수 있습니다.</span></div>
+          </div>
+        </section>
+
+        <section className="panel">
+          <PanelHeader icon={KeyRound} title="익명 접수 조회" />
+          <div className="anonymous-lookup">
+            <label>
+              접수번호
+              <input
+                value={anonymousReceiptId}
+                onChange={(event) => setAnonymousReceiptId(event.target.value.toUpperCase())}
+                placeholder="SOOP-..."
+              />
+            </label>
+            <label>
+              확인 코드
+              <input
+                value={anonymousAccessCode}
+                onChange={(event) => setAnonymousAccessCode(event.target.value.toUpperCase())}
+                placeholder="AB12CD"
+              />
+            </label>
+            <button className="primary-button wide" onClick={lookupAnonymousIssue}>
+              조회하기
+            </button>
+            {anonymousLookupError && <p className="form-error">{anonymousLookupError}</p>}
+            {anonymousIssue && (
+              <div className="anonymous-result">
+                <div className="submission-summary static">
+                  <KeyRound size={18} />
+                  <div>
+                    <strong>{anonymousIssue.title}</strong>
+                    <span>{anonymousIssue.id} · {anonymousIssue.category} · {anonymousIssue.target}</span>
+                  </div>
+                  <span className="status-pill">{anonymousIssue.status}</span>
+                </div>
+                <div className="submission-detail">
+                  {anonymousIssue.leaderReply && <p>답변: {anonymousIssue.leaderReply}</p>}
+                  {anonymousIssue.oneOnOneNote && <p>익명 추가 대화 제안: {anonymousIssue.oneOnOneNote}</p>}
+                  {anonymousIssue.actionItem && <p>액션아이템: {anonymousIssue.actionItem}</p>}
+                  {anonymousIssue.submitterResponse && <p>내 익명 응답: {anonymousIssue.submitterResponse}</p>}
+                  {(anonymousIssue.leaderReply || anonymousIssue.oneOnOneNote || anonymousIssue.actionItem) && (
+                    <div className="submission-followup">
+                      <textarea
+                        value={responseDrafts[anonymousIssue.id] ?? ''}
+                        onChange={(event) => updateResponseDraft(anonymousIssue.id, event.target.value)}
+                        placeholder="익명 상태로 추가 의견을 남겨주세요."
+                      />
+                      <button className="primary-button wide" onClick={() => saveSubmitterResponse(anonymousIssue)}>
+                        익명 후속 응답 남기기
+                      </button>
+                    </div>
+                  )}
+                  {!anonymousIssue.leaderReply && !anonymousIssue.oneOnOneNote && !anonymousIssue.actionItem && (
+                    <p>아직 리더가 남긴 답변이나 후속 액션이 없습니다.</p>
+                  )}
+                </div>
               </div>
-            ))}
+            )}
           </div>
         </section>
       </aside>
     </section>
   );
+}
+
+function makeAnonymousAccessCode() {
+  const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  return Array.from({ length: 6 }, () => alphabet[Math.floor(Math.random() * alphabet.length)]).join('');
 }

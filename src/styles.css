@@ -217,6 +217,11 @@ h1 {
   color: #17352f;
 }
 
+.secondary-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
 .wide {
   width: 100%;
 }
@@ -904,6 +909,33 @@ h1 {
   line-height: 1.6;
 }
 
+.anonymous-receipt {
+  background: #fff7e6;
+  border: 1px solid #f1d390;
+  border-radius: 8px;
+  display: grid;
+  gap: 4px;
+  padding: 12px 14px;
+}
+
+.anonymous-receipt strong {
+  color: #76513a;
+  font-size: 13px;
+}
+
+.anonymous-receipt span {
+  color: #1d2522;
+  font-size: 24px;
+  font-weight: 900;
+  letter-spacing: 0;
+}
+
+.anonymous-receipt small {
+  color: #76513a;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
 .privacy-list,
 .submission-list {
   display: grid;
@@ -917,6 +949,132 @@ h1 {
   border-radius: 8px;
   display: grid;
   gap: 5px;
+  padding: 12px;
+}
+
+.submission-card {
+  align-items: start;
+}
+
+.my-issues-header {
+  align-items: start;
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+}
+
+.my-issues-toolbar {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.submission-summary {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  color: #1d2522;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  padding: 0;
+  text-align: left;
+  width: 100%;
+}
+
+.submission-summary.static {
+  cursor: default;
+}
+
+.submission-summary div {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.submission-summary strong {
+  line-height: 1.35;
+}
+
+.submission-detail {
+  border-top: 1px solid #e1e7df;
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 10px;
+}
+
+.submission-detail p {
+  color: #3d4945;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.submission-card .status-pill {
+  flex: 0 0 auto;
+}
+
+.submission-followup {
+  border-top: 1px solid #e1e7df;
+  display: grid;
+  gap: 10px;
+  margin-top: 4px;
+  padding-top: 10px;
+}
+
+.submission-followup textarea {
+  min-height: 92px;
+}
+
+.submission-followup-actions {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.submission-followup-actions .secondary-button {
+  min-height: 36px;
+  padding: 0 10px;
+  white-space: nowrap;
+}
+
+.submission-withdraw {
+  align-items: center;
+  background: #fff7e6;
+  border: 1px solid #f1d390;
+  border-radius: 8px;
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+  padding: 10px;
+}
+
+.submission-withdraw span {
+  color: #76513a;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.submission-withdraw .secondary-button {
+  flex: 0 0 auto;
+  min-height: 36px;
+  white-space: nowrap;
+}
+
+.empty-submission {
+  min-height: 104px;
+  place-content: center;
+}
+
+.anonymous-lookup,
+.anonymous-result {
+  display: grid;
+  gap: 12px;
+}
+
+.anonymous-result {
+  background: #f7faf5;
+  border: 1px solid #e1e7df;
+  border-radius: 8px;
   padding: 12px;
 }
 
@@ -1141,6 +1299,30 @@ textarea {
   font-size: 12px;
   font-weight: 800;
   padding: 5px 8px;
+}
+
+.author-card {
+  background: #f7faf5;
+  border: 1px solid #e1e7df;
+  border-radius: 8px;
+  display: grid;
+  gap: 3px;
+  padding: 10px 12px;
+  width: fit-content;
+}
+
+.author-card strong {
+  color: #17352f;
+  font-size: 13px;
+}
+
+.author-card span {
+  color: #65736d;
+  font-size: 12px;
+}
+
+.author-card.prominent {
+  width: 100%;
 }
 
 .issue-actions select {
@@ -4433,6 +4615,14 @@ textarea {
     grid-template-columns: 1fr;
   }
 
+  .my-issues-header {
+    display: grid;
+  }
+
+  .my-issues-toolbar {
+    justify-content: flex-start;
+  }
+
   .summary-strip {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -4550,6 +4740,25 @@ textarea {
   }
 
   .hero-actions {
+    display: grid;
+  }
+
+  .submission-summary {
+    align-items: start;
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .submission-summary .status-pill {
+    grid-column: 2;
+    justify-self: start;
+  }
+
+  .submission-followup-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .submission-withdraw {
+    align-items: stretch;
     display: grid;
   }
 
