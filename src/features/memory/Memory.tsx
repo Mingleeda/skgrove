@@ -2,52 +2,20 @@ import {
   CalendarDays,
   Clock3,
   Download,
-  Edit3,
   Film,
   ImagePlus,
   MessageCircle,
   PartyPopper,
-  Save,
-  Trash2,
   UploadCloud,
-  X,
 } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { ChangeEvent } from 'react';
-import type { CurrentUser } from '../../types';
-
-type MemoryAsset = {
-  id: number;
-  type: 'photo' | 'video';
-  title: string;
-  uploader: string;
-  tone: 'green' | 'blue' | 'coral' | 'amber';
-  uploadedAt: string;
-  reactions: Record<MemoryEmoji, number>;
-  comments: string[];
-  previewUrl?: string;
-};
-
-type MemoryReaction = '좋아요' | '웃겨요' | '또가요';
-type MemoryEmoji = '👍' | '👏' | '😂' | '🔥' | '💚';
-
-type TeamMemory = {
-  id: number;
-  title: string;
-  date: string;
-  place: string;
-  host: string;
-  createdBy: string;
-  summary: string;
-  tags: string[];
-  assets: MemoryAsset[];
-  comments: string[];
-  reactions: Record<MemoryReaction, number>;
-};
-
-type MemoryEditDraft = Pick<TeamMemory, 'title' | 'date' | 'place' | 'summary'> & {
-  tags: string;
-};
+import {
+  loadMemories,
+  saveMemories,
+  uploadMemoryAssetFile,
+} from '../../memoryStore';
+import type { CurrentUser, MemoryAsset, MemoryEmoji, TeamMemory } from '../../types';
 
 type MemoryProps = {
   currentUser: CurrentUser;
@@ -245,31 +213,38 @@ function getCalendarDays(memories: TeamMemory[]) {
 }
 
 export function Memory({ currentUser }: MemoryProps) {
-  const [memories, setMemories] = useState(initialMemories);
+  const [memories, setMemories] = useState<TeamMemory[]>(initialMemories);
   const [selectedId, setSelectedId] = useState(initialMemories[0].id);
   const [selectedAssetId, setSelectedAssetId] = useState(initialMemories[0].assets[0]?.id ?? 0);
   const [assetCommentDrafts, setAssetCommentDrafts] = useState<Record<number, string>>({});
-  const [editingMemoryId, setEditingMemoryId] = useState<number | null>(null);
-  const [memoryEditDraft, setMemoryEditDraft] = useState<MemoryEditDraft>({
-    title: '',
-    date: '',
-    place: '',
-    summary: '',
-    tags: '',
-  });
-  const [pendingDeleteMemoryId, setPendingDeleteMemoryId] = useState<number | null>(null);
-  const [pendingDeleteAssetId, setPendingDeleteAssetId] = useState<number | null>(null);
 
   const selectedMemory = memories.find((memory) => memory.id === selectedId) ?? memories[0];
   const selectedAsset = selectedMemory.assets.find((asset) => asset.id === selectedAssetId) ?? selectedMemory.assets[0];
-  const canManageMemory = currentUser.role === '팀리더' || selectedMemory.createdBy === currentUser.name || selectedMemory.host === currentUser.name;
-  const canManageAsset = selectedAsset && (currentUser.role === '팀리더' || selectedAsset.uploader === currentUser.name);
-  const isEditingSelectedMemory = editingMemoryId === selectedMemory.id;
   const upcomingMemories = useMemo(
     () => [...memories].sort((a, b) => a.date.localeCompare(b.date)).filter((memory) => !getDday(memory.date).startsWith('D+')),
     [memories],
   );
   const calendarDays = useMemo(() => getCalendarDays(memories), [memories]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    loadMemories(initialMemories).then((loadedMemories) => {
+      if (!isMounted) return;
+      setMemories(loadedMemories);
+      setSelectedId(loadedMemories[0]?.id ?? initialMemories[0].id);
+      setSelectedAssetId(loadedMemories[0]?.assets[0]?.id ?? 0);
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const persistMemories = (nextMemories: TeamMemory[]) => {
+    setMemories(nextMemories);
+    void saveMemories(nextMemories);
+  };
 
   const selectCalendarDay = (date: string, memory?: TeamMemory) => {
     if (memory) {
@@ -293,28 +268,37 @@ export function Memory({ currentUser }: MemoryProps) {
       reactions: { 좋아요: 0, 웃겨요: 0, 또가요: 0 },
     };
 
-    setMemories([...memories, nextMemory].sort((a, b) => a.date.localeCompare(b.date)));
+    persistMemories([...memories, nextMemory].sort((a, b) => a.date.localeCompare(b.date)));
     setSelectedId(nextMemory.id);
     setSelectedAssetId(0);
   };
 
-  const uploadAssets = (event: ChangeEvent<HTMLInputElement>) => {
+  const uploadAssets = async (event: ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files ?? []);
     if (files.length === 0) return;
 
-    const uploadedAssets: MemoryAsset[] = files.map((file, index) => ({
-      id: Date.now() + index,
-      type: file.type.startsWith('video') ? 'video' : 'photo',
-      title: file.name.replace(/\.[^/.]+$/, ''),
-      uploader: currentUser.name,
-      tone: assetTones[(selectedMemory.assets.length + index) % assetTones.length],
-      uploadedAt: '방금',
-      reactions: { '👍': 0, '👏': 0, '😂': 0, '🔥': 0, '💚': 0 },
-      comments: [],
-      previewUrl: URL.createObjectURL(file),
-    }));
+    const uploadedAssets: MemoryAsset[] = await Promise.all(
+      files.map(async (file, index) => {
+        const id = Date.now() + index;
+        const localPreviewUrl = URL.createObjectURL(file);
+        const stored = await uploadMemoryAssetFile(selectedMemory.id, id, file);
 
-    setMemories(
+        return {
+          id,
+          type: file.type.startsWith('video') ? 'video' : 'photo',
+          title: file.name.replace(/\.[^/.]+$/, ''),
+          uploader: currentUser.name,
+          tone: assetTones[(selectedMemory.assets.length + index) % assetTones.length],
+          uploadedAt: '방금',
+          reactions: { '👍': 0, '👏': 0, '😂': 0, '🔥': 0, '💚': 0 },
+          comments: [],
+          previewUrl: stored.previewUrl || localPreviewUrl,
+          storagePath: stored.storagePath || undefined,
+        };
+      }),
+    );
+
+    persistMemories(
       memories.map((memory) =>
         memory.id === selectedMemory.id
           ? { ...memory, assets: [...uploadedAssets, ...memory.assets] }
@@ -326,7 +310,7 @@ export function Memory({ currentUser }: MemoryProps) {
   };
 
   const reactAsset = (assetId: number, emoji: MemoryEmoji) => {
-    setMemories(
+    persistMemories(
       memories.map((memory) =>
         memory.id === selectedMemory.id
           ? {
@@ -346,7 +330,7 @@ export function Memory({ currentUser }: MemoryProps) {
     const comment = assetCommentDrafts[assetId]?.trim();
     if (!comment) return;
 
-    setMemories(
+    persistMemories(
       memories.map((memory) =>
         memory.id === selectedMemory.id
           ? {
@@ -359,71 +343,6 @@ export function Memory({ currentUser }: MemoryProps) {
       ),
     );
     setAssetCommentDrafts({ ...assetCommentDrafts, [assetId]: '' });
-  };
-
-  const startEditMemory = () => {
-    setPendingDeleteMemoryId(null);
-    setEditingMemoryId(selectedMemory.id);
-    setMemoryEditDraft({
-      title: selectedMemory.title,
-      date: selectedMemory.date,
-      place: selectedMemory.place,
-      summary: selectedMemory.summary,
-      tags: selectedMemory.tags.join(', '),
-    });
-  };
-
-  const saveMemoryEdit = () => {
-    if (!memoryEditDraft.title.trim() || !memoryEditDraft.date.trim()) return;
-
-    const nextTags = memoryEditDraft.tags
-      .split(',')
-      .map((tag) => tag.trim())
-      .filter(Boolean);
-
-    setMemories(
-      memories
-        .map((memory) =>
-          memory.id === selectedMemory.id
-            ? {
-                ...memory,
-                title: memoryEditDraft.title.trim(),
-                date: memoryEditDraft.date,
-                place: memoryEditDraft.place.trim() || '장소 미정',
-                summary: memoryEditDraft.summary.trim() || '팀원이 함께 기록을 모아가는 추억 공간이에요.',
-                tags: nextTags.length > 0 ? nextTags : ['공동사진첩'],
-              }
-            : memory,
-        )
-        .sort((a, b) => a.date.localeCompare(b.date)),
-    );
-    setEditingMemoryId(null);
-  };
-
-  const deleteMemory = () => {
-    if (memories.length <= 1) return;
-    const nextMemories = memories.filter((memory) => memory.id !== selectedMemory.id);
-    setMemories(nextMemories);
-    setSelectedId(nextMemories[0].id);
-    setSelectedAssetId(nextMemories[0].assets[0]?.id ?? 0);
-    setEditingMemoryId(null);
-    setPendingDeleteMemoryId(null);
-  };
-
-  const deleteAsset = (assetId: number) => {
-    const nextAssets = selectedMemory.assets.filter((asset) => asset.id !== assetId);
-    setMemories(
-      memories.map((memory) =>
-        memory.id === selectedMemory.id
-          ? {
-              ...memory,
-              assets: nextAssets,
-            }
-          : memory,
-      ),
-    );
-    setSelectedAssetId(nextAssets[0]?.id ?? 0);
-    setPendingDeleteAssetId(null);
   };
 
   return (
@@ -500,97 +419,13 @@ export function Memory({ currentUser }: MemoryProps) {
         <aside className="memory-side">
           <section className="panel memory-detail-panel">
             <div className="memory-detail-head">
-              <div className="memory-title-row">
-                <span className="status-pill">{getDday(selectedMemory.date)}</span>
-                {canManageMemory && (
-                  <div className="memory-owner-actions">
-                    <button className="secondary-button" type="button" onClick={startEditMemory}>
-                      <Edit3 size={15} />
-                      수정
-                    </button>
-                    <button className="danger-button" type="button" onClick={() => setPendingDeleteMemoryId(selectedMemory.id)}>
-                      <Trash2 size={15} />
-                      삭제
-                    </button>
-                  </div>
-                )}
-              </div>
-              {isEditingSelectedMemory ? (
-                <div className="memory-edit-form">
-                  <label>
-                    행사 이름
-                    <input
-                      value={memoryEditDraft.title}
-                      onChange={(event) => setMemoryEditDraft({ ...memoryEditDraft, title: event.target.value })}
-                    />
-                  </label>
-                  <div className="memory-edit-grid">
-                    <label>
-                      날짜
-                      <input
-                        type="date"
-                        value={memoryEditDraft.date}
-                        onChange={(event) => setMemoryEditDraft({ ...memoryEditDraft, date: event.target.value })}
-                      />
-                    </label>
-                    <label>
-                      장소
-                      <input
-                        value={memoryEditDraft.place}
-                        onChange={(event) => setMemoryEditDraft({ ...memoryEditDraft, place: event.target.value })}
-                      />
-                    </label>
-                  </div>
-                  <label>
-                    설명
-                    <textarea
-                      value={memoryEditDraft.summary}
-                      onChange={(event) => setMemoryEditDraft({ ...memoryEditDraft, summary: event.target.value })}
-                    />
-                  </label>
-                  <label>
-                    태그
-                    <input
-                      value={memoryEditDraft.tags}
-                      onChange={(event) => setMemoryEditDraft({ ...memoryEditDraft, tags: event.target.value })}
-                    />
-                  </label>
-                  <div className="memory-edit-actions">
-                    <button className="secondary-button" type="button" onClick={() => setEditingMemoryId(null)}>
-                      <X size={16} />
-                      취소
-                    </button>
-                    <button className="primary-button" type="button" onClick={saveMemoryEdit}>
-                      <Save size={16} />
-                      저장
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <>
-                  <h2>{selectedMemory.title}</h2>
-                  <p>{selectedMemory.summary}</p>
-                </>
-              )}
-              {pendingDeleteMemoryId === selectedMemory.id && (
-                <div className="memory-delete-confirm">
-                  <strong>이 추억 공간을 삭제할까요?</strong>
-                  <span>앨범에 담긴 사진, 영상, 댓글도 함께 사라지는 것으로 표시됩니다.</span>
-                  <div>
-                    <button className="secondary-button" type="button" onClick={() => setPendingDeleteMemoryId(null)}>
-                      취소
-                    </button>
-                    <button className="danger-button" type="button" onClick={deleteMemory} disabled={memories.length <= 1}>
-                      삭제하기
-                    </button>
-                  </div>
-                </div>
-              )}
+              <span className="status-pill">{getDday(selectedMemory.date)}</span>
+              <h2>{selectedMemory.title}</h2>
+              <p>{selectedMemory.summary}</p>
               <div className="memory-meta">
                 <span>{selectedMemory.date}</span>
                 <span>{selectedMemory.place}</span>
                 <span>담당 {selectedMemory.host}</span>
-                <span>작성 {selectedMemory.createdBy}</span>
               </div>
             </div>
 
@@ -687,26 +522,7 @@ export function Memory({ currentUser }: MemoryProps) {
                       <Download size={16} />
                       다운로드
                     </button>
-                    {canManageAsset && (
-                      <button className="danger-outline-button" type="button" onClick={() => setPendingDeleteAssetId(selectedAsset.id)}>
-                        <Trash2 size={16} />
-                        파일 삭제
-                      </button>
-                    )}
                   </div>
-                  {pendingDeleteAssetId === selectedAsset.id && (
-                    <div className="memory-delete-confirm compact">
-                      <strong>이 파일을 앨범에서 삭제할까요?</strong>
-                      <div>
-                        <button className="secondary-button" type="button" onClick={() => setPendingDeleteAssetId(null)}>
-                          취소
-                        </button>
-                        <button className="danger-button" type="button" onClick={() => deleteAsset(selectedAsset.id)}>
-                          삭제하기
-                        </button>
-                      </div>
-                    </div>
-                  )}
                   <div className="memory-asset-comments">
                     <div className="memory-asset-comment-input">
                       <MessageCircle size={16} />
