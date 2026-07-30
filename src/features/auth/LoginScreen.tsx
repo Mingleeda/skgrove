@@ -97,16 +97,16 @@ export function LoginScreen({ accounts, onLogin, onRegister }: LoginScreenProps)
             <span>Team Culture Hub</span>
           </div>
         </div>
+
         <div>
           <p className="eyebrow">팀문화 개선 웹앱</p>
-          <h1>팀 안에서 더 빨리 말하고, 함께 결정하고, 실제로 바꿔요</h1>
-          <p>
-            가입된 사내 계정으로 로그인한 뒤 소속 파트와 권한을 기준으로 의견 접수, 안건 투표, 리더 관리함을 사용할 수 있습니다.
-          </p>
+          <h1>편하게 말하고, 함께 정하고, 작게 바꿔요</h1>
+          <p>사내 계정으로 로그인하면 의견 접수, 안건 투표, 리더 관리 흐름을 바로 사용할 수 있습니다.</p>
         </div>
+
         <div className="login-assurance">
           <ShieldCheck size={20} />
-          익명 의견은 화면에서 작성자 정보와 분리되는 흐름으로 다룹니다.
+          익명 의견은 작성자 정보와 분리해서 다룹니다.
         </div>
       </section>
 
