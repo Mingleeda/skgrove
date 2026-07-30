@@ -12,38 +12,16 @@ import {
   UploadCloud,
   X,
 } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { ChangeEvent } from 'react';
-import type { CurrentUser } from '../../types';
-
-type MemoryAsset = {
-  id: number;
-  type: 'photo' | 'video';
-  title: string;
-  uploader: string;
-  tone: 'green' | 'blue' | 'coral' | 'amber';
-  uploadedAt: string;
-  reactions: Record<MemoryEmoji, number>;
-  comments: string[];
-  previewUrl?: string;
-};
-
-type MemoryReaction = '좋아요' | '웃겨요' | '또가요';
-type MemoryEmoji = '👍' | '👏' | '😂' | '🔥' | '💚';
-
-type TeamMemory = {
-  id: number;
-  title: string;
-  date: string;
-  place: string;
-  host: string;
-  createdBy: string;
-  summary: string;
-  tags: string[];
-  assets: MemoryAsset[];
-  comments: string[];
-  reactions: Record<MemoryReaction, number>;
-};
+import {
+  deleteMemoryAssetRecord,
+  deleteMemoryRecord,
+  loadMemories,
+  saveMemories,
+  uploadMemoryAssetFile,
+} from '../../memoryStore';
+import type { CurrentUser, MemoryAsset, MemoryEmoji, TeamMemory } from '../../types';
 
 type MemoryEditDraft = Pick<TeamMemory, 'title' | 'date' | 'place' | 'summary'> & {
   tags: string;
@@ -245,7 +223,7 @@ function getCalendarDays(memories: TeamMemory[]) {
 }
 
 export function Memory({ currentUser }: MemoryProps) {
-  const [memories, setMemories] = useState(initialMemories);
+  const [memories, setMemories] = useState<TeamMemory[]>(initialMemories);
   const [selectedId, setSelectedId] = useState(initialMemories[0].id);
   const [selectedAssetId, setSelectedAssetId] = useState(initialMemories[0].assets[0]?.id ?? 0);
   const [assetCommentDrafts, setAssetCommentDrafts] = useState<Record<number, string>>({});
@@ -271,6 +249,26 @@ export function Memory({ currentUser }: MemoryProps) {
   );
   const calendarDays = useMemo(() => getCalendarDays(memories), [memories]);
 
+  useEffect(() => {
+    let isMounted = true;
+
+    loadMemories(initialMemories).then((loadedMemories) => {
+      if (!isMounted) return;
+      setMemories(loadedMemories);
+      setSelectedId(loadedMemories[0]?.id ?? initialMemories[0].id);
+      setSelectedAssetId(loadedMemories[0]?.assets[0]?.id ?? 0);
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const persistMemories = (nextMemories: TeamMemory[]) => {
+    setMemories(nextMemories);
+    void saveMemories(nextMemories);
+  };
+
   const selectCalendarDay = (date: string, memory?: TeamMemory) => {
     if (memory) {
       setSelectedId(memory.id);
@@ -293,28 +291,37 @@ export function Memory({ currentUser }: MemoryProps) {
       reactions: { 좋아요: 0, 웃겨요: 0, 또가요: 0 },
     };
 
-    setMemories([...memories, nextMemory].sort((a, b) => a.date.localeCompare(b.date)));
+    persistMemories([...memories, nextMemory].sort((a, b) => a.date.localeCompare(b.date)));
     setSelectedId(nextMemory.id);
     setSelectedAssetId(0);
   };
 
-  const uploadAssets = (event: ChangeEvent<HTMLInputElement>) => {
+  const uploadAssets = async (event: ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files ?? []);
     if (files.length === 0) return;
 
-    const uploadedAssets: MemoryAsset[] = files.map((file, index) => ({
-      id: Date.now() + index,
-      type: file.type.startsWith('video') ? 'video' : 'photo',
-      title: file.name.replace(/\.[^/.]+$/, ''),
-      uploader: currentUser.name,
-      tone: assetTones[(selectedMemory.assets.length + index) % assetTones.length],
-      uploadedAt: '방금',
-      reactions: { '👍': 0, '👏': 0, '😂': 0, '🔥': 0, '💚': 0 },
-      comments: [],
-      previewUrl: URL.createObjectURL(file),
-    }));
+    const uploadedAssets: MemoryAsset[] = await Promise.all(
+      files.map(async (file, index) => {
+        const id = Date.now() + index;
+        const localPreviewUrl = URL.createObjectURL(file);
+        const stored = await uploadMemoryAssetFile(selectedMemory.id, id, file);
 
-    setMemories(
+        return {
+          id,
+          type: file.type.startsWith('video') ? 'video' : 'photo',
+          title: file.name.replace(/\.[^/.]+$/, ''),
+          uploader: currentUser.name,
+          tone: assetTones[(selectedMemory.assets.length + index) % assetTones.length],
+          uploadedAt: '방금',
+          reactions: { '👍': 0, '👏': 0, '😂': 0, '🔥': 0, '💚': 0 },
+          comments: [],
+          previewUrl: stored.previewUrl || localPreviewUrl,
+          storagePath: stored.storagePath || undefined,
+        };
+      }),
+    );
+
+    persistMemories(
       memories.map((memory) =>
         memory.id === selectedMemory.id
           ? { ...memory, assets: [...uploadedAssets, ...memory.assets] }
@@ -326,7 +333,7 @@ export function Memory({ currentUser }: MemoryProps) {
   };
 
   const reactAsset = (assetId: number, emoji: MemoryEmoji) => {
-    setMemories(
+    persistMemories(
       memories.map((memory) =>
         memory.id === selectedMemory.id
           ? {
@@ -346,7 +353,7 @@ export function Memory({ currentUser }: MemoryProps) {
     const comment = assetCommentDrafts[assetId]?.trim();
     if (!comment) return;
 
-    setMemories(
+    persistMemories(
       memories.map((memory) =>
         memory.id === selectedMemory.id
           ? {
@@ -381,7 +388,7 @@ export function Memory({ currentUser }: MemoryProps) {
       .map((tag) => tag.trim())
       .filter(Boolean);
 
-    setMemories(
+    persistMemories(
       memories
         .map((memory) =>
           memory.id === selectedMemory.id
@@ -403,7 +410,8 @@ export function Memory({ currentUser }: MemoryProps) {
   const deleteMemory = () => {
     if (memories.length <= 1) return;
     const nextMemories = memories.filter((memory) => memory.id !== selectedMemory.id);
-    setMemories(nextMemories);
+    persistMemories(nextMemories);
+    void deleteMemoryRecord(selectedMemory.id);
     setSelectedId(nextMemories[0].id);
     setSelectedAssetId(nextMemories[0].assets[0]?.id ?? 0);
     setEditingMemoryId(null);
@@ -411,8 +419,9 @@ export function Memory({ currentUser }: MemoryProps) {
   };
 
   const deleteAsset = (assetId: number) => {
+    const targetAsset = selectedMemory.assets.find((asset) => asset.id === assetId);
     const nextAssets = selectedMemory.assets.filter((asset) => asset.id !== assetId);
-    setMemories(
+    persistMemories(
       memories.map((memory) =>
         memory.id === selectedMemory.id
           ? {
@@ -422,6 +431,7 @@ export function Memory({ currentUser }: MemoryProps) {
           : memory,
       ),
     );
+    if (targetAsset) void deleteMemoryAssetRecord(targetAsset);
     setSelectedAssetId(nextAssets[0]?.id ?? 0);
     setPendingDeleteAssetId(null);
   };

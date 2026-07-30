@@ -135,6 +135,36 @@ export type Profile = {
   photoUrl?: string; // 프로필 사진(직접 이미지 URL). 없으면 이니셜 칩으로 폴백.
 };
 
+export type MemoryReaction = '좋아요' | '웃겨요' | '또가요';
+export type MemoryEmoji = '👍' | '👏' | '😂' | '🔥' | '💚';
+
+export type MemoryAsset = {
+  id: number;
+  type: 'photo' | 'video';
+  title: string;
+  uploader: string;
+  tone: 'green' | 'blue' | 'coral' | 'amber';
+  uploadedAt: string;
+  reactions: Record<MemoryEmoji, number>;
+  comments: string[];
+  previewUrl?: string;
+  storagePath?: string;
+};
+
+export type TeamMemory = {
+  id: number;
+  title: string;
+  date: string;
+  place: string;
+  host: string;
+  createdBy: string;
+  summary: string;
+  tags: string[];
+  assets: MemoryAsset[];
+  comments: string[];
+  reactions: Record<MemoryReaction, number>;
+};
+
 export type PartScore = {
   name: string;
   score: number;

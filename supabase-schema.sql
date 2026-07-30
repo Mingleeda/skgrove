@@ -203,3 +203,121 @@ create policy "Allow prototype action updates"
   for update
   using (true)
   with check (true);
+
+create table if not exists public.team_memories (
+  id bigint primary key,
+  title text not null,
+  event_date date not null,
+  place text not null default '장소 미정',
+  host text not null,
+  created_by text not null,
+  summary text not null default '',
+  tags jsonb not null default '[]'::jsonb,
+  comments jsonb not null default '[]'::jsonb,
+  reactions jsonb not null default '{"좋아요":0,"웃겨요":0,"또가요":0}'::jsonb,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+alter table public.team_memories enable row level security;
+
+drop policy if exists "Allow prototype team memory reads" on public.team_memories;
+drop policy if exists "Allow prototype team memory writes" on public.team_memories;
+drop policy if exists "Allow prototype team memory updates" on public.team_memories;
+drop policy if exists "Allow prototype team memory deletes" on public.team_memories;
+
+create policy "Allow prototype team memory reads"
+  on public.team_memories
+  for select
+  using (true);
+
+create policy "Allow prototype team memory writes"
+  on public.team_memories
+  for insert
+  with check (true);
+
+create policy "Allow prototype team memory updates"
+  on public.team_memories
+  for update
+  using (true)
+  with check (true);
+
+create policy "Allow prototype team memory deletes"
+  on public.team_memories
+  for delete
+  using (true);
+
+create table if not exists public.team_memory_assets (
+  id bigint primary key,
+  memory_id bigint not null references public.team_memories(id) on delete cascade,
+  type text not null check (type in ('photo', 'video')),
+  title text not null,
+  uploader text not null,
+  tone text not null check (tone in ('green', 'blue', 'coral', 'amber')),
+  uploaded_at text not null,
+  reactions jsonb not null default '{"👍":0,"👏":0,"😂":0,"🔥":0,"💚":0}'::jsonb,
+  comments jsonb not null default '[]'::jsonb,
+  preview_url text,
+  storage_path text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+alter table public.team_memory_assets enable row level security;
+
+drop policy if exists "Allow prototype team memory asset reads" on public.team_memory_assets;
+drop policy if exists "Allow prototype team memory asset writes" on public.team_memory_assets;
+drop policy if exists "Allow prototype team memory asset updates" on public.team_memory_assets;
+drop policy if exists "Allow prototype team memory asset deletes" on public.team_memory_assets;
+
+create policy "Allow prototype team memory asset reads"
+  on public.team_memory_assets
+  for select
+  using (true);
+
+create policy "Allow prototype team memory asset writes"
+  on public.team_memory_assets
+  for insert
+  with check (true);
+
+create policy "Allow prototype team memory asset updates"
+  on public.team_memory_assets
+  for update
+  using (true)
+  with check (true);
+
+create policy "Allow prototype team memory asset deletes"
+  on public.team_memory_assets
+  for delete
+  using (true);
+
+insert into storage.buckets (id, name, public)
+values ('team-memory-assets', 'team-memory-assets', true)
+on conflict (id) do update set
+  public = excluded.public;
+
+drop policy if exists "Allow prototype team memory file reads" on storage.objects;
+drop policy if exists "Allow prototype team memory file writes" on storage.objects;
+drop policy if exists "Allow prototype team memory file updates" on storage.objects;
+drop policy if exists "Allow prototype team memory file deletes" on storage.objects;
+
+create policy "Allow prototype team memory file reads"
+  on storage.objects
+  for select
+  using (bucket_id = 'team-memory-assets');
+
+create policy "Allow prototype team memory file writes"
+  on storage.objects
+  for insert
+  with check (bucket_id = 'team-memory-assets');
+
+create policy "Allow prototype team memory file updates"
+  on storage.objects
+  for update
+  using (bucket_id = 'team-memory-assets')
+  with check (bucket_id = 'team-memory-assets');
+
+create policy "Allow prototype team memory file deletes"
+  on storage.objects
+  for delete
+  using (bucket_id = 'team-memory-assets');
