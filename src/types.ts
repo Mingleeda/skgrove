@@ -147,6 +147,36 @@ export type SavedDrawResult = {
   shareUrl: string;
 };
 
+export type MemoryReaction = '좋아요' | '웃겨요' | '또가요';
+export type MemoryEmoji = '👍' | '👏' | '😂' | '🔥' | '💚';
+
+export type MemoryAsset = {
+  id: number;
+  type: 'photo' | 'video';
+  title: string;
+  uploader: string;
+  tone: 'green' | 'blue' | 'coral' | 'amber';
+  uploadedAt: string;
+  reactions: Record<MemoryEmoji, number>;
+  comments: string[];
+  previewUrl?: string;
+  storagePath?: string;
+};
+
+export type TeamMemory = {
+  id: number;
+  title: string;
+  date: string;
+  place: string;
+  host: string;
+  createdBy: string;
+  summary: string;
+  tags: string[];
+  assets: MemoryAsset[];
+  comments: string[];
+  reactions: Record<MemoryReaction, number>;
+};
+
 export type PartScore = {
   name: string;
   score: number;
