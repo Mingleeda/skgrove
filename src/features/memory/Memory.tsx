@@ -8,35 +8,17 @@ import {
   PartyPopper,
   UploadCloud,
 } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { ChangeEvent } from 'react';
+import {
+  loadMemories,
+  saveMemories,
+  uploadMemoryAssetFile,
+} from '../../memoryStore';
+import type { CurrentUser, MemoryAsset, MemoryEmoji, TeamMemory } from '../../types';
 
-type MemoryAsset = {
-  id: number;
-  type: 'photo' | 'video';
-  title: string;
-  uploader: string;
-  tone: 'green' | 'blue' | 'coral' | 'amber';
-  uploadedAt: string;
-  reactions: Record<MemoryEmoji, number>;
-  comments: string[];
-  previewUrl?: string;
-};
-
-type MemoryReaction = '좋아요' | '웃겨요' | '또가요';
-type MemoryEmoji = '👍' | '👏' | '😂' | '🔥' | '💚';
-
-type TeamMemory = {
-  id: number;
-  title: string;
-  date: string;
-  place: string;
-  host: string;
-  summary: string;
-  tags: string[];
-  assets: MemoryAsset[];
-  comments: string[];
-  reactions: Record<MemoryReaction, number>;
+type MemoryProps = {
+  currentUser: CurrentUser;
 };
 
 const today = new Date('2026-07-25T09:00:00');
@@ -48,6 +30,7 @@ const initialMemories: TeamMemory[] = [
     date: '2026-08-07',
     place: '성수 오프사이트 라운지',
     host: '김수정',
+    createdBy: '김수정',
     summary: '파트를 섞어 점심을 먹고, 오후에는 짧은 회고와 사진 공유 시간을 가져요.',
     tags: ['팀행사', 'D-DAY', '사진모음'],
     assets: [
@@ -121,6 +104,7 @@ const initialMemories: TeamMemory[] = [
     date: '2026-07-18',
     place: '판교 7층 라운지',
     host: '김승현',
+    createdBy: '김승현',
     summary: '캔미팅에서 나온 액션아이템을 한 장씩 정리하고 다음 실험을 골랐어요.',
     tags: ['캔미팅', '회고', '자료'],
     assets: [
@@ -164,6 +148,7 @@ const initialMemories: TeamMemory[] = [
     date: '2026-07-29',
     place: '사내 카페',
     host: '장우진',
+    createdBy: '장우진',
     summary: '조뽑기로 만난 사람끼리 짧게 커피를 마시고 서로의 일하는 방식을 나눠요.',
     tags: ['커피챗', '파트섞기'],
     assets: [
@@ -187,6 +172,7 @@ const initialMemories: TeamMemory[] = [
     date: '2026-09-04',
     place: '대회의실 A',
     host: '한유진',
+    createdBy: '한유진',
     summary: '각 파트가 만든 개선 도구와 실험 결과를 짧게 공유하는 날이에요.',
     tags: ['데모', '공유회'],
     assets: [],
@@ -226,8 +212,8 @@ function getCalendarDays(memories: TeamMemory[]) {
   });
 }
 
-export function Memory() {
-  const [memories, setMemories] = useState(initialMemories);
+export function Memory({ currentUser }: MemoryProps) {
+  const [memories, setMemories] = useState<TeamMemory[]>(initialMemories);
   const [selectedId, setSelectedId] = useState(initialMemories[0].id);
   const [selectedAssetId, setSelectedAssetId] = useState(initialMemories[0].assets[0]?.id ?? 0);
   const [assetCommentDrafts, setAssetCommentDrafts] = useState<Record<number, string>>({});
@@ -239,6 +225,26 @@ export function Memory() {
     [memories],
   );
   const calendarDays = useMemo(() => getCalendarDays(memories), [memories]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    loadMemories(initialMemories).then((loadedMemories) => {
+      if (!isMounted) return;
+      setMemories(loadedMemories);
+      setSelectedId(loadedMemories[0]?.id ?? initialMemories[0].id);
+      setSelectedAssetId(loadedMemories[0]?.assets[0]?.id ?? 0);
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const persistMemories = (nextMemories: TeamMemory[]) => {
+    setMemories(nextMemories);
+    void saveMemories(nextMemories);
+  };
 
   const selectCalendarDay = (date: string, memory?: TeamMemory) => {
     if (memory) {
@@ -253,7 +259,8 @@ export function Memory() {
       title: `${Number(month)}/${Number(day)} 팀 추억`,
       date,
       place: '장소 미정',
-      host: '김수정',
+      host: currentUser.name,
+      createdBy: currentUser.name,
       summary: '캘린더에서 만든 새 추억 공간이에요. 팀원이 함께 사진과 영상을 모아갈 수 있어요.',
       tags: ['새앨범', '공동사진첩'],
       assets: [],
@@ -261,28 +268,37 @@ export function Memory() {
       reactions: { 좋아요: 0, 웃겨요: 0, 또가요: 0 },
     };
 
-    setMemories([...memories, nextMemory].sort((a, b) => a.date.localeCompare(b.date)));
+    persistMemories([...memories, nextMemory].sort((a, b) => a.date.localeCompare(b.date)));
     setSelectedId(nextMemory.id);
     setSelectedAssetId(0);
   };
 
-  const uploadAssets = (event: ChangeEvent<HTMLInputElement>) => {
+  const uploadAssets = async (event: ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files ?? []);
     if (files.length === 0) return;
 
-    const uploadedAssets: MemoryAsset[] = files.map((file, index) => ({
-      id: Date.now() + index,
-      type: file.type.startsWith('video') ? 'video' : 'photo',
-      title: file.name.replace(/\.[^/.]+$/, ''),
-      uploader: '김수정',
-      tone: assetTones[(selectedMemory.assets.length + index) % assetTones.length],
-      uploadedAt: '방금',
-      reactions: { '👍': 0, '👏': 0, '😂': 0, '🔥': 0, '💚': 0 },
-      comments: [],
-      previewUrl: URL.createObjectURL(file),
-    }));
+    const uploadedAssets: MemoryAsset[] = await Promise.all(
+      files.map(async (file, index) => {
+        const id = Date.now() + index;
+        const localPreviewUrl = URL.createObjectURL(file);
+        const stored = await uploadMemoryAssetFile(selectedMemory.id, id, file);
 
-    setMemories(
+        return {
+          id,
+          type: file.type.startsWith('video') ? 'video' : 'photo',
+          title: file.name.replace(/\.[^/.]+$/, ''),
+          uploader: currentUser.name,
+          tone: assetTones[(selectedMemory.assets.length + index) % assetTones.length],
+          uploadedAt: '방금',
+          reactions: { '👍': 0, '👏': 0, '😂': 0, '🔥': 0, '💚': 0 },
+          comments: [],
+          previewUrl: stored.previewUrl || localPreviewUrl,
+          storagePath: stored.storagePath || undefined,
+        };
+      }),
+    );
+
+    persistMemories(
       memories.map((memory) =>
         memory.id === selectedMemory.id
           ? { ...memory, assets: [...uploadedAssets, ...memory.assets] }
@@ -294,7 +310,7 @@ export function Memory() {
   };
 
   const reactAsset = (assetId: number, emoji: MemoryEmoji) => {
-    setMemories(
+    persistMemories(
       memories.map((memory) =>
         memory.id === selectedMemory.id
           ? {
@@ -314,7 +330,7 @@ export function Memory() {
     const comment = assetCommentDrafts[assetId]?.trim();
     if (!comment) return;
 
-    setMemories(
+    persistMemories(
       memories.map((memory) =>
         memory.id === selectedMemory.id
           ? {
