@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { ElementType } from 'react';
-import { Bell, Clock, Coffee, FileCheck2, Inbox, Mail, MessageSquare, Vote } from 'lucide-react';
+import { Bell, Clock, Coffee, FileCheck2, Inbox, Laugh, Mail, MessageSquare, Vote } from 'lucide-react';
 import { PanelHeader } from '../../components/PanelHeader';
 import type { AppNotification, CurrentUser, ManagedAccount, NotificationKind, Section } from '../../types';
 
@@ -20,6 +20,7 @@ const KIND_LABEL: Record<NotificationKind, string> = {
   deadline: '마감',
   action: '액션',
   tea: '티미팅',
+  humor: '유머',
   message: '메시지',
 };
 
@@ -29,6 +30,7 @@ const KIND_ICON: Record<NotificationKind, ElementType> = {
   deadline: Clock,
   action: FileCheck2,
   tea: Coffee,
+  humor: Laugh,
   message: MessageSquare,
 };
 

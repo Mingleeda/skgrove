@@ -671,7 +671,16 @@ h1 {
   font-weight: 900;
   height: 38px;
   justify-content: center;
+  overflow: hidden;
   width: 38px;
+}
+
+.tiny-avatar img {
+  border-radius: inherit;
+  display: block;
+  height: 100%;
+  object-fit: cover;
+  width: 100%;
 }
 
 .tiny-avatar.green {
@@ -5890,4 +5899,488 @@ button.notif-row {
   height: 8px;
   margin-left: auto;
   width: 8px;
+}
+
+/* ===== 유머게시판 ===== */
+.humor-hero {
+  align-items: center;
+  background: linear-gradient(120deg, #17352f, #2f6f62);
+  border-radius: 12px;
+  color: #ffffff;
+  display: flex;
+  gap: 20px;
+  justify-content: space-between;
+  padding: 24px 26px;
+}
+
+.humor-hero h2 {
+  font-size: 24px;
+  margin: 2px 0 6px;
+}
+
+.humor-hero p {
+  color: rgba(255, 255, 255, 0.86);
+  font-size: 14px;
+  max-width: 560px;
+}
+
+.humor-hero .eyebrow {
+  color: #d8f06a;
+}
+
+.humor-hero-badge {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  display: grid;
+  gap: 2px;
+  justify-items: center;
+  min-width: 130px;
+  padding: 14px 16px;
+  text-align: center;
+}
+
+.humor-hero-badge svg {
+  color: #d8f06a;
+}
+
+.humor-hero-badge strong {
+  font-size: 20px;
+}
+
+.humor-hero-badge small {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 12px;
+}
+
+.humor-rankers {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.humor-ranker {
+  background: linear-gradient(160deg, #fff7e6, #ffffff);
+  border: 1px solid #f0e2c0;
+  border-radius: 10px;
+  display: grid;
+  gap: 8px;
+  padding: 16px;
+}
+
+.humor-ranker.empty {
+  background: #f7faf5;
+  border-color: #e2e8de;
+}
+
+.humor-ranker-crown {
+  align-items: center;
+  color: #b07a12;
+  display: flex;
+  font-size: 13px;
+  font-weight: 800;
+  gap: 6px;
+}
+
+.humor-podium {
+  display: grid;
+  gap: 6px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.humor-podium li {
+  align-items: center;
+  border-radius: 8px;
+  display: flex;
+  gap: 8px;
+  padding: 4px 6px;
+}
+
+.humor-podium li.top {
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.humor-medal {
+  flex: 0 0 auto;
+  font-size: 15px;
+  width: 20px;
+}
+
+.humor-podium .tiny-avatar {
+  font-size: 12px;
+  height: 26px;
+  width: 26px;
+}
+
+.humor-podium strong {
+  font-size: 14px;
+}
+
+.humor-podium li.top strong {
+  font-size: 15px;
+}
+
+.humor-podium em {
+  color: #5c6e66;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 700;
+  margin-left: auto;
+}
+
+.humor-ranker-none {
+  color: #94a29a;
+  font-size: 14px;
+}
+
+.humor-hall-foot {
+  color: #5c6e66;
+  font-size: 13px;
+  margin-top: 14px;
+}
+
+.humor-compose-author {
+  align-items: center;
+  color: #5c6e66;
+  display: flex;
+  font-size: 13px;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.humor-compose-author .tiny-avatar {
+  height: 28px;
+  width: 28px;
+}
+
+.humor-controls {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  justify-content: space-between;
+}
+
+.humor-sort {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.humor-sort button {
+  background: #ffffff;
+  border: 1px solid #d9dfd8;
+  border-radius: 999px;
+  color: #40514a;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 6px 14px;
+}
+
+.humor-sort button.active {
+  background: #17352f;
+  border-color: #17352f;
+  color: #ffffff;
+}
+
+.humor-write-toggle {
+  align-items: center;
+  display: inline-flex;
+  gap: 6px;
+}
+
+.humor-back {
+  align-items: center;
+  align-self: flex-start;
+  background: transparent;
+  border: none;
+  color: #40514a;
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 14px;
+  font-weight: 700;
+  gap: 6px;
+  padding: 4px 0;
+}
+
+.humor-back:hover {
+  color: #17352f;
+}
+
+/* 목록 = 가벼운 행(미디어는 아이콘만, 실제 로드는 상세에서) */
+.humor-list {
+  display: grid;
+  gap: 8px;
+}
+
+.humor-row {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid #dce2dc;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  gap: 14px;
+  padding: 14px 16px;
+  text-align: left;
+  width: 100%;
+}
+
+.humor-row:hover {
+  border-color: #b9c6ba;
+  box-shadow: 0 8px 20px rgba(42, 58, 52, 0.08);
+}
+
+.humor-row-glyph {
+  flex: 0 0 auto;
+  font-size: 20px;
+  width: 24px;
+}
+
+.humor-row-main {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.humor-row-main strong {
+  font-size: 15px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.humor-row-main small {
+  align-items: center;
+  color: #8a978f;
+  display: flex;
+  font-size: 12px;
+  gap: 6px;
+}
+
+.humor-row-main small .tiny-avatar {
+  font-size: 11px;
+  height: 20px;
+  width: 20px;
+}
+
+.humor-row-stats {
+  color: #5c6e66;
+  display: flex;
+  flex: 0 0 auto;
+  font-size: 13px;
+  font-weight: 700;
+  gap: 12px;
+  margin-left: auto;
+}
+
+.humor-detail {
+  gap: 14px;
+}
+
+.humor-comment-count {
+  align-items: center;
+  color: #5c6e66;
+  display: inline-flex;
+  font-size: 13px;
+  font-weight: 700;
+  gap: 6px;
+}
+
+.humor-card {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid #dce2dc;
+  border-radius: 10px;
+  box-shadow: 0 12px 30px rgba(42, 58, 52, 0.07);
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+}
+
+.humor-card-head {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+}
+
+.humor-card-head strong {
+  display: block;
+  font-size: 15px;
+}
+
+.humor-card-head small {
+  color: #8a978f;
+  font-size: 12px;
+}
+
+.humor-card-head .humor-icon-btn {
+  margin-left: auto;
+}
+
+.humor-icon-btn {
+  align-items: center;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  color: #9aa79f;
+  cursor: pointer;
+  display: flex;
+  padding: 5px;
+}
+
+.humor-icon-btn:hover {
+  background: #ffe5df;
+  color: #e35d4f;
+}
+
+.humor-card-body {
+  font-size: 15px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+
+.humor-card-image img {
+  border-radius: 8px;
+  display: block;
+  max-height: 420px;
+  max-width: 100%;
+  object-fit: contain;
+}
+
+.humor-card-video {
+  aspect-ratio: 16 / 9;
+  background: #000000;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.humor-card-video iframe,
+.humor-card-video video {
+  border: 0;
+  display: block;
+  height: 100%;
+  width: 100%;
+}
+
+.humor-card-link {
+  align-items: center;
+  align-self: flex-start;
+  background: #f7faf5;
+  border: 1px solid #e2e8de;
+  border-radius: 8px;
+  color: #2f6f62;
+  display: inline-flex;
+  font-size: 14px;
+  font-weight: 600;
+  gap: 6px;
+  padding: 10px 14px;
+  text-decoration: none;
+}
+
+.humor-card-link:hover {
+  background: #eef4e6;
+}
+
+.humor-media-hint {
+  color: #8a978f;
+  display: block;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.humor-card-actions {
+  border-top: 1px solid #eef1ec;
+  display: flex;
+  gap: 10px;
+  padding-top: 12px;
+}
+
+.humor-like {
+  align-items: center;
+  background: #f7faf5;
+  border: 1px solid #e2e8de;
+  border-radius: 999px;
+  color: #40514a;
+  cursor: pointer;
+  display: flex;
+  font-size: 13px;
+  font-weight: 700;
+  gap: 6px;
+  padding: 7px 14px;
+}
+
+.humor-like.active {
+  background: #fff1cf;
+  border-color: #f0d69a;
+  color: #b07a12;
+}
+
+.humor-comments {
+  border-top: 1px solid #eef1ec;
+  display: grid;
+  gap: 10px;
+  padding-top: 12px;
+}
+
+.humor-comment {
+  align-items: flex-start;
+  display: flex;
+  gap: 10px;
+}
+
+.humor-comment .tiny-avatar {
+  height: 30px;
+  width: 30px;
+}
+
+.humor-comment-body {
+  flex: 1;
+}
+
+.humor-comment-body strong {
+  font-size: 13px;
+}
+
+.humor-comment-body p {
+  font-size: 14px;
+  line-height: 1.5;
+  margin: 2px 0;
+}
+
+.humor-comment-body small {
+  color: #9aa79f;
+  font-size: 11px;
+}
+
+.humor-comment-empty {
+  color: #94a29a;
+  font-size: 13px;
+}
+
+.humor-comment-input {
+  display: flex;
+  gap: 8px;
+}
+
+.humor-comment-input input {
+  flex: 1;
+}
+
+.humor-comment-input .secondary-button {
+  align-items: center;
+  display: flex;
+  padding: 8px 12px;
+}
+
+@media (max-width: 720px) {
+  .humor-hero {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .humor-rankers {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
