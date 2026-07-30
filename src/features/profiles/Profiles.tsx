@@ -7,10 +7,11 @@ import {
   Sparkles,
   UserRound,
 } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Avatar } from '../../components/Avatar';
 import { PanelHeader } from '../../components/PanelHeader';
 import { profiles as initialProfiles } from '../../data/mockData';
+import { loadProfiles, saveProfileForUser } from '../../profileStore';
 import type { CurrentUser, Profile } from '../../types';
 
 type ProfileDraft = Omit<Profile, 'color'>;
@@ -98,7 +99,7 @@ function getAgeMood(birthYear: string) {
 }
 
 export function Profiles({ currentUser }: ProfilesProps) {
-  const [profileList, setProfileList] = useState(initialProfiles);
+  const [profileList, setProfileList] = useState<Profile[]>(initialProfiles);
   const [selectedName, setSelectedName] = useState(() => {
     return initialProfiles.find((profile) => profile.name === currentUser.name)?.name ?? initialProfiles[0]?.name ?? '';
   });
@@ -154,6 +155,37 @@ export function Profiles({ currentUser }: ProfilesProps) {
   const previewAgeMood = getAgeMood(previewProfile.birthYear);
   const selectedAgeMood = selectedProfile ? getAgeMood(selectedProfile.birthYear) : undefined;
 
+  useEffect(() => {
+    let isMounted = true;
+
+    loadProfiles(initialProfiles, currentUser).then((loadedProfiles) => {
+      if (!isMounted) return;
+      setProfileList(loadedProfiles);
+      const nextMine = loadedProfiles.find((profile) => profile.name === currentUser.name) ?? loadedProfiles[0];
+      if (nextMine) {
+        setSelectedName(nextMine.name);
+        setDraft({
+          name: nextMine.name,
+          part: nextMine.part,
+          role: nextMine.role,
+          englishName: nextMine.englishName,
+          birthYear: nextMine.birthYear,
+          birthday: nextMine.birthday,
+          character: nextMine.character,
+          trait: nextMine.trait,
+          style: nextMine.style,
+          collaboration: nextMine.collaboration,
+          feedback: nextMine.feedback,
+          guide: nextMine.guide,
+        });
+      }
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [currentUser]);
+
   const updateDraft = (field: keyof ProfileDraft, value: string) => {
     setDraft((current) => ({ ...current, [field]: value }));
   };
@@ -186,7 +218,9 @@ export function Profiles({ currentUser }: ProfilesProps) {
       name: draft.name.trim(),
       color: myProfile?.color ?? colorCycle[profileList.length % colorCycle.length],
     };
-    setProfileList((current) => [nextProfile, ...current.filter((profile) => profile.name !== nextProfile.name)]);
+    const nextProfiles = [nextProfile, ...profileList.filter((profile) => profile.name !== nextProfile.name)];
+    setProfileList(nextProfiles);
+    void saveProfileForUser(nextProfile, currentUser, profileList);
     setSelectedName(nextProfile.name);
     setIsEditing(false);
   };

@@ -204,6 +204,48 @@ create policy "Allow prototype action updates"
   using (true)
   with check (true);
 
+create table if not exists public.profiles (
+  profile_key text primary key,
+  owner_email text,
+  name text not null,
+  part text not null check (part in ('전체', 'TEST혁신파트', 'ITS혁신파트', '혁신도구파트')),
+  role text not null default '',
+  english_name text not null default '',
+  birth_year text not null default '',
+  birthday text not null default '',
+  character text not null default '',
+  trait text not null default '',
+  style text not null default '',
+  collaboration text not null default '',
+  feedback text not null default '',
+  guide text not null default '',
+  color text not null check (color in ('green', 'red', 'blue', 'yellow')),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+alter table public.profiles enable row level security;
+
+drop policy if exists "Allow prototype profile reads" on public.profiles;
+drop policy if exists "Allow prototype profile writes" on public.profiles;
+drop policy if exists "Allow prototype profile updates" on public.profiles;
+
+create policy "Allow prototype profile reads"
+  on public.profiles
+  for select
+  using (true);
+
+create policy "Allow prototype profile writes"
+  on public.profiles
+  for insert
+  with check (true);
+
+create policy "Allow prototype profile updates"
+  on public.profiles
+  for update
+  using (true)
+  with check (true);
+
 create table if not exists public.connect_results (
   id text primary key,
   mode text not null check (mode in ('coffee', 'teams')),
