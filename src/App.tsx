@@ -72,6 +72,7 @@ import type {
   AppNotification,
   CanFollowRoute,
   CanOpinion,
+  CanResultGroup,
   CanSession,
   CurrentUser,
   HumorComment,
@@ -422,10 +423,12 @@ export function App() {
     saveCanSteps(steps);
   };
 
-  const confirmCanResult = (sessionId: string, summary: string) => {
+  const confirmCanResult = (sessionId: string, summary: string, groups: CanResultGroup[]) => {
     if (!summary.trim()) return;
     setCanSessions((prev) =>
-      prev.map((session) => (session.id === sessionId ? { ...session, resultSummary: summary } : session)),
+      prev.map((session) =>
+        session.id === sessionId ? { ...session, resultSummary: summary, resultGroups: groups } : session,
+      ),
     );
   };
 

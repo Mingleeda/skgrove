@@ -4962,6 +4962,18 @@ textarea {
   margin: -4px 0 0;
 }
 
+/* 단계 전환 안내 — 의견 데이터와 섞이지 않게 스테이지 하단에 두는 플로우 노트 */
+.can-flow-note {
+  background: #f2f6ef;
+  border: 1px dashed #d7e0d5;
+  border-radius: 8px;
+  color: #6b7a71;
+  font-size: 12.5px;
+  margin: 4px 0 0;
+  padding: 10px 12px;
+  text-align: center;
+}
+
 .can-meta {
   background: #f7faf5;
   border: 1px dashed #cbd6cb;
@@ -5071,6 +5083,24 @@ textarea {
   justify-content: center;
   min-width: 22px;
   padding: 0 6px;
+}
+
+/* 파트 컬럼 안에서 Step별로 묶어 보여주기 */
+.can-step-group {
+  display: grid;
+  gap: 6px;
+}
+
+.can-step-group + .can-step-group {
+  border-top: 1px dashed #d7e0d5;
+  padding-top: 8px;
+}
+
+.can-step-group-title {
+  color: #3f6d3a;
+  font-size: 11px;
+  font-weight: 800;
+  margin: 2px 0 0;
 }
 
 .can-opinion {
@@ -5558,6 +5588,21 @@ textarea {
 
 .can-template-steps li {
   line-height: 1.55;
+}
+
+/* 확정할 결과물 선택 토글 (원문 선정 / AI 요약) */
+.can-result-toggle {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 4px 0 10px;
+}
+
+.can-result-toggle > span {
+  color: #46544f;
+  font-size: 13px;
+  font-weight: 700;
 }
 
 .can-result-actions {

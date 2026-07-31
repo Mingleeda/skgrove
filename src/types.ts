@@ -200,6 +200,11 @@ export type CanFollowUp = {
   actionMeta: Record<string, { owner: string; due: string }>;
 };
 
+// 확정된 결과물(원문 선정 의견 or AI 요약 중 택1). PPT·후속조치의 단일 소스.
+// id: 원문이면 opinion.id, AI 요약이면 생성 id(stepId#index). routes/actionMeta가 이 id를 참조한다.
+export type CanResultItem = { id: string; content: string };
+export type CanResultGroup = { label: string; items: CanResultItem[] };
+
 export type CanSession = {
   id: string;
   topic: string;
@@ -209,6 +214,7 @@ export type CanSession = {
   parts: TeamPart[];
   stage: CanStage;
   resultSummary: string;
+  resultGroups?: CanResultGroup[]; // 확정 시 저장. 없으면 원문(선정 의견)으로 폴백.
   followUp: CanFollowUp | null;
 };
 

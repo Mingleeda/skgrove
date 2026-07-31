@@ -19,12 +19,14 @@ import type { CanStepConfig } from '../../canConfig';
 import { makeStepId } from '../../canStepsStore';
 import { PanelHeader } from '../../components/PanelHeader';
 import { makeActionItemId } from '../../actionItemStore';
+import { summarizeCanMeeting } from '../../aiSummarize';
 import { teamRoster } from '../../data/mockData';
 import type {
   ActionItem,
   CanFollowRoute,
   CanMethod,
   CanOpinion,
+  CanResultGroup,
   CanSession,
   CanStage,
   CanStep,
@@ -37,6 +39,16 @@ import type {
 } from '../../types';
 
 type FollowRoute = CanFollowRoute;
+
+// 취합 프롬프트. 각 Step 안에서만 유사·중복 의견을 병합해 "그 Step의 결론"을 도출하도록 지시한다.
+const AI_AGGREGATE_PROMPT =
+  '다음은 캔미팅에서 Step(단계)별로 선정된 팀원 의견입니다. ' +
+  '각 Step 안에서만(다른 Step과 절대 섞지 말고) 유사·중복 의견을 병합해 그 Step의 결론을 도출해 주세요. ' +
+  'Step별로 핵심 결론 1~3개로 간결하게 정리하고, 원문 뉘앙스는 유지하되 없는 내용을 새로 지어내지 마세요.';
+
+// 취합 표시용 정규화 키(공백 정리·끝 문장부호 제거·소문자화)로 동일/근접 중복을 제거.
+const normalizeOpinion = (text: string) =>
+  text.trim().replace(/\s+/g, ' ').replace(/[.。!?~\s]+$/u, '').toLowerCase();
 
 const canMethods: CanMethod[] = ['온라인', '오프라인'];
 
@@ -64,7 +76,7 @@ type MeetingsProps = {
   onUpdateSession: (session: CanSession) => void;
   onAddOpinion: (opinion: Omit<CanOpinion, 'id' | 'selected'>) => void;
   onToggleOpinion: (id: string) => void;
-  onConfirmResult: (sessionId: string, summary: string) => void;
+  onConfirmResult: (sessionId: string, summary: string, groups: CanResultGroup[]) => void;
   onApplyFollowUp: (
     sessionId: string,
     data: {
@@ -123,7 +135,10 @@ export function Meetings({
     author: '익명',
     content: '',
   });
-  const [aiSummary, setAiSummary] = useState<string | null>(null);
+  const [aiGroups, setAiGroups] = useState<{ label: string; points: string[] }[] | null>(null); // Step별 AI 결론(선택)
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiNote, setAiNote] = useState(''); // 결과 출처 표기(AI/로컬)
+  const [resultMode, setResultMode] = useState<'original' | 'ai'>('original'); // 확정할 결과물 선택
   const [view, setView] = useState<{ id: string; stage: CanStage } | null>(null);
   const [followRouting, setFollowRouting] = useState<Record<string, FollowRoute>>({});
   const [followDrafts, setFollowDrafts] = useState<Record<string, { owner: string; due: string }>>({});
@@ -144,7 +159,10 @@ export function Meetings({
 
   // 세션 전환 시 AI 취합 결과·조회 단계·후속 조치 입력값을 초기화 (세션 간 상태 누수 방지)
   useEffect(() => {
-    setAiSummary(null);
+    setAiGroups(null);
+    setAiLoading(false);
+    setAiNote('');
+    setResultMode('original');
     setView(null);
     setFollowRouting({});
     setFollowDrafts({});
@@ -304,7 +322,7 @@ export function Meetings({
               };
 
               const confirmResult = () => {
-                onConfirmResult(session.id, aiSummary ?? session.resultSummary);
+                onConfirmResult(session.id, buildResultText() || session.resultSummary, liveGroups);
               };
 
               // 후속 조치: 선정 의견을 항목별로 안건/액션/생략 라우팅
@@ -317,24 +335,22 @@ export function Meetings({
               const applyFollowUp = () => {
                 const routes: Record<string, FollowRoute> = {};
                 const actionMeta: Record<string, { owner: string; due: string }> = {};
-                selectedOpinions.forEach((o) => {
-                  const route = routeOf(o.id);
-                  routes[o.id] = route;
+                resultItems.forEach((item) => {
+                  const route = routeOf(item.id);
+                  routes[item.id] = route;
                   if (route === 'action') {
-                    const d = followDraftOf(o.id);
-                    actionMeta[o.id] = { owner: d.owner.trim(), due: d.due.trim() };
+                    const d = followDraftOf(item.id);
+                    actionMeta[item.id] = { owner: d.owner.trim(), due: d.due.trim() };
                   }
                 });
-                const agendaTitles = selectedOpinions
-                  .filter((o) => routes[o.id] === 'agenda')
-                  .map((o) => o.content);
-                const actions: ActionItem[] = selectedOpinions
-                  .filter((o) => routes[o.id] === 'action')
-                  .map((o) => {
-                    const m = actionMeta[o.id];
+                const agendaTitles = resultItems.filter((item) => routes[item.id] === 'agenda').map((item) => item.content);
+                const actions: ActionItem[] = resultItems
+                  .filter((item) => routes[item.id] === 'action')
+                  .map((item) => {
+                    const m = actionMeta[item.id];
                     return {
                       id: makeActionItemId(),
-                      title: o.content,
+                      title: item.content,
                       owner: m.owner || '미정',
                       // 기한 입력은 type="date"라 그대로 'YYYY-MM-DD'. 비면 미정으로 둔다.
                       due: m.due || '',
@@ -351,19 +367,11 @@ export function Meetings({
                 onApplyFollowUp(session.id, { sessionTopic: session.topic, agendaTitles, actions, routes, actionMeta });
               };
               const followUp = session.followUp;
-              // 액션으로 라우팅된 항목은 담당·기한 필수, 최소 1건 라우팅 필요
-              const routedCount = selectedOpinions.filter((o) => routeOf(o.id) !== 'skip').length;
-              const actionItemsIncomplete = selectedOpinions.some((o) => {
-                if (routeOf(o.id) !== 'action') return false;
-                const d = followDraftOf(o.id);
-                return !d.owner.trim() || !d.due.trim();
-              });
-              const applyDisabled = routedCount === 0 || actionItemsIncomplete;
 
-              // 후속 라우팅 결과 조회 (참여자·확정 후 공통, opinion id 기준)
-              const followRouteOf = (opinion: CanOpinion): FollowRoute | null =>
-                followUp ? followUp.routes[opinion.id] ?? 'skip' : null;
-              const followActionMeta = (opinion: CanOpinion) => followUp?.actionMeta[opinion.id] ?? null;
+              // 후속 라우팅 결과 조회 (참여자·확정 후 공통, 확정 결과물 item id 기준)
+              const followRouteOf = (id: string): FollowRoute | null =>
+                followUp ? followUp.routes[id] ?? 'skip' : null;
+              const followActionMeta = (id: string) => followUp?.actionMeta[id] ?? null;
               const followCount = (route: FollowRoute) =>
                 followUp ? Object.values(followUp.routes).filter((r) => r === route).length : 0;
               const routeLabel: Record<FollowRoute, string> = { agenda: '안건', action: '액션', skip: '생략' };
@@ -385,12 +393,87 @@ export function Meetings({
                   ),
                 ).join(', ') || '—';
 
-              // AI 취합 (자리표시): 선정 의견을 3-Step 템플릿으로 정리. 실제 LLM 연동은 예정.
-              const runAiAggregate = () => {
-                const grouped = stepGroups
-                  .map((group) => `[${group.step.label}]\n` + group.items.map((o) => `· ${o.content}`).join('\n'))
+              // AI 취합 입력용(선정 의견을 Step별 문자열로).
+              const rawGroups = stepGroups.map((group) => ({
+                label: group.step.label,
+                points: group.items.map((opinion) => opinion.content.trim()),
+              }));
+              // Step별 AI 결론(선택). label 매칭 → 없으면 같은 순서로 폴백.
+              const conclusionFor = (index: number, label: string): string[] =>
+                aiGroups ? (aiGroups.find((group) => group.label === label) ?? aiGroups[index])?.points ?? [] : [];
+
+              // 결과물 두 버전을 동일한 {label, items:[{id, content}]} 형태로. Step 골격은 항상 동일, 항목만 다름.
+              const originalGroups: CanResultGroup[] = stepGroups.map((group) => ({
+                label: group.step.label,
+                items: group.items.map((opinion) => ({ id: opinion.id, content: opinion.content })),
+              }));
+              const aiConclusionGroups: CanResultGroup[] | null = aiGroups
+                ? stepGroups.map((group, index) => ({
+                    label: group.step.label,
+                    items: conclusionFor(index, group.step.label).map((point, i) => ({
+                      id: `${group.step.id}#${i}`,
+                      content: point,
+                    })),
+                  }))
+                : null;
+              const liveGroups: CanResultGroup[] =
+                resultMode === 'ai' && aiConclusionGroups ? aiConclusionGroups : originalGroups;
+              // 확정 후엔 세션에 얼린 resultGroups를, 확정 전엔 토글 선택본(liveGroups)을 단일 소스로 쓴다.
+              const resultGroups: CanResultGroup[] = session.resultGroups ?? liveGroups;
+              const resultItems = resultGroups.flatMap((group) =>
+                group.items.map((item) => ({ ...item, stepLabel: group.label })),
+              );
+
+              // 액션으로 라우팅된 항목은 담당·기한 필수, 최소 1건 라우팅 필요 (확정 결과물 항목 기준)
+              const routedCount = resultItems.filter((item) => routeOf(item.id) !== 'skip').length;
+              const actionItemsIncomplete = resultItems.some((item) => {
+                if (routeOf(item.id) !== 'action') return false;
+                const d = followDraftOf(item.id);
+                return !d.owner.trim() || !d.due.trim();
+              });
+              const applyDisabled = routedCount === 0 || actionItemsIncomplete;
+
+              // 확정 저장용 요약 텍스트(확정 결과물 기준). 'done' 센티넬 대신 이 내용을 저장.
+              const buildResultText = () =>
+                liveGroups
+                  .map((group) => [`[${group.label}]`, ...group.items.map((item) => `· ${item.content}`)].join('\n'))
                   .join('\n\n');
-                setAiSummary(grouped || '선정된 의견이 없습니다.');
+
+              // 정규화 키로 동일/근접 중복 제거 (로컬 폴백용).
+              const dedupPoints = (points: string[]): string[] => {
+                const seen = new Set<string>();
+                return points.filter((point) => {
+                  const key = normalizeOpinion(point);
+                  if (!key || seen.has(key)) return false;
+                  seen.add(key);
+                  return true;
+                });
+              };
+
+              // AI 취합: 오픈라우터(LLM)로 유사·중복 의견을 병합. 미연동/실패 시 로컬 중복 제거로 폴백.
+              const runAiAggregate = async () => {
+                const localGroups = rawGroups.map((group) => ({
+                  label: group.label,
+                  points: dedupPoints(group.points),
+                }));
+                setAiLoading(true);
+                try {
+                  const result = await summarizeCanMeeting(AI_AGGREGATE_PROMPT, rawGroups);
+                  if (result.ok && result.groups?.length) {
+                    setAiGroups(result.groups);
+                    setAiNote('AI 취합 · 유사/중복 병합');
+                  } else {
+                    setAiGroups(localGroups);
+                    setAiNote(
+                      result.reason === 'disabled'
+                        ? '로컬 취합 · AI 미연동(중복 제거)'
+                        : `로컬 취합 · AI 실패(${result.reason})`,
+                    );
+                  }
+                } finally {
+                  setAiLoading(false);
+                  setResultMode('ai'); // 요약 실행 후 AI 결과를 확정 후보로 전환(토글로 원문 복귀 가능)
+                }
               };
 
               const resultTemplate = () => (
@@ -418,13 +501,13 @@ export function Meetings({
                   </table>
                   <table className="can-template-steps">
                     <tbody>
-                      {stepGroups.map((group) => (
-                        <tr key={group.step.id}>
-                          <th>{group.step.label}</th>
+                      {resultGroups.map((group, groupIndex) => (
+                        <tr key={`${group.label}-${groupIndex}`}>
+                          <th>{group.label}</th>
                           <td>
                             <ul>
-                              {group.items.map((opinion) => (
-                                <li key={opinion.id}>{opinion.content}</li>
+                              {group.items.map((item) => (
+                                <li key={item.id}>{item.content}</li>
                               ))}
                             </ul>
                           </td>
@@ -462,9 +545,9 @@ export function Meetings({
                   { x: 0.4, y: 0.9, w: 9.2, colW: [1.5, 3.1, 1.5, 3.1], border, fontSize: 11, rowH: 0.4 },
                 );
                 slide.addTable(
-                  stepGroups.map((group) => [
-                    head(group.step.label),
-                    body(group.items.map((opinion) => `• ${opinion.content}`).join('\n')),
+                  resultGroups.map((group) => [
+                    head(group.label),
+                    body(group.items.map((item) => `• ${item.content}`).join('\n')),
                   ]),
                   { x: 0.4, y: 2.4, w: 9.2, colW: [2.2, 7.0], border, fontSize: 11, valign: 'top' },
                 );
@@ -493,17 +576,33 @@ export function Meetings({
                 </article>
               );
 
+              // 파트 컬럼 안에서 다시 Step별로 묶어 보여준다(뒤섞임 방지). Step 순서는 canSteps 기준.
               const partColumns = () => (
                 <div className="can-part-columns">
                   {session.parts.map((part) => {
                     const partOpinions = sessionOpinions.filter((opinion) => opinion.part === part);
+                    const groups = canSteps
+                      .map((step) => ({ step, items: partOpinions.filter((opinion) => opinion.step === step.id) }))
+                      .filter((group) => group.items.length > 0);
                     return (
                       <div className="can-part-column" key={part}>
                         <h3>
                           {part} <span>{partOpinions.length}</span>
                         </h3>
                         {partOpinions.length === 0 && <p className="can-empty">해당 의견 없음</p>}
-                        {partOpinions.map(opinionCard)}
+                        {groups.map((group) => (
+                          <div className="can-step-group" key={group.step.id}>
+                            <h4 className="can-step-group-title">{group.step.label}</h4>
+                            {group.items.map((opinion) => (
+                              <article className="can-opinion" key={opinion.id}>
+                                <div className="can-opinion-top">
+                                  <small>{authorLabel(opinion)}</small>
+                                </div>
+                                <p>{opinion.content}</p>
+                              </article>
+                            ))}
+                          </div>
+                        ))}
                       </div>
                     );
                   })}
@@ -765,7 +864,7 @@ export function Meetings({
                       <PanelHeader icon={Sparkles} title="⑤ 캔미팅 결과 (진행자)" />
                       <div className="can-summary-head">
                         <strong>{session.topic}</strong>
-                        <small>선정 {selectedOpinions.length}건 · 자동 취합</small>
+                        <small>선정 {selectedOpinions.length}건</small>
                         {confirmed && (
                           <span className="can-confirmed-tag">
                             <CheckCircle2 size={14} />
@@ -776,32 +875,57 @@ export function Meetings({
 
                       {selectedOpinions.length === 0 ? (
                         <p className="can-empty">선정된 의견이 없습니다. 선정 단계에서 핵심 의견을 골라주세요.</p>
-                      ) : !confirmed && !aiSummary ? (
-                        <div className="can-ai">
-                          <div className="can-ai-head">
-                            {isLive && (
-                              <button className="ghost-button" onClick={runAiAggregate}>
-                                <Sparkles size={16} />
-                                AI로 취합·정리
-                              </button>
-                            )}
-                            <span className="can-ai-note">* 실제 LLM 연동 예정 — 현재는 자리표시(로컬 취합)</span>
-                          </div>
-                          <p className="can-empty">‘AI로 취합·정리’를 누르면 결과 템플릿이 작성됩니다.</p>
-                        </div>
                       ) : (
                         <>
+                          {!confirmed && isLive && (
+                            <div className="can-ai-head">
+                              <button className="ghost-button" onClick={runAiAggregate} disabled={aiLoading}>
+                                <Sparkles size={16} />
+                                {aiLoading ? '요약 중…' : 'AI로 결과 요약하기 (선택)'}
+                              </button>
+                              <span className="can-ai-note">
+                                * 선택 사항 — 누르면 Step별로 유사·중복 의견을 병합한 ‘AI 요약’ 결과물을 만듭니다. 아래에서 확정본을 고르세요.
+                              </span>
+                            </div>
+                          )}
+                          {!confirmed && isLive && aiConclusionGroups && (
+                            <div className="can-result-toggle">
+                              <span>확정할 결과물</span>
+                              <div className="segmented">
+                                <button
+                                  className={resultMode === 'original' ? 'selected' : ''}
+                                  onClick={() => setResultMode('original')}
+                                >
+                                  원문 선정
+                                </button>
+                                <button
+                                  className={resultMode === 'ai' ? 'selected' : ''}
+                                  onClick={() => setResultMode('ai')}
+                                >
+                                  AI 요약
+                                </button>
+                              </div>
+                              {aiNote && <span className="can-ai-note">{aiNote}</span>}
+                            </div>
+                          )}
                           {resultTemplate()}
                           <div className="can-result-actions">
-                            <button className="secondary-button" onClick={exportPptx}>
-                              <Download size={16} />
-                              PPT로 내보내기
-                            </button>
-                            {!confirmed && isLive && (
-                              <button className="primary-button" onClick={confirmResult}>
-                                결과 확정
-                                <ArrowRight size={18} />
+                            {confirmed && (
+                              <button className="secondary-button" onClick={exportPptx}>
+                                <Download size={16} />
+                                PPT로 내보내기
                               </button>
+                            )}
+                            {!confirmed && isLive && (
+                              <>
+                                <button className="primary-button" onClick={confirmResult}>
+                                  결과 확정
+                                  <ArrowRight size={18} />
+                                </button>
+                                <span className="can-ai-note">
+                                  * 확정하면 이 결과물이 고정되고, PPT 내보내기·후속조치가 확정본 기준으로 진행됩니다.
+                                </span>
+                              </>
                             )}
                           </div>
 
@@ -818,13 +942,13 @@ export function Meetings({
                                     (안건함 / 대시보드에서 확인)
                                   </p>
                                   <div className="can-followup-result">
-                                    {selectedOpinions.map((opinion) => {
-                                      const r = followRouteOf(opinion);
-                                      const meta = followActionMeta(opinion);
+                                    {resultItems.map((item) => {
+                                      const r = followRouteOf(item.id);
+                                      const meta = followActionMeta(item.id);
                                       return (
-                                        <div className="can-followup-resultrow" key={opinion.id}>
+                                        <div className="can-followup-resultrow" key={item.id}>
                                           <span className={`can-route-badge ${r}`}>{r ? routeLabel[r] : '-'}</span>
-                                          <span className="can-followup-rc">{opinion.content}</span>
+                                          <span className="can-followup-rc">{item.content}</span>
                                           {r === 'action' && meta && (
                                             <small>
                                               {meta.owner} · {meta.due}
@@ -842,14 +966,14 @@ export function Meetings({
                                     필수)
                                   </p>
                                   <div className="can-followup-list">
-                                    {selectedOpinions.map((opinion) => {
-                                      const route = routeOf(opinion.id);
-                                      const fd = followDraftOf(opinion.id);
+                                    {resultItems.map((item) => {
+                                      const route = routeOf(item.id);
+                                      const fd = followDraftOf(item.id);
                                       return (
-                                        <div className="can-followup-row" key={opinion.id}>
+                                        <div className="can-followup-row" key={item.id}>
                                           <div className="can-followup-main">
-                                            <span className="can-badge">{stepLabelOf(opinion.step)}</span>
-                                            <span>{opinion.content}</span>
+                                            <span className="can-badge">{item.stepLabel}</span>
+                                            <span>{item.content}</span>
                                           </div>
                                           <div className="segmented can-followup-seg">
                                             {(
@@ -862,7 +986,7 @@ export function Meetings({
                                               <button
                                                 key={val}
                                                 className={route === val ? 'selected' : ''}
-                                                onClick={() => setRoute(opinion.id, val)}
+                                                onClick={() => setRoute(item.id, val)}
                                               >
                                                 {label}
                                               </button>
@@ -874,7 +998,7 @@ export function Meetings({
                                                 placeholder="담당"
                                                 value={fd.owner}
                                                 onChange={(event) =>
-                                                  setFollowDraft(opinion.id, { owner: event.target.value })
+                                                  setFollowDraft(item.id, { owner: event.target.value })
                                                 }
                                               />
                                               <input
@@ -882,7 +1006,7 @@ export function Meetings({
                                                 aria-label="기한"
                                                 value={fd.due}
                                                 onChange={(event) =>
-                                                  setFollowDraft(opinion.id, { due: event.target.value })
+                                                  setFollowDraft(item.id, { due: event.target.value })
                                                 }
                                               />
                                             </div>
@@ -915,6 +1039,7 @@ export function Meetings({
                     waitingCard('진행자가 세션을 준비하고 있어요', '곧 의견 수집이 시작됩니다.')}
 
                   {!isHost && stage === 'collect' && (
+                    <>
                     <div className="can-two">
                       <div className="panel form-panel">
                         <PanelHeader icon={Send} title="② 의견 제출" />
@@ -981,9 +1106,10 @@ export function Meetings({
                           )}
                           {myOpinions.map(opinionCard)}
                         </div>
-                        <p className="can-hint">진행자가 수집을 마감하면 의견 공유로 넘어갑니다.</p>
                       </div>
                     </div>
+                    <p className="can-flow-note">진행자가 수집을 마감하면 의견 공유로 넘어갑니다.</p>
+                    </>
                   )}
 
                   {!isHost && stage === 'share' && (
@@ -1024,13 +1150,13 @@ export function Meetings({
                                 후속 조치 결과
                               </h4>
                               <div className="can-followup-result">
-                                {selectedOpinions.map((opinion) => {
-                                  const r = followRouteOf(opinion);
-                                  const meta = followActionMeta(opinion);
+                                {resultItems.map((item) => {
+                                  const r = followRouteOf(item.id);
+                                  const meta = followActionMeta(item.id);
                                   return (
-                                    <div className="can-followup-resultrow" key={opinion.id}>
+                                    <div className="can-followup-resultrow" key={item.id}>
                                       <span className={`can-route-badge ${r}`}>{r ? routeLabel[r] : '-'}</span>
-                                      <span className="can-followup-rc">{opinion.content}</span>
+                                      <span className="can-followup-rc">{item.content}</span>
                                       {r === 'action' && meta && (
                                         <small>
                                           {meta.owner} · {meta.due}

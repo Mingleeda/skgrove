@@ -8,7 +8,10 @@
     "build": "tsc && vite build",
     "preview": "vite preview --host 127.0.0.1",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "proxy": "node scripts/proxy.mjs",
+    "ai-proxy": "node scripts/ai-proxy.mjs",
+    "notify-proxy": "node scripts/notify-proxy.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.110.8",
