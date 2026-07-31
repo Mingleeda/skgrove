@@ -2,6 +2,7 @@
 // 실행: node scripts/notify-proxy.mjs   (설정은 .env.notify.local 에서 읽음, Node 18+ 필요)
 import { createServer } from 'node:http';
 import { readFileSync } from 'node:fs';
+import { pathToFileURL } from 'node:url';
 
 // .env.notify.local 로드 (KEY=VALUE 단순 파서)
 const env = {};
@@ -14,9 +15,7 @@ try {
     if (i > 0) env[t.slice(0, i).trim()] = t.slice(i + 1).trim();
   }
 } catch {
-  console.error('⚠️  .env.notify.local 이 없습니다. .env.notify.example 를 복사해 채워주세요:');
-  console.error('    cp .env.notify.example .env.notify.local');
-  process.exit(1);
+  console.warn('⚠️  .env.notify.local 없음 — 슬랙 전송 휴면(프론트는 인앱만). 설정: cp .env.notify.example .env.notify.local');
 }
 
 const PORT = Number(env.PORT || 8787);
@@ -139,7 +138,7 @@ function announceCard(text) {
   return { attachments: [{ color: '#17352f', fallback: '이번 티미팅 안내', blocks }] };
 }
 
-createServer((req, res) => {
+export function handleNotify(req, res) {
   if (req.method === 'OPTIONS') {
     res.writeHead(204, CORS);
     res.end();
@@ -208,6 +207,11 @@ createServer((req, res) => {
       send(res, 502, { ok: false, reason: String(error) });
     }
   });
-}).listen(PORT, () => {
-  console.log(`🔔 notify-proxy 실행 중 → http://127.0.0.1:${PORT}/api/notify`);
-});
+}
+
+// 단독 실행일 때만 서버를 띄운다(통합 실행 시엔 import 만).
+if (import.meta.url === pathToFileURL(process.argv[1] || '').href) {
+  createServer(handleNotify).listen(PORT, () => {
+    console.log(`🔔 notify-proxy 실행 중 → http://127.0.0.1:${PORT}/api/notify`);
+  });
+}
