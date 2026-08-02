@@ -15,6 +15,8 @@ type MemoryRow = {
   created_by: string;
   summary: string;
   tags?: string[] | null;
+  drive_folder_id?: string | null;
+  drive_folder_url?: string | null;
   comments?: string[] | null;
   reactions?: TeamMemory['reactions'] | null;
 };
@@ -31,6 +33,9 @@ type MemoryAssetRow = {
   comments?: string[] | null;
   preview_url?: string | null;
   storage_path?: string | null;
+  drive_file_id?: string | null;
+  drive_view_url?: string | null;
+  drive_download_url?: string | null;
 };
 
 export async function loadMemories(fallback: TeamMemory[]) {
@@ -138,6 +143,8 @@ function memoryFromRow(row: MemoryRow, assets: MemoryAsset[]): TeamMemory {
     createdBy: row.created_by,
     summary: row.summary,
     tags: row.tags ?? [],
+    driveFolderId: row.drive_folder_id ?? undefined,
+    driveFolderUrl: row.drive_folder_url ?? undefined,
     assets,
     comments: row.comments ?? [],
     reactions: row.reactions ?? { 좋아요: 0, 웃겨요: 0, 또가요: 0 },
@@ -154,6 +161,8 @@ function memoryToRow(memory: TeamMemory): MemoryRow {
     created_by: memory.createdBy,
     summary: memory.summary,
     tags: memory.tags,
+    drive_folder_id: memory.driveFolderId ?? null,
+    drive_folder_url: memory.driveFolderUrl ?? null,
     comments: memory.comments,
     reactions: memory.reactions,
   };
@@ -171,6 +180,9 @@ function assetFromRow(row: MemoryAssetRow): MemoryAsset {
     comments: row.comments ?? [],
     previewUrl: row.preview_url ?? undefined,
     storagePath: row.storage_path ?? undefined,
+    driveFileId: row.drive_file_id ?? undefined,
+    driveViewUrl: row.drive_view_url ?? undefined,
+    driveDownloadUrl: row.drive_download_url ?? undefined,
   };
 }
 
@@ -187,5 +199,8 @@ function assetToRow(memoryId: number, asset: MemoryAsset): MemoryAssetRow {
     comments: asset.comments,
     preview_url: asset.previewUrl ?? null,
     storage_path: asset.storagePath ?? null,
+    drive_file_id: asset.driveFileId ?? null,
+    drive_view_url: asset.driveViewUrl ?? null,
+    drive_download_url: asset.driveDownloadUrl ?? null,
   };
 }

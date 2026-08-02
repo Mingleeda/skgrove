@@ -3703,6 +3703,62 @@ textarea {
   color: #76513a;
 }
 
+.memory-drive-panel {
+  background: #f4f7fb;
+  border: 1px solid #d6deea;
+  border-left: 5px solid #2f74c0;
+  border-radius: 8px;
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+}
+
+.memory-drive-panel > div:first-child {
+  display: grid;
+  gap: 5px;
+  grid-template-columns: 28px minmax(0, 1fr);
+}
+
+.memory-drive-panel > div:first-child svg {
+  color: #2f74c0;
+  grid-row: span 2;
+}
+
+.memory-drive-panel strong {
+  color: #17352f;
+}
+
+.memory-drive-panel span {
+  color: #5f6b82;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.memory-drive-actions,
+.memory-drive-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.memory-drive-actions a {
+  align-items: center;
+  display: inline-flex;
+  gap: 6px;
+  justify-content: center;
+  text-decoration: none;
+}
+
+.memory-drive-meta span {
+  background: #ffffff;
+  border: 1px solid #d6deea;
+  border-radius: 999px;
+  color: #1f476f;
+  font-size: 12px;
+  font-weight: 900;
+  padding: 6px 9px;
+}
+
 .memory-upload-box {
   background: #f7faf5;
   border: 1px solid #e1e7df;
@@ -3964,7 +4020,8 @@ textarea {
   border-color: #9ac5ad;
 }
 
-.memory-asset-actions button {
+.memory-asset-actions button,
+.memory-asset-actions a {
   align-items: center;
   background: #f7faf5;
   border: 1px solid #e1e7df;
@@ -3975,6 +4032,7 @@ textarea {
   font-size: 12px;
   min-height: 32px;
   padding: 0 10px;
+  text-decoration: none;
 }
 
 .memory-asset-comments {
