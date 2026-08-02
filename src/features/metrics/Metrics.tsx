@@ -1,4 +1,4 @@
-import { BarChart3, CalendarClock, CheckCircle2, Gauge, Settings2, Sparkles, UsersRound } from 'lucide-react';
+import { BarChart3, CalendarClock, CheckCircle2, Eye, Gauge, LockKeyhole, Settings2, ShieldCheck, Sparkles, UsersRound } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { loadActionItems } from '../../actionItemStore';
 import { loadAgendas } from '../../agendaStore';
@@ -12,7 +12,7 @@ import {
 } from '../../data/mockData';
 import { loadIssues } from '../../issueStore';
 import { loadTeaSessions } from '../../teaStore';
-import type { ActionItem, Agenda, AgendaBallot, CanOpinion, CanSession, Issue, Profile, TeaSession } from '../../types';
+import type { ActionItem, Agenda, AgendaBallot, CanOpinion, CanSession, CurrentUser, Issue, Profile, TeaSession } from '../../types';
 
 type PartMetric = {
   name: string;
@@ -73,6 +73,10 @@ const initialActivity: MetricsActivity = {
   connectShareTexts: [],
   issues: initialIssues,
   teaSessions: [],
+};
+
+type MetricsProps = {
+  currentUser: CurrentUser;
 };
 
 function clampScore(score: number) {
@@ -225,10 +229,12 @@ function buildPartMetrics(activity: MetricsActivity): PartMetric[] {
   });
 }
 
-export function Metrics() {
+export function Metrics({ currentUser }: MetricsProps) {
   const [partMetrics, setPartMetrics] = useState<PartMetric[]>(() => buildPartMetrics(initialActivity));
-  const [selectedPart, setSelectedPart] = useState(partNames[0]);
+  const [selectedPart, setSelectedPart] = useState(currentUser.part === '전체' ? partNames[0] : currentUser.part);
   const [weights, setWeights] = useState(initialWeights);
+  const canViewAllLeaderMetrics = currentUser.role === '팀리더';
+  const isPartLeader = currentUser.role === '파트리더';
 
   useEffect(() => {
     let isMounted = true;
@@ -268,10 +274,17 @@ export function Metrics() {
           dominantTone: getDominantTone(part),
         }))
         .sort((a, b) => b.score - a.score),
-    [weights],
+    [partMetrics, weights],
   );
 
   const activePart = scoredParts.find((part) => part.name === selectedPart) ?? scoredParts[0];
+  const canViewActiveLeaderMetrics = canViewAllLeaderMetrics || (isPartLeader && currentUser.part === activePart.name);
+  const modeClass = canViewAllLeaderMetrics ? 'team-leader-mode' : isPartLeader ? 'part-leader-mode' : 'public-member-mode';
+  const modeTitle = canViewAllLeaderMetrics ? '팀리더 운영 콘솔' : isPartLeader ? '파트리더 리더룸' : '팀원 공개 리포트';
+  const accessLabel = canViewActiveLeaderMetrics ? '리더 전용 지표 포함' : '전체 공개 지표';
+  const accessDescription = canViewActiveLeaderMetrics
+    ? '회의 과다 감점, 상세 반영률, 운영 리스크 신호까지 확인할 수 있어요.'
+    : '민감할 수 있는 회의량과 운영 리스크는 리더 권한에서만 보여요.';
   const rewardCandidates = scoredParts.filter((part) => part.score >= weights.rewardScore);
   const totalOpinions = scoredParts.reduce((sum, part) => sum + part.opinionSubmitted, 0);
   const reflectedOpinions = scoredParts.reduce((sum, part) => sum + part.reflectedOpinions, 0);
@@ -283,15 +296,52 @@ export function Metrics() {
   };
 
   return (
-    <section className="screen metrics-screen">
+    <section className={`screen metrics-screen ${modeClass}`}>
       <section className="metrics-hero">
         <div>
           <p className="eyebrow">CULTURE HEALTH REPORT</p>
-          <h2>파트의 회의 습관, 의견 반영, 성향 색을 함께 봅니다.</h2>
-          <p>대나무숲, 캔미팅, 안건 투표, 액션아이템, 티미팅, 커넥트 결과를 모아 파트별 문화 흐름을 계산합니다.</p>
+          <h2>{modeTitle}</h2>
+          <p>
+            {canViewAllLeaderMetrics
+              ? '전체 파트의 회의 리스크, 보상 기준, 문화 흐름을 운영 관점에서 봅니다.'
+              : isPartLeader
+                ? `${currentUser.part}의 회의 리스크와 의견 반영 흐름을 리더 관점에서 봅니다.`
+                : '팀원에게 공개 가능한 파트별 문화 흐름과 성향 색만 가볍게 봅니다.'}
+          </p>
+        </div>
+        <div className="metrics-access-card">
+          {canViewAllLeaderMetrics ? <ShieldCheck size={22} /> : isPartLeader ? <UsersRound size={22} /> : <Eye size={22} />}
+          <strong>{currentUser.role}</strong>
+          <span>{accessLabel}</span>
+          <small>{currentUser.part === '전체' ? '전체 파트 접근' : currentUser.part}</small>
+        </div>
+      </section>
+
+      <section className="metrics-permission-strip" aria-label="권한별 보기 단계">
+        <div className="active">
+          <Eye size={18} />
+          <strong>전체 공개</strong>
+          <span>파트지수, 반영률, 성향 팔레트</span>
+        </div>
+        <div className={isPartLeader || canViewAllLeaderMetrics ? 'active' : 'locked'}>
+          {isPartLeader || canViewAllLeaderMetrics ? <UsersRound size={18} /> : <LockKeyhole size={18} />}
+          <strong>파트리더</strong>
+          <span>내 파트 회의 상세와 운영 힌트</span>
+        </div>
+        <div className={canViewAllLeaderMetrics ? 'active' : 'locked'}>
+          {canViewAllLeaderMetrics ? <ShieldCheck size={18} /> : <LockKeyhole size={18} />}
+          <strong>팀리더</strong>
+          <span>전체 파트 민감 지표와 계산 기준</span>
+        </div>
+      </section>
+
+      <section className="metrics-visibility-banner">
+        <div>
+          <strong>{accessLabel}</strong>
+          <span>{accessDescription}</span>
         </div>
         <div className="calendar-sync-card">
-          <CalendarClock size={22} />
+          <CalendarClock size={18} />
           <strong>Google Calendar</strong>
           <span>연결 예정 · 회의 길이 자동 분석</span>
         </div>
@@ -320,6 +370,26 @@ export function Metrics() {
         </div>
       </section>
 
+      {canViewAllLeaderMetrics && (
+        <section className="metrics-leader-console">
+          <div>
+            <ShieldCheck size={20} />
+            <strong>팀리더 전용 운영 콘솔</strong>
+            <span>모든 파트의 회의 과다 감점과 보상 기준 조정이 열려 있어요.</span>
+          </div>
+          <div>
+            <Gauge size={20} />
+            <strong>최대 긴 회의 비율 {Math.max(...scoredParts.map((part) => part.longMeetingRate))}%</strong>
+            <span>민감 지표라 팀원 공개 화면에는 표시하지 않습니다.</span>
+          </div>
+          <div>
+            <Settings2 size={20} />
+            <strong>보상 기준 {weights.rewardScore}점</strong>
+            <span>팀리더만 계산 기준을 조정할 수 있어요.</span>
+          </div>
+        </section>
+      )}
+
       <div className="metrics-layout">
         <section className="panel metrics-ranking">
           <div className="panel-header">
@@ -337,6 +407,9 @@ export function Metrics() {
                 <div>
                   <strong>{part.name}</strong>
                   <span>{part.members}명 · 반영률 {part.reflectionRate}%</span>
+                  <small className={canViewAllLeaderMetrics || (isPartLeader && currentUser.part === part.name) ? 'leader-visible' : 'public-visible'}>
+                    {canViewAllLeaderMetrics || (isPartLeader && currentUser.part === part.name) ? '리더 상세 열림' : '공개 지표만'}
+                  </small>
                 </div>
                 <em>{part.score}</em>
               </button>
@@ -350,7 +423,10 @@ export function Metrics() {
               <p className="eyebrow">선택 파트 분석</p>
               <h2>{activePart.name}</h2>
             </div>
-            {activePart.score >= weights.rewardScore && <span className="reward-badge">보상 후보</span>}
+            <div className="metrics-detail-badges">
+              <span className={canViewActiveLeaderMetrics ? 'leader-scope-badge' : 'public-scope-badge'}>{accessLabel}</span>
+              {activePart.score >= weights.rewardScore && <span className="reward-badge">보상 후보</span>}
+            </div>
           </div>
 
           <div className="metrics-score-grid">
@@ -363,28 +439,38 @@ export function Metrics() {
               <strong>{activePart.reflectionRate}%</strong>
             </div>
             <div>
-              긴 회의 비율
-              <strong>{activePart.longMeetingRate}%</strong>
+              {canViewActiveLeaderMetrics ? '긴 회의 비율' : '참여 균형'}
+              <strong>{canViewActiveLeaderMetrics ? `${activePart.longMeetingRate}%` : `${activePart.voteParticipation}%`}</strong>
             </div>
           </div>
 
-          <div className="meeting-health-card">
-            <div>
-              <CalendarClock size={20} />
-              <strong>회의 건강도</strong>
-              <span>{activePart.meetingTrend}</span>
+          {canViewActiveLeaderMetrics ? (
+            <div className="meeting-health-card leader-only-card">
+              <div>
+                <CalendarClock size={20} />
+                <strong>회의 건강도</strong>
+                <span>{activePart.meetingTrend}</span>
+              </div>
+              <div className="meeting-bars">
+                <label>
+                  원온원
+                  <span style={{ width: `${Math.min(100, activePart.oneOnOneMinutes / 5)}%` }} />
+                </label>
+                <label>
+                  파트회의
+                  <span style={{ width: `${Math.min(100, activePart.partMeetingMinutes / 7)}%` }} />
+                </label>
+              </div>
             </div>
-            <div className="meeting-bars">
-              <label>
-                원온원
-                <span style={{ width: `${Math.min(100, activePart.oneOnOneMinutes / 5)}%` }} />
-              </label>
-              <label>
-                파트회의
-                <span style={{ width: `${Math.min(100, activePart.partMeetingMinutes / 7)}%` }} />
-              </label>
+          ) : (
+            <div className="metrics-public-note">
+              <LockKeyhole size={20} />
+              <div>
+                <strong>회의 상세는 리더 전용이에요</strong>
+                <span>팀원 공개 화면에서는 파트별 문화 흐름과 성향 팔레트만 보여주고, 회의 피로도나 감점 근거는 숨깁니다.</span>
+              </div>
             </div>
-          </div>
+          )}
 
           <div className="profile-color-panel">
             <div className="panel-header">
@@ -419,10 +505,15 @@ export function Metrics() {
             <div className="insight-list">
               <p>의견은 총 {totalOpinions}건 접수됐고 {reflectedOpinions}건이 답변/안건/액션으로 이어졌어요.</p>
               <p>{scoredParts[0].name}은 회의 건강도와 의견 반영 균형이 가장 좋아요.</p>
-              <p>긴 회의 비율이 높은 파트는 45분 단위 회의 템플릿을 적용해보면 좋아요.</p>
+              <p>
+                {canViewAllLeaderMetrics
+                  ? '긴 회의 비율이 높은 파트는 45분 단위 회의 템플릿을 적용해보면 좋아요.'
+                  : '상세 회의 리스크는 리더 권한에서만 볼 수 있고, 공개 리포트에는 팀 문화 흐름만 남깁니다.'}
+              </p>
             </div>
           </section>
 
+          {canViewAllLeaderMetrics ? (
           <section className="panel">
             <div className="panel-header">
               <Settings2 size={20} />
@@ -451,6 +542,15 @@ export function Metrics() {
               ))}
             </div>
           </section>
+          ) : (
+          <section className="panel metrics-locked-panel">
+            <div className="panel-header">
+              <Settings2 size={20} />
+              <h2>계산 기준 설정</h2>
+            </div>
+            <p>보상 기준과 감점 가중치는 팀리더 전용 설정이에요. 파트리더는 자기 파트의 운영 상세를 보고, 팀원은 공개 리포트만 확인합니다.</p>
+          </section>
+          )}
         </aside>
       </div>
     </section>
