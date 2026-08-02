@@ -1,4 +1,4 @@
-import { BarChart3, CalendarClock, CheckCircle2, Gauge, Settings2, Sparkles, UsersRound } from 'lucide-react';
+import { BarChart3, CalendarClock, CheckCircle2, Eye, Gauge, LockKeyhole, Settings2, ShieldCheck, Sparkles, UsersRound } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { loadActionItems } from '../../actionItemStore';
 import { loadAgendas } from '../../agendaStore';
@@ -12,7 +12,7 @@ import {
 } from '../../data/mockData';
 import { loadIssues } from '../../issueStore';
 import { loadTeaSessions } from '../../teaStore';
-import type { ActionItem, Agenda, AgendaBallot, CanOpinion, CanSession, Issue, Profile, TeaSession } from '../../types';
+import type { ActionItem, Agenda, AgendaBallot, CanOpinion, CanSession, CurrentUser, Issue, Profile, TeaSession } from '../../types';
 
 type PartMetric = {
   name: string;
@@ -57,6 +57,7 @@ type MetricsActivity = {
   actionItems: ActionItem[];
   agendas: Agenda[];
   ballots: AgendaBallot[];
+  calendarEvents: CalendarMetricEvent[];
   canOpinions: CanOpinion[];
   canSessions: CanSession[];
   connectShareTexts: string[];
@@ -64,16 +65,92 @@ type MetricsActivity = {
   teaSessions: TeaSession[];
 };
 
+type CalendarMeetingType = '원온원' | '파트회의' | '캔미팅' | '티미팅';
+
+type CalendarMetricEvent = {
+  id: string;
+  title: string;
+  part: string;
+  type: CalendarMeetingType;
+  startsAt: string;
+  durationMinutes: number;
+  attendees: number;
+  isRecurring: boolean;
+};
+
+type CalendarConnection = 'disconnected' | 'connected' | 'synced';
+
 const initialActivity: MetricsActivity = {
   actionItems: [],
   agendas: initialAgendas,
   ballots: [],
+  calendarEvents: [],
   canOpinions: initialCanOpinions,
   canSessions: initialCanSessions,
   connectShareTexts: [],
   issues: initialIssues,
   teaSessions: [],
 };
+
+type MetricsProps = {
+  currentUser: CurrentUser;
+};
+
+const CALENDAR_STORAGE_KEY = 'skgrove:metrics-calendar-events';
+const CALENDAR_STATUS_KEY = 'skgrove:metrics-calendar-status';
+
+const sampleCalendarEvents: CalendarMetricEvent[] = [
+  {
+    id: 'GCAL-001',
+    title: 'TEST혁신파트 주간 싱크',
+    part: 'TEST혁신파트',
+    type: '파트회의',
+    startsAt: '2026-08-03T10:00:00',
+    durationMinutes: 70,
+    attendees: 9,
+    isRecurring: true,
+  },
+  {
+    id: 'GCAL-002',
+    title: 'ITS혁신파트 캔미팅',
+    part: 'ITS혁신파트',
+    type: '캔미팅',
+    startsAt: '2026-08-04T14:00:00',
+    durationMinutes: 95,
+    attendees: 11,
+    isRecurring: false,
+  },
+  {
+    id: 'GCAL-003',
+    title: '혁신도구파트 원온원 블록',
+    part: '혁신도구파트',
+    type: '원온원',
+    startsAt: '2026-08-05T11:00:00',
+    durationMinutes: 30,
+    attendees: 2,
+    isRecurring: true,
+  },
+  {
+    id: 'GCAL-004',
+    title: '혁신도구파트 티미팅 리허설',
+    part: '혁신도구파트',
+    type: '티미팅',
+    startsAt: '2026-08-06T16:00:00',
+    durationMinutes: 55,
+    attendees: 7,
+    isRecurring: false,
+  },
+  {
+    id: 'GCAL-005',
+    title: 'ITS혁신파트 장기 이슈 리뷰',
+    part: 'ITS혁신파트',
+    type: '파트회의',
+    startsAt: '2026-08-07T09:30:00',
+    durationMinutes: 120,
+    attendees: 8,
+    isRecurring: true,
+  },
+];
 
 function clampScore(score: number) {
   return Math.max(0, Math.min(100, Math.round(score)));
@@ -193,6 +270,27 @@ function readConnectShareTexts() {
   }
 }
 
+function readCalendarEvents() {
+  try {
+    const saved = window.localStorage.getItem(CALENDAR_STORAGE_KEY);
+    if (!saved) return [];
+    return JSON.parse(saved) as CalendarMetricEvent[];
+  } catch {
+    return [];
+  }
+}
+
+function readCalendarStatus(): CalendarConnection {
+  const saved = window.localStorage.getItem(CALENDAR_STATUS_KEY);
+  if (saved === 'connected' || saved === 'synced') return saved;
+  return 'disconnected';
+}
+
+function saveCalendarState(status: CalendarConnection, events: CalendarMetricEvent[]) {
+  window.localStorage.setItem(CALENDAR_STATUS_KEY, status);
+  window.localStorage.setItem(CALENDAR_STORAGE_KEY, JSON.stringify(events));
+}
+
 function buildPartMetrics(activity: MetricsActivity): PartMetric[] {
   return partNames.map((partName) => {
     const members = profiles.filter((profile) => profile.part === partName);
@@ -204,9 +302,19 @@ function buildPartMetrics(activity: MetricsActivity): PartMetric[] {
     const issuePressure = activity.issues.filter((issue) => issue.target === '파트장' || issue.target.includes(partName)).length;
     const teaCount = activity.teaSessions.filter((session) => session.part === partName || members.some((member) => member.name === session.presenter)).length;
     const canSessionCount = activity.canSessions.filter((session) => session.parts.includes(partName as never)).length;
-    const oneOnOneMinutes = members.length * 25 + issuePressure * 20;
-    const partMeetingMinutes = canSessionCount * 80 + teaCount * 45 + canOpinions.length * 12;
-    const longMeetingRate = clampScore((canSessionCount * 8 + teaCount * 4 + issuePressure * 3) / Math.max(1, members.length) * 5);
+    const partCalendarEvents = activity.calendarEvents.filter((event) => event.part === partName);
+    const calendarOneOnOneMinutes = partCalendarEvents
+      .filter((event) => event.type === '원온원')
+      .reduce((sum, event) => sum + event.durationMinutes, 0);
+    const calendarMeetingMinutes = partCalendarEvents
+      .filter((event) => event.type !== '원온원')
+      .reduce((sum, event) => sum + event.durationMinutes, 0);
+    const longCalendarMeetings = partCalendarEvents.filter((event) => event.durationMinutes >= 60).length;
+    const oneOnOneMinutes = calendarOneOnOneMinutes || members.length * 25 + issuePressure * 20;
+    const partMeetingMinutes = calendarMeetingMinutes || canSessionCount * 80 + teaCount * 45 + canOpinions.length * 12;
+    const longMeetingRate = partCalendarEvents.length > 0
+      ? clampScore((longCalendarMeetings / partCalendarEvents.length) * 100)
+      : clampScore((canSessionCount * 8 + teaCount * 4 + issuePressure * 3) / Math.max(1, members.length) * 5);
 
     return {
       name: partName,
@@ -225,13 +333,23 @@ function buildPartMetrics(activity: MetricsActivity): PartMetric[] {
   });
 }
 
-export function Metrics() {
+export function Metrics({ currentUser }: MetricsProps) {
+  const [activity, setActivity] = useState<MetricsActivity>(initialActivity);
   const [partMetrics, setPartMetrics] = useState<PartMetric[]>(() => buildPartMetrics(initialActivity));
-  const [selectedPart, setSelectedPart] = useState(partNames[0]);
+  const [calendarEvents, setCalendarEvents] = useState<CalendarMetricEvent[]>([]);
+  const [calendarStatus, setCalendarStatus] = useState<CalendarConnection>('disconnected');
+  const [selectedPart, setSelectedPart] = useState(currentUser.part === '전체' ? partNames[0] : currentUser.part);
   const [weights, setWeights] = useState(initialWeights);
+  const canViewAllLeaderMetrics = currentUser.role === '팀리더';
+  const isPartLeader = currentUser.role === '파트리더';
 
   useEffect(() => {
     let isMounted = true;
+
+    const savedCalendarStatus = readCalendarStatus();
+    const savedCalendarEvents = readCalendarEvents();
+    setCalendarStatus(savedCalendarStatus);
+    setCalendarEvents(savedCalendarEvents);
 
     Promise.all([
       loadIssues(),
@@ -240,16 +358,19 @@ export function Metrics() {
       loadActionItems(),
     ]).then(([issues, agendas, ballots, actionItems]) => {
       if (!isMounted) return;
-      setPartMetrics(buildPartMetrics({
+      const loadedActivity = {
         actionItems,
         agendas,
         ballots,
+        calendarEvents: savedCalendarEvents,
         canOpinions: initialCanOpinions,
         canSessions: initialCanSessions,
         connectShareTexts: readConnectShareTexts(),
         issues,
         teaSessions: loadTeaSessions(),
-      }));
+      };
+      setActivity(loadedActivity);
+      setPartMetrics(buildPartMetrics(loadedActivity));
     });
 
     return () => {
@@ -268,32 +389,109 @@ export function Metrics() {
           dominantTone: getDominantTone(part),
         }))
         .sort((a, b) => b.score - a.score),
-    [weights],
+    [partMetrics, weights],
   );
 
   const activePart = scoredParts.find((part) => part.name === selectedPart) ?? scoredParts[0];
+  const canViewActiveLeaderMetrics = canViewAllLeaderMetrics || (isPartLeader && currentUser.part === activePart.name);
+  const modeClass = canViewAllLeaderMetrics ? 'team-leader-mode' : isPartLeader ? 'part-leader-mode' : 'public-member-mode';
+  const modeTitle = canViewAllLeaderMetrics ? '팀리더 운영 콘솔' : isPartLeader ? '파트리더 리더룸' : '팀원 공개 리포트';
+  const accessLabel = canViewActiveLeaderMetrics ? '리더 전용 지표 포함' : '전체 공개 지표';
+  const accessDescription = canViewActiveLeaderMetrics
+    ? '회의 과다 감점, 상세 반영률, 운영 리스크 신호까지 확인할 수 있어요.'
+    : '민감할 수 있는 회의량과 운영 리스크는 리더 권한에서만 보여요.';
   const rewardCandidates = scoredParts.filter((part) => part.score >= weights.rewardScore);
   const totalOpinions = scoredParts.reduce((sum, part) => sum + part.opinionSubmitted, 0);
   const reflectedOpinions = scoredParts.reduce((sum, part) => sum + part.reflectedOpinions, 0);
   const averageMeetingHealth = Math.round(scoredParts.reduce((sum, part) => sum + part.meetingHealth, 0) / scoredParts.length);
   const reflectionRate = totalOpinions > 0 ? Math.round((reflectedOpinions / totalOpinions) * 100) : 0;
+  const activeCalendarEvents = calendarEvents.filter((event) => event.part === activePart.name);
+  const longCalendarEventCount = activeCalendarEvents.filter((event) => event.durationMinutes >= 60).length;
+
+  const applyCalendarEvents = (status: CalendarConnection, events: CalendarMetricEvent[]) => {
+    setCalendarStatus(status);
+    setCalendarEvents(events);
+    saveCalendarState(status, events);
+    const nextActivity = {
+      ...activity,
+      calendarEvents: events,
+      connectShareTexts: readConnectShareTexts(),
+    };
+    setActivity(nextActivity);
+    setPartMetrics(buildPartMetrics(nextActivity));
+  };
+
+  const connectCalendar = () => {
+    applyCalendarEvents('connected', calendarEvents);
+  };
+
+  const importSampleCalendar = () => {
+    applyCalendarEvents('synced', sampleCalendarEvents);
+  };
+
+  const disconnectCalendar = () => {
+    applyCalendarEvents('disconnected', []);
+  };
 
   const updateWeight = (key: keyof MetricWeights, value: number) => {
     setWeights({ ...weights, [key]: value });
   };
 
   return (
-    <section className="screen metrics-screen">
+    <section className={`screen metrics-screen ${modeClass}`}>
       <section className="metrics-hero">
         <div>
           <p className="eyebrow">CULTURE HEALTH REPORT</p>
-          <h2>파트의 회의 습관, 의견 반영, 성향 색을 함께 봅니다.</h2>
-          <p>대나무숲, 캔미팅, 안건 투표, 액션아이템, 티미팅, 커넥트 결과를 모아 파트별 문화 흐름을 계산합니다.</p>
+          <h2>{modeTitle}</h2>
+          <p>
+            {canViewAllLeaderMetrics
+              ? '전체 파트의 회의 리스크, 보상 기준, 문화 흐름을 운영 관점에서 봅니다.'
+              : isPartLeader
+                ? `${currentUser.part}의 회의 리스크와 의견 반영 흐름을 리더 관점에서 봅니다.`
+                : '팀원에게 공개 가능한 파트별 문화 흐름과 성향 색만 가볍게 봅니다.'}
+          </p>
+        </div>
+        <div className="metrics-access-card">
+          {canViewAllLeaderMetrics ? <ShieldCheck size={22} /> : isPartLeader ? <UsersRound size={22} /> : <Eye size={22} />}
+          <strong>{currentUser.role}</strong>
+          <span>{accessLabel}</span>
+          <small>{currentUser.part === '전체' ? '전체 파트 접근' : currentUser.part}</small>
+        </div>
+      </section>
+
+      <section className="metrics-permission-strip" aria-label="권한별 보기 단계">
+        <div className="active">
+          <Eye size={18} />
+          <strong>전체 공개</strong>
+          <span>파트지수, 반영률, 성향 팔레트</span>
+        </div>
+        <div className={isPartLeader || canViewAllLeaderMetrics ? 'active' : 'locked'}>
+          {isPartLeader || canViewAllLeaderMetrics ? <UsersRound size={18} /> : <LockKeyhole size={18} />}
+          <strong>파트리더</strong>
+          <span>내 파트 회의 상세와 운영 힌트</span>
+        </div>
+        <div className={canViewAllLeaderMetrics ? 'active' : 'locked'}>
+          {canViewAllLeaderMetrics ? <ShieldCheck size={18} /> : <LockKeyhole size={18} />}
+          <strong>팀리더</strong>
+          <span>전체 파트 민감 지표와 계산 기준</span>
+        </div>
+      </section>
+
+      <section className="metrics-visibility-banner">
+        <div>
+          <strong>{accessLabel}</strong>
+          <span>{accessDescription}</span>
         </div>
         <div className="calendar-sync-card">
-          <CalendarClock size={22} />
+          <CalendarClock size={18} />
           <strong>Google Calendar</strong>
-          <span>연결 예정 · 회의 길이 자동 분석</span>
+          <span>
+            {calendarStatus === 'synced'
+              ? `${calendarEvents.length}개 회의 반영됨`
+              : calendarStatus === 'connected'
+                ? '연결됨 · 회의 가져오기 대기'
+                : '미연결 · 샘플 연동 가능'}
+          </span>
         </div>
       </section>
 
@@ -320,6 +518,58 @@ export function Metrics() {
         </div>
       </section>
 
+      {canViewAllLeaderMetrics && (
+        <section className="metrics-leader-console">
+          <div>
+            <ShieldCheck size={20} />
+            <strong>팀리더 전용 운영 콘솔</strong>
+            <span>모든 파트의 회의 과다 감점과 보상 기준 조정이 열려 있어요.</span>
+          </div>
+          <div>
+            <Gauge size={20} />
+            <strong>최대 긴 회의 비율 {Math.max(...scoredParts.map((part) => part.longMeetingRate))}%</strong>
+            <span>민감 지표라 팀원 공개 화면에는 표시하지 않습니다.</span>
+          </div>
+          <div>
+            <Settings2 size={20} />
+            <strong>보상 기준 {weights.rewardScore}점</strong>
+            <span>팀리더만 계산 기준을 조정할 수 있어요.</span>
+          </div>
+        </section>
+      )}
+
+      {canViewActiveLeaderMetrics && (
+        <section className="metrics-calendar-panel">
+          <div>
+            <CalendarClock size={20} />
+            <strong>Google Calendar 회의 분석</strong>
+            <span>
+              {calendarStatus === 'synced'
+                ? '캘린더 회의가 파트지수 회의 건강도와 긴 회의 감점에 반영되고 있어요.'
+                : '실제 OAuth 연결 전까지는 샘플 회의 데이터로 계산 흐름을 확인할 수 있어요.'}
+            </span>
+          </div>
+          <div className="calendar-sync-actions">
+            <button className="secondary-button" type="button" onClick={connectCalendar}>
+              연결 상태로 보기
+            </button>
+            <button type="button" onClick={importSampleCalendar}>
+              샘플 회의 가져오기
+            </button>
+            {calendarStatus !== 'disconnected' && (
+              <button className="secondary-button" type="button" onClick={disconnectCalendar}>
+                연결 해제
+              </button>
+            )}
+          </div>
+          <div className="calendar-event-summary">
+            <span>선택 파트 회의 {activeCalendarEvents.length}개</span>
+            <span>60분 이상 {longCalendarEventCount}개</span>
+            <span>상태 {calendarStatus === 'synced' ? '동기화됨' : calendarStatus === 'connected' ? '연결됨' : '미연결'}</span>
+          </div>
+        </section>
+      )}
+
       <div className="metrics-layout">
         <section className="panel metrics-ranking">
           <div className="panel-header">
@@ -337,6 +587,9 @@ export function Metrics() {
                 <div>
                   <strong>{part.name}</strong>
                   <span>{part.members}명 · 반영률 {part.reflectionRate}%</span>
+                  <small className={canViewAllLeaderMetrics || (isPartLeader && currentUser.part === part.name) ? 'leader-visible' : 'public-visible'}>
+                    {canViewAllLeaderMetrics || (isPartLeader && currentUser.part === part.name) ? '리더 상세 열림' : '공개 지표만'}
+                  </small>
                 </div>
                 <em>{part.score}</em>
               </button>
@@ -350,7 +603,10 @@ export function Metrics() {
               <p className="eyebrow">선택 파트 분석</p>
               <h2>{activePart.name}</h2>
             </div>
-            {activePart.score >= weights.rewardScore && <span className="reward-badge">보상 후보</span>}
+            <div className="metrics-detail-badges">
+              <span className={canViewActiveLeaderMetrics ? 'leader-scope-badge' : 'public-scope-badge'}>{accessLabel}</span>
+              {activePart.score >= weights.rewardScore && <span className="reward-badge">보상 후보</span>}
+            </div>
           </div>
 
           <div className="metrics-score-grid">
@@ -363,28 +619,38 @@ export function Metrics() {
               <strong>{activePart.reflectionRate}%</strong>
             </div>
             <div>
-              긴 회의 비율
-              <strong>{activePart.longMeetingRate}%</strong>
+              {canViewActiveLeaderMetrics ? '긴 회의 비율' : '참여 균형'}
+              <strong>{canViewActiveLeaderMetrics ? `${activePart.longMeetingRate}%` : `${activePart.voteParticipation}%`}</strong>
             </div>
           </div>
 
-          <div className="meeting-health-card">
-            <div>
-              <CalendarClock size={20} />
-              <strong>회의 건강도</strong>
-              <span>{activePart.meetingTrend}</span>
+          {canViewActiveLeaderMetrics ? (
+            <div className="meeting-health-card leader-only-card">
+              <div>
+                <CalendarClock size={20} />
+                <strong>회의 건강도</strong>
+                <span>{activePart.meetingTrend}</span>
+              </div>
+              <div className="meeting-bars">
+                <label>
+                  원온원
+                  <span style={{ width: `${Math.min(100, activePart.oneOnOneMinutes / 5)}%` }} />
+                </label>
+                <label>
+                  파트회의
+                  <span style={{ width: `${Math.min(100, activePart.partMeetingMinutes / 7)}%` }} />
+                </label>
+              </div>
             </div>
-            <div className="meeting-bars">
-              <label>
-                원온원
-                <span style={{ width: `${Math.min(100, activePart.oneOnOneMinutes / 5)}%` }} />
-              </label>
-              <label>
-                파트회의
-                <span style={{ width: `${Math.min(100, activePart.partMeetingMinutes / 7)}%` }} />
-              </label>
+          ) : (
+            <div className="metrics-public-note">
+              <LockKeyhole size={20} />
+              <div>
+                <strong>회의 상세는 리더 전용이에요</strong>
+                <span>팀원 공개 화면에서는 파트별 문화 흐름과 성향 팔레트만 보여주고, 회의 피로도나 감점 근거는 숨깁니다.</span>
+              </div>
             </div>
-          </div>
+          )}
 
           <div className="profile-color-panel">
             <div className="panel-header">
@@ -408,6 +674,26 @@ export function Metrics() {
               파트 대화에서 자주 나타납니다.
             </p>
           </div>
+
+          {canViewActiveLeaderMetrics && (
+            <div className="calendar-event-list">
+              <div className="panel-header">
+                <CalendarClock size={20} />
+                <h2>캘린더 회의 분류</h2>
+              </div>
+              {activeCalendarEvents.length > 0 ? (
+                activeCalendarEvents.map((event) => (
+                  <div className={event.durationMinutes >= 60 ? 'long-meeting' : ''} key={event.id}>
+                    <span>{event.type}</span>
+                    <strong>{event.title}</strong>
+                    <small>{event.durationMinutes}분 · {event.attendees}명 · {event.isRecurring ? '반복' : '단건'}</small>
+                  </div>
+                ))
+              ) : (
+                <p>아직 이 파트에 반영된 캘린더 회의가 없어요. 상단에서 샘플 회의를 가져오면 회의 건강도 계산에 바로 반영됩니다.</p>
+              )}
+            </div>
+          )}
         </section>
 
         <aside className="metrics-side">
@@ -419,10 +705,15 @@ export function Metrics() {
             <div className="insight-list">
               <p>의견은 총 {totalOpinions}건 접수됐고 {reflectedOpinions}건이 답변/안건/액션으로 이어졌어요.</p>
               <p>{scoredParts[0].name}은 회의 건강도와 의견 반영 균형이 가장 좋아요.</p>
-              <p>긴 회의 비율이 높은 파트는 45분 단위 회의 템플릿을 적용해보면 좋아요.</p>
+              <p>
+                {canViewAllLeaderMetrics
+                  ? '긴 회의 비율이 높은 파트는 45분 단위 회의 템플릿을 적용해보면 좋아요.'
+                  : '상세 회의 리스크는 리더 권한에서만 볼 수 있고, 공개 리포트에는 팀 문화 흐름만 남깁니다.'}
+              </p>
             </div>
           </section>
 
+          {canViewAllLeaderMetrics ? (
           <section className="panel">
             <div className="panel-header">
               <Settings2 size={20} />
@@ -451,6 +742,15 @@ export function Metrics() {
               ))}
             </div>
           </section>
+          ) : (
+          <section className="panel metrics-locked-panel">
+            <div className="panel-header">
+              <Settings2 size={20} />
+              <h2>계산 기준 설정</h2>
+            </div>
+            <p>보상 기준과 감점 가중치는 팀리더 전용 설정이에요. 파트리더는 자기 파트의 운영 상세를 보고, 팀원은 공개 리포트만 확인합니다.</p>
+          </section>
+          )}
         </aside>
       </div>
     </section>

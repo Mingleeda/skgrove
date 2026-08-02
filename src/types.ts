@@ -167,6 +167,9 @@ export type MemoryAsset = {
   comments: string[];
   previewUrl?: string;
   storagePath?: string;
+  driveFileId?: string;
+  driveViewUrl?: string;
+  driveDownloadUrl?: string;
 };
 
 export type TeamMemory = {
@@ -178,6 +181,8 @@ export type TeamMemory = {
   createdBy: string;
   summary: string;
   tags: string[];
+  driveFolderId?: string;
+  driveFolderUrl?: string;
   assets: MemoryAsset[];
   comments: string[];
   reactions: Record<MemoryReaction, number>;
