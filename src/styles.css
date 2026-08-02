@@ -4357,6 +4357,62 @@ textarea {
   line-height: 1.5;
 }
 
+.metrics-calendar-panel {
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid #dce2dc;
+  border-left: 5px solid #2f6f62;
+  border-radius: 8px;
+  display: grid;
+  gap: 14px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  padding: 16px;
+}
+
+.metrics-calendar-panel > div:first-child {
+  display: grid;
+  gap: 6px;
+  grid-template-columns: 28px minmax(0, 1fr);
+}
+
+.metrics-calendar-panel > div:first-child svg {
+  color: #2f6f62;
+  grid-row: span 2;
+}
+
+.metrics-calendar-panel strong {
+  color: #17352f;
+}
+
+.metrics-calendar-panel span {
+  color: #65736d;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.calendar-sync-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.calendar-event-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  grid-column: 1 / -1;
+}
+
+.calendar-event-summary span {
+  background: #f7faf5;
+  border: 1px solid #e1e7df;
+  border-radius: 999px;
+  color: #17352f;
+  font-weight: 900;
+  padding: 7px 10px;
+}
+
 .metrics-layout {
   align-items: start;
   display: grid;
@@ -4666,6 +4722,62 @@ textarea {
 
 .profile-color-panel p strong {
   color: #17352f;
+}
+
+.calendar-event-list {
+  display: grid;
+  gap: 10px;
+}
+
+.calendar-event-list > div:not(.panel-header) {
+  background: #f7faf5;
+  border: 1px solid #e1e7df;
+  border-radius: 8px;
+  display: grid;
+  gap: 5px;
+  grid-template-columns: 82px minmax(0, 1fr);
+  padding: 12px;
+}
+
+.calendar-event-list > div.long-meeting {
+  background: #fff7ed;
+  border-color: #e5b862;
+}
+
+.calendar-event-list > div:not(.panel-header) span {
+  align-self: start;
+  background: #e8f3ef;
+  border-radius: 999px;
+  color: #17352f;
+  font-size: 12px;
+  font-weight: 900;
+  justify-self: start;
+  padding: 5px 8px;
+}
+
+.calendar-event-list > div.long-meeting span {
+  background: #f7dfad;
+  color: #6b460a;
+}
+
+.calendar-event-list > div:not(.panel-header) strong {
+  color: #17352f;
+}
+
+.calendar-event-list > div:not(.panel-header) small {
+  color: #65736d;
+  font-size: 12px;
+  grid-column: 2;
+}
+
+.calendar-event-list p {
+  background: #f7faf5;
+  border: 1px dashed #cdd8d1;
+  border-radius: 8px;
+  color: #65736d;
+  font-size: 13px;
+  line-height: 1.55;
+  padding: 12px;
 }
 
 .insight-list p {

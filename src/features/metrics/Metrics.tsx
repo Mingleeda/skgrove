@@ -57,6 +57,7 @@ type MetricsActivity = {
   actionItems: ActionItem[];
   agendas: Agenda[];
   ballots: AgendaBallot[];
+  calendarEvents: CalendarMetricEvent[];
   canOpinions: CanOpinion[];
   canSessions: CanSession[];
   connectShareTexts: string[];
@@ -64,10 +65,26 @@ type MetricsActivity = {
   teaSessions: TeaSession[];
 };
 
+type CalendarMeetingType = '원온원' | '파트회의' | '캔미팅' | '티미팅';
+
+type CalendarMetricEvent = {
+  id: string;
+  title: string;
+  part: string;
+  type: CalendarMeetingType;
+  startsAt: string;
+  durationMinutes: number;
+  attendees: number;
+  isRecurring: boolean;
+};
+
+type CalendarConnection = 'disconnected' | 'connected' | 'synced';
+
 const initialActivity: MetricsActivity = {
   actionItems: [],
   agendas: initialAgendas,
   ballots: [],
+  calendarEvents: [],
   canOpinions: initialCanOpinions,
   canSessions: initialCanSessions,
   connectShareTexts: [],
@@ -78,6 +95,62 @@ const initialActivity: MetricsActivity = {
 type MetricsProps = {
   currentUser: CurrentUser;
 };
+
+const CALENDAR_STORAGE_KEY = 'skgrove:metrics-calendar-events';
+const CALENDAR_STATUS_KEY = 'skgrove:metrics-calendar-status';
+
+const sampleCalendarEvents: CalendarMetricEvent[] = [
+  {
+    id: 'GCAL-001',
+    title: 'TEST혁신파트 주간 싱크',
+    part: 'TEST혁신파트',
+    type: '파트회의',
+    startsAt: '2026-08-03T10:00:00',
+    durationMinutes: 70,
+    attendees: 9,
+    isRecurring: true,
+  },
+  {
+    id: 'GCAL-002',
+    title: 'ITS혁신파트 캔미팅',
+    part: 'ITS혁신파트',
+    type: '캔미팅',
+    startsAt: '2026-08-04T14:00:00',
+    durationMinutes: 95,
+    attendees: 11,
+    isRecurring: false,
+  },
+  {
+    id: 'GCAL-003',
+    title: '혁신도구파트 원온원 블록',
+    part: '혁신도구파트',
+    type: '원온원',
+    startsAt: '2026-08-05T11:00:00',
+    durationMinutes: 30,
+    attendees: 2,
+    isRecurring: true,
+  },
+  {
+    id: 'GCAL-004',
+    title: '혁신도구파트 티미팅 리허설',
+    part: '혁신도구파트',
+    type: '티미팅',
+    startsAt: '2026-08-06T16:00:00',
+    durationMinutes: 55,
+    attendees: 7,
+    isRecurring: false,
+  },
+  {
+    id: 'GCAL-005',
+    title: 'ITS혁신파트 장기 이슈 리뷰',
+    part: 'ITS혁신파트',
+    type: '파트회의',
+    startsAt: '2026-08-07T09:30:00',
+    durationMinutes: 120,
+    attendees: 8,
+    isRecurring: true,
+  },
+];
 
 function clampScore(score: number) {
   return Math.max(0, Math.min(100, Math.round(score)));
@@ -197,6 +270,27 @@ function readConnectShareTexts() {
   }
 }
 
+function readCalendarEvents() {
+  try {
+    const saved = window.localStorage.getItem(CALENDAR_STORAGE_KEY);
+    if (!saved) return [];
+    return JSON.parse(saved) as CalendarMetricEvent[];
+  } catch {
+    return [];
+  }
+}
+
+function readCalendarStatus(): CalendarConnection {
+  const saved = window.localStorage.getItem(CALENDAR_STATUS_KEY);
+  if (saved === 'connected' || saved === 'synced') return saved;
+  return 'disconnected';
+}
+
+function saveCalendarState(status: CalendarConnection, events: CalendarMetricEvent[]) {
+  window.localStorage.setItem(CALENDAR_STATUS_KEY, status);
+  window.localStorage.setItem(CALENDAR_STORAGE_KEY, JSON.stringify(events));
+}
+
 function buildPartMetrics(activity: MetricsActivity): PartMetric[] {
   return partNames.map((partName) => {
     const members = profiles.filter((profile) => profile.part === partName);
@@ -208,9 +302,19 @@ function buildPartMetrics(activity: MetricsActivity): PartMetric[] {
     const issuePressure = activity.issues.filter((issue) => issue.target === '파트장' || issue.target.includes(partName)).length;
     const teaCount = activity.teaSessions.filter((session) => session.part === partName || members.some((member) => member.name === session.presenter)).length;
     const canSessionCount = activity.canSessions.filter((session) => session.parts.includes(partName as never)).length;
-    const oneOnOneMinutes = members.length * 25 + issuePressure * 20;
-    const partMeetingMinutes = canSessionCount * 80 + teaCount * 45 + canOpinions.length * 12;
-    const longMeetingRate = clampScore((canSessionCount * 8 + teaCount * 4 + issuePressure * 3) / Math.max(1, members.length) * 5);
+    const partCalendarEvents = activity.calendarEvents.filter((event) => event.part === partName);
+    const calendarOneOnOneMinutes = partCalendarEvents
+      .filter((event) => event.type === '원온원')
+      .reduce((sum, event) => sum + event.durationMinutes, 0);
+    const calendarMeetingMinutes = partCalendarEvents
+      .filter((event) => event.type !== '원온원')
+      .reduce((sum, event) => sum + event.durationMinutes, 0);
+    const longCalendarMeetings = partCalendarEvents.filter((event) => event.durationMinutes >= 60).length;
+    const oneOnOneMinutes = calendarOneOnOneMinutes || members.length * 25 + issuePressure * 20;
+    const partMeetingMinutes = calendarMeetingMinutes || canSessionCount * 80 + teaCount * 45 + canOpinions.length * 12;
+    const longMeetingRate = partCalendarEvents.length > 0
+      ? clampScore((longCalendarMeetings / partCalendarEvents.length) * 100)
+      : clampScore((canSessionCount * 8 + teaCount * 4 + issuePressure * 3) / Math.max(1, members.length) * 5);
 
     return {
       name: partName,
@@ -230,7 +334,10 @@ function buildPartMetrics(activity: MetricsActivity): PartMetric[] {
 }
 
 export function Metrics({ currentUser }: MetricsProps) {
+  const [activity, setActivity] = useState<MetricsActivity>(initialActivity);
   const [partMetrics, setPartMetrics] = useState<PartMetric[]>(() => buildPartMetrics(initialActivity));
+  const [calendarEvents, setCalendarEvents] = useState<CalendarMetricEvent[]>([]);
+  const [calendarStatus, setCalendarStatus] = useState<CalendarConnection>('disconnected');
   const [selectedPart, setSelectedPart] = useState(currentUser.part === '전체' ? partNames[0] : currentUser.part);
   const [weights, setWeights] = useState(initialWeights);
   const canViewAllLeaderMetrics = currentUser.role === '팀리더';
@@ -239,6 +346,11 @@ export function Metrics({ currentUser }: MetricsProps) {
   useEffect(() => {
     let isMounted = true;
 
+    const savedCalendarStatus = readCalendarStatus();
+    const savedCalendarEvents = readCalendarEvents();
+    setCalendarStatus(savedCalendarStatus);
+    setCalendarEvents(savedCalendarEvents);
+
     Promise.all([
       loadIssues(),
       loadAgendas(),
@@ -246,16 +358,19 @@ export function Metrics({ currentUser }: MetricsProps) {
       loadActionItems(),
     ]).then(([issues, agendas, ballots, actionItems]) => {
       if (!isMounted) return;
-      setPartMetrics(buildPartMetrics({
+      const loadedActivity = {
         actionItems,
         agendas,
         ballots,
+        calendarEvents: savedCalendarEvents,
         canOpinions: initialCanOpinions,
         canSessions: initialCanSessions,
         connectShareTexts: readConnectShareTexts(),
         issues,
         teaSessions: loadTeaSessions(),
-      }));
+      };
+      setActivity(loadedActivity);
+      setPartMetrics(buildPartMetrics(loadedActivity));
     });
 
     return () => {
@@ -290,6 +405,33 @@ export function Metrics({ currentUser }: MetricsProps) {
   const reflectedOpinions = scoredParts.reduce((sum, part) => sum + part.reflectedOpinions, 0);
   const averageMeetingHealth = Math.round(scoredParts.reduce((sum, part) => sum + part.meetingHealth, 0) / scoredParts.length);
   const reflectionRate = totalOpinions > 0 ? Math.round((reflectedOpinions / totalOpinions) * 100) : 0;
+  const activeCalendarEvents = calendarEvents.filter((event) => event.part === activePart.name);
+  const longCalendarEventCount = activeCalendarEvents.filter((event) => event.durationMinutes >= 60).length;
+
+  const applyCalendarEvents = (status: CalendarConnection, events: CalendarMetricEvent[]) => {
+    setCalendarStatus(status);
+    setCalendarEvents(events);
+    saveCalendarState(status, events);
+    const nextActivity = {
+      ...activity,
+      calendarEvents: events,
+      connectShareTexts: readConnectShareTexts(),
+    };
+    setActivity(nextActivity);
+    setPartMetrics(buildPartMetrics(nextActivity));
+  };
+
+  const connectCalendar = () => {
+    applyCalendarEvents('connected', calendarEvents);
+  };
+
+  const importSampleCalendar = () => {
+    applyCalendarEvents('synced', sampleCalendarEvents);
+  };
+
+  const disconnectCalendar = () => {
+    applyCalendarEvents('disconnected', []);
+  };
 
   const updateWeight = (key: keyof MetricWeights, value: number) => {
     setWeights({ ...weights, [key]: value });
@@ -343,7 +485,13 @@ export function Metrics({ currentUser }: MetricsProps) {
         <div className="calendar-sync-card">
           <CalendarClock size={18} />
           <strong>Google Calendar</strong>
-          <span>연결 예정 · 회의 길이 자동 분석</span>
+          <span>
+            {calendarStatus === 'synced'
+              ? `${calendarEvents.length}개 회의 반영됨`
+              : calendarStatus === 'connected'
+                ? '연결됨 · 회의 가져오기 대기'
+                : '미연결 · 샘플 연동 가능'}
+          </span>
         </div>
       </section>
 
@@ -386,6 +534,38 @@ export function Metrics({ currentUser }: MetricsProps) {
             <Settings2 size={20} />
             <strong>보상 기준 {weights.rewardScore}점</strong>
             <span>팀리더만 계산 기준을 조정할 수 있어요.</span>
+          </div>
+        </section>
+      )}
+
+      {canViewActiveLeaderMetrics && (
+        <section className="metrics-calendar-panel">
+          <div>
+            <CalendarClock size={20} />
+            <strong>Google Calendar 회의 분석</strong>
+            <span>
+              {calendarStatus === 'synced'
+                ? '캘린더 회의가 파트지수 회의 건강도와 긴 회의 감점에 반영되고 있어요.'
+                : '실제 OAuth 연결 전까지는 샘플 회의 데이터로 계산 흐름을 확인할 수 있어요.'}
+            </span>
+          </div>
+          <div className="calendar-sync-actions">
+            <button className="secondary-button" type="button" onClick={connectCalendar}>
+              연결 상태로 보기
+            </button>
+            <button type="button" onClick={importSampleCalendar}>
+              샘플 회의 가져오기
+            </button>
+            {calendarStatus !== 'disconnected' && (
+              <button className="secondary-button" type="button" onClick={disconnectCalendar}>
+                연결 해제
+              </button>
+            )}
+          </div>
+          <div className="calendar-event-summary">
+            <span>선택 파트 회의 {activeCalendarEvents.length}개</span>
+            <span>60분 이상 {longCalendarEventCount}개</span>
+            <span>상태 {calendarStatus === 'synced' ? '동기화됨' : calendarStatus === 'connected' ? '연결됨' : '미연결'}</span>
           </div>
         </section>
       )}
@@ -494,6 +674,26 @@ export function Metrics({ currentUser }: MetricsProps) {
               파트 대화에서 자주 나타납니다.
             </p>
           </div>
+
+          {canViewActiveLeaderMetrics && (
+            <div className="calendar-event-list">
+              <div className="panel-header">
+                <CalendarClock size={20} />
+                <h2>캘린더 회의 분류</h2>
+              </div>
+              {activeCalendarEvents.length > 0 ? (
+                activeCalendarEvents.map((event) => (
+                  <div className={event.durationMinutes >= 60 ? 'long-meeting' : ''} key={event.id}>
+                    <span>{event.type}</span>
+                    <strong>{event.title}</strong>
+                    <small>{event.durationMinutes}분 · {event.attendees}명 · {event.isRecurring ? '반복' : '단건'}</small>
+                  </div>
+                ))
+              ) : (
+                <p>아직 이 파트에 반영된 캘린더 회의가 없어요. 상단에서 샘플 회의를 가져오면 회의 건강도 계산에 바로 반영됩니다.</p>
+              )}
+            </div>
+          )}
         </section>
 
         <aside className="metrics-side">
