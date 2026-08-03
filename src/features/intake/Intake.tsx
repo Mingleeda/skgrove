@@ -15,6 +15,8 @@ import {
 import { PanelHeader } from '../../components/PanelHeader';
 import { MIN_MEMBERS_TO_REVEAL } from '../../metricsPrivacy';
 import type { CurrentUser, Identity, Issue, IssueVisibility, Urgency } from '../../types';
+import { ReviewGate } from './ReviewGate';
+import type { ReviewField } from '../../intakeReview';
 
 type IntakeProps = {
   identity: Identity;
@@ -57,6 +59,8 @@ export function Intake({ identity, currentUser, issues, onIdentityChange, onIssu
   const [anonymousAccessCode, setAnonymousAccessCode] = useState('');
   const [anonymousLookupError, setAnonymousLookupError] = useState('');
   const [anonymousIssueId, setAnonymousIssueId] = useState('');
+  // 검토를 통과하기 전에는 제출할 수 없다. 검토 중에도 잠근다.
+  const [reviewReady, setReviewReady] = useState(false);
 
   const currentStepIndex = steps.findIndex((item) => item.id === step);
   const myIssues = issues.filter(
@@ -71,8 +75,16 @@ export function Intake({ identity, currentUser, issues, onIdentityChange, onIssu
     return true;
   });
 
+  // AI 제안을 해당 필드에 반영한다. 반영하면 ReviewGate가 바뀐 값으로 자동 재검토한다.
+  const applyReviewFix = (field: ReviewField, rewritten: string) => {
+    if (field === 'title') setTitle(rewritten);
+    if (field === 'body') setBody(rewritten);
+    if (field === 'expectedChange') setExpectedChange(rewritten);
+  };
+
   const submit = () => {
-    if (!title.trim() || !body.trim()) return;
+    // 버튼이 잠겨 있어도 다른 경로로 호출될 수 있으니 여기서 한 번 더 막는다.
+    if (!reviewReady || !title.trim() || !body.trim()) return;
     const nextAnonymousCode = identity === '익명' ? makeAnonymousAccessCode() : undefined;
     const createdIssue = onSubmitIssue({
       title: title.trim(),
@@ -276,7 +288,15 @@ export function Intake({ identity, currentUser, issues, onIdentityChange, onIssu
               <button className="secondary-button" onClick={() => setStep('scope')}>
                 이전
               </button>
-              <button className="primary-button" disabled={!title.trim() || !body.trim()} onClick={() => setStep('review')}>
+              <button
+                className="primary-button"
+                disabled={!title.trim() || !body.trim()}
+                onClick={() => {
+                  // 내용이 바뀌었으니 이전 검토 결과를 물려받지 않는다.
+                  setReviewReady(false);
+                  setStep('review');
+                }}
+              >
                 제출 전 확인
               </button>
             </div>
@@ -301,6 +321,20 @@ export function Intake({ identity, currentUser, issues, onIdentityChange, onIssu
                 <div><dt>기대 변화</dt><dd>{expectedChange}</dd></div>
               </dl>
             </div>
+
+            <ReviewGate
+              title={title}
+              body={body}
+              expectedChange={expectedChange}
+              onApplyFix={applyReviewFix}
+              onEditManually={() => setStep('content')}
+              onReadyChange={setReviewReady}
+            />
+
+            {/* 외부 전송 고지는 검토 결과와 무관하게 항상 보인다. */}
+            <p className="field-note">
+              다듬기 검토를 위해 작성 내용이 외부 AI로 전송됩니다. 이름·메일·소속은 보내지 않습니다.
+            </p>
             <div className="notice-line">
               <AlertTriangle size={18} />
               개인정보, 실명 비방, 민감 정보가 포함되어 있지 않은지 한 번 더 확인해주세요.
@@ -309,7 +343,7 @@ export function Intake({ identity, currentUser, issues, onIdentityChange, onIssu
               <button className="secondary-button" onClick={() => setStep('content')}>
                 수정하기
               </button>
-              <button className="primary-button" onClick={submit}>
+              <button className="primary-button" disabled={!reviewReady} onClick={submit}>
                 <Send size={18} />
                 접수하기
               </button>
