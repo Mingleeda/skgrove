@@ -4968,7 +4968,7 @@ textarea {
 .account-summary {
   display: grid;
   gap: 14px;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .account-summary div {
@@ -5004,7 +5004,34 @@ textarea {
 .account-row {
   display: grid;
   gap: 12px;
-  grid-template-columns: minmax(240px, 1fr) 150px 190px 150px;
+  grid-template-columns: minmax(220px, 1fr) 130px 170px 130px 96px;
+}
+
+.account-hint {
+  color: #65736d;
+  font-size: 12px;
+  margin: -2px 0 10px;
+}
+
+.connectioner-toggle {
+  align-items: center;
+  color: #65736d;
+  cursor: pointer;
+  display: flex;
+  font-size: 13px;
+  font-weight: 600;
+  gap: 6px;
+}
+
+.connectioner-toggle input {
+  accent-color: #2f7d5b;
+  cursor: pointer;
+  height: 16px;
+  width: 16px;
+}
+
+.connectioner-toggle.on {
+  color: #2f7d5b;
 }
 
 .account-table-head {
@@ -6969,6 +6996,78 @@ button.notif-row {
 .humor-icon-btn:hover {
   background: #ffe5df;
   color: #e35d4f;
+}
+
+.humor-owner-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.humor-owner-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 14px;
+  border-radius: 8px;
+  border: 1px solid #d9dfd8;
+  background: #ffffff;
+  color: #46524d;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.humor-owner-btn.edit:hover {
+  background: #e4f3ea;
+  border-color: #2f7d5b;
+  color: #2f7d5b;
+}
+
+.humor-owner-btn.delete {
+  color: #d0554a;
+  border-color: #f0c8c2;
+}
+
+.humor-owner-btn.delete:hover {
+  background: #ffe5df;
+  border-color: #e35d4f;
+  color: #e35d4f;
+}
+
+.humor-edit {
+  display: grid;
+  gap: 12px;
+}
+
+.humor-edit label {
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #46524d;
+}
+
+.humor-edit textarea,
+.humor-edit input {
+  width: 100%;
+  border: 1px solid #d9dfd8;
+  border-radius: 8px;
+  padding: 9px 11px;
+  font: inherit;
+  font-size: 14px;
+}
+
+.humor-edit textarea {
+  min-height: 110px;
+  resize: vertical;
+}
+
+.humor-edit-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
 }
 
 .humor-card-body {

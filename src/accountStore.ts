@@ -12,6 +12,7 @@ const adminAccount: ManagedAccount = {
   part: '전체',
   status: '활성',
   joinedAt: '2026-07-24',
+  connectioner: true,
 };
 
 export const seedAccounts: ManagedAccount[] = [
@@ -24,6 +25,7 @@ export const seedAccounts: ManagedAccount[] = [
     part: 'ITS혁신파트',
     status: '활성',
     joinedAt: '2026-07-24',
+    connectioner: true,
   },
   {
     id: 'USR-03',
@@ -33,6 +35,7 @@ export const seedAccounts: ManagedAccount[] = [
     part: '혁신도구파트',
     status: '활성',
     joinedAt: '2026-07-24',
+    connectioner: true,
   },
   {
     id: 'USR-04',
@@ -54,6 +57,7 @@ type AccountRow = {
   status: ManagedAccount['status'];
   joined_at: string;
   photo_url?: string | null;
+  is_connectioner?: boolean | null;
 };
 
 export async function loadAccounts() {
@@ -119,6 +123,7 @@ function accountFromRow(row: AccountRow): ManagedAccount {
     status: row.status,
     joinedAt: row.joined_at,
     photoUrl: row.photo_url ?? undefined,
+    connectioner: row.is_connectioner ?? false,
   };
 }
 
@@ -132,5 +137,6 @@ function accountToRow(account: ManagedAccount): AccountRow {
     status: account.status,
     joined_at: account.joinedAt,
     photo_url: account.photoUrl || null,
+    is_connectioner: account.connectioner ?? false,
   };
 }

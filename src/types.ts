@@ -26,6 +26,8 @@ export type CurrentUser = {
   email: string;
   role: UserRole;
   part: TeamPart;
+  // 커넥셔너 = 시스템 구축 슈퍼관리자. 팀 역할과 별개인 전권 플래그(계정 관리에서 토글).
+  connectioner?: boolean;
 };
 
 export type ManagedAccount = CurrentUser & {
