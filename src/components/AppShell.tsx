@@ -1,8 +1,14 @@
 import type { ReactNode } from 'react';
-import { Bell, HeartHandshake, LogOut, MessageSquarePlus } from 'lucide-react';
+import { Bell, HeartHandshake, Lock, LogOut, MessageSquarePlus } from 'lucide-react';
 import { isLeader, isTeamLeader } from '../auth';
-import { sections } from '../navigation';
+import { navGroups, sections } from '../navigation';
 import type { CurrentUser, Section } from '../types';
+
+function lockReasonFor(id: Section, canUseLeaderMenu: boolean, canUseAccountsMenu: boolean) {
+  if (id === 'leader' && !canUseLeaderMenu) return '파트리더 이상만 사용할 수 있어요.';
+  if (id === 'accounts' && !canUseAccountsMenu) return '팀리더만 사용할 수 있어요.';
+  return null;
+}
 
 type AppShellProps = {
   active: Section;
@@ -32,24 +38,30 @@ export function AppShell({ active, children, currentUser, unreadCount, onLogout,
         </div>
 
         <nav className="nav">
-          {sections.map((section) => {
-            const Icon = section.icon;
-            return (
-              <button
-                className={active === section.id ? 'nav-item active' : 'nav-item'}
-                disabled={
-                  (section.id === 'leader' && !userCanUseLeaderMenu) ||
-                  (section.id === 'accounts' && !userCanUseAccountsMenu)
-                }
-                key={section.id}
-                onClick={() => onSectionChange(section.id)}
-                title={`${section.label} · ${section.owner}`}
-              >
-                <Icon size={18} />
-                <span>{section.label}</span>
-              </button>
-            );
-          })}
+          {navGroups.map((group) => (
+            <div className="nav-group" key={group.title}>
+              <p className="nav-group-title">{group.title}</p>
+              {group.items.map((section) => {
+                const Icon = section.icon;
+                const lockReason = lockReasonFor(section.id, userCanUseLeaderMenu, userCanUseAccountsMenu);
+                return (
+                  <button
+                    className={active === section.id ? 'nav-item active' : 'nav-item'}
+                    disabled={Boolean(lockReason)}
+                    key={section.id}
+                    onClick={() => onSectionChange(section.id)}
+                    // 잠긴 메뉴는 '왜 못 쓰는지'를 알려줘야 한다.
+                    // 흐리게만 처리하면 사용자는 고장으로 읽는다.
+                    title={lockReason ?? `${section.label} · ${section.owner}`}
+                  >
+                    <Icon size={18} />
+                    <span>{section.label}</span>
+                    {lockReason && <Lock size={14} className="nav-lock" />}
+                  </button>
+                );
+              })}
+            </div>
+          ))}
         </nav>
 
         <div className="owner-box">

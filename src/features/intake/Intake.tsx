@@ -42,10 +42,12 @@ export function Intake({ identity, currentUser, issues, onIdentityChange, onIssu
   const [visibility, setVisibility] = useState<IssueVisibility>('리더만 보기');
   const [category, setCategory] = useState(categories[0]);
   const [urgency, setUrgency] = useState<Urgency>('보통');
-  const [title, setTitle] = useState('팀 티미팅 시간을 줄이고 싶어요');
-  const [body, setBody] = useState('논의할 주제가 명확하지 않은 회의는 시간을 줄이고, 필요한 경우 안건함에서 먼저 투표하면 좋겠습니다.');
-  const [expectedChange, setExpectedChange] = useState('회의 전 안건을 먼저 모으고, 꼭 필요한 주제만 짧게 논의하면 좋겠습니다.');
-  const [receiptId, setReceiptId] = useState('SOOP-148');
+  // 예시 문장을 기본값으로 넣으면 그대로 제출되어 남의 문장이 내 의견으로 접수된다.
+  // 예시는 placeholder로만 보여준다.
+  const [title, setTitle] = useState('');
+  const [body, setBody] = useState('');
+  const [expectedChange, setExpectedChange] = useState('');
+  const [receiptId, setReceiptId] = useState('');
   const [receiptAccessCode, setReceiptAccessCode] = useState('');
   const [responseDrafts, setResponseDrafts] = useState<Record<string, string>>({});
   const [myIssueFilter, setMyIssueFilter] = useState<MyIssueFilter>('전체');
@@ -69,9 +71,10 @@ export function Intake({ identity, currentUser, issues, onIdentityChange, onIssu
   });
 
   const submit = () => {
+    if (!title.trim() || !body.trim()) return;
     const nextAnonymousCode = identity === '익명' ? makeAnonymousAccessCode() : undefined;
     const createdIssue = onSubmitIssue({
-      title,
+      title: title.trim(),
       category,
       author: identity,
       anonymousAccessCode: nextAnonymousCode,
@@ -80,8 +83,8 @@ export function Intake({ identity, currentUser, issues, onIdentityChange, onIssu
       submitterPart: identity === '실명' ? currentUser.part : undefined,
       target,
       urgency,
-      body,
-      expectedChange,
+      body: body.trim(),
+      expectedChange: expectedChange.trim(),
       visibility,
     });
     setReceiptId(createdIssue.id);
@@ -163,7 +166,14 @@ export function Intake({ identity, currentUser, issues, onIdentityChange, onIssu
       <div className="intake-main">
         <div className="intake-stepper">
           {steps.map((item, index) => (
-            <button className={index <= currentStepIndex ? 'active' : ''} key={item.id} onClick={() => setStep(item.id)}>
+            <button
+              className={index <= currentStepIndex ? 'active' : ''}
+              // 앞 단계로 되돌아가는 것은 늘 열어두고, 건너뛰기만 막는다.
+              // 내용이 비어 있는데 '제출 확인'으로 점프하면 빈 의견이 접수된다.
+              disabled={index > currentStepIndex || item.id === 'complete'}
+              key={item.id}
+              onClick={() => setStep(item.id)}
+            >
               <span>{index + 1}</span>
               {item.label}
             </button>
@@ -195,11 +205,19 @@ export function Intake({ identity, currentUser, issues, onIdentityChange, onIssu
               <label>
                 공개 범위
                 <select value={visibility} onChange={(event) => setVisibility(event.target.value as IssueVisibility)}>
-                  <option>리더만 보기</option>
-                  <option>안건 후보로 공개 가능</option>
+                  <option value="리더만 보기">리더만 보기 · 원문 비공개</option>
+                  <option value="안건 후보로 공개 가능">안건 후보로 공개 가능 · 원문 인용 가능</option>
                 </select>
               </label>
             </div>
+
+            {/* 라벨만으로는 '리더만 보기'가 절대 공개되지 않는다고 읽힌다.
+                실제로는 리더가 새로 쓴 익명 안건이 올라갈 수 있으므로 여기서 미리 밝힌다. */}
+            <p className="field-note">
+              {visibility === '리더만 보기'
+                ? '내가 쓴 원문과 작성자 정보는 팀원에게 공개되지 않습니다. 다만 리더가 이 주제를 다뤄야 한다고 판단하면, 원문 대신 리더가 새로 쓴 익명 안건이 안건함에 올라갈 수 있어요.'
+                : '리더가 원문을 인용하거나 다듬어 안건으로 올릴 수 있습니다. 익명으로 접수했다면 작성자 정보는 계속 공개되지 않습니다.'}
+            </p>
 
             <button className="primary-button wide" onClick={() => setStep('content')}>
               <FileText size={18} />
@@ -231,21 +249,33 @@ export function Intake({ identity, currentUser, issues, onIdentityChange, onIssu
             </div>
             <label>
               제목
-              <input value={title} onChange={(event) => setTitle(event.target.value)} />
+              <input
+                value={title}
+                onChange={(event) => setTitle(event.target.value)}
+                placeholder="예: 팀 티미팅 시간을 줄이고 싶어요"
+              />
             </label>
             <label>
               내용
-              <textarea value={body} onChange={(event) => setBody(event.target.value)} />
+              <textarea
+                value={body}
+                onChange={(event) => setBody(event.target.value)}
+                placeholder="예: 논의할 주제가 명확하지 않은 회의는 시간을 줄이고, 필요한 경우 안건함에서 먼저 투표하면 좋겠습니다."
+              />
             </label>
             <label>
               기대 변화
-              <textarea value={expectedChange} onChange={(event) => setExpectedChange(event.target.value)} />
+              <textarea
+                value={expectedChange}
+                onChange={(event) => setExpectedChange(event.target.value)}
+                placeholder="예: 회의 전 안건을 먼저 모으고, 꼭 필요한 주제만 짧게 논의하면 좋겠습니다."
+              />
             </label>
             <div className="form-actions">
               <button className="secondary-button" onClick={() => setStep('scope')}>
                 이전
               </button>
-              <button className="primary-button" onClick={() => setStep('review')}>
+              <button className="primary-button" disabled={!title.trim() || !body.trim()} onClick={() => setStep('review')}>
                 제출 전 확인
               </button>
             </div>
@@ -303,7 +333,16 @@ export function Intake({ identity, currentUser, issues, onIdentityChange, onIssu
                 ? '의견이 리더 관리함으로 전달되었습니다. 접수번호와 확인 코드로 익명 접수 조회에서 후속 조치를 확인할 수 있어요.'
                 : '의견이 리더 관리함으로 전달되었습니다. 접수 상태는 아래 목록에서 계속 확인할 수 있어요.'}
             </p>
-            <button className="primary-button" onClick={() => setStep('scope')}>
+            <button
+              className="primary-button"
+              onClick={() => {
+                // 직전 접수 내용이 남아 있으면 다음 의견에 그대로 딸려 들어간다.
+                setTitle('');
+                setBody('');
+                setExpectedChange('');
+                setStep('scope');
+              }}
+            >
               새 의견 접수
             </button>
           </section>

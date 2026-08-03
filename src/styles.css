@@ -101,7 +101,31 @@ button {
 
 .nav-item:disabled {
   cursor: not-allowed;
-  opacity: 0.38;
+  /* 0.38은 대비가 너무 낮아 라벨이 읽히지 않는다. 자물쇠 아이콘이 상태를 함께 전한다. */
+  opacity: 0.6;
+}
+
+.nav-lock {
+  margin-left: auto;
+}
+
+.nav-group {
+  display: grid;
+  gap: 6px;
+}
+
+.nav-group + .nav-group {
+  margin-top: 18px;
+}
+
+.nav-group-title {
+  color: #8fae9f;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  margin: 0 0 2px;
+  padding: 0 12px;
+  text-transform: uppercase;
 }
 
 .owner-box {
@@ -2264,7 +2288,7 @@ textarea {
 }
 
 .profile-search-box input:focus {
-  outline: 0;
+  outline: revert;
 }
 
 .profile-result-summary {
@@ -2508,7 +2532,7 @@ textarea {
 }
 
 .participant-search input:focus {
-  outline: 0;
+  outline: revert;
 }
 
 .participant-list {
@@ -4956,6 +4980,8 @@ textarea {
 
   .brand div:last-child,
   .nav-item span,
+  .nav-group-title,
+  .nav-lock,
   .owner-box {
     display: none;
   }
@@ -4963,6 +4989,13 @@ textarea {
   .nav-item {
     justify-content: center;
     padding: 0;
+  }
+
+  /* 라벨이 사라진 상태에서는 그룹 사이 여백만으로 구분한다. */
+  .nav-group + .nav-group {
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    margin-top: 12px;
+    padding-top: 12px;
   }
 
   .hero-panel,
@@ -7023,4 +7056,106 @@ button.notif-row {
   .humor-rankers {
     grid-template-columns: minmax(0, 1fr);
   }
+}
+
+/* ===== 접근성 · 디자인 리뷰 반영 ===== */
+
+/*
+  이 앱은 화면 전체가 button으로 되어 있는데 포커스 스타일이 없었다.
+  키보드 사용자는 지금 어디에 있는지 알 방법이 없었다(WCAG 2.4.7).
+*/
+:where(button, a, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid #2f6f62;
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+/* 어두운 사이드바 위에서는 같은 색 링이 배경에 묻힌다. */
+.sidebar :where(button, a):focus-visible {
+  outline-color: #d8f06a;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* 안건화 직전, 팀원에게 실제로 공개될 문장을 확인하는 블록 */
+.agenda-publish-preview {
+  background: #f7faf5;
+  border: 1px solid #d7e3d5;
+  border-left: 3px solid #2f6f62;
+  border-radius: 10px;
+  display: grid;
+  gap: 8px;
+  padding: 14px 16px;
+}
+
+.agenda-publish-preview strong {
+  color: #2f6f62;
+  font-size: 12px;
+  letter-spacing: 0.02em;
+}
+
+.agenda-publish-preview-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.agenda-publish-preview-body {
+  color: #4a544f;
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.agenda-publish-preview small {
+  color: #6b756f;
+}
+
+/* 투표·마감 확정 전 확인 */
+.vote-confirm,
+.agenda-close-box {
+  border: 1px solid #e4d5a8;
+  background: #fdf8ec;
+  border-radius: 10px;
+  display: grid;
+  gap: 10px;
+  padding: 14px 16px;
+}
+
+.agenda-close-box:has(> .secondary-button:only-child) {
+  background: transparent;
+  border: 0;
+  padding: 0;
+}
+
+.vote-confirm p,
+.agenda-close-box p {
+  color: #4a544f;
+  margin: 0;
+}
+
+.vote-confirm-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.vote-actions button.selected {
+  border-color: #2f6f62;
+  box-shadow: inset 0 0 0 1px #2f6f62;
+}
+
+.field-note {
+  color: #5c665f;
+  font-size: 13px;
+  line-height: 1.55;
+  margin: -4px 0 0;
 }

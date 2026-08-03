@@ -267,6 +267,24 @@ export function LeaderInbox({ issues, onIssueUpdate, onPromoteToAgenda }: Leader
                     />
                   </label>
 
+                  {/* 원문 옮기기는 리더가 의도적으로 눌러야만 일어난다.
+                      '리더만 보기'로 접수된 건은 이 경로 자체를 열지 않는다. */}
+                  {selectedIssue.visibility !== '리더만 보기' && (
+                    <button
+                      className="secondary-button"
+                      type="button"
+                      onClick={() =>
+                        updateAgendaDraft({
+                          title: agendaDraft.title || selectedIssue.title,
+                          description: issueSourceText(selectedIssue),
+                        })
+                      }
+                    >
+                      <PenLine size={17} />
+                      접수 원문 불러와서 다듬기
+                    </button>
+                  )}
+
                   <div className="agenda-refine-grid">
                     <label>
                       카테고리
@@ -311,6 +329,20 @@ export function LeaderInbox({ issues, onIssueUpdate, onPromoteToAgenda }: Leader
                       <span>원문과 작성자 정보는 공개되지 않습니다. 리더가 정제한 별도 안건만 안건함에 올라갑니다.</span>
                     </div>
                   )}
+
+                  {/* 무엇이 팀 전체에 공개되는지 확정 직전에 보여준다.
+                      원문이 섞여 들어갔는지 리더가 눈으로 확인할 수 있는 마지막 지점이다. */}
+                  <div className="agenda-publish-preview">
+                    <strong>팀원에게 공개될 내용</strong>
+                    <p className="agenda-publish-preview-title">{agendaDraft.title.trim() || '(제목을 입력해주세요)'}</p>
+                    <p className="agenda-publish-preview-body">
+                      {agendaDraft.description.trim() || '(설명을 입력해주세요)'}
+                    </p>
+                    <small>
+                      작성자 표기: {selectedIssue.visibility === '리더만 보기' ? '익명' : agendaDraft.author} · 투표 대상:{' '}
+                      {agendaDraft.part}
+                    </small>
+                  </div>
 
                   <button
                     className="primary-button wide"
@@ -378,22 +410,26 @@ export function LeaderInbox({ issues, onIssueUpdate, onPromoteToAgenda }: Leader
   );
 }
 
+// 안건 초안은 비워둔 채로 시작한다.
+// 접수 원문을 기본값으로 깔면 리더가 아무것도 하지 않아도 원문이 그대로 공개된다.
+// 소규모 팀에서는 문체와 사례만으로 작성자가 특정되므로, 원문을 옮기는 것은
+// 반드시 리더의 명시적인 행동(원문 불러오기)이어야 한다.
 function makeAgendaDraft(issue: Issue): AgendaDraft {
-  const description = [
-    issue.body,
-    issue.expectedChange ? `기대 변화\n${issue.expectedChange}` : '',
-  ]
-    .filter(Boolean)
-    .join('\n\n');
-
   return {
-    title: issue.title,
-    description,
+    title: '',
+    description: '',
     category: issue.category,
     part: '전체',
     author: issue.visibility === '리더만 보기' ? '익명' : issue.author,
     deadline: addDays(DEFAULT_VOTING_DAYS),
   };
+}
+
+// '원문 불러오기'를 눌렀을 때만 쓰이는 값. 공개 가능으로 접수된 건에서만 노출한다.
+function issueSourceText(issue: Issue) {
+  return [issue.body, issue.expectedChange ? `기대 변화\n${issue.expectedChange}` : '']
+    .filter(Boolean)
+    .join('\n\n');
 }
 
 function getActionLabel(action: LeaderAction) {
