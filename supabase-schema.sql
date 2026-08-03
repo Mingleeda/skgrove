@@ -306,11 +306,17 @@ create table if not exists public.team_memories (
   created_by text not null,
   summary text not null default '',
   tags jsonb not null default '[]'::jsonb,
+  drive_folder_id text,
+  drive_folder_url text,
   comments jsonb not null default '[]'::jsonb,
   reactions jsonb not null default '{"좋아요":0,"웃겨요":0,"또가요":0}'::jsonb,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table public.team_memories
+  add column if not exists drive_folder_id text,
+  add column if not exists drive_folder_url text;
 
 alter table public.team_memories enable row level security;
 
@@ -352,9 +358,17 @@ create table if not exists public.team_memory_assets (
   comments jsonb not null default '[]'::jsonb,
   preview_url text,
   storage_path text,
+  drive_file_id text,
+  drive_view_url text,
+  drive_download_url text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table public.team_memory_assets
+  add column if not exists drive_file_id text,
+  add column if not exists drive_view_url text,
+  add column if not exists drive_download_url text;
 
 alter table public.team_memory_assets enable row level security;
 

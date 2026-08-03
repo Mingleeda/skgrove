@@ -2,7 +2,9 @@ import {
   CalendarDays,
   Clock3,
   Download,
+  ExternalLink,
   Film,
+  FolderOpen,
   ImagePlus,
   MessageCircle,
   PartyPopper,
@@ -183,6 +185,55 @@ const initialMemories: TeamMemory[] = [
 
 const assetTones: MemoryAsset['tone'][] = ['green', 'blue', 'coral', 'amber'];
 const emojiOptions: MemoryEmoji[] = ['👍', '👏', '😂', '🔥', '💚'];
+const driveRootUrl = 'https://drive.google.com/drive/folders';
+const driveFileUrl = 'https://drive.google.com/file/d';
+
+function getDriveFolderId(memory: Pick<TeamMemory, 'id'>) {
+  return `skgrove-memory-${memory.id}`;
+}
+
+function getDriveFolderUrl(folderId: string) {
+  return `${driveRootUrl}/${folderId}`;
+}
+
+function getDriveFileMeta(folderId: string, assetId: number) {
+  const driveFileId = `${folderId}-file-${assetId}`;
+  return {
+    driveFileId,
+    driveViewUrl: `${driveFileUrl}/${driveFileId}/view`,
+    driveDownloadUrl: `${driveFileUrl}/${driveFileId}/uc?export=download`,
+  };
+}
+
+function getSampleDriveAssets(memory: TeamMemory): MemoryAsset[] {
+  const folderId = memory.driveFolderId ?? getDriveFolderId(memory);
+  const firstId = Date.now();
+  const secondId = firstId + 1;
+  return [
+    {
+      id: firstId,
+      type: 'photo',
+      title: `${memory.title} 단체컷`,
+      uploader: 'Google Drive',
+      tone: 'green',
+      uploadedAt: 'Drive 동기화',
+      reactions: { '👍': 0, '👏': 0, '😂': 0, '🔥': 0, '💚': 0 },
+      comments: [],
+      ...getDriveFileMeta(folderId, firstId),
+    },
+    {
+      id: secondId,
+      type: 'video',
+      title: `${memory.title} 하이라이트`,
+      uploader: 'Google Drive',
+      tone: 'blue',
+      uploadedAt: 'Drive 동기화',
+      reactions: { '👍': 0, '👏': 0, '😂': 0, '🔥': 0, '💚': 0 },
+      comments: [],
+      ...getDriveFileMeta(folderId, secondId),
+    },
+  ];
+}
 
 function getDday(date: string) {
   const eventDate = new Date(`${date}T00:00:00`);
@@ -254,8 +305,10 @@ export function Memory({ currentUser }: MemoryProps) {
     }
 
     const [, month, day] = date.split('-');
+    const nextMemoryId = Date.now();
+    const nextDriveFolderId = getDriveFolderId({ id: nextMemoryId });
     const nextMemory: TeamMemory = {
-      id: Date.now(),
+      id: nextMemoryId,
       title: `${Number(month)}/${Number(day)} 팀 추억`,
       date,
       place: '장소 미정',
@@ -263,6 +316,8 @@ export function Memory({ currentUser }: MemoryProps) {
       createdBy: currentUser.name,
       summary: '캘린더에서 만든 새 추억 공간이에요. 팀원이 함께 사진과 영상을 모아갈 수 있어요.',
       tags: ['새앨범', '공동사진첩'],
+      driveFolderId: nextDriveFolderId,
+      driveFolderUrl: getDriveFolderUrl(nextDriveFolderId),
       assets: [],
       comments: [],
       reactions: { 좋아요: 0, 웃겨요: 0, 또가요: 0 },
@@ -282,6 +337,7 @@ export function Memory({ currentUser }: MemoryProps) {
         const id = Date.now() + index;
         const localPreviewUrl = URL.createObjectURL(file);
         const stored = await uploadMemoryAssetFile(selectedMemory.id, id, file);
+        const folderId = selectedMemory.driveFolderId ?? getDriveFolderId(selectedMemory);
 
         return {
           id,
@@ -294,6 +350,7 @@ export function Memory({ currentUser }: MemoryProps) {
           comments: [],
           previewUrl: stored.previewUrl || localPreviewUrl,
           storagePath: stored.storagePath || undefined,
+          ...getDriveFileMeta(folderId, id),
         };
       }),
     );
@@ -301,12 +358,57 @@ export function Memory({ currentUser }: MemoryProps) {
     persistMemories(
       memories.map((memory) =>
         memory.id === selectedMemory.id
-          ? { ...memory, assets: [...uploadedAssets, ...memory.assets] }
+          ? {
+              ...memory,
+              driveFolderId: memory.driveFolderId ?? getDriveFolderId(memory),
+              driveFolderUrl: memory.driveFolderUrl ?? getDriveFolderUrl(memory.driveFolderId ?? getDriveFolderId(memory)),
+              assets: [...uploadedAssets, ...memory.assets],
+            }
           : memory,
       ),
     );
     setSelectedAssetId(uploadedAssets[0].id);
     event.target.value = '';
+  };
+
+  const connectDriveFolder = () => {
+    const folderId = selectedMemory.driveFolderId ?? getDriveFolderId(selectedMemory);
+    persistMemories(
+      memories.map((memory) =>
+        memory.id === selectedMemory.id
+          ? {
+              ...memory,
+              driveFolderId: folderId,
+              driveFolderUrl: getDriveFolderUrl(folderId),
+              tags: memory.tags.includes('Drive연동') ? memory.tags : ['Drive연동', ...memory.tags],
+            }
+          : memory,
+      ),
+    );
+  };
+
+  const importDriveSamples = () => {
+    const folderId = selectedMemory.driveFolderId ?? getDriveFolderId(selectedMemory);
+    const sampleAssets = getSampleDriveAssets({
+      ...selectedMemory,
+      driveFolderId: folderId,
+      driveFolderUrl: getDriveFolderUrl(folderId),
+    });
+
+    persistMemories(
+      memories.map((memory) =>
+        memory.id === selectedMemory.id
+          ? {
+              ...memory,
+              driveFolderId: folderId,
+              driveFolderUrl: getDriveFolderUrl(folderId),
+              tags: memory.tags.includes('Drive연동') ? memory.tags : ['Drive연동', ...memory.tags],
+              assets: [...sampleAssets, ...memory.assets],
+            }
+          : memory,
+      ),
+    );
+    setSelectedAssetId(sampleAssets[0].id);
   };
 
   const reactAsset = (assetId: number, emoji: MemoryEmoji) => {
@@ -435,6 +537,37 @@ export function Memory({ currentUser }: MemoryProps) {
               ))}
             </div>
 
+            <div className="memory-drive-panel">
+              <div>
+                <FolderOpen size={20} />
+                <strong>Google Drive 공동 사진첩</strong>
+                <span>
+                  {selectedMemory.driveFolderUrl
+                    ? '행사별 Drive 폴더와 연결되어 업로드/다운로드 링크를 함께 관리해요.'
+                    : '실제 Drive OAuth 전까지 행사별 폴더 매핑과 파일 링크 구조를 먼저 확인해요.'}
+                </span>
+              </div>
+              <div className="memory-drive-actions">
+                <button className="secondary-button" type="button" onClick={connectDriveFolder}>
+                  폴더 연결
+                </button>
+                <button type="button" onClick={importDriveSamples}>
+                  Drive 샘플 가져오기
+                </button>
+                {selectedMemory.driveFolderUrl && (
+                  <a className="secondary-button" href={selectedMemory.driveFolderUrl} rel="noreferrer" target="_blank">
+                    <ExternalLink size={15} />
+                    폴더 열기
+                  </a>
+                )}
+              </div>
+              <div className="memory-drive-meta">
+                <span>{selectedMemory.driveFolderId ? 'Drive 폴더 연결됨' : 'Drive 미연결'}</span>
+                <span>{selectedMemory.assets.filter((asset) => asset.driveFileId).length}개 파일 링크</span>
+                <span>파일 반응/댓글은 앱에 저장</span>
+              </div>
+            </div>
+
             <div className="memory-upload-box">
               <div>
                 <UploadCloud size={20} />
@@ -518,10 +651,16 @@ export function Memory({ currentUser }: MemoryProps) {
                     ))}
                   </div>
                   <div className="memory-asset-actions">
-                    <button type="button">
+                    {selectedAsset.driveViewUrl && (
+                      <a href={selectedAsset.driveViewUrl} rel="noreferrer" target="_blank">
+                        <ExternalLink size={16} />
+                        Drive 보기
+                      </a>
+                    )}
+                    <a href={selectedAsset.driveDownloadUrl ?? selectedAsset.previewUrl ?? '#'} rel="noreferrer" target="_blank">
                       <Download size={16} />
                       다운로드
-                    </button>
+                    </a>
                   </div>
                   <div className="memory-asset-comments">
                     <div className="memory-asset-comment-input">

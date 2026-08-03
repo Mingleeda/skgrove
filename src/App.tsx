@@ -835,7 +835,7 @@ export function App() {
       {active === 'profiles' && <Profiles currentUser={currentUser} />}
       {active === 'connect' && <Connect matched={matched} onShuffleTeams={shuffleTeams} />}
       {active === 'memory' && <Memory currentUser={currentUser} />}
-      {active === 'metrics' && <Metrics />}
+      {active === 'metrics' && <Metrics currentUser={currentUser} />}
       {active === 'accounts' && isTeamLeader(currentUser) && <AccountManagement accounts={accounts} onAccountsChange={persistAccounts} />}
     </AppShell>
   );
