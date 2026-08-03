@@ -29,6 +29,8 @@ export function sanitizeFindings(raw: unknown): ReviewFinding[] {
 
   return raw
     .map((item) => {
+      // LLM이 findings 배열 안에 null/undefined 원소를 섞어 보내는 경우가 있다. 캐스팅 전에 걸러야 한다.
+      if (!item || typeof item !== 'object') return null;
       const f = item as { field?: unknown; kind?: unknown; reason?: unknown; rewritten?: unknown };
       const field = FIELDS.find((name) => name === f.field);
       const rewritten = typeof f.rewritten === 'string' ? f.rewritten.trim() : '';

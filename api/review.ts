@@ -29,9 +29,12 @@ export const REVIEW_SYSTEM_PROMPT = [
   '반드시 지킬 것:',
   '- 사실 주장과 개선 요구는 절대 삭제하거나 완곡하게 만들지 않습니다. 강도를 낮추지 않습니다.',
   '- 행동·영향·요구는 그대로 둡니다. 사람에 대한 평가 표현만 바꿉니다.',
-  '- 본인이 겪은 피해 진술은 인신공격이 아닙니다.',
+  '- 본인이 겪은 피해 진술은 욕설·인신공격 어느 쪽으로도 지적하지 않습니다.',
   '    "저 사람은 무능하다" → 인격 평가 → 지적합니다',
   '    "저 사람이 저에게 욕설을 했습니다" → 사실 진술 → 지적하지 않습니다',
+  '- 인용된 발언은 접수자의 표현이 아닙니다. 겪은 일을 옮긴 인용문 안의 욕설·비하 표현은 지적하지 않습니다.',
+  '    "그 사람이 저에게 \\"XX새끼\\"라고 했습니다" → 피해 진술의 인용 → 지적하지 않습니다',
+  '    "그 XX새끼 때문에 못 해먹겠다" → 접수자 본인의 욕설 → 지적합니다',
   '- 없는 내용을 지어내지 않습니다.',
   '- 문체·어투·맞춤법은 지적하지 않습니다.',
   '- 지적할 것이 없으면 findings 를 빈 배열로 둡니다. 억지로 찾지 않습니다.',
@@ -40,6 +43,7 @@ export const REVIEW_SYSTEM_PROMPT = [
   '{"findings":[{"field":"title|body|expectedChange","kind":"profanity|personal-attack","reason":"<한 문장>","rewritten":"<완성 문장>"}]}',
   '- field 는 문제가 있는 항목의 키입니다.',
   '- rewritten 은 그 항목 전체를 대체할 완성된 한국어 문장입니다. 문제 부분만 잘라내지 않습니다.',
+  '- 문제가 된 표현 외의 문장은 원문 그대로 옮깁니다. 다시 쓰지 않습니다.',
   '- reason 은 접수자에게 그대로 보여집니다. 비난하지 말고 담담하게 한 문장으로 씁니다.',
 ].join('\n');
 
@@ -66,8 +70,9 @@ export default async function handler(request: Request): Promise<Response> {
 
   const apiKey = env('OPENROUTER_API_KEY');
   if (!apiKey) {
-    // 키 미주입 → 휴면. 프론트는 검토 없이 통과시킨다.
-    return Response.json({ ok: false, reason: 'OPENROUTER_API_KEY not configured' });
+    // 키 미주입 → 휴면. reason 은 반드시 'disabled' 여야 한다.
+    // ReviewGate.tsx 는 이 문자열로만 "기능 없음(조용히 통과)"과 "검사 실패(경고 배너)"를 구분한다.
+    return Response.json({ ok: false, reason: 'disabled' });
   }
 
   let payload: ReviewPayload;

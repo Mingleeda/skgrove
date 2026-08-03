@@ -48,6 +48,17 @@ describe('sanitizeFindings', () => {
     const [item] = sanitizeFindings([finding({ reason: undefined })]);
     expect(item.reason).toBe('');
   });
+
+  it('배열 원소가 null/undefined 여도 던지지 않고 버린다', () => {
+    expect(sanitizeFindings([null])).toEqual([]);
+    expect(sanitizeFindings([undefined])).toEqual([]);
+  });
+
+  it('null 원소 옆의 정상 항목은 살아남는다', () => {
+    const result = sanitizeFindings([null, finding(), undefined]);
+    expect(result).toHaveLength(1);
+    expect(result[0]).toEqual(finding());
+  });
 });
 
 describe('reviewIntake', () => {
