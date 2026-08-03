@@ -53,6 +53,7 @@ type AccountRow = {
   part: ManagedAccount['part'];
   status: ManagedAccount['status'];
   joined_at: string;
+  photo_url?: string | null;
 };
 
 export async function loadAccounts() {
@@ -117,6 +118,7 @@ function accountFromRow(row: AccountRow): ManagedAccount {
     part: row.part,
     status: row.status,
     joinedAt: row.joined_at,
+    photoUrl: row.photo_url ?? undefined,
   };
 }
 
@@ -129,5 +131,6 @@ function accountToRow(account: ManagedAccount): AccountRow {
     part: account.part,
     status: account.status,
     joined_at: account.joinedAt,
+    photo_url: account.photoUrl || null,
   };
 }

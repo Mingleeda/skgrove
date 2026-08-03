@@ -17,6 +17,8 @@ import type { CurrentUser, Profile } from '../../types';
 type ProfileDraft = Omit<Profile, 'color'>;
 type ProfilesProps = {
   currentUser: CurrentUser;
+  // 편집/로드 시 상위(App)의 프로필 디렉토리에 반영 → Avatar 전역 갱신.
+  onProfilesChange?: (profiles: Profile[]) => void;
 };
 
 type SurveyChoice = {
@@ -98,7 +100,7 @@ function getAgeMood(birthYear: string) {
   };
 }
 
-export function Profiles({ currentUser }: ProfilesProps) {
+export function Profiles({ currentUser, onProfilesChange }: ProfilesProps) {
   const [profileList, setProfileList] = useState<Profile[]>(initialProfiles);
   const [selectedName, setSelectedName] = useState(() => {
     return initialProfiles.find((profile) => profile.name === currentUser.name)?.name ?? initialProfiles[0]?.name ?? '';
@@ -161,6 +163,7 @@ export function Profiles({ currentUser }: ProfilesProps) {
     loadProfiles(initialProfiles, currentUser).then((loadedProfiles) => {
       if (!isMounted) return;
       setProfileList(loadedProfiles);
+      onProfilesChange?.(loadedProfiles);
       const nextMine = loadedProfiles.find((profile) => profile.name === currentUser.name) ?? loadedProfiles[0];
       if (nextMine) {
         setSelectedName(nextMine.name);
@@ -220,6 +223,7 @@ export function Profiles({ currentUser }: ProfilesProps) {
     };
     const nextProfiles = [nextProfile, ...profileList.filter((profile) => profile.name !== nextProfile.name)];
     setProfileList(nextProfiles);
+    onProfilesChange?.(nextProfiles);
     void saveProfileForUser(nextProfile, currentUser, profileList);
     setSelectedName(nextProfile.name);
     setIsEditing(false);
