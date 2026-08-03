@@ -20,8 +20,12 @@ import {
   initialAgendas,
   initialCanOpinions,
   initialCanSessions,
+  initialHumorComments,
+  initialHumorPosts,
   initialIssues,
   initialMatches,
+  initialNotifications,
+  initialTeaSessions,
   matchCandidates,
 } from './data/mockData';
 import { ActionBoard } from './features/actions/ActionBoard';
@@ -126,11 +130,12 @@ export function App() {
   const [selectedCanId, setSelectedCanId] = useState<string | null>(null);
   const [actionItems, setActionItems] = useState<ActionItem[]>(initialActionItems);
   const [canSteps, setCanSteps] = useState<CanStepConfig[]>(loadCanSteps);
-  const [teaSessions, setTeaSessions] = useState<TeaSession[]>(loadTeaSessions);
+  // DB(있으면)에서 비동기 로드하므로 초기값은 시드로 두고 useEffect에서 덮어쓴다. (유형 config는 로컬 동기)
+  const [teaSessions, setTeaSessions] = useState<TeaSession[]>(initialTeaSessions);
   const [teaSessionTypes, setTeaSessionTypes] = useState<string[]>(loadTeaSessionTypes);
-  const [notifications, setNotifications] = useState<AppNotification[]>(loadNotifications);
-  const [humorPosts, setHumorPosts] = useState<HumorPost[]>(loadHumorPosts);
-  const [humorComments, setHumorComments] = useState<HumorComment[]>(loadHumorComments);
+  const [notifications, setNotifications] = useState<AppNotification[]>(initialNotifications);
+  const [humorPosts, setHumorPosts] = useState<HumorPost[]>(initialHumorPosts);
+  const [humorComments, setHumorComments] = useState<HumorComment[]>(initialHumorComments);
 
   const [votedAgendaIds, setVotedAgendaIds] = useState<string[]>([]);
   const [agendaForActions, setAgendaForActions] = useState<Agenda | null>(null);
@@ -174,6 +179,18 @@ export function App() {
       if (isMounted) {
         setActionItems(loadedItems);
       }
+    });
+    loadTeaSessions().then((loaded) => {
+      if (isMounted) setTeaSessions(loaded);
+    });
+    loadNotifications().then((loaded) => {
+      if (isMounted) setNotifications(loaded);
+    });
+    loadHumorPosts().then((loaded) => {
+      if (isMounted) setHumorPosts(loaded);
+    });
+    loadHumorComments().then((loaded) => {
+      if (isMounted) setHumorComments(loaded);
     });
 
     return () => {

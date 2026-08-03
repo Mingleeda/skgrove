@@ -238,7 +238,8 @@ export function Metrics() {
       loadAgendas(),
       loadBallots(),
       loadActionItems(),
-    ]).then(([issues, agendas, ballots, actionItems]) => {
+      loadTeaSessions(),
+    ]).then(([issues, agendas, ballots, actionItems, teaSessions]) => {
       if (!isMounted) return;
       setPartMetrics(buildPartMetrics({
         actionItems,
@@ -248,7 +249,7 @@ export function Metrics() {
         canSessions: initialCanSessions,
         connectShareTexts: readConnectShareTexts(),
         issues,
-        teaSessions: loadTeaSessions(),
+        teaSessions,
       }));
     });
 
