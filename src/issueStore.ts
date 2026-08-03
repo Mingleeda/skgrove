@@ -50,16 +50,24 @@ export async function loadIssues() {
   }
 }
 
-export async function saveIssues(issues: Issue[]) {
+/**
+ * 서버 저장까지 성공했는지 돌려준다.
+ * 예전에는 실패를 console.warn으로만 남겨서, 접수자는 저장이 안 된 사실을 알 수 없었다.
+ * false는 "이 기기에만 남았다"는 뜻이고, 호출부가 그것을 사용자에게 알린다.
+ */
+export async function saveIssues(issues: Issue[]): Promise<boolean> {
   window.localStorage.setItem(ISSUE_STORAGE_KEY, JSON.stringify(issues));
 
-  if (!supabase) return;
+  if (!supabase) return true; // 서버 미연동은 실패가 아니다(로컬 전용 모드)
 
   const { error } = await supabase.from(ISSUE_TABLE).upsert(issues.map(issueToRow), { onConflict: 'id' });
 
   if (error) {
     console.warn('Supabase issue save failed. Local fallback is still updated.', error);
+    return false;
   }
+
+  return true;
 }
 
 export function makeIssueId() {

@@ -44,16 +44,20 @@ export async function loadAgendas() {
   }
 }
 
-export async function saveAgendas(agendas: Agenda[]) {
+/** 서버 저장 성공 여부. false는 "이 기기에만 남았다"는 뜻이다(issueStore와 같은 규약). */
+export async function saveAgendas(agendas: Agenda[]): Promise<boolean> {
   window.localStorage.setItem(AGENDA_STORAGE_KEY, JSON.stringify(agendas));
 
-  if (!supabase) return;
+  if (!supabase) return true;
 
   const { error } = await supabase.from(AGENDA_TABLE).upsert(agendas.map(agendaToRow), { onConflict: 'id' });
 
   if (error) {
     console.warn('Supabase agenda save failed. Local fallback is still updated.', error);
+    return false;
   }
+
+  return true;
 }
 
 // 캔미팅 후속 조치는 안건을 한 번에 여러 건 만든다.
