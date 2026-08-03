@@ -136,6 +136,8 @@ export function App() {
   const [notifications, setNotifications] = useState<AppNotification[]>(initialNotifications);
   const [humorPosts, setHumorPosts] = useState<HumorPost[]>(initialHumorPosts);
   const [humorComments, setHumorComments] = useState<HumorComment[]>(initialHumorComments);
+  // 알림이 DB(있으면)에서 로드 완료됐는지. 마감 임박 체크는 이게 true여야 실행(중복 슬랙 방지).
+  const [notificationsReady, setNotificationsReady] = useState(false);
 
   const [votedAgendaIds, setVotedAgendaIds] = useState<string[]>([]);
   const [agendaForActions, setAgendaForActions] = useState<Agenda | null>(null);
@@ -184,7 +186,10 @@ export function App() {
       if (isMounted) setTeaSessions(loaded);
     });
     loadNotifications().then((loaded) => {
-      if (isMounted) setNotifications(loaded);
+      if (isMounted) {
+        setNotifications(loaded);
+        setNotificationsReady(true);
+      }
     });
     loadHumorPosts().then((loaded) => {
       if (isMounted) setHumorPosts(loaded);
@@ -279,6 +284,8 @@ export function App() {
   // 투표 마감 임박(113): 서버 타이머가 없으므로 안건이 로드/변경될 때 기회적으로 계산한다.
   // dedupeKey가 이미 만든 알림의 재생성을 막으므로 로드마다 중복 생성되지 않는다.
   useEffect(() => {
+    // 알림이 DB에서 아직 안 실려온 상태면 보류 — seen(dedupe)이 비어 있어 매 로드마다 재발신되는 걸 막는다.
+    if (!notificationsReady) return;
     const drafts: NotificationDraft[] = [];
     agendas.forEach((agenda) => {
       if (isDeadlineSoon(agenda, today())) {
@@ -288,7 +295,7 @@ export function App() {
     if (drafts.length > 0) notify(drafts);
     // notify는 최신 notifications 클로저를 쓰며, 이 effect는 알림 변경으로 재실행되지 않는다.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [agendas, accounts]);
+  }, [agendas, accounts, notificationsReady]);
 
   // 투표 대상 인원. 파트 한정 안건은 해당 파트 + 전체 소속(팀리더)만 센다.
   const eligibleCountFor = (part: Agenda['part']) =>
