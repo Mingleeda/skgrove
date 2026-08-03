@@ -202,10 +202,6 @@ export const partScores: PartScore[] = [
   { name: '혁신도구파트', score: 78, meetings: 11 },
 ];
 
-export const initialMatches = ['김수정 · 이선민', '김승현 · 이상협', 'TEST혁신파트 · ITS혁신파트'];
-
-export const matchCandidates = ['이선민 · 김수정', '김승현 · 김수정', '이상협 · 이선민', 'ITS혁신파트 · 혁신도구파트'];
-
 export const initialCanSessions: CanSession[] = [
   {
     id: 'CAN-S-2',

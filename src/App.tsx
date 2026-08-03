@@ -23,10 +23,8 @@ import {
   initialHumorComments,
   initialHumorPosts,
   initialIssues,
-  initialMatches,
   initialNotifications,
   initialTeaSessions,
-  matchCandidates,
   profiles as initialProfiles,
 } from './data/mockData';
 import { ActionBoard } from './features/actions/ActionBoard';
@@ -128,7 +126,6 @@ export function App() {
   const [agendas, setAgendas] = useState<Agenda[]>(initialAgendas);
   const [ballots, setBallots] = useState<AgendaBallot[]>([]);
   const [identity, setIdentity] = useState<Identity>('익명');
-  const [matched, setMatched] = useState(initialMatches);
   const [canSessions, setCanSessions] = useState<CanSession[]>(initialCanSessions);
   const [canOpinions, setCanOpinions] = useState<CanOpinion[]>(initialCanOpinions);
   const [selectedCanId, setSelectedCanId] = useState<string | null>(null);
@@ -155,6 +152,16 @@ export function App() {
       map.set(account.name, { color: existing?.color ?? 'blue', photoUrl: account.photoUrl });
     });
     return map;
+  }, [profileDirectory, accounts]);
+
+  // 커피뽑기/조뽑기 명단 = 실제 유저(활성 계정)의 라이브 성향 프로필.
+  // 조 편성 로직이 part·birthYear·trait·style·color를 쓰므로 profiles가 소스,
+  // 탈퇴·비활성 계정은 accounts.status로 걸러 명단에서 제외한다.
+  const connectMembers = useMemo(() => {
+    const activeNames = new Set(
+      accounts.filter((account) => account.status === '활성').map((account) => account.name),
+    );
+    return profileDirectory.filter((profile) => activeNames.has(profile.name));
   }, [profileDirectory, accounts]);
 
   const [votedAgendaIds, setVotedAgendaIds] = useState<string[]>([]);
@@ -432,10 +439,6 @@ export function App() {
           : agenda,
       ),
     );
-  };
-
-  const shuffleTeams = () => {
-    setMatched([...matchCandidates].sort(() => Math.random() - 0.5).slice(0, 3));
   };
 
   const startCanSession = () => {
@@ -897,7 +900,7 @@ export function App() {
         />
       )}
       {active === 'profiles' && <Profiles currentUser={currentUser} onProfilesChange={setProfileDirectory} />}
-      {active === 'connect' && <Connect matched={matched} onShuffleTeams={shuffleTeams} />}
+      {active === 'connect' && <Connect members={connectMembers} />}
       {active === 'memory' && <Memory currentUser={currentUser} />}
       {active === 'metrics' && <Metrics currentUser={currentUser} />}
       {active === 'accounts' && isTeamLeader(currentUser) && <AccountManagement accounts={accounts} onAccountsChange={persistAccounts} />}

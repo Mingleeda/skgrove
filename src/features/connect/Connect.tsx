@@ -9,12 +9,11 @@ import {
   makeConnectShareUrl,
   saveConnectResults,
 } from '../../connectResultStore';
-import { profiles } from '../../data/mockData';
 import type { Profile, SavedDrawResult } from '../../types';
 
 type ConnectProps = {
-  matched: string[];
-  onShuffleTeams: () => void;
+  // 실제 유저(활성 계정)의 라이브 성향 프로필. App이 profiles(DB)+accounts(활성 상태)로 합쳐 전달한다.
+  members: Profile[];
 };
 
 type ConnectMode = 'coffee' | 'teams';
@@ -41,7 +40,6 @@ type ProfileSignal = {
   weight: number;
 };
 
-const participantNames = profiles.map((profile) => profile.name);
 const partOrder = ['TEST혁신파트', 'ITS혁신파트', '혁신도구파트'];
 
 function getAgeMood(birthYear: string) {
@@ -272,9 +270,16 @@ function analyzeAllTeams(groups: TeamGroup[]) {
   };
 }
 
-export function Connect({ matched: _matched, onShuffleTeams: _onShuffleTeams }: ConnectProps) {
+export function Connect({ members }: ConnectProps) {
   const [mode, setMode] = useState<ConnectMode>('teams');
+  const participantNames = useMemo(() => members.map((member) => member.name), [members]);
   const [selectedNames, setSelectedNames] = useState(participantNames);
+
+  // 실제 명단(활성 계정)이 로드/변경되면(로그인 직후 DB 로드, 계정 활성상태 변경 등)
+  // 선택 목록을 최신 명단 전체로 다시 맞춘다. 데모성 화면이라 선택 상태를 영속화하지 않는다.
+  useEffect(() => {
+    setSelectedNames(participantNames);
+  }, [participantNames]);
   const [balanceRule, setBalanceRule] = useState<BalanceRule>('both');
   const [teamBasis, setTeamBasis] = useState<TeamBasis>('count');
   const [teamValue, setTeamValue] = useState(4);
@@ -302,19 +307,19 @@ export function Connect({ matched: _matched, onShuffleTeams: _onShuffleTeams }: 
   }, []);
 
   const selectedParticipants = useMemo(() => {
-    return profiles.filter((profile) => selectedNames.includes(profile.name));
-  }, [selectedNames]);
+    return members.filter((member) => selectedNames.includes(member.name));
+  }, [members, selectedNames]);
 
   const visibleParticipants = useMemo(() => {
     const keyword = participantSearch.trim().toLowerCase();
 
-    if (!keyword) return profiles;
-    return profiles.filter((profile) => (
-      profile.name.toLowerCase().includes(keyword) ||
-      profile.part.toLowerCase().includes(keyword) ||
-      getAgeMood(profile.birthYear).label.toLowerCase().includes(keyword)
+    if (!keyword) return members;
+    return members.filter((member) => (
+      member.name.toLowerCase().includes(keyword) ||
+      member.part.toLowerCase().includes(keyword) ||
+      getAgeMood(member.birthYear).label.toLowerCase().includes(keyword)
     ));
-  }, [participantSearch]);
+  }, [members, participantSearch]);
 
   const visibleParticipantsByPart = useMemo(() => {
     return partOrder.map((part) => ({
@@ -347,7 +352,7 @@ export function Connect({ matched: _matched, onShuffleTeams: _onShuffleTeams }: 
   };
 
   const togglePart = (part: string) => {
-    const partMemberNames = profiles.filter((profile) => profile.part === part).map((profile) => profile.name);
+    const partMemberNames = members.filter((member) => member.part === part).map((member) => member.name);
     const hasEveryMember = partMemberNames.every((name) => selectedNames.includes(name));
 
     setSelectedNames((current) => (
