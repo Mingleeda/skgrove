@@ -7395,3 +7395,105 @@ button.notif-row {
   font-size: 13px;
   font-weight: 600;
 }
+
+/* ===== 접수 AI 사전 검토 ===== */
+.review-gate {
+  align-items: center;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  display: flex;
+  gap: var(--space-3);
+  padding: var(--space-4);
+}
+
+.review-gate p {
+  margin: 0;
+}
+
+.review-gate.checking {
+  background: #f7faf5;
+  color: var(--color-muted);
+}
+
+.review-gate.clear {
+  background: #f2f7f0;
+  color: var(--color-primary);
+}
+
+.review-gate.unavailable {
+  background: #fdf8ec;
+  border-color: #e4d5a8;
+}
+
+.review-gate.unavailable div {
+  display: grid;
+  flex: 1;
+  gap: 2px;
+}
+
+.review-gate.unavailable span {
+  color: var(--color-muted);
+  font-size: 13px;
+}
+
+.review-gate.blocked {
+  align-items: stretch;
+  background: #fdf4f2;
+  border-color: #edc9c2;
+  display: grid;
+  gap: var(--space-3);
+}
+
+.review-gate-head {
+  align-items: center;
+  color: #a3453c;
+  display: flex;
+  font-weight: 700;
+  gap: var(--space-2);
+}
+
+.review-finding {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-3);
+}
+
+.review-kind {
+  background: #fbeee7;
+  border-radius: 999px;
+  color: #a3453c;
+  font-size: 12px;
+  font-weight: 700;
+  padding: var(--space-1) var(--space-2);
+  width: fit-content;
+}
+
+.review-kind.profanity {
+  background: #f6dedb;
+}
+
+.review-reason {
+  color: var(--color-muted);
+  font-size: 13px;
+}
+
+.review-rewritten {
+  background: #f7faf5;
+  border-left: 3px solid var(--color-primary);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: var(--space-2) var(--space-3);
+  white-space: pre-wrap;
+}
+
+.review-finding .primary-button {
+  justify-self: start;
+}
+
+.review-gate-foot {
+  display: grid;
+  gap: var(--space-2);
+  justify-items: start;
+}
