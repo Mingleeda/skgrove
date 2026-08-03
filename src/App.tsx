@@ -664,6 +664,17 @@ export function App() {
     }
   };
 
+  const editHumorPost = (postId: string, draft: { body: string; mediaUrl: string }) => {
+    if (!currentUser || !draft.body.trim()) return;
+    const post = humorPosts.find((item) => item.id === postId);
+    if (!post || post.author !== currentUser.name) return; // 본인 글만 수정
+    persistHumorPosts(
+      humorPosts.map((item) =>
+        item.id === postId ? { ...item, body: draft.body.trim(), mediaUrl: draft.mediaUrl.trim() } : item,
+      ),
+    );
+  };
+
   const deleteHumorPost = (postId: string) => {
     const post = humorPosts.find((item) => item.id === postId);
     if (!post || !currentUser) return;
@@ -880,6 +891,7 @@ export function App() {
           onAddPost={addHumorPost}
           onToggleLike={toggleHumorLike}
           onAddComment={addHumorComment}
+          onEditPost={editHumorPost}
           onDeletePost={deleteHumorPost}
           onDeleteComment={deleteHumorComment}
         />
