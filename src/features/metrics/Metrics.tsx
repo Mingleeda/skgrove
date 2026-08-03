@@ -356,7 +356,8 @@ export function Metrics({ currentUser }: MetricsProps) {
       loadAgendas(),
       loadBallots(),
       loadActionItems(),
-    ]).then(([issues, agendas, ballots, actionItems]) => {
+      loadTeaSessions(),
+    ]).then(([issues, agendas, ballots, actionItems, teaSessions]) => {
       if (!isMounted) return;
       const loadedActivity = {
         actionItems,
@@ -367,7 +368,7 @@ export function Metrics({ currentUser }: MetricsProps) {
         canSessions: initialCanSessions,
         connectShareTexts: readConnectShareTexts(),
         issues,
-        teaSessions: loadTeaSessions(),
+        teaSessions,
       };
       setActivity(loadedActivity);
       setPartMetrics(buildPartMetrics(loadedActivity));

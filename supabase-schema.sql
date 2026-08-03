@@ -428,3 +428,96 @@ create policy "Allow prototype team memory file deletes"
   on storage.objects
   for delete
   using (bucket_id = 'team-memory-assets');
+
+-- =====================================================================
+-- 김승현 기능 테이블 (SKSOOP-14/15/21/130) — 프로토타입 개방 정책(for all).
+-- 실서비스 전 RLS를 인증 기반으로 강화 필요.
+-- =====================================================================
+
+-- 알림 / 메시지 (SKSOOP-21)
+create table if not exists public.notifications (
+  id text primary key,
+  kind text not null,
+  recipient_name text not null,
+  from_name text not null default '',
+  title text not null default '',
+  body text not null default '',
+  section text not null,
+  source_id text not null default '',
+  dedupe_key text not null default '',
+  created_at text not null default '',
+  read boolean not null default false
+);
+alter table public.notifications enable row level security;
+drop policy if exists "Allow prototype notifications all" on public.notifications;
+create policy "Allow prototype notifications all" on public.notifications for all using (true) with check (true);
+
+-- 유머게시판 (SKSOOP-130)
+create table if not exists public.humor_posts (
+  id text primary key,
+  author text not null,
+  body text not null default '',
+  media_url text not null default '',
+  created_at text not null default '',
+  liked_by jsonb not null default '[]'::jsonb
+);
+alter table public.humor_posts enable row level security;
+drop policy if exists "Allow prototype humor posts all" on public.humor_posts;
+create policy "Allow prototype humor posts all" on public.humor_posts for all using (true) with check (true);
+
+create table if not exists public.humor_comments (
+  id text primary key,
+  post_id text not null,
+  author text not null,
+  body text not null default '',
+  created_at text not null default ''
+);
+alter table public.humor_comments enable row level security;
+drop policy if exists "Allow prototype humor comments all" on public.humor_comments;
+create policy "Allow prototype humor comments all" on public.humor_comments for all using (true) with check (true);
+
+-- 티미팅 세션 (SKSOOP-15) — 세션 유형/캔 단계 같은 config 는 로컬 유지
+create table if not exists public.tea_sessions (
+  id text primary key,
+  title text not null default '',
+  type text not null default '',
+  presenter text not null default '',
+  part text not null,
+  description text not null default '',
+  status text not null default '제안',
+  memo text not null default ''
+);
+alter table public.tea_sessions enable row level security;
+drop policy if exists "Allow prototype tea sessions all" on public.tea_sessions;
+create policy "Allow prototype tea sessions all" on public.tea_sessions for all using (true) with check (true);
+
+-- 캔미팅 (SKSOOP-14) — 스키마 선반영. 스토어/App 연동은 후속(현재 메모리 상태).
+create table if not exists public.can_sessions (
+  id text primary key,
+  topic text not null default '',
+  team_name text not null default '',
+  held_at text not null default '',
+  method text not null default '오프라인',
+  parts jsonb not null default '[]'::jsonb,
+  stage text not null default 'setup',
+  result_summary text not null default '',
+  result_groups jsonb,
+  follow_up jsonb
+);
+alter table public.can_sessions enable row level security;
+drop policy if exists "Allow prototype can sessions all" on public.can_sessions;
+create policy "Allow prototype can sessions all" on public.can_sessions for all using (true) with check (true);
+
+create table if not exists public.can_opinions (
+  id text primary key,
+  session_id text not null,
+  part text not null,
+  step text not null,
+  content text not null default '',
+  author text not null,
+  author_name text not null default '',
+  selected boolean not null default false
+);
+alter table public.can_opinions enable row level security;
+drop policy if exists "Allow prototype can opinions all" on public.can_opinions;
+create policy "Allow prototype can opinions all" on public.can_opinions for all using (true) with check (true);
