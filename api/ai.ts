@@ -46,11 +46,9 @@ function parseJson(content: string): { steps?: unknown } | null {
   }
 }
 
-export default async function handler(request: Request): Promise<Response> {
-  if (request.method !== 'POST') {
-    return new Response('Method Not Allowed', { status: 405 });
-  }
-
+// Vercel Node.js 함수는 기본 export를 (req,res)=>void 로 취급해 Response를 그냥 무시한다
+// (반환값이 버려져 응답이 안 나가고 300초 뒤 타임아웃). named export(POST)로 Web API 시그니처를 쓴다.
+export async function POST(request: Request): Promise<Response> {
   const apiKey = env('OPENROUTER_API_KEY');
   if (!apiKey) {
     // 키 미주입 → 휴면. 프론트는 로컬 취합으로 폴백한다.

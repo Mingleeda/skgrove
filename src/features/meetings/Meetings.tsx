@@ -139,6 +139,14 @@ export function Meetings({
   const [aiLoading, setAiLoading] = useState(false);
   const [aiNote, setAiNote] = useState(''); // 결과 출처 표기(AI/로컬)
   const [resultMode, setResultMode] = useState<'original' | 'ai'>('original'); // 확정할 결과물 선택
+  const [pptxError, setPptxError] = useState('');
+
+  // PPT 내보내기 버튼 클릭 시점에 동적 import가 처음 걸리면(네트워크 지연) 브라우저가 사용자
+  // 제스처와의 연결을 끊어 다운로드를 조용히 막는 경우가 있다. 캔미팅 화면 진입 시 미리 받아둬
+  // 클릭 시점엔 이미 캐시돼 있게 한다.
+  useEffect(() => {
+    void import('pptxgenjs');
+  }, []);
   const [view, setView] = useState<{ id: string; stage: CanStage } | null>(null);
   const [followRouting, setFollowRouting] = useState<Record<string, FollowRoute>>({});
   const [followDrafts, setFollowDrafts] = useState<Record<string, { owner: string; due: string }>>({});
@@ -519,6 +527,16 @@ export function Meetings({
               );
 
               const exportPptx = async () => {
+                setPptxError('');
+                try {
+                  await runExportPptx();
+                } catch (error) {
+                  console.error('PPT export failed', error);
+                  setPptxError('PPT 생성에 실패했어요. 잠시 후 다시 시도해주세요.');
+                }
+              };
+
+              const runExportPptx = async () => {
                 const pptxgen = (await import('pptxgenjs')).default;
                 const pptx = new pptxgen();
                 const slide = pptx.addSlide();
@@ -916,6 +934,7 @@ export function Meetings({
                                 PPT로 내보내기
                               </button>
                             )}
+                            {confirmed && pptxError && <p className="form-error">{pptxError}</p>}
                             {!confirmed && isLive && (
                               <>
                                 <button className="primary-button" onClick={confirmResult}>
@@ -1143,6 +1162,7 @@ export function Meetings({
                               PPT로 내보내기
                             </button>
                           </div>
+                          {pptxError && <p className="form-error">{pptxError}</p>}
                           {followUp && (
                             <div className="can-followup">
                               <h4 className="can-result-title">
