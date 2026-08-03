@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { loadAccounts, makeAccountId, saveAccounts, seedAccounts } from './accountStore';
 import { loadActionItems, makeActionItemId, saveActionItems } from './actionItemStore';
 import { finalStatus, isOpen, liveStatus, settleAgendas } from './agendaRules';
@@ -27,6 +27,7 @@ import {
   initialNotifications,
   initialTeaSessions,
   matchCandidates,
+  profiles as initialProfiles,
 } from './data/mockData';
 import { ActionBoard } from './features/actions/ActionBoard';
 import { ActionCreateForm } from './features/actions/ActionCreateForm';
@@ -69,6 +70,8 @@ import {
   saveHumorComments,
   saveHumorPosts,
 } from './humorStore';
+import { loadProfiles } from './profileStore';
+import { ProfilesContext, type AvatarInfo } from './profilesContext';
 import type {
   ActionItem,
   Agenda,
@@ -84,6 +87,7 @@ import type {
   Identity,
   Issue,
   ManagedAccount,
+  Profile,
   Section,
   TeaSession,
   TeaSessionStatus,
@@ -138,6 +142,20 @@ export function App() {
   const [humorComments, setHumorComments] = useState<HumorComment[]>(initialHumorComments);
   // 알림이 DB(있으면)에서 로드 완료됐는지. 마감 임박 체크는 이게 true여야 실행(중복 슬랙 방지).
   const [notificationsReady, setNotificationsReady] = useState(false);
+  // 계정별 아바타(색·사진). Avatar가 ProfilesContext로 읽는다. 로그인 후 DB에서 로드.
+  // 색은 성향 프로필(profiles), 사진은 계정(accounts)에서 오며 여기서 합친다.
+  const [profileDirectory, setProfileDirectory] = useState<Profile[]>(initialProfiles);
+  const profileMap = useMemo(() => {
+    const map = new Map<string, AvatarInfo>();
+    profileDirectory.forEach((profile) => map.set(profile.name, { color: profile.color }));
+    // 사진의 단일 소스는 accounts. 있으면 우선하고, 색은 성향 프로필 값을 유지한다.
+    accounts.forEach((account) => {
+      if (!account.photoUrl) return;
+      const existing = map.get(account.name);
+      map.set(account.name, { color: existing?.color ?? 'blue', photoUrl: account.photoUrl });
+    });
+    return map;
+  }, [profileDirectory, accounts]);
 
   const [votedAgendaIds, setVotedAgendaIds] = useState<string[]>([]);
   const [agendaForActions, setAgendaForActions] = useState<Agenda | null>(null);
@@ -202,6 +220,18 @@ export function App() {
       isMounted = false;
     };
   }, []);
+
+  // 프로필 디렉토리는 로그인(currentUser) 후 로드 — loadProfiles가 currentUser를 필요로 한다.
+  useEffect(() => {
+    if (!currentUser) return;
+    let isMounted = true;
+    loadProfiles(initialProfiles, currentUser).then((loaded) => {
+      if (isMounted) setProfileDirectory(loaded);
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, [currentUser]);
 
   const submitIssue = (issue: Omit<Issue, 'id' | 'status'>) => {
     const next: Issue = {
@@ -672,6 +702,18 @@ export function App() {
     void saveAccounts(nextAccounts);
   };
 
+  // 자율 관리: 로그인한 본인 계정의 프로필 사진만 갱신한다.
+  const saveMyProfilePhoto = (photoUrl: string) => {
+    if (!currentUser) return;
+    persistAccounts(
+      accounts.map((account) =>
+        account.email.toLowerCase() === currentUser.email.toLowerCase()
+          ? { ...account, photoUrl: photoUrl.trim() || undefined }
+          : account,
+      ),
+    );
+  };
+
   const registerAccount = (account: Omit<ManagedAccount, 'id' | 'joinedAt' | 'status'>) => {
     persistAccounts([
       ...accounts,
@@ -724,9 +766,12 @@ export function App() {
   ).length;
 
   return (
+    <ProfilesContext.Provider value={profileMap}>
     <AppShell
       active={active}
       currentUser={currentUser}
+      currentPhotoUrl={accounts.find((account) => account.email.toLowerCase() === currentUser.email.toLowerCase())?.photoUrl}
+      onSavePhoto={saveMyProfilePhoto}
       unreadCount={unreadCount}
       onLogout={() => setCurrentUser(null)}
       onSectionChange={changeSection}
@@ -839,11 +884,12 @@ export function App() {
           onDeleteComment={deleteHumorComment}
         />
       )}
-      {active === 'profiles' && <Profiles currentUser={currentUser} />}
+      {active === 'profiles' && <Profiles currentUser={currentUser} onProfilesChange={setProfileDirectory} />}
       {active === 'connect' && <Connect matched={matched} onShuffleTeams={shuffleTeams} />}
       {active === 'memory' && <Memory currentUser={currentUser} />}
       {active === 'metrics' && <Metrics currentUser={currentUser} />}
       {active === 'accounts' && isTeamLeader(currentUser) && <AccountManagement accounts={accounts} onAccountsChange={persistAccounts} />}
     </AppShell>
+    </ProfilesContext.Provider>
   );
 }

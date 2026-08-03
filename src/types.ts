@@ -32,6 +32,7 @@ export type ManagedAccount = CurrentUser & {
   id: string;
   status: AccountStatus;
   joinedAt: string;
+  photoUrl?: string; // 계정별 프로필 사진(직접 이미지 URL). 없으면 이니셜 칩으로 폴백.
 };
 
 // 접수자가 고른 공개 범위. '리더만 보기'는 안건 전환을 막는 약속이므로 저장해야 한다.
@@ -138,7 +139,6 @@ export type Profile = {
   feedback: string;
   guide: string;
   color: 'green' | 'red' | 'blue' | 'yellow';
-  photoUrl?: string; // 프로필 사진(직접 이미지 URL). 없으면 이니셜 칩으로 폴백.
 };
 
 export type ConnectResultMode = 'coffee' | 'teams';

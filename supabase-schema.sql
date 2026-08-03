@@ -10,6 +10,9 @@ create table if not exists public.accounts (
   updated_at timestamptz not null default now()
 );
 
+-- 계정별 프로필 사진(직접 이미지 URL). 없으면 앱에서 이니셜 칩으로 폴백.
+alter table public.accounts add column if not exists photo_url text;
+
 alter table public.accounts enable row level security;
 
 drop policy if exists "Allow prototype account reads" on public.accounts;

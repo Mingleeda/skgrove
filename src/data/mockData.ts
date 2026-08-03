@@ -148,7 +148,7 @@ export const initialActionItems: ActionItem[] = [
 ];
 
 type ProfileSeed = Pick<Profile, 'name' | 'part' | 'birthYear' | 'trait' | 'style' | 'color'> &
-  Partial<Pick<Profile, 'role' | 'englishName' | 'birthday' | 'character' | 'collaboration' | 'feedback' | 'guide' | 'photoUrl'>>;
+  Partial<Pick<Profile, 'role' | 'englishName' | 'birthday' | 'character' | 'collaboration' | 'feedback' | 'guide'>>;
 
 const profileFromSeed = (profile: ProfileSeed): Profile => ({
   role: '팀 문화와 협업 흐름 참여',
@@ -192,8 +192,8 @@ export const profiles: Profile[] = [
   profileFromSeed({ name: '최유라', part: 'TEST혁신파트', birthYear: '1995', trait: 'Gentle Fix', style: '불편한 흐름을 작은 개선으로 바꿈', color: 'yellow' }),
   profileFromSeed({ name: '하준영', part: 'ITS혁신파트', birthYear: '1991', trait: 'System Eyes', style: '서비스 전체 영향을 먼저 계산함', color: 'green' }),
   profileFromSeed({ name: '홍세아', part: '혁신도구파트', birthYear: '1999', trait: 'Fresh Note', style: '새로운 관점을 쉽게 기록하고 공유함', color: 'blue' }),
-  profileFromSeed({ name: '김영석', part: 'ITS혁신파트', birthYear: '1985', trait: 'Prime Mover', style: '핵심을 먼저 짚고 팀을 밀어붙임', color: 'red', photoUrl: 'https://telinfo.skax.co.kr/servlet/PictureServlet?picGubun=1&empNo=08215' }),
-  profileFromSeed({ name: '문성욱', part: 'ITS혁신파트', birthYear: '1986', trait: 'Steady Spark', style: '차분하게 아이디어를 계속 던짐', color: 'green', photoUrl: 'https://telinfo.skax.co.kr/servlet/PictureServlet?picGubun=1&empNo=08194' }),
+  profileFromSeed({ name: '김영석', part: 'ITS혁신파트', birthYear: '1985', trait: 'Prime Mover', style: '핵심을 먼저 짚고 팀을 밀어붙임', color: 'red' }),
+  profileFromSeed({ name: '문성욱', part: 'ITS혁신파트', birthYear: '1986', trait: 'Steady Spark', style: '차분하게 아이디어를 계속 던짐', color: 'green' }),
 ];
 
 export const partScores: PartScore[] = [
