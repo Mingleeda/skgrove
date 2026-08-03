@@ -211,11 +211,12 @@ export function App() {
     };
   }, []);
 
-  const submitIssue = (issue: Omit<Issue, 'id' | 'status'>) => {
+  const submitIssue = (issue: Omit<Issue, 'id' | 'status' | 'createdAt'>) => {
     const next: Issue = {
       id: makeIssueId(),
       ...issue,
       status: '접수',
+      createdAt: today(),
     };
     const nextIssues = [next, ...issues];
     setIssues(nextIssues);
@@ -767,7 +768,7 @@ export function App() {
         />
       )}
       {active === 'leader' && isLeader(currentUser) && (
-        <LeaderInbox issues={issues} onIssueUpdate={updateIssue} onPromoteToAgenda={promoteToAgenda} />
+        <LeaderInbox issues={issues} today={today()} onIssueUpdate={updateIssue} onPromoteToAgenda={promoteToAgenda} />
       )}
       {active === 'agenda' && !agendaForActions && (
         <AgendaBoard

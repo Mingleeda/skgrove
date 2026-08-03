@@ -7320,3 +7320,78 @@ button.notif-row {
   white-space: nowrap;
   width: 1px;
 }
+
+/* ===== 접수 지연 표시 (Slido 운영 원칙: 첫 응답 속도가 이후 참여를 만든다) ===== */
+.waiting-badge {
+  align-items: center;
+  background: #f2f5f1;
+  border-radius: 999px;
+  color: var(--color-muted);
+  display: inline-flex;
+  font-size: 12px;
+  font-weight: 600;
+  gap: var(--space-1);
+  margin-top: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  width: fit-content;
+}
+
+.waiting-badge.overdue {
+  background: #fbeee7;
+  color: #a3453c;
+}
+
+.leader-summary .leader-overdue strong {
+  color: #a3453c;
+}
+
+/* ===== 보류·종료 사유 ===== */
+.status-reason-editor {
+  border: 1px solid #e4d5a8;
+  background: #fdf8ec;
+  border-radius: var(--radius);
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-4);
+}
+
+.status-reason-editor textarea {
+  min-height: 96px;
+  width: 100%;
+}
+
+.submission-reason {
+  border-left: 3px solid var(--color-primary);
+  background: #f7faf5;
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: var(--space-2) var(--space-3);
+}
+
+/* ===== 파트 지표 익명 임계값 ===== */
+.metrics-suppressed {
+  align-items: flex-start;
+  background: #f7faf5;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius);
+  color: var(--color-muted);
+  display: flex;
+  gap: var(--space-3);
+  padding: var(--space-4);
+}
+
+.metrics-suppressed strong {
+  color: var(--color-ink);
+  display: block;
+  margin-bottom: var(--space-1);
+}
+
+.metrics-suppressed svg {
+  color: var(--color-primary);
+  flex: none;
+}
+
+.metrics-part-list em.score-hidden {
+  color: var(--color-muted);
+  font-size: 13px;
+  font-weight: 600;
+}

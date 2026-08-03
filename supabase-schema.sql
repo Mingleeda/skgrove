@@ -83,7 +83,10 @@ alter table public.issues
   -- 공개 범위를 모르는 과거 행은 공개하지 않는 쪽으로 채운다.
   add column if not exists visibility text not null default '리더만 보기',
   add column if not exists submitter_response text,
-  add column if not exists one_on_one_response text;
+  add column if not exists one_on_one_response text,
+  -- 보류·종료로 바꿀 때 리더가 남긴 사유. 접수자에게도 그대로 보인다.
+  -- 이유 없이 상태만 바뀌면 접수자는 무시당했다고 읽는다.
+  add column if not exists status_reason text;
 
 alter table public.issues enable row level security;
 

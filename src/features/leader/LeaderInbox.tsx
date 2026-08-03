@@ -1,10 +1,29 @@
-import { CalendarPlus, FileCheck2, MessageSquareText, PenLine, Send, ShieldCheck, UserRoundCheck, Vote } from 'lucide-react';
+import {
+  AlarmClock,
+  CalendarPlus,
+  FileCheck2,
+  MessageSquareText,
+  PenLine,
+  Send,
+  ShieldCheck,
+  UserRoundCheck,
+  Vote,
+} from 'lucide-react';
 import { useState } from 'react';
 import { teamParts } from '../../auth';
+import {
+  RESPONSE_DUE_DAYS,
+  daysSinceCreated,
+  isAwaitingResponse,
+  isResponseOverdue,
+  oldestWaitingDays,
+  statusNeedsReason,
+} from '../../issueRules';
 import type { Agenda, Identity, Issue, IssueStatus, TeamPart } from '../../types';
 
 type LeaderInboxProps = {
   issues: Issue[];
+  today: string;
   onIssueUpdate: (issue: Issue) => void;
   onPromoteToAgenda: (
     issue: Issue,
@@ -20,12 +39,15 @@ const agendaParts: TeamPart[] = ['전체', ...teamParts];
 const DEFAULT_VOTING_DAYS = 7;
 const addDays = (days: number) => new Date(Date.now() + days * 86400000).toISOString().slice(0, 10);
 
-export function LeaderInbox({ issues, onIssueUpdate, onPromoteToAgenda }: LeaderInboxProps) {
+export function LeaderInbox({ issues, today, onIssueUpdate, onPromoteToAgenda }: LeaderInboxProps) {
   const [filter, setFilter] = useState<'전체' | IssueStatus>('전체');
   const [selectedIssueId, setSelectedIssueId] = useState(issues[0]?.id ?? '');
   const [activeAction, setActiveAction] = useState<LeaderAction>('reply');
   const [draft, setDraft] = useState('');
   const [agendaDrafts, setAgendaDrafts] = useState<Record<string, AgendaDraft>>({});
+  // 보류·종료로 바꾸려는 중인 건. 사유를 받기 전에는 상태를 바꾸지 않는다.
+  const [pendingStatus, setPendingStatus] = useState<{ issueId: string; status: IssueStatus } | null>(null);
+  const [reasonDraft, setReasonDraft] = useState('');
 
   const visibleIssues =
     filter === '전체'
@@ -36,6 +58,9 @@ export function LeaderInbox({ issues, onIssueUpdate, onPromoteToAgenda }: Leader
   const waitingCount = issues.filter((issue) => issue.status === '접수' || issue.status === '검토중').length;
   const answeredCount = issues.filter((issue) => issue.leaderReply).length;
   const followUpCount = issues.filter((issue) => issue.oneOnOneNote || issue.actionItem).length;
+  // 개수만으로는 방치가 보이지 않는다. 3건이 3일째인지 30일째인지가 다르다.
+  const oldestWaiting = oldestWaitingDays(issues, today);
+  const overdueCount = issues.filter((issue) => isResponseOverdue(issue, today)).length;
 
   const chooseIssue = (issue: Issue) => {
     setSelectedIssueId(issue.id);
@@ -44,7 +69,28 @@ export function LeaderInbox({ issues, onIssueUpdate, onPromoteToAgenda }: Leader
   };
 
   const changeStatus = (issue: Issue, status: IssueStatus) => {
+    if (status === issue.status) return;
+    // 보류·종료는 접수자에게 "안 하기로 했다"는 통보다. 근거 없이 보내지 않는다.
+    if (statusNeedsReason(status)) {
+      setSelectedIssueId(issue.id);
+      setPendingStatus({ issueId: issue.id, status });
+      setReasonDraft(issue.statusReason ?? '');
+      return;
+    }
     onIssueUpdate({ ...issue, status });
+  };
+
+  const commitStatusChange = (issue: Issue) => {
+    const reason = reasonDraft.trim();
+    if (!pendingStatus || !reason) return;
+    onIssueUpdate({ ...issue, status: pendingStatus.status, statusReason: reason });
+    setPendingStatus(null);
+    setReasonDraft('');
+  };
+
+  const cancelStatusChange = () => {
+    setPendingStatus(null);
+    setReasonDraft('');
   };
 
   const updateAgendaDraft = (patch: Partial<AgendaDraft>) => {
@@ -119,7 +165,20 @@ export function LeaderInbox({ issues, onIssueUpdate, onPromoteToAgenda }: Leader
           <span>후속 액션</span>
           <strong>{followUpCount}</strong>
         </div>
+        <div className={overdueCount > 0 ? 'leader-overdue' : ''}>
+          <AlarmClock size={22} />
+          <span>가장 오래 기다린 건</span>
+          <strong>{oldestWaiting === null ? '없음' : `${oldestWaiting}일`}</strong>
+        </div>
       </div>
+
+      {overdueCount > 0 && (
+        <div className="notice-line action-overdue-notice">
+          <AlarmClock size={18} />
+          {RESPONSE_DUE_DAYS}일이 넘도록 응답이 없는 접수가 {overdueCount}건 있습니다. 대나무숲은 첫 몇 건의 응답 속도가
+          이후 참여를 결정합니다.
+        </div>
+      )}
 
       <div className="leader-layout">
         <section className="leader-inbox-list">
@@ -140,6 +199,17 @@ export function LeaderInbox({ issues, onIssueUpdate, onPromoteToAgenda }: Leader
                   <p>
                     {issue.id} · {issue.category} · {getAuthorLabel(issue)} · {issue.target}
                   </p>
+                  {(() => {
+                    // 접수일이 없는 과거 데이터는 경과일을 표시하지 않는다.
+                    const waited = daysSinceCreated(issue, today);
+                    if (waited === null || !isAwaitingResponse(issue)) return null;
+                    return (
+                      <span className={isResponseOverdue(issue, today) ? 'waiting-badge overdue' : 'waiting-badge'}>
+                        <AlarmClock size={13} />
+                        {waited === 0 ? '오늘 접수' : `${waited}일째 응답 대기`}
+                      </span>
+                    );
+                  })()}
                   {issue.author === '실명' && issue.submitterName && (
                     <div className="author-card">
                       <strong>{issue.submitterName}</strong>
@@ -367,14 +437,53 @@ export function LeaderInbox({ issues, onIssueUpdate, onPromoteToAgenda }: Leader
                 </>
               )}
 
-              {selectedIssue.status !== '종료' && selectedIssue.status !== '회수' && (
-                <button className="secondary-button wide" onClick={() => onIssueUpdate({ ...selectedIssue, status: '종료' })}>
-                  종료 처리
-                </button>
+              {/* 보류·종료로 바꾸려는 중이면 사유부터 받는다. 이 화면을 통과해야 상태가 바뀐다. */}
+              {pendingStatus?.issueId === selectedIssue.id ? (
+                <div className="status-reason-editor">
+                  <label>
+                    {pendingStatus.status} 사유
+                    <textarea
+                      value={reasonDraft}
+                      onChange={(event) => setReasonDraft(event.target.value)}
+                      placeholder={
+                        pendingStatus.status === '보류'
+                          ? '왜 지금은 진행하지 않는지, 언제 다시 볼지 적어주세요. 접수자에게 그대로 보입니다.'
+                          : '어떤 판단으로 마무리하는지 적어주세요. 접수자에게 그대로 보입니다.'
+                      }
+                    />
+                  </label>
+                  <p className="field-note">
+                    이유 없이 상태만 바뀌면 접수자는 무시당했다고 읽습니다. 이 문장이 접수자가 보는 유일한 설명입니다.
+                  </p>
+                  <div className="form-actions">
+                    <button className="secondary-button" onClick={cancelStatusChange}>
+                      취소
+                    </button>
+                    <button
+                      className="primary-button"
+                      disabled={!reasonDraft.trim()}
+                      onClick={() => commitStatusChange(selectedIssue)}
+                    >
+                      {pendingStatus.status}(으)로 변경
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                selectedIssue.status !== '종료' &&
+                selectedIssue.status !== '회수' && (
+                  <button className="secondary-button wide" onClick={() => changeStatus(selectedIssue, '종료')}>
+                    종료 처리
+                  </button>
+                )
               )}
 
               <div className="leader-history">
                 <strong>처리 기록</strong>
+                {selectedIssue.statusReason && (
+                  <p>
+                    {selectedIssue.status} 사유: {selectedIssue.statusReason}
+                  </p>
+                )}
                 {selectedIssue.leaderReply && <p>답변: {selectedIssue.leaderReply}</p>}
                 {selectedIssue.oneOnOneNote && <p>1on1: {selectedIssue.oneOnOneNote}</p>}
                 {selectedIssue.actionItem && <p>액션아이템: {selectedIssue.actionItem}</p>}
@@ -388,7 +497,8 @@ export function LeaderInbox({ issues, onIssueUpdate, onPromoteToAgenda }: Leader
                 {!selectedIssue.oneOnOneResponse && selectedIssue.submitterResponse && (
                   <p>팀원 후속 응답: {selectedIssue.submitterResponse}</p>
                 )}
-                {!selectedIssue.leaderReply &&
+                {!selectedIssue.statusReason &&
+                  !selectedIssue.leaderReply &&
                   !selectedIssue.oneOnOneNote &&
                   !selectedIssue.actionItem &&
                   !selectedIssue.leaderMemo &&

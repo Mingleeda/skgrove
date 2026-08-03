@@ -15,6 +15,7 @@ import type {
 export const initialIssues: Issue[] = [
   {
     id: 'SOOP-142',
+    createdAt: '2026-06-18',
     title: '팀 티미팅 시간이 길어져 집중 업무 시간이 끊겨요',
     category: '회의문화',
     author: '익명',
@@ -27,6 +28,7 @@ export const initialIssues: Issue[] = [
   },
   {
     id: 'SOOP-141',
+    createdAt: '2026-07-11',
     title: '파트 간 업무 맥락을 공유하는 짧은 자리가 있으면 좋겠어요',
     category: '협업',
     author: '실명',
@@ -39,6 +41,7 @@ export const initialIssues: Issue[] = [
   },
   {
     id: 'SOOP-139',
+    createdAt: '2026-07-26',
     title: '캔미팅 결과가 액션아이템으로 이어지는 과정이 잘 안 보여요',
     category: '캔미팅',
     author: '익명',

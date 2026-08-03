@@ -26,6 +26,7 @@ type IssueRow = {
   leader_memo?: string | null;
   submitter_response?: string | null;
   one_on_one_response?: Issue['oneOnOneResponse'] | null;
+  status_reason?: string | null;
   created_at?: string;
 };
 
@@ -98,6 +99,9 @@ function issueFromRow(row: IssueRow): Issue {
     leaderMemo: row.leader_memo ?? undefined,
     submitterResponse: row.submitter_response ?? undefined,
     oneOnOneResponse: row.one_on_one_response ?? undefined,
+    statusReason: row.status_reason ?? undefined,
+    // 과거 데이터에는 값이 없을 수 있다. 없으면 경과일을 계산하지 않는다(빈 문자열).
+    createdAt: row.created_at ?? '',
   };
 }
 
@@ -123,5 +127,7 @@ function issueToRow(issue: Issue): IssueRow {
     leader_memo: issue.leaderMemo ?? null,
     submitter_response: issue.submitterResponse ?? null,
     one_on_one_response: issue.oneOnOneResponse ?? null,
+    status_reason: issue.statusReason ?? null,
+    created_at: issue.createdAt || undefined,
   };
 }

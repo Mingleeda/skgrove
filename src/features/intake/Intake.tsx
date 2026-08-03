@@ -13,6 +13,7 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import { PanelHeader } from '../../components/PanelHeader';
+import { MIN_MEMBERS_TO_REVEAL } from '../../metricsPrivacy';
 import type { CurrentUser, Identity, Issue, IssueVisibility, Urgency } from '../../types';
 
 type IntakeProps = {
@@ -21,7 +22,7 @@ type IntakeProps = {
   issues: Issue[];
   onIdentityChange: (identity: Identity) => void;
   onIssueUpdate: (issue: Issue) => void;
-  onSubmitIssue: (issue: Omit<Issue, 'id' | 'status'>) => Issue;
+  onSubmitIssue: (issue: Omit<Issue, 'id' | 'status' | 'createdAt'>) => Issue;
 };
 
 type IntakeStep = 'scope' | 'content' | 'review' | 'complete';
@@ -381,6 +382,12 @@ export function Intake({ identity, currentUser, issues, onIdentityChange, onIssu
 
                     {isExpanded && (
                       <div className="submission-detail">
+                        {/* 보류·종료는 결과만 통보하면 무시당한 것으로 읽힌다. 리더가 남긴 사유를 함께 보여준다. */}
+                        {issue.statusReason && (
+                          <p className="submission-reason">
+                            {issue.status} 사유: {issue.statusReason}
+                          </p>
+                        )}
                         {issue.leaderReply && <p>답변: {issue.leaderReply}</p>}
                         {issue.oneOnOneNote && <p>1on1: {issue.oneOnOneNote}</p>}
                         {issue.actionItem && <p>액션아이템: {issue.actionItem}</p>}
@@ -417,9 +424,11 @@ export function Intake({ identity, currentUser, issues, onIdentityChange, onIssu
                           </div>
                         )}
                         {issue.status === '회수' && <p>이 접수 의견은 작성자가 회수했습니다.</p>}
-                        {issue.status !== '회수' && !issue.leaderReply && !issue.oneOnOneNote && !issue.actionItem && (
-                          <p>아직 리더가 남긴 답변이나 후속 액션이 없습니다.</p>
-                        )}
+                        {issue.status !== '회수' &&
+                          !issue.statusReason &&
+                          !issue.leaderReply &&
+                          !issue.oneOnOneNote &&
+                          !issue.actionItem && <p>아직 리더가 남긴 답변이나 후속 액션이 없습니다.</p>}
                       </div>
                     )}
                   </article>
@@ -442,6 +451,14 @@ export function Intake({ identity, currentUser, issues, onIdentityChange, onIssu
             <div><strong>익명 선택</strong><span>리더 화면에는 작성자 이름과 메일이 보이지 않습니다.</span></div>
             <div><strong>실명 선택</strong><span>후속 대화가 필요한 개선 제안에 적합합니다.</span></div>
             <div><strong>안건 후보</strong><span>공개 가능으로 제출하면 투표 안건 전환 후보가 됩니다.</span></div>
+            {/* 임계값은 응답 전에 알려야 의미가 있다. 나중에 알면 이미 낸 뒤다. */}
+            <div>
+              <strong>파트 집계 기준</strong>
+              <span>
+                파트지수는 {MIN_MEMBERS_TO_REVEAL}명 이상인 파트만 공개됩니다. 인원이 적은 파트는 리더에게도 표시되지
+                않습니다.
+              </span>
+            </div>
           </div>
         </section>
 
@@ -487,6 +504,11 @@ export function Intake({ identity, currentUser, issues, onIdentityChange, onIssu
                   <span className="status-pill">{anonymousIssue.status}</span>
                 </div>
                 <div className="submission-detail">
+                  {anonymousIssue.statusReason && (
+                    <p className="submission-reason">
+                      {anonymousIssue.status} 사유: {anonymousIssue.statusReason}
+                    </p>
+                  )}
                   {anonymousIssue.leaderReply && <p>답변: {anonymousIssue.leaderReply}</p>}
                   {anonymousIssue.oneOnOneNote && <p>익명 추가 대화 제안: {anonymousIssue.oneOnOneNote}</p>}
                   {anonymousIssue.actionItem && <p>액션아이템: {anonymousIssue.actionItem}</p>}

@@ -60,6 +60,11 @@ export type Issue = {
   leaderMemo?: string;
   submitterResponse?: string;
   oneOnOneResponse?: '수락' | '일정 조율 요청';
+  // 접수일. 리더 관리함에서 "며칠째 방치됐는지"를 보여주려면 필요하다.
+  // 예전에는 DB 컬럼만 있고 앱 모델에 올라오지 않아 경과일을 알 수 없었다.
+  createdAt: string;
+  // 보류·종료 사유. 접수자 화면에도 그대로 노출된다.
+  statusReason?: string;
 };
 
 export type Agenda = {
