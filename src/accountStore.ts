@@ -106,18 +106,13 @@ export function makeAccountId() {
 }
 
 function ensureAdminAccount(accounts: ManagedAccount[]) {
+  // 레거시 관리자 이메일(sunmin@sk.com) 정리.
   const withoutLegacyAdmin = accounts.filter((account) => account.email.toLowerCase() !== 'sunmin@sk.com');
-  const existingAdmin = withoutLegacyAdmin.find((account) => account.email.toLowerCase() === adminAccount.email);
-
-  if (!existingAdmin) {
-    return [adminAccount, ...withoutLegacyAdmin];
-  }
-
-  return withoutLegacyAdmin.map((account) =>
-    account.email.toLowerCase() === adminAccount.email
-      ? { ...account, ...adminAccount, id: account.id || adminAccount.id }
-      : account,
-  );
+  const hasAdmin = withoutLegacyAdmin.some((account) => account.email.toLowerCase() === adminAccount.email);
+  // 관리자 계정이 아예 없을 때만 시드로 보장(최초 실행). 이미 있으면 DB 값을 그대로 존중한다.
+  // (예전엔 매번 role/part를 팀리더/전체로 덮어써서 계정 관리에서 역할을 바꿔도 원복됐다.
+  //  전권은 커넥셔너 플래그로 별도 보장되므로 역할을 강제할 필요가 없다.)
+  return hasAdmin ? withoutLegacyAdmin : [adminAccount, ...withoutLegacyAdmin];
 }
 
 function accountFromRow(row: AccountRow): ManagedAccount {
