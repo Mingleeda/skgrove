@@ -66,7 +66,14 @@ export async function loadAccounts() {
 
     if (!error && data) {
       const accounts = ensureAdminAccount(data.map(accountFromRow));
-      await saveAccounts(accounts);
+      // 읽기는 DB를 다시 쓰지 않는다. 예전엔 saveAccounts로 전체 재저장했는데,
+      // 옛 번들이 뜬 클라이언트가 photo_url 등을 못 읽은 채 저장하면 공유 데이터가 손상됐다.
+      // (계정 사진이 통째로 NULL로 덮어써지던 원인) 로컬 캐시만 갱신한다.
+      try {
+        window.localStorage.setItem(ACCOUNT_STORAGE_KEY, JSON.stringify(accounts));
+      } catch {
+        // localStorage 접근 불가 시 무시
+      }
       return accounts;
     }
   }
