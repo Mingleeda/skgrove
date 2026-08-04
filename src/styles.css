@@ -1691,8 +1691,28 @@ textarea {
 
 .priority.낮음,
 .status-pill {
+  align-items: center;
   background: var(--tint-moss);
   color: var(--tint-moss-ink);
+  display: inline-flex;
+  gap: var(--space-1);
+}
+
+/* 배지 짝 글자색을 쓰던 자리에 역할색을 쓰면 대비가 떨어진다.
+   틴트 위에서는 --tint-*-ink 를 쓴다(AAA 7:1 이상, 가드 테스트가 강제). */
+.status-pill.action-진행중 {
+  background: var(--tint-info);
+  color: var(--tint-info-ink);
+}
+
+.status-pill.action-완료 {
+  background: var(--tint-moss);
+  color: var(--tint-moss-ink);
+}
+
+.status-pill.action-재검토 {
+  background: var(--tint-clay);
+  color: var(--tint-clay-ink);
 }
 
 .issue-flags {
@@ -2179,21 +2199,6 @@ textarea {
 .action-card-meta {
   color: var(--color-ink);
   font-size: 13px;
-}
-
-.status-pill.action-진행중 {
-  background: var(--tint-info);
-  color: var(--color-info);
-}
-
-.status-pill.action-완료 {
-  background: var(--tint-moss);
-  color: var(--color-moss);
-}
-
-.status-pill.action-재검토 {
-  background: var(--tint-clay);
-  color: var(--color-clay);
 }
 
 .action-note {

@@ -1,7 +1,20 @@
 import { useState } from 'react';
-import { AlertTriangle, CircleDot, FileCheck2, RotateCcw, Search } from 'lucide-react';
+import type { ElementType } from 'react';
+import { AlertTriangle, CheckCircle2, Clock, FileCheck2, PlayCircle, RotateCcw, Search } from 'lucide-react';
 import { actionStatuses, daysUntilDue, isOverdue, nextStatuses, sortActionItems } from '../../actionRules';
 import type { ActionItem, ActionStatus, CurrentUser, ManagedAccount } from '../../types';
+
+/*
+  상태 전환 버튼 네 개가 전부 같은 CircleDot 을 달고 있었다. 같은 아이콘이
+  다른 동작에 붙으면 아이콘은 정보를 나르지 않고 자리만 차지한다.
+  상태 하나에 아이콘 하나를 고정해, 배지에서 보던 모양이 버튼에서도 같게 한다.
+*/
+const STATUS_ICON: Record<ActionStatus, ElementType> = {
+  대기: Clock,
+  진행중: PlayCircle,
+  완료: CheckCircle2,
+  재검토: RotateCcw,
+};
 
 type ActionBoardProps = {
   items: ActionItem[];
@@ -124,7 +137,13 @@ export function ActionBoard({ items, accounts, currentUser, today, onUpdate }: A
             return (
               <article className={overdue ? 'panel action-card overdue' : 'panel action-card'} key={item.id}>
                 <div className="action-card-head">
-                  <span className={`status-pill action-${item.status}`}>{item.status}</span>
+                  <span className={`status-pill action-${item.status}`}>
+                    {(() => {
+                      const StatusIcon = STATUS_ICON[item.status];
+                      return <StatusIcon size={13} aria-hidden />;
+                    })()}
+                    {item.status}
+                  </span>
                   <small>
                     {item.sourceKind}
                     {item.sourceLabel && ` · ${item.sourceLabel}`}
@@ -206,12 +225,15 @@ export function ActionBoard({ items, accounts, currentUser, today, onUpdate }: A
                   </div>
                 ) : (
                   <div className="action-transitions">
-                    {nextStatuses(item.status).map((to) => (
-                      <button key={to} className="secondary-button" onClick={() => startTransition(item, to)}>
-                        <CircleDot size={16} />
-                        {to}
-                      </button>
-                    ))}
+                    {nextStatuses(item.status).map((to) => {
+                      const StatusIcon = STATUS_ICON[to];
+                      return (
+                        <button key={to} className="secondary-button" onClick={() => startTransition(item, to)}>
+                          <StatusIcon size={16} aria-hidden />
+                          {to}
+                        </button>
+                      );
+                    })}
                   </div>
                 )}
               </article>
