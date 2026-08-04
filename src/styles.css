@@ -8539,3 +8539,15 @@ button.notif-row {
   word-break: keep-all;
 }
 }
+
+/* 접수 화면의 목적 전환 탭(말하기 / 내 접수). */
+.intake-view-tabs {
+  align-self: start;
+  margin-bottom: var(--space-4);
+}
+
+.intake-view-tabs button {
+  align-items: center;
+  display: inline-flex;
+  gap: var(--space-2);
+}

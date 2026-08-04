@@ -1,14 +1,20 @@
 import { useState, type ReactNode } from 'react';
-import { Bell, Camera, HeartHandshake, Lock, LogOut, MessageSquarePlus } from 'lucide-react';
+import { Bell, Camera, HeartHandshake, LogOut, MessageSquarePlus } from 'lucide-react';
 import { isLeader, isTeamLeader } from '../auth';
 import { navGroups, sections } from '../navigation';
 import type { CurrentUser, Section } from '../types';
 import { Avatar } from './Avatar';
 
-function lockReasonFor(id: Section, canUseLeaderMenu: boolean, canUseAccountsMenu: boolean) {
-  if (id === 'leader' && !canUseLeaderMenu) return '파트리더 이상만 사용할 수 있어요.';
-  if (id === 'accounts' && !canUseAccountsMenu) return '팀리더만 사용할 수 있어요.';
-  return null;
+/*
+  예전에는 못 쓰는 메뉴를 흐리게 보여주고 자물쇠를 달았다. "앱에 뭐가 있는지
+  알려준다"는 근거였는데, 이 앱에서는 홈 히어로의 '의견이 지나는 길
+  (접수 → 리더 검토 → 익명 투표 → 액션)'이 이미 흐름을 보여준다.
+  팀원에게 13개 중 2개가 매일 못 누르는 상태로 남는 건 순손실이라 감춘다.
+*/
+function canSee(id: Section, canUseLeaderMenu: boolean, canUseAccountsMenu: boolean) {
+  if (id === 'leader') return canUseLeaderMenu;
+  if (id === 'accounts') return canUseAccountsMenu;
+  return true;
 }
 
 type AppShellProps = {
@@ -63,30 +69,32 @@ export function AppShell({
         </div>
 
         <nav className="nav">
-          {navGroups.map((group) => (
+          {navGroups.map((group) => {
+            const visible = group.items.filter((section) =>
+              canSee(section.id, userCanUseLeaderMenu, userCanUseAccountsMenu),
+            );
+            // 항목이 모두 걸러진 그룹은 제목만 남는다. 그룹째 렌더하지 않는다.
+            if (visible.length === 0) return null;
+            return (
             <div className="nav-group" key={group.title}>
               <p className="nav-group-title">{group.title}</p>
-              {group.items.map((section) => {
-                const Icon = section.icon;
-                const lockReason = lockReasonFor(section.id, userCanUseLeaderMenu, userCanUseAccountsMenu);
+              {visible.map((section) => {
+                  const Icon = section.icon;
                 return (
                   <button
                     className={active === section.id ? 'nav-item active' : 'nav-item'}
-                    disabled={Boolean(lockReason)}
                     key={section.id}
                     onClick={() => onSectionChange(section.id)}
-                    // 잠긴 메뉴는 '왜 못 쓰는지'를 알려줘야 한다.
-                    // 흐리게만 처리하면 사용자는 고장으로 읽는다.
-                    title={lockReason ?? `${section.label} · ${section.owner}`}
+                    title={`${section.label} · ${section.owner}`}
                   >
                     <Icon size={18} />
                     <span>{section.label}</span>
-                    {lockReason && <Lock size={14} className="nav-lock" />}
                   </button>
                 );
               })}
             </div>
-          ))}
+            );
+          })}
         </nav>
       </aside>
 

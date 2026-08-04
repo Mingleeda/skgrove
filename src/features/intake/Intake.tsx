@@ -169,6 +169,14 @@ export function Intake({ identity, currentUser, issues, onIdentityChange, onIssu
     setAnonymousLookupError('');
   };
 
+  /*
+    이 화면은 목적이 둘이다 — '말하기'(4단계 위저드)와 '내가 낸 것 확인하기'.
+    예전에는 세로로 쌓여 있어, 말하러 온 사람이 자기 이력을 지나쳐야 했고
+    확인하러 온 사람은 위저드를 지나쳐야 했다. 마이페이지를 새로 만들면
+    메뉴가 14개가 되므로, 화면 안에서 탭으로 가른다.
+  */
+  const [view, setView] = useState<'write' | 'mine'>('write');
+
   const anonymousIssue = issues.find((issue) => issue.id === anonymousIssueId);
 
   return (
@@ -188,6 +196,31 @@ export function Intake({ identity, currentUser, issues, onIdentityChange, onIssu
           </div>
         )}
 
+        <div className="segmented intake-view-tabs" role="tablist" aria-label="접수 화면 전환">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={view === 'write'}
+            className={view === 'write' ? 'selected' : ''}
+            onClick={() => setView('write')}
+          >
+            <MessageSquarePlus size={16} />
+            말하기
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={view === 'mine'}
+            className={view === 'mine' ? 'selected' : ''}
+            onClick={() => setView('mine')}
+          >
+            <Megaphone size={16} />
+            내 접수 {myIssues.length > 0 ? `(${myIssues.length})` : ''}
+          </button>
+        </div>
+
+        {view === 'write' && (
+        <>
         <div className="intake-stepper">
           {steps.map((item, index) => (
             <button
@@ -440,7 +473,11 @@ export function Intake({ identity, currentUser, issues, onIdentityChange, onIssu
             </button>
           </section>
         )}
+        </>
+        )}
 
+        {view === 'mine' && (
+        <>
         <section className="panel intake-panel my-issues-panel">
           <div className="my-issues-header">
             <PanelHeader icon={Megaphone} title="내 접수 현황" />
@@ -543,7 +580,6 @@ export function Intake({ identity, currentUser, issues, onIdentityChange, onIssu
             )}
           </div>
         </section>
-      </div>
 
         <section className="panel">
           <button className="btn-ghost lookup-toggle" onClick={() => setLookupOpen((prev) => !prev)} type="button">
@@ -614,6 +650,9 @@ export function Intake({ identity, currentUser, issues, onIdentityChange, onIssu
           </div>
           )}
         </section>
+        </>
+        )}
+      </div>
     </section>
   );
 }
