@@ -2319,8 +2319,10 @@ textarea {
 }
 
 .profiles-screen {
+  /* 우측 380px 는 편집 미리보기(.profile-side) 자리였다. 미리보기를 카드 자체에
+     합치면서 컴포넌트는 지웠는데 열은 남아, 본문이 546px 로 눌려 있었다. */
   align-items: start;
-  grid-template-columns: minmax(0, 1fr) 380px;
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .my-profile-card {
