@@ -19,6 +19,13 @@ export function isTeamLeader(user: CurrentUser) {
   return isConnectioner(user) || user.role === '팀리더';
 }
 
+// 커넥셔너 전권을 적용하지 않는 '순수 팀리더 역할' 체크.
+// 캔미팅처럼 커넥셔너도 참여자로 의견을 내야 하는 화면에서 쓴다
+// (전권으로 진행자 화면이 열리면 정작 본인 의견을 낼 수가 없다).
+export function hasTeamLeaderRole(user: CurrentUser) {
+  return user.role === '팀리더';
+}
+
 export function isCompanyEmail(email: string) {
   return /^[^\s@]+@sk\.com$/i.test(email.trim());
 }

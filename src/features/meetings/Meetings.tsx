@@ -14,7 +14,7 @@ import {
   Sparkles,
   UsersRound,
 } from 'lucide-react';
-import { isLeader, teamParts } from '../../auth';
+import { hasTeamLeaderRole, isLeader, teamParts } from '../../auth';
 import type { CanStepConfig } from '../../canConfig';
 import { makeStepId } from '../../canStepsStore';
 import { PanelHeader } from '../../components/PanelHeader';
@@ -142,6 +142,7 @@ export function Meetings({
   const [aiLoading, setAiLoading] = useState(false);
   const [aiNote, setAiNote] = useState(''); // 결과 출처 표기(AI/로컬)
   const [resultMode, setResultMode] = useState<'original' | 'ai'>('original'); // 확정할 결과물 선택
+  const [pptxLoading, setPptxLoading] = useState(false); // PPT 생성 중(버튼 로딩 표시 + 중복 클릭 방지)
 
   // PPT 내보내기 버튼 클릭 시점에 동적 import가 처음 걸리면(네트워크 지연) 브라우저가 사용자
   // 제스처와의 연결을 끊어 다운로드를 조용히 막는 경우가 있다. 캔미팅 화면 진입 시 미리 받아둬
@@ -178,7 +179,12 @@ export function Meetings({
     setFollowDrafts({});
   }, [selectedId]);
 
+  // 티미팅 운영(세션 유형 관리·상태 변경)은 리더 + 커넥셔너.
+  // 세션 제안 알림이 '커넥셔너 대행 리더'에게 가는 구조라 커넥셔너가 처리 주체다.
   const isHost = isLeader(currentUser);
+  // 캔미팅 진행자는 팀리더 역할만. 커넥셔너는 전권이라도 여기선 참여자로 의견을 낸다
+  // (진행자 화면이 열려버리면 정작 본인 의견을 제출할 수가 없다).
+  const isCanHost = hasTeamLeaderRole(currentUser);
   const session = sessions.find((item) => item.id === selectedId) ?? null;
 
   const stepLabelOf = (id: string) => canSteps.find((step) => step.id === id)?.label ?? id;
@@ -259,7 +265,7 @@ export function Meetings({
                   <h2>캔미팅 세션</h2>
                   <p className="can-hint">분기마다 진행되는 캔미팅을 모아봅니다.</p>
                 </div>
-                {isHost && (
+                {isCanHost && (
                   <button className="primary-button" onClick={onStartSession}>
                     <Plus size={18} />
                     신규 캔미팅 시작
@@ -529,11 +535,15 @@ export function Meetings({
               );
 
               const exportPptx = async () => {
+                if (pptxLoading) return;
+                setPptxLoading(true);
                 try {
                   await runExportPptx();
                 } catch (error) {
                   console.error('PPT export failed', error);
                   onNotifyStatus('PPT 생성에 실패했어요. 잠시 후 다시 시도해주세요.', 'error');
+                } finally {
+                  setPptxLoading(false);
                 }
               };
 
@@ -669,7 +679,7 @@ export function Meetings({
                   )}
 
                   {/* 진행자 뷰 */}
-                  {isHost && stage === 'setup' && (
+                  {isCanHost && stage === 'setup' && (
                     <div className="panel form-panel">
                       <PanelHeader icon={FileText} title="① 세션 준비 (진행자)" />
                       <p className="can-hint">
@@ -803,7 +813,7 @@ export function Meetings({
                     </div>
                   )}
 
-                  {isHost && stage === 'collect' && (
+                  {isCanHost && stage === 'collect' && (
                     <div className="panel">
                       <PanelHeader icon={UsersRound} title={`② 수집 현황 (진행자) · 총 ${sessionOpinions.length}건`} />
                       <div className="can-count-row can-count-inline">
@@ -824,7 +834,7 @@ export function Meetings({
                     </div>
                   )}
 
-                  {isHost && stage === 'share' && (
+                  {isCanHost && stage === 'share' && (
                     <div className="panel">
                       <PanelHeader icon={Share2} title="③ 파트별 의견 공유 (진행자)" />
                       {partColumns()}
@@ -837,7 +847,7 @@ export function Meetings({
                     </div>
                   )}
 
-                  {isHost && stage === 'select' && (
+                  {isCanHost && stage === 'select' && (
                     <div className="panel">
                       <PanelHeader icon={ListChecks} title={`④ 진행자 선정 · ${selectedOpinions.length}건 선택됨`} />
                       <p className="can-hint">
@@ -878,7 +888,7 @@ export function Meetings({
                     </div>
                   )}
 
-                  {isHost && stage === 'summary' && (
+                  {isCanHost && stage === 'summary' && (
                     <div className="panel">
                       <PanelHeader icon={Sparkles} title="⑤ 캔미팅 결과 (진행자)" />
                       <div className="can-summary-head">
@@ -930,9 +940,9 @@ export function Meetings({
                           {resultTemplate()}
                           <div className="can-result-actions">
                             {confirmed && (
-                              <button className="secondary-button" onClick={exportPptx}>
+                              <button className="secondary-button" onClick={exportPptx} disabled={pptxLoading}>
                                 <Download size={16} />
-                                PPT로 내보내기
+                                {pptxLoading ? 'PPT 만드는 중…' : 'PPT로 내보내기'}
                               </button>
                             )}
                             {!confirmed && isLive && (
@@ -1054,10 +1064,10 @@ export function Meetings({
                   )}
 
                   {/* 참여자 뷰 */}
-                  {!isHost && stage === 'setup' &&
+                  {!isCanHost && stage === 'setup' &&
                     waitingCard('진행자가 세션을 준비하고 있어요', '곧 의견 수집이 시작됩니다.')}
 
-                  {!isHost && stage === 'collect' && (
+                  {!isCanHost && stage === 'collect' && (
                     <>
                     <div className="can-two">
                       <div className="panel form-panel">
@@ -1131,7 +1141,7 @@ export function Meetings({
                     </>
                   )}
 
-                  {!isHost && stage === 'share' && (
+                  {!isCanHost && stage === 'share' && (
                     <div className="panel">
                       <PanelHeader icon={Share2} title="③ 파트별 의견 공유" />
                       {partColumns()}
@@ -1139,10 +1149,10 @@ export function Meetings({
                     </div>
                   )}
 
-                  {!isHost && stage === 'select' &&
+                  {!isCanHost && stage === 'select' &&
                     waitingCard('진행자가 핵심 의견을 선정하고 있어요', '잠시 후 종합 결과가 공유됩니다.')}
 
-                  {!isHost && stage === 'summary' && (
+                  {!isCanHost && stage === 'summary' && (
                     <div className="panel">
                       <PanelHeader icon={Sparkles} title="⑤ 캔미팅 결과" />
                       {confirmed ? (
@@ -1157,9 +1167,9 @@ export function Meetings({
                           </div>
                           {resultTemplate()}
                           <div className="can-result-actions">
-                            <button className="secondary-button" onClick={exportPptx}>
+                            <button className="secondary-button" onClick={exportPptx} disabled={pptxLoading}>
                               <Download size={16} />
-                              PPT로 내보내기
+                              {pptxLoading ? 'PPT 만드는 중…' : 'PPT로 내보내기'}
                             </button>
                           </div>
                           {followUp && (
