@@ -34,7 +34,21 @@ type LeaderInboxProps = {
 type AgendaDraft = Pick<Agenda, 'title' | 'description' | 'category' | 'part' | 'author' | 'deadline'>;
 type LeaderAction = 'reply' | 'oneOnOne' | 'actionItem' | 'agenda' | 'memo';
 
-const filters: Array<'전체' | IssueStatus> = ['전체', '접수', '검토중', '답변완료', '1on1 제안', '액션아이템', '안건화', '보류', '회수', '종료'];
+/*
+  상태 10개를 전부 칩으로 늘어놓으면 두 줄(94px)을 먹는다. 목록에 걸린 건이
+  세 건일 때도 필터가 목록보다 자리를 더 차지했다. 리더가 매일 오가는 네 개만
+  칩으로 두고, 결과 상태와 보관 상태는 드롭다운으로 내린다.
+  ('전체'는 회수·종료를 제외한다 — 그 둘은 이미 보관 성격이다.)
+*/
+const primaryFilters: Array<'전체' | IssueStatus> = ['전체', '접수', '검토중', '답변완료'];
+const secondaryFilters: IssueStatus[] = ['1on1 제안', '액션아이템', '안건화', '보류', '회수', '종료'];
+// 건별 상태 변경 select 는 거르기와 달리 모든 상태를 다 보여줘야 한다.
+const issueStatuses: IssueStatus[] = [
+  '접수',
+  '검토중',
+  '답변완료',
+  ...secondaryFilters,
+];
 const agendaParts: TeamPart[] = ['전체', ...teamParts];
 const DEFAULT_VOTING_DAYS = 7;
 const addDays = (days: number) => new Date(Date.now() + days * 86400000).toISOString().slice(0, 10);
@@ -183,11 +197,23 @@ export function LeaderInbox({ issues, today, onIssueUpdate, onPromoteToAgenda }:
       <div className="leader-layout">
         <section className="leader-inbox-list">
           <div className="toolbar leader-toolbar">
-            {filters.map((item) => (
+            {primaryFilters.map((item) => (
               <button className={filter === item ? 'filter active' : 'filter'} key={item} onClick={() => setFilter(item)}>
                 {item}
               </button>
             ))}
+            <select
+              aria-label="그 밖의 상태로 거르기"
+              value={secondaryFilters.includes(filter as IssueStatus) ? filter : ''}
+              onChange={(event) => {
+                if (event.target.value) setFilter(event.target.value as IssueStatus);
+              }}
+            >
+              <option value="">그 밖의 상태</option>
+              {secondaryFilters.map((item) => (
+                <option key={item}>{item}</option>
+              ))}
+            </select>
           </div>
 
           <div className="issue-list">
@@ -232,11 +258,9 @@ export function LeaderInbox({ issues, today, onIssueUpdate, onPromoteToAgenda }:
                     value={issue.status}
                     onChange={(event) => changeStatus(issue, event.target.value as IssueStatus)}
                   >
-                    {filters
-                      .filter((item): item is IssueStatus => item !== '전체')
-                      .map((status) => (
-                        <option key={status}>{status}</option>
-                      ))}
+                    {issueStatuses.map((status) => (
+                      <option key={status}>{status}</option>
+                    ))}
                   </select>
                   <button
                     className="secondary-button"
