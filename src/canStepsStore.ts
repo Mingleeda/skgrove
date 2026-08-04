@@ -1,24 +1,15 @@
+// 캔미팅 단계 설정 — 모든 캔미팅에 공통 적용되는 팀 약속이라 공용 설정(app_config)에 둔다.
+// 기기별 localStorage에만 있으면 진행자가 바꾼 단계가 참여자 화면엔 반영되지 않는다.
 import { CAN_STEPS, type CanStepConfig } from './canConfig';
+import { CAN_STEPS_KEY, loadConfig, saveConfig } from './configStore';
 
-const STEPS_KEY = 'skgrove:cansteps';
-
-export function loadCanSteps(): CanStepConfig[] {
-  try {
-    const saved = window.localStorage.getItem(STEPS_KEY);
-    if (!saved) return CAN_STEPS;
-    const parsed = JSON.parse(saved) as CanStepConfig[];
-    return Array.isArray(parsed) && parsed.length > 0 ? parsed : CAN_STEPS;
-  } catch {
-    return CAN_STEPS;
-  }
+export async function loadCanSteps(): Promise<CanStepConfig[]> {
+  const steps = await loadConfig<CanStepConfig[]>(CAN_STEPS_KEY, CAN_STEPS);
+  return Array.isArray(steps) && steps.length > 0 ? steps : CAN_STEPS;
 }
 
-export function saveCanSteps(steps: CanStepConfig[]) {
-  try {
-    window.localStorage.setItem(STEPS_KEY, JSON.stringify(steps));
-  } catch {
-    // 저장 실패는 무시 (메모리 상태는 유지)
-  }
+export async function saveCanSteps(steps: CanStepConfig[]) {
+  await saveConfig(CAN_STEPS_KEY, steps);
 }
 
 export function makeStepId() {

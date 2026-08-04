@@ -1,11 +1,12 @@
-// 티미팅 세션 영속화 — Supabase(tea_sessions) 있으면 DB, 없으면 localStorage.
-// 세션 유형(config)은 자주 안 바뀌는 관리 설정이라 로컬 유지.
+// 티미팅 영속화 — Supabase 있으면 DB, 없으면 localStorage.
+// 세션은 tea_sessions 테이블, 세션 유형(공용 설정)은 app_config(configStore)에 둔다.
+import { TEA_SESSION_TYPES_KEY, loadConfig, saveConfig } from './configStore';
 import { initialTeaSessions } from './data/mockData';
 import { supabase } from './supabaseClient';
 import type { TeaSession, TeaSessionStatus, TeamPart } from './types';
 
 const SESSIONS_KEY = 'skgrove:teasessions';
-const SESSION_TYPES_KEY = 'skgrove:teasessiontypes';
+const SESSION_TYPES_KEY = TEA_SESSION_TYPES_KEY;
 const SESSIONS_TABLE = 'tea_sessions';
 
 type TeaSessionRow = {
@@ -53,23 +54,14 @@ export async function saveTeaSessions(sessions: TeaSession[]) {
 
 export const DEFAULT_TEA_SESSION_TYPES = ['기술세미나', '여행기', '팀워크샵', '팀내공유사항'];
 
-export function loadTeaSessionTypes(): string[] {
-  try {
-    const saved = window.localStorage.getItem(SESSION_TYPES_KEY);
-    if (!saved) return DEFAULT_TEA_SESSION_TYPES;
-    const parsed = JSON.parse(saved) as string[];
-    return Array.isArray(parsed) && parsed.length > 0 ? parsed : DEFAULT_TEA_SESSION_TYPES;
-  } catch {
-    return DEFAULT_TEA_SESSION_TYPES;
-  }
+// 세션 유형은 팀 전체가 같은 목록을 봐야 하는 공용 설정이라 app_config에 둔다.
+export async function loadTeaSessionTypes(): Promise<string[]> {
+  const types = await loadConfig<string[]>(SESSION_TYPES_KEY, DEFAULT_TEA_SESSION_TYPES);
+  return Array.isArray(types) && types.length > 0 ? types : DEFAULT_TEA_SESSION_TYPES;
 }
 
-export function saveTeaSessionTypes(types: string[]) {
-  try {
-    window.localStorage.setItem(SESSION_TYPES_KEY, JSON.stringify(types));
-  } catch {
-    // 저장 실패는 무시 (메모리 상태는 유지)
-  }
+export async function saveTeaSessionTypes(types: string[]) {
+  await saveConfig(SESSION_TYPES_KEY, types);
 }
 
 // 같은 밀리초에 세션이 여럿 만들어져도 id가 겹치지 않도록 세션 카운터를 덧붙인다.
