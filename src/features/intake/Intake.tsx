@@ -13,6 +13,7 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import { PanelHeader } from '../../components/PanelHeader';
+import { MIN_MEMBERS_TO_REVEAL } from '../../metricsPrivacy';
 import type { CurrentUser, Identity, Issue, IssueVisibility, Urgency } from '../../types';
 
 type IntakeProps = {
@@ -21,7 +22,7 @@ type IntakeProps = {
   issues: Issue[];
   onIdentityChange: (identity: Identity) => void;
   onIssueUpdate: (issue: Issue) => void;
-  onSubmitIssue: (issue: Omit<Issue, 'id' | 'status'>) => Issue;
+  onSubmitIssue: (issue: Omit<Issue, 'id' | 'status' | 'createdAt'>) => Issue;
 };
 
 type IntakeStep = 'scope' | 'content' | 'review' | 'complete';
@@ -42,10 +43,12 @@ export function Intake({ identity, currentUser, issues, onIdentityChange, onIssu
   const [visibility, setVisibility] = useState<IssueVisibility>('리더만 보기');
   const [category, setCategory] = useState(categories[0]);
   const [urgency, setUrgency] = useState<Urgency>('보통');
-  const [title, setTitle] = useState('팀 티미팅 시간을 줄이고 싶어요');
-  const [body, setBody] = useState('논의할 주제가 명확하지 않은 회의는 시간을 줄이고, 필요한 경우 안건함에서 먼저 투표하면 좋겠습니다.');
-  const [expectedChange, setExpectedChange] = useState('회의 전 안건을 먼저 모으고, 꼭 필요한 주제만 짧게 논의하면 좋겠습니다.');
-  const [receiptId, setReceiptId] = useState('SOOP-148');
+  // 예시 문장을 기본값으로 넣으면 그대로 제출되어 남의 문장이 내 의견으로 접수된다.
+  // 예시는 placeholder로만 보여준다.
+  const [title, setTitle] = useState('');
+  const [body, setBody] = useState('');
+  const [expectedChange, setExpectedChange] = useState('');
+  const [receiptId, setReceiptId] = useState('');
   const [receiptAccessCode, setReceiptAccessCode] = useState('');
   const [responseDrafts, setResponseDrafts] = useState<Record<string, string>>({});
   const [myIssueFilter, setMyIssueFilter] = useState<MyIssueFilter>('전체');
@@ -69,9 +72,10 @@ export function Intake({ identity, currentUser, issues, onIdentityChange, onIssu
   });
 
   const submit = () => {
+    if (!title.trim() || !body.trim()) return;
     const nextAnonymousCode = identity === '익명' ? makeAnonymousAccessCode() : undefined;
     const createdIssue = onSubmitIssue({
-      title,
+      title: title.trim(),
       category,
       author: identity,
       anonymousAccessCode: nextAnonymousCode,
@@ -80,8 +84,8 @@ export function Intake({ identity, currentUser, issues, onIdentityChange, onIssu
       submitterPart: identity === '실명' ? currentUser.part : undefined,
       target,
       urgency,
-      body,
-      expectedChange,
+      body: body.trim(),
+      expectedChange: expectedChange.trim(),
       visibility,
     });
     setReceiptId(createdIssue.id);
@@ -163,7 +167,14 @@ export function Intake({ identity, currentUser, issues, onIdentityChange, onIssu
       <div className="intake-main">
         <div className="intake-stepper">
           {steps.map((item, index) => (
-            <button className={index <= currentStepIndex ? 'active' : ''} key={item.id} onClick={() => setStep(item.id)}>
+            <button
+              className={index <= currentStepIndex ? 'active' : ''}
+              // 앞 단계로 되돌아가는 것은 늘 열어두고, 건너뛰기만 막는다.
+              // 내용이 비어 있는데 '제출 확인'으로 점프하면 빈 의견이 접수된다.
+              disabled={index > currentStepIndex || item.id === 'complete'}
+              key={item.id}
+              onClick={() => setStep(item.id)}
+            >
               <span>{index + 1}</span>
               {item.label}
             </button>
@@ -195,11 +206,19 @@ export function Intake({ identity, currentUser, issues, onIdentityChange, onIssu
               <label>
                 공개 범위
                 <select value={visibility} onChange={(event) => setVisibility(event.target.value as IssueVisibility)}>
-                  <option>리더만 보기</option>
-                  <option>안건 후보로 공개 가능</option>
+                  <option value="리더만 보기">리더만 보기 · 원문 비공개</option>
+                  <option value="안건 후보로 공개 가능">안건 후보로 공개 가능 · 원문 인용 가능</option>
                 </select>
               </label>
             </div>
+
+            {/* 라벨만으로는 '리더만 보기'가 절대 공개되지 않는다고 읽힌다.
+                실제로는 리더가 새로 쓴 익명 안건이 올라갈 수 있으므로 여기서 미리 밝힌다. */}
+            <p className="field-note">
+              {visibility === '리더만 보기'
+                ? '내가 쓴 원문과 작성자 정보는 팀원에게 공개되지 않습니다. 다만 리더가 이 주제를 다뤄야 한다고 판단하면, 원문 대신 리더가 새로 쓴 익명 안건이 안건함에 올라갈 수 있어요.'
+                : '리더가 원문을 인용하거나 다듬어 안건으로 올릴 수 있습니다. 익명으로 접수했다면 작성자 정보는 계속 공개되지 않습니다.'}
+            </p>
 
             <button className="primary-button wide" onClick={() => setStep('content')}>
               <FileText size={18} />
@@ -231,21 +250,33 @@ export function Intake({ identity, currentUser, issues, onIdentityChange, onIssu
             </div>
             <label>
               제목
-              <input value={title} onChange={(event) => setTitle(event.target.value)} />
+              <input
+                value={title}
+                onChange={(event) => setTitle(event.target.value)}
+                placeholder="예: 팀 티미팅 시간을 줄이고 싶어요"
+              />
             </label>
             <label>
               내용
-              <textarea value={body} onChange={(event) => setBody(event.target.value)} />
+              <textarea
+                value={body}
+                onChange={(event) => setBody(event.target.value)}
+                placeholder="예: 논의할 주제가 명확하지 않은 회의는 시간을 줄이고, 필요한 경우 안건함에서 먼저 투표하면 좋겠습니다."
+              />
             </label>
             <label>
               기대 변화
-              <textarea value={expectedChange} onChange={(event) => setExpectedChange(event.target.value)} />
+              <textarea
+                value={expectedChange}
+                onChange={(event) => setExpectedChange(event.target.value)}
+                placeholder="예: 회의 전 안건을 먼저 모으고, 꼭 필요한 주제만 짧게 논의하면 좋겠습니다."
+              />
             </label>
             <div className="form-actions">
               <button className="secondary-button" onClick={() => setStep('scope')}>
                 이전
               </button>
-              <button className="primary-button" onClick={() => setStep('review')}>
+              <button className="primary-button" disabled={!title.trim() || !body.trim()} onClick={() => setStep('review')}>
                 제출 전 확인
               </button>
             </div>
@@ -303,7 +334,16 @@ export function Intake({ identity, currentUser, issues, onIdentityChange, onIssu
                 ? '의견이 리더 관리함으로 전달되었습니다. 접수번호와 확인 코드로 익명 접수 조회에서 후속 조치를 확인할 수 있어요.'
                 : '의견이 리더 관리함으로 전달되었습니다. 접수 상태는 아래 목록에서 계속 확인할 수 있어요.'}
             </p>
-            <button className="primary-button" onClick={() => setStep('scope')}>
+            <button
+              className="primary-button"
+              onClick={() => {
+                // 직전 접수 내용이 남아 있으면 다음 의견에 그대로 딸려 들어간다.
+                setTitle('');
+                setBody('');
+                setExpectedChange('');
+                setStep('scope');
+              }}
+            >
               새 의견 접수
             </button>
           </section>
@@ -342,6 +382,12 @@ export function Intake({ identity, currentUser, issues, onIdentityChange, onIssu
 
                     {isExpanded && (
                       <div className="submission-detail">
+                        {/* 보류·종료는 결과만 통보하면 무시당한 것으로 읽힌다. 리더가 남긴 사유를 함께 보여준다. */}
+                        {issue.statusReason && (
+                          <p className="submission-reason">
+                            {issue.status} 사유: {issue.statusReason}
+                          </p>
+                        )}
                         {issue.leaderReply && <p>답변: {issue.leaderReply}</p>}
                         {issue.oneOnOneNote && <p>1on1: {issue.oneOnOneNote}</p>}
                         {issue.actionItem && <p>액션아이템: {issue.actionItem}</p>}
@@ -378,9 +424,11 @@ export function Intake({ identity, currentUser, issues, onIdentityChange, onIssu
                           </div>
                         )}
                         {issue.status === '회수' && <p>이 접수 의견은 작성자가 회수했습니다.</p>}
-                        {issue.status !== '회수' && !issue.leaderReply && !issue.oneOnOneNote && !issue.actionItem && (
-                          <p>아직 리더가 남긴 답변이나 후속 액션이 없습니다.</p>
-                        )}
+                        {issue.status !== '회수' &&
+                          !issue.statusReason &&
+                          !issue.leaderReply &&
+                          !issue.oneOnOneNote &&
+                          !issue.actionItem && <p>아직 리더가 남긴 답변이나 후속 액션이 없습니다.</p>}
                       </div>
                     )}
                   </article>
@@ -403,6 +451,14 @@ export function Intake({ identity, currentUser, issues, onIdentityChange, onIssu
             <div><strong>익명 선택</strong><span>리더 화면에는 작성자 이름과 메일이 보이지 않습니다.</span></div>
             <div><strong>실명 선택</strong><span>후속 대화가 필요한 개선 제안에 적합합니다.</span></div>
             <div><strong>안건 후보</strong><span>공개 가능으로 제출하면 투표 안건 전환 후보가 됩니다.</span></div>
+            {/* 임계값은 응답 전에 알려야 의미가 있다. 나중에 알면 이미 낸 뒤다. */}
+            <div>
+              <strong>파트 집계 기준</strong>
+              <span>
+                파트지수는 {MIN_MEMBERS_TO_REVEAL}명 이상인 파트만 공개됩니다. 인원이 적은 파트는 리더에게도 표시되지
+                않습니다.
+              </span>
+            </div>
           </div>
         </section>
 
@@ -448,6 +504,11 @@ export function Intake({ identity, currentUser, issues, onIdentityChange, onIssu
                   <span className="status-pill">{anonymousIssue.status}</span>
                 </div>
                 <div className="submission-detail">
+                  {anonymousIssue.statusReason && (
+                    <p className="submission-reason">
+                      {anonymousIssue.status} 사유: {anonymousIssue.statusReason}
+                    </p>
+                  )}
                   {anonymousIssue.leaderReply && <p>답변: {anonymousIssue.leaderReply}</p>}
                   {anonymousIssue.oneOnOneNote && <p>익명 추가 대화 제안: {anonymousIssue.oneOnOneNote}</p>}
                   {anonymousIssue.actionItem && <p>액션아이템: {anonymousIssue.actionItem}</p>}

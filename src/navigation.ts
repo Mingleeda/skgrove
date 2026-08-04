@@ -23,6 +23,11 @@ export type AppSection = {
   owner: string;
 };
 
+export type NavGroup = {
+  title: string;
+  items: AppSection[];
+};
+
 export const sections: AppSection[] = [
   { id: 'dashboard', label: '홈', icon: Home, owner: '공통' },
   { id: 'intake', label: '대나무숲 접수', icon: MessageSquarePlus, owner: '이선민' },
@@ -37,4 +42,23 @@ export const sections: AppSection[] = [
   { id: 'metrics', label: '파트지수 / 리포트', icon: BarChart3, owner: '김수정' },
   { id: 'notifications', label: '알림 / 메시지', icon: Bell, owner: '김승현' },
   { id: 'accounts', label: '계정 관리', icon: UsersRound, owner: '팀리더' },
+];
+
+const bySection = (id: Section) => sections.find((section) => section.id === id)!;
+
+// 13개를 평면으로 늘어놓으면 핵심 흐름(말하기 → 정하기)이
+// 유머게시판·커피뽑기와 같은 무게로 읽힌다. 목적 단위로 묶는다.
+export const navGroups: NavGroup[] = [
+  {
+    title: '말하고 정하기',
+    items: ['dashboard', 'intake', 'leader', 'agenda', 'actions'].map((id) => bySection(id as Section)),
+  },
+  {
+    title: '함께하기',
+    items: ['meetings', 'profiles', 'connect', 'memory', 'humor'].map((id) => bySection(id as Section)),
+  },
+  {
+    title: '살펴보기 · 관리',
+    items: ['metrics', 'notifications', 'accounts'].map((id) => bySection(id as Section)),
+  },
 ];

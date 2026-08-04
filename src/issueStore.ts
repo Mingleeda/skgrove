@@ -26,6 +26,7 @@ type IssueRow = {
   leader_memo?: string | null;
   submitter_response?: string | null;
   one_on_one_response?: Issue['oneOnOneResponse'] | null;
+  status_reason?: string | null;
   created_at?: string;
 };
 
@@ -50,16 +51,24 @@ export async function loadIssues() {
   }
 }
 
-export async function saveIssues(issues: Issue[]) {
+/**
+ * 서버 저장까지 성공했는지 돌려준다.
+ * 예전에는 실패를 console.warn으로만 남겨서, 접수자는 저장이 안 된 사실을 알 수 없었다.
+ * false는 "이 기기에만 남았다"는 뜻이고, 호출부가 그것을 사용자에게 알린다.
+ */
+export async function saveIssues(issues: Issue[]): Promise<boolean> {
   window.localStorage.setItem(ISSUE_STORAGE_KEY, JSON.stringify(issues));
 
-  if (!supabase) return;
+  if (!supabase) return true; // 서버 미연동은 실패가 아니다(로컬 전용 모드)
 
   const { error } = await supabase.from(ISSUE_TABLE).upsert(issues.map(issueToRow), { onConflict: 'id' });
 
   if (error) {
     console.warn('Supabase issue save failed. Local fallback is still updated.', error);
+    return false;
   }
+
+  return true;
 }
 
 export function makeIssueId() {
@@ -90,6 +99,9 @@ function issueFromRow(row: IssueRow): Issue {
     leaderMemo: row.leader_memo ?? undefined,
     submitterResponse: row.submitter_response ?? undefined,
     oneOnOneResponse: row.one_on_one_response ?? undefined,
+    statusReason: row.status_reason ?? undefined,
+    // 과거 데이터에는 값이 없을 수 있다. 없으면 경과일을 계산하지 않는다(빈 문자열).
+    createdAt: row.created_at ?? '',
   };
 }
 
@@ -115,5 +127,7 @@ function issueToRow(issue: Issue): IssueRow {
     leader_memo: issue.leaderMemo ?? null,
     submitter_response: issue.submitterResponse ?? null,
     one_on_one_response: issue.oneOnOneResponse ?? null,
+    status_reason: issue.statusReason ?? null,
+    created_at: issue.createdAt || undefined,
   };
 }

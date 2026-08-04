@@ -12,6 +12,7 @@ import {
   profiles,
 } from '../../data/mockData';
 import { loadIssues } from '../../issueStore';
+import { MIN_MEMBERS_TO_REVEAL, isRevealable } from '../../metricsPrivacy';
 import { loadTeaSessions } from '../../teaStore';
 import type { ActionItem, Agenda, AgendaBallot, CanOpinion, CanSession, CurrentUser, Issue, Profile, TeaSession } from '../../types';
 
@@ -53,6 +54,7 @@ const initialWeights: MetricWeights = {
 };
 
 const partNames = ['TEST혁신파트', 'ITS혁신파트', '혁신도구파트'];
+
 
 type MetricsActivity = {
   actionItems: ActionItem[];
@@ -588,12 +590,17 @@ export function Metrics({ currentUser }: MetricsProps) {
               >
                 <div>
                   <strong>{part.name}</strong>
-                  <span>{part.members}명 · 반영률 {part.reflectionRate}%</span>
+                  <span>
+                    {part.members}명{isRevealable(part) ? ` · 반영률 ${part.reflectionRate}%` : ''}
+                  </span>
                   <small className={canViewAllLeaderMetrics || (isPartLeader && currentUser.part === part.name) ? 'leader-visible' : 'public-visible'}>
                     {canViewAllLeaderMetrics || (isPartLeader && currentUser.part === part.name) ? '리더 상세 열림' : '공개 지표만'}
                   </small>
                 </div>
-                <em>{part.score}</em>
+                {/* 인원 미달 파트는 점수 자리에 숫자를 넣지 않는다. 흐린 값도 단서가 된다. */}
+                <em className={isRevealable(part) ? '' : 'score-hidden'}>
+                  {isRevealable(part) ? part.score : '비공개'}
+                </em>
               </button>
             ))}
           </div>
@@ -607,24 +614,40 @@ export function Metrics({ currentUser }: MetricsProps) {
             </div>
             <div className="metrics-detail-badges">
               <span className={canViewActiveLeaderMetrics ? 'leader-scope-badge' : 'public-scope-badge'}>{accessLabel}</span>
-              {activePart.score >= weights.rewardScore && <span className="reward-badge">보상 후보</span>}
+              {isRevealable(activePart) && activePart.score >= weights.rewardScore && (
+                <span className="reward-badge">보상 후보</span>
+              )}
             </div>
           </div>
 
-          <div className="metrics-score-grid">
-            <div>
-              파트지수
-              <strong>{activePart.score}</strong>
+          {isRevealable(activePart) ? (
+            <div className="metrics-score-grid">
+              <div>
+                파트지수
+                <strong>{activePart.score}</strong>
+              </div>
+              <div>
+                의견 반영도
+                <strong>{activePart.reflectionRate}%</strong>
+              </div>
+              <div>
+                {canViewActiveLeaderMetrics ? '긴 회의 비율' : '참여 균형'}
+                <strong>{canViewActiveLeaderMetrics ? `${activePart.longMeetingRate}%` : `${activePart.voteParticipation}%`}</strong>
+              </div>
             </div>
-            <div>
-              의견 반영도
-              <strong>{activePart.reflectionRate}%</strong>
+          ) : (
+            // 리더 권한이어도 열리지 않는다. 권한 문제가 아니라 익명성 문제다.
+            <div className="metrics-suppressed">
+              <LockKeyhole size={20} />
+              <div>
+                <strong>인원이 적어 지표를 표시하지 않습니다</strong>
+                <span>
+                  {activePart.name}은(는) {activePart.members}명으로, 공개 기준 {MIN_MEMBERS_TO_REVEAL}명에 미치지 못합니다.
+                  적은 인원에서는 집계 숫자만으로 누가 어떤 의견을 냈는지 좁혀질 수 있어 리더에게도 열지 않습니다.
+                </span>
+              </div>
             </div>
-            <div>
-              {canViewActiveLeaderMetrics ? '긴 회의 비율' : '참여 균형'}
-              <strong>{canViewActiveLeaderMetrics ? `${activePart.longMeetingRate}%` : `${activePart.voteParticipation}%`}</strong>
-            </div>
-          </div>
+          )}
 
           {canViewActiveLeaderMetrics ? (
             <div className="meeting-health-card leader-only-card">

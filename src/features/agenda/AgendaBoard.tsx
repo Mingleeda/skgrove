@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { CheckCircle2, FileCheck2, FilePlus2, Search, ThumbsDown, ThumbsUp, Timer } from 'lucide-react';
+import { CheckCircle2, FileCheck2, FilePlus2, Search, ThumbsUp, Timer } from 'lucide-react';
 import { daysLeft, isOpen, voteTotal } from '../../agendaRules';
 import { teamParts } from '../../auth';
 import type { Agenda, CurrentUser, TeamPart, VoteChoice } from '../../types';
@@ -176,14 +176,12 @@ export function AgendaBoard({
                     투표 완료
                   </div>
                 ) : (
+                  // 투표는 되돌릴 수 없다. 목록에서 바로 확정하면 스크롤 중 오클릭 한 번이
+                  // 영구 확정이 되므로, 카드에서는 상세로 보내기만 하고 확정은 상세에서 받는다.
                   <div className="vote-actions">
-                    <button onClick={() => onVote(agenda.id, 'approve')}>
+                    <button className="vote-open" onClick={() => openDetail(agenda.id)}>
                       <ThumbsUp size={17} />
-                      찬성
-                    </button>
-                    <button onClick={() => onVote(agenda.id, 'reject')}>
-                      <ThumbsDown size={17} />
-                      반대
+                      투표하기
                     </button>
                   </div>
                 )}

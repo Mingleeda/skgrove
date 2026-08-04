@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import {
+  AlertTriangle,
   ArrowLeft,
   CheckCircle2,
   EyeOff,
@@ -43,6 +45,9 @@ export function AgendaDetail({
   onCreateActions,
   onBack,
 }: AgendaDetailProps) {
+  // 확정 전 임시 선택. 확정 버튼을 눌러야만 onVote가 호출된다.
+  const [pendingChoice, setPendingChoice] = useState<VoteChoice | null>(null);
+  const [closeConfirmOpen, setCloseConfirmOpen] = useState(false);
   const total = voteTotal(agenda);
   const rate = approveRate(agenda);
   const remaining = daysLeft(agenda, today);
@@ -133,23 +138,79 @@ export function AgendaDetail({
           이 안건에 이미 투표했습니다. 어떤 쪽을 골랐는지는 기록되지 않아 다시 확인할 수 없어요.
         </div>
       ) : (
-        <div className="vote-actions">
-          <button onClick={() => onVote(agenda.id, 'approve')}>
-            <ThumbsUp size={17} />
-            찬성
-          </button>
-          <button onClick={() => onVote(agenda.id, 'reject')}>
-            <ThumbsDown size={17} />
-            반대
-          </button>
-        </div>
+        <>
+          <div className="vote-actions">
+            <button className={pendingChoice === 'approve' ? 'selected' : ''} onClick={() => setPendingChoice('approve')}>
+              <ThumbsUp size={17} />
+              찬성
+            </button>
+            <button className={pendingChoice === 'reject' ? 'selected' : ''} onClick={() => setPendingChoice('reject')}>
+              <ThumbsDown size={17} />
+              반대
+            </button>
+          </div>
+
+          {/* 확정 경고는 확정 '전에' 보여야 한다.
+              투표한 뒤에 "변경할 수 없다"고 알리는 건 안내가 아니라 통보다. */}
+          {pendingChoice && (
+            <div className="vote-confirm">
+              <AlertTriangle size={18} />
+              <p>
+                <strong>{pendingChoice === 'approve' ? '찬성' : '반대'}</strong>으로 투표합니다. 확정하면 변경하거나 취소할 수
+                없고, 어떤 쪽을 골랐는지는 기록되지 않아 나중에 다시 확인할 수도 없어요.
+              </p>
+              <div className="vote-confirm-actions">
+                <button className="secondary-button" onClick={() => setPendingChoice(null)}>
+                  다시 고르기
+                </button>
+                <button
+                  className="primary-button"
+                  onClick={() => {
+                    onVote(agenda.id, pendingChoice);
+                    setPendingChoice(null);
+                  }}
+                >
+                  <CheckCircle2 size={17} />
+                  투표 확정
+                </button>
+              </div>
+            </div>
+          )}
+        </>
       )}
 
       {open && canClose && (
-        <button className="secondary-button" onClick={() => onClose(agenda.id)}>
-          <Gavel size={17} />
-          지금 마감하기
-        </button>
+        <div className="agenda-close-box">
+          {closeConfirmOpen ? (
+            <>
+              <AlertTriangle size={18} />
+              <p>
+                지금 마감하면 남은 {notVotedYet}명은 투표할 수 없고, 현재 집계(찬성 {agenda.approve} · 반대 {agenda.reject})로
+                결과가 확정됩니다. 되돌릴 수 없습니다.
+              </p>
+              <div className="vote-confirm-actions">
+                <button className="secondary-button" onClick={() => setCloseConfirmOpen(false)}>
+                  취소
+                </button>
+                <button
+                  className="primary-button"
+                  onClick={() => {
+                    onClose(agenda.id);
+                    setCloseConfirmOpen(false);
+                  }}
+                >
+                  <Gavel size={17} />
+                  마감 확정
+                </button>
+              </div>
+            </>
+          ) : (
+            <button className="secondary-button" onClick={() => setCloseConfirmOpen(true)}>
+              <Gavel size={17} />
+              지금 마감하기
+            </button>
+          )}
+        </div>
       )}
     </section>
   );

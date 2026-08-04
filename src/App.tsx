@@ -15,6 +15,7 @@ import {
 } from './teaStore';
 import type { CanStepConfig } from './canConfig';
 import { AppShell } from './components/AppShell';
+import { ToastRegion, useToasts } from './components/Toast';
 import {
   initialActionItems,
   initialAgendas,
@@ -167,6 +168,18 @@ export function App() {
   const [votedAgendaIds, setVotedAgendaIds] = useState<string[]>([]);
   const [agendaForActions, setAgendaForActions] = useState<Agenda | null>(null);
 
+  const { toasts, notifyStatus, dismiss } = useToasts();
+
+  // 서버 저장이 실패하면 화면에는 반영됐지만 이 기기에만 남는다.
+  // 그 사실을 조용히 넘기면 사용자는 팀에 전달된 줄로 안다.
+  const reportSave = (saved: Promise<boolean>, okText: string) => {
+    void saved.then((ok) =>
+      ok
+        ? notifyStatus(okText)
+        : notifyStatus('서버 저장에 실패해 이 기기에만 저장되었습니다. 네트워크를 확인해주세요.', 'error'),
+    );
+  };
+
   const actionCountByAgenda = actionItems.reduce<Record<string, number>>((acc, item) => {
     if (item.sourceKind === '안건' && item.sourceId) {
       acc[item.sourceId] = (acc[item.sourceId] ?? 0) + 1;
@@ -240,15 +253,17 @@ export function App() {
     };
   }, [currentUser]);
 
-  const submitIssue = (issue: Omit<Issue, 'id' | 'status'>) => {
+  // createdAt은 App이 채운다(접수 시각). 호출부가 넘기지 않는다.
+  const submitIssue = (issue: Omit<Issue, 'id' | 'status' | 'createdAt'>) => {
     const next: Issue = {
       id: makeIssueId(),
       ...issue,
       status: '접수',
+      createdAt: today(),
     };
     const nextIssues = [next, ...issues];
     setIssues(nextIssues);
-    void saveIssues(nextIssues);
+    reportSave(saveIssues(nextIssues), `${next.id} 접수가 저장되었습니다.`);
     // 111: 의견 접수 → 대상 리더에게 알림
     notify(issueDrafts(next, leadersFor(accounts, next.target), today()));
     return next;
@@ -390,6 +405,7 @@ export function App() {
     setIssues(nextIssues);
     void saveIssues(nextIssues);
     setActive('agenda');
+    notifyStatus(`안건 후보로 등록했습니다 · ${promoted.title}`);
     // 112: 대나무숲 → 안건 승격도 팀원 알림
     notify(agendaDrafts(promoted, agendaAudience(accounts, promoted.part), today()));
   };
@@ -427,11 +443,12 @@ export function App() {
 
     const nextBallots = [...ballots, { agendaId: id, voterKey, createdAt: today() }];
     setBallots(nextBallots);
-    void saveBallots(nextBallots);
+    reportSave(saveBallots(nextBallots), '투표가 확정되었습니다.');
   };
 
   // 마감: 참여 수와 무관하게 과반 여부로 최종 상태를 확정한다.
   const closeAgenda = (id: string) => {
+    const target = agendas.find((agenda) => agenda.id === id);
     persistAgendas(
       agendas.map((agenda) =>
         agenda.id === id && isOpen(agenda)
@@ -439,6 +456,7 @@ export function App() {
           : agenda,
       ),
     );
+    if (target && isOpen(target)) notifyStatus(`안건을 마감했습니다 · ${finalStatus(target)}`);
   };
 
   const startCanSession = () => {
@@ -568,6 +586,7 @@ export function App() {
 
     persistActionItems([...created, ...actionItems]);
     setActive('actions');
+    notifyStatus(`액션아이템 ${created.length}건을 만들었습니다.`);
     // 114: 담당자 지정된 액션은 그 담당자에게 알림
     const ownerNotifs = created
       .map((item) => {
@@ -585,6 +604,10 @@ export function App() {
     if (previous && previous.owner !== updated.owner) {
       const owner = ownerAccount(accounts, updated.owner);
       if (owner) notify([actionDraft(updated, owner, today())]);
+      // 담당자 변경은 상대에게 알림이 나가는 조작이다. 바꾼 사람도 무엇이 일어났는지 알아야 한다.
+      notifyStatus(`담당자를 ${updated.owner}(으)로 바꿨습니다. 알림이 전달됩니다.`);
+    } else if (previous && previous.status !== updated.status) {
+      notifyStatus(`'${updated.title}' 상태를 ${updated.status}(으)로 바꿨습니다.`);
     }
   };
 
@@ -698,6 +721,7 @@ export function App() {
     if (!currentUser || !recipientName || !body.trim()) return;
     const messageId = makeNotificationId();
     notify([messageDraft(currentUser.name, recipientName, body.trim(), today(), messageId)]);
+    notifyStatus(`${recipientName}님에게 메시지를 보냈습니다.`);
   };
 
   const markNotificationRead = (id: string) => {
@@ -811,7 +835,7 @@ export function App() {
         />
       )}
       {active === 'leader' && isLeader(currentUser) && (
-        <LeaderInbox issues={issues} onIssueUpdate={updateIssue} onPromoteToAgenda={promoteToAgenda} />
+        <LeaderInbox issues={issues} today={today()} onIssueUpdate={updateIssue} onPromoteToAgenda={promoteToAgenda} />
       )}
       {active === 'agenda' && !agendaForActions && (
         <AgendaBoard
@@ -904,6 +928,7 @@ export function App() {
       {active === 'memory' && <Memory currentUser={currentUser} />}
       {active === 'metrics' && <Metrics currentUser={currentUser} />}
       {active === 'accounts' && isTeamLeader(currentUser) && <AccountManagement accounts={accounts} onAccountsChange={persistAccounts} />}
+      <ToastRegion toasts={toasts} onDismiss={dismiss} />
     </AppShell>
     </ProfilesContext.Provider>
   );

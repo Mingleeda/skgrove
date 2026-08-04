@@ -47,10 +47,11 @@ export async function loadBallots() {
   }
 }
 
-export async function saveBallots(ballots: AgendaBallot[]) {
+/** 서버 저장 성공 여부. false는 "이 기기에만 남았다"는 뜻이다(issueStore와 같은 규약). */
+export async function saveBallots(ballots: AgendaBallot[]): Promise<boolean> {
   window.localStorage.setItem(BALLOT_STORAGE_KEY, JSON.stringify(ballots));
 
-  if (!supabase) return;
+  if (!supabase) return true;
 
   const { error } = await supabase
     .from(BALLOT_TABLE)
@@ -58,7 +59,10 @@ export async function saveBallots(ballots: AgendaBallot[]) {
 
   if (error) {
     console.warn('Supabase ballot save failed. Local fallback is still updated.', error);
+    return false;
   }
+
+  return true;
 }
 
 export function hasVoted(ballots: AgendaBallot[], agendaId: string, voterKey: string) {

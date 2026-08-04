@@ -31,7 +31,8 @@ const agenda = (patch: Partial<Agenda> = {}): Agenda => ({
 
 const issue = (patch: Partial<Issue> = {}): Issue => ({
   id: 'SOOP-T', title: '테스트 의견', category: '회의문화', author: '익명', target: '리더 전체',
-  status: '접수', urgency: '보통', body: '본문', expectedChange: '', visibility: '리더만 보기', ...patch,
+  status: '접수', urgency: '보통', body: '본문', expectedChange: '', visibility: '리더만 보기',
+  createdAt: '2026-07-20', ...patch,
 });
 
 const action = (patch: Partial<ActionItem> = {}): ActionItem => ({
