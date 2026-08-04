@@ -272,16 +272,26 @@ export function Intake({ identity, currentUser, issues, onIdentityChange, onIssu
               </label>
             </div>
             <label>
-              제목
+              <span className="field-label">
+                제목
+                <span className="field-required">필수</span>
+              </span>
               <input
+                required
+                aria-required="true"
                 value={title}
                 onChange={(event) => setTitle(event.target.value)}
                 placeholder="예: 팀 티미팅 시간을 줄이고 싶어요"
               />
             </label>
             <label>
-              내용
+              <span className="field-label">
+                내용
+                <span className="field-required">필수</span>
+              </span>
               <textarea
+                required
+                aria-required="true"
                 value={body}
                 onChange={(event) => setBody(event.target.value)}
                 placeholder="예: 논의할 주제가 명확하지 않은 회의는 시간을 줄이고, 필요한 경우 안건함에서 먼저 투표하면 좋겠습니다."
@@ -295,6 +305,19 @@ export function Intake({ identity, currentUser, issues, onIdentityChange, onIssu
                 placeholder="예: 회의 전 안건을 먼저 모으고, 꼭 필요한 주제만 짧게 논의하면 좋겠습니다."
               />
             </label>
+            {/*
+              버튼을 흐리게만 두면 사용자는 고장으로 읽는다. 사이드바 잠금에서
+              이미 세운 원칙인데 폼에는 빠져 있었다. 무엇이 모자란지 적는다.
+            */}
+            {(!title.trim() || !body.trim()) && (
+              <p className="field-note gate-note">
+                {!title.trim() && !body.trim()
+                  ? '제목과 내용을 채우면 다음으로 넘어갈 수 있어요.'
+                  : !title.trim()
+                    ? '제목을 채우면 다음으로 넘어갈 수 있어요.'
+                    : '내용을 채우면 다음으로 넘어갈 수 있어요.'}
+              </p>
+            )}
             <div className="form-actions">
               <button className="secondary-button" onClick={() => setStep('scope')}>
                 이전
