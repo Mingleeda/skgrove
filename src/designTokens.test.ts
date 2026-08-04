@@ -105,3 +105,20 @@ describe('토큰 경유율', () => {
     expect(total, `정의 없이 참조된 토큰: ${detail}`).toBeLessThanOrEqual(MAX_DANGLING_VAR);
   });
 });
+
+describe('한국어 타이포그래피', () => {
+  // "작게" 가 "작 / 게" 로 쪼개지던 문제. keep-all 단독은 가로 넘침을 만든다.
+  it('keep-all 과 overflow-wrap 을 짝으로 선언한다', () => {
+    const rule = css.match(/word-break:\s*keep-all[^}]*}/);
+    expect(rule).not.toBeNull();
+    expect(rule![0]).toMatch(/overflow-wrap:\s*anywhere/);
+  });
+
+  it('제목에 text-wrap: balance 를 준다', () => {
+    expect(css).toMatch(/text-wrap:\s*balance/);
+  });
+
+  it('숫자에 tabular-nums 를 준다', () => {
+    expect(css).toMatch(/font-variant-numeric:\s*tabular-nums/);
+  });
+});

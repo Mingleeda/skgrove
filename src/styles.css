@@ -77,6 +77,29 @@
   box-sizing: border-box;
 }
 
+/*
+  이 앱은 전부 한국어다. 기본 word-break 는 음절 단위로 끊어서
+  "작게" 가 "작 / 게" 로 갈린다. keep-all 로 어절을 지키되,
+  단독으로 쓰면 공백 없는 긴 문자열(URL 등)이 컨테이너를 뚫으므로
+  overflow-wrap 을 반드시 짝으로 둔다.
+*/
+h1, h2, h3, h4, h5, h6,
+p, li, dt, dd, th, td,
+button, label, legend, figcaption {
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+h1, h2, h3 {
+  text-wrap: balance;
+}
+
+/* 숫자가 세로로 정렬되어야 목록에서 자릿수를 비교할 수 있다. */
+.num,
+[data-num] {
+  font-variant-numeric: tabular-nums;
+}
+
 body {
   margin: 0;
 }
