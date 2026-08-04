@@ -3523,7 +3523,7 @@ textarea {
 
 .share-hero-slide span,
 .coffee-share-slide span {
-  color: var(--color-pending);
+  color: var(--tint-pending);
   font-size: 12px;
   font-weight: 900;
   letter-spacing: 0;
@@ -5888,7 +5888,7 @@ textarea {
 
 .can-step.active span {
   background: var(--color-moss-strong);
-  color: var(--color-pending);
+  color: var(--tint-pending);
 }
 
 .can-step.done span {
@@ -7076,7 +7076,7 @@ button.notif-row {
 .humor-hero .eyebrow,
 .memory-hero .eyebrow,
 .metrics-hero .eyebrow {
-  color: var(--color-pending);
+  color: var(--tint-pending);
 }
 
 .humor-hero-badge {
@@ -7092,7 +7092,7 @@ button.notif-row {
 }
 
 .humor-hero-badge svg {
-  color: var(--color-pending);
+  color: var(--tint-pending);
 }
 
 .humor-hero-badge strong {
@@ -8056,3 +8056,138 @@ button.notif-row {
   margin: 0;
 }
 /* 프로필 편집 — 사진 URL 미리보기 */
+
+/* ===== 업무면 문법 — 목록을 훑고 비교하는 화면 =====
+   카드 그리드는 1280px 에 3건만 담겼다. 행은 같은 자리에 12건이 들어간다.
+   투표 앱인데 집계가 12px 회색으로 다른 메타데이터와 동등했다. 퍼센트를
+   ink 굵은 숫자로 올리고, 이끼색은 상태 점과 진행바 채움에만 쓴다. */
+.work-list {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.work-row {
+  align-items: center;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--color-sunken);
+  display: flex;
+  gap: var(--space-3);
+  height: var(--row-h);
+  padding: 0 var(--space-4);
+  text-align: left;
+  transition: background var(--ease-ui);
+  width: 100%;
+}
+
+.work-row:last-child {
+  border-bottom: none;
+}
+
+.work-row:hover {
+  background: var(--color-page);
+}
+
+.work-row-dot {
+  border-radius: var(--radius-full);
+  flex: none;
+  height: 7px;
+  width: 7px;
+}
+
+/* 행은 높이가 고정이라 긴 한글 제목이 반드시 잘린다.
+   자르되 title 속성으로 전문을 남긴다(TSX 쪽에서 부여). */
+.work-row-title {
+  color: var(--color-ink);
+  flex: 1;
+  font-size: 14px;
+  font-weight: 500;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.work-row-sub {
+  color: var(--color-muted);
+  flex: none;
+  font-size: 11px;
+  max-width: 30ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.work-row-bar {
+  background: var(--color-sunken);
+  border-radius: var(--radius-full);
+  flex: none;
+  height: 4px;
+  overflow: hidden;
+  width: 64px;
+}
+
+.work-row-bar > span {
+  display: block;
+  height: 100%;
+}
+
+.work-row-pct {
+  color: var(--color-ink);
+  flex: none;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  text-align: right;
+  width: 40px;
+}
+
+.work-row-meta {
+  color: var(--color-muted);
+  flex: none;
+  font-size: 11px;
+  text-align: right;
+  width: 62px;
+}
+
+/* ===== 빈 상태 ===== */
+.empty-state {
+  align-items: center;
+  color: var(--color-muted);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-12) var(--space-6);
+  text-align: center;
+}
+
+.empty-state-title {
+  color: var(--color-ink);
+  font-size: 15px;
+  font-weight: 500;
+  margin: 0;
+}
+
+.empty-state-desc {
+  font-size: 13px;
+  line-height: 1.7;
+  margin: 0;
+  max-width: 40ch;
+}
+
+.btn-secondary {
+  background: var(--color-sunken);
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  color: var(--color-ink);
+  font-size: 14px;
+  font-weight: 500;
+  padding: 9px var(--space-4);
+  transition: border-color var(--ease-ui);
+}
+
+.btn-secondary:hover {
+  border-color: var(--color-border-strong);
+}
