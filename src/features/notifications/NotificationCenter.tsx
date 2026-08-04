@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { ElementType } from 'react';
-import { Bell, Clock, Coffee, FileCheck2, Inbox, Laugh, Mail, MessageSquare, Vote } from 'lucide-react';
+import { Bell, BellOff, Clock, Coffee, FileCheck2, Inbox, Laugh, Mail, MessageSquare, Vote } from 'lucide-react';
+import { EmptyState } from '../../components/EmptyState';
 import { PanelHeader } from '../../components/PanelHeader';
 import type { AppNotification, CurrentUser, ManagedAccount, NotificationKind, Section } from '../../types';
 
@@ -102,7 +103,17 @@ export function NotificationCenter({
           </div>
         )}
         <div className="notif-list">
-          {visibleReceived.length === 0 && <p className="can-empty">{emptyMessage}</p>}
+          {visibleReceived.length === 0 && (
+            <EmptyState
+              icon={BellOff}
+              title={emptyMessage}
+              description={
+                filter === 'all'
+                  ? '리더 답변이나 안건 소식이 오면 여기로 도착합니다.'
+                  : '필터를 바꾸면 다른 알림을 볼 수 있어요.'
+              }
+            />
+          )}
           {visibleReceived.map((item) => {
             const Icon = KIND_ICON[item.kind];
             return (

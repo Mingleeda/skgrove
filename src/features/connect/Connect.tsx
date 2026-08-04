@@ -1,5 +1,6 @@
 import { BadgeCheck, ClipboardCopy, Coffee, Dice5, Save, Search, Shuffle, Sparkles, UsersRound } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import { EmptyState } from '../../components/EmptyState';
 import { Avatar } from '../../components/Avatar';
 import { PanelHeader } from '../../components/PanelHeader';
 import {
@@ -691,7 +692,11 @@ export function Connect({ members }: ConnectProps) {
               {shareNotice && <p className="share-notice">{shareNotice}</p>}
               <div className="saved-result-list">
                 {savedResults.length === 0 ? (
-                  <p>저장된 결과가 아직 없어요.</p>
+                  <EmptyState
+                    icon={Shuffle}
+                    title="저장된 결과가 아직 없어요"
+                    description="뽑기를 돌리고 결과를 저장하면 여기에 쌓입니다."
+                  />
                 ) : (
                   savedResults.map((result) => (
                     <article key={result.id}>

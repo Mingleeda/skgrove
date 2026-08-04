@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { participationRate } from '../../agendaRules';
 import { Avatar } from '../../components/Avatar';
+import { EmptyState } from '../../components/EmptyState';
 import { PanelHeader } from '../../components/PanelHeader';
 import { profiles } from '../../data/mockData';
 import type { ActionItem, Agenda, CurrentUser, Identity, Section } from '../../types';
@@ -124,9 +125,12 @@ export function Dashboard({
             <PanelHeader icon={Vote} title="진행 중인 안건 투표" />
             <div className="home-agenda-list">
               {activeAgendas.length === 0 && (
-                <p className="field-note">
-                  지금 투표 중인 안건이 없어요. 접수된 의견이 안건이 되면 여기에서 바로 투표할 수 있습니다.
-                </p>
+                <EmptyState
+                  icon={Vote}
+                  title="지금 투표 중인 안건이 없어요"
+                  description="접수된 의견이 안건이 되면 여기에서 바로 투표할 수 있습니다."
+                  action={{ label: '안건함 열기', onClick: () => onSectionChange('agenda') }}
+                />
               )}
               {activeAgendas.map((agenda) => {
                 const total = agenda.approve + agenda.reject || 1;

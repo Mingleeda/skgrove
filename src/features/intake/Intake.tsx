@@ -13,6 +13,7 @@ import {
   Send,
   ShieldCheck,
 } from 'lucide-react';
+import { EmptyState } from '../../components/EmptyState';
 import { PanelHeader } from '../../components/PanelHeader';
 import type { CurrentUser, Identity, Issue, IssueVisibility, Urgency } from '../../types';
 import { ReviewGate } from './ReviewGate';
@@ -510,10 +511,12 @@ export function Intake({ identity, currentUser, issues, onIdentityChange, onIssu
                 );
               })
             ) : (
-              <div className="submission-card empty-submission">
-                <strong>표시할 접수 의견이 없습니다.</strong>
-                <span>실명으로 접수한 의견은 이곳에서 상태와 리더 답변을 확인할 수 있어요.</span>
-              </div>
+              <EmptyState
+                icon={Megaphone}
+                title="표시할 접수 의견이 없습니다"
+                description="실명으로 접수한 의견은 이곳에서 상태와 리더 답변을 확인할 수 있어요."
+                action={{ label: '의견 보내기', onClick: () => setStep('scope') }}
+              />
             )}
           </div>
         </section>
