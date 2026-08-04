@@ -322,10 +322,12 @@ export function App() {
       if (!events.has(key)) events.set(key, item);
     });
     events.forEach((rep) => {
-      // 개인 메시지(DM): 수신자 이메일로 슬랙 DM 경로. 실제 발송은 프록시(SLACK_DM_ENABLED)에서 잠금.
+      // 개인 메시지(DM): 계정 관리에서 슬랙 이메일을 명시적으로 등록한 사람에게만 DM을 보낸다.
+      // 앱 로그인 이메일로는 폴백하지 않음(매핑 안 된 사람에게 잘못된 상대로 DM이 가는 걸 방지).
+      // 매핑 없으면 인앱 알림만 남고 슬랙 DM은 조용히 스킵. 실제 발송은 프록시(SLACK_DM_ENABLED)에서 잠금.
       if (rep.kind === 'message') {
-        const email = accounts.find((account) => account.name === rep.recipientName)?.email;
-        if (email) deliverDm(email, rep.kind, rep.title, rep.body, rep.fromName);
+        const slackEmail = accounts.find((item) => item.name === rep.recipientName)?.slackEmail;
+        if (slackEmail) deliverDm(slackEmail, rep.kind, rep.title, rep.body, rep.fromName);
         return;
       }
       const channel = slackChannelForKind(rep.kind);
@@ -897,6 +899,7 @@ export function App() {
           onSetTeaMemo={setTeaSessionMemo}
           onTeaTypesChange={updateTeaSessionTypes}
           onAnnounceToSlack={announceTeaToSlack}
+          onNotifyStatus={notifyStatus}
         />
       )}
       {active === 'notifications' && (

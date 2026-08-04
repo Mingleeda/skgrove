@@ -46,10 +46,25 @@ export function NotificationCenter({
   const recipients = accounts.filter((account) => account.status === '활성' && account.name !== currentUser.name);
   const [to, setTo] = useState<string>(recipients[0]?.name ?? '');
   const [body, setBody] = useState('');
+  const [filter, setFilter] = useState<'all' | 'unread' | 'read'>('all');
 
   const received = notifications.filter((item) => item.recipientName === currentUser.name);
   const sent = notifications.filter((item) => item.kind === 'message' && item.fromName === currentUser.name);
   const unread = received.filter((item) => !item.read).length;
+  const readCount = received.length - unread;
+  const visibleReceived = received.filter((item) => {
+    if (filter === 'unread') return !item.read;
+    if (filter === 'read') return item.read;
+    return true;
+  });
+  const emptyMessage =
+    received.length === 0
+      ? '받은 알림이 없습니다.'
+      : filter === 'unread'
+        ? '안읽은 알림이 없습니다.'
+        : filter === 'read'
+          ? '읽은 알림이 없습니다.'
+          : '받은 알림이 없습니다.';
 
   const openNotification = (item: AppNotification) => {
     if (!item.read) onMarkRead(item.id);
@@ -73,9 +88,22 @@ export function NotificationCenter({
             </button>
           )}
         </div>
+        {received.length > 0 && (
+          <div className="segmented">
+            <button className={filter === 'all' ? 'selected' : ''} onClick={() => setFilter('all')}>
+              전체 {received.length}
+            </button>
+            <button className={filter === 'unread' ? 'selected' : ''} onClick={() => setFilter('unread')}>
+              안읽음 {unread}
+            </button>
+            <button className={filter === 'read' ? 'selected' : ''} onClick={() => setFilter('read')}>
+              읽음 {readCount}
+            </button>
+          </div>
+        )}
         <div className="notif-list">
-          {received.length === 0 && <p className="can-empty">받은 알림이 없습니다.</p>}
-          {received.map((item) => {
+          {visibleReceived.length === 0 && <p className="can-empty">{emptyMessage}</p>}
+          {visibleReceived.map((item) => {
             const Icon = KIND_ICON[item.kind];
             return (
               <button
