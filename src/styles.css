@@ -1341,7 +1341,7 @@ h1 {
 }
 
 .privacy-list div,
-.submission-list div {
+.submission-list > div:not(.empty-state) {
   background: var(--tint-moss);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
@@ -8265,6 +8265,8 @@ button.notif-row {
 
 /* ===== 빈 상태 ===== */
 .empty-state {
+  /* 목록 컨테이너의 자손 선택자가 display 를 덮어써서 아이콘·글·버튼이
+     제각각 정렬됐다. 이 컴포넌트는 어디에 놓이든 자기 배치를 지켜야 한다. */
   align-items: center;
   color: var(--color-muted);
   display: flex;

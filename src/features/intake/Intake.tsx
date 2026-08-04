@@ -497,8 +497,12 @@ export function Intake({ identity, currentUser, issues, onIdentityChange, onIssu
           {/* 예전에는 이 설명이 옆 열에 같은 제목의 별도 패널로 있었다.
               같은 이름이 목록과 설명 둘을 가리켜 라벨이 충돌했다.
               헤더는 제목과 필터를 한 줄에 놓는 가로 배치라 그 밖에 둔다. */}
+          {/* 안내문과 빈 상태가 같은 말('실명만 보임 + 리더 답변 확인')을 두 번
+              했다. 안내문은 '무엇이 여기 보이고 나머지는 어디로 가는가'만 맡고,
+              빈 상태는 '지금 왜 비었고 무엇을 하면 되는가'만 맡는다. */}
           <p className="field-note my-issues-note">
-            사내메일 기준으로 실명 접수 건만 보여줍니다. 리더 답변이나 1on1 제안이 오면 여기에서 바로 응답할 수 있어요.
+            사내메일 기준으로 실명 접수 건만 보입니다. 익명으로 낸 건은 아래 &lsquo;익명으로 접수한 건
+            조회하기&rsquo;에서 확인하세요.
           </p>
 
           <div className="submission-list">
@@ -573,9 +577,9 @@ export function Intake({ identity, currentUser, issues, onIdentityChange, onIssu
             ) : (
               <EmptyState
                 icon={Megaphone}
-                title="표시할 접수 의견이 없습니다"
-                description="실명으로 접수한 의견은 이곳에서 상태와 리더 답변을 확인할 수 있어요."
-                action={{ label: '의견 보내기', onClick: () => setStep('scope') }}
+                title="아직 실명으로 접수한 의견이 없어요"
+                description="리더 답변이나 1on1 제안이 오면 여기에서 바로 응답할 수 있습니다."
+                action={{ label: '의견 보내기', onClick: () => { setView('write'); setStep('scope'); } }}
               />
             )}
           </div>
