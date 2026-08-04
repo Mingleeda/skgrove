@@ -5,40 +5,67 @@
   여기 있는 것을 쓴다.
 */
 :root {
-  /* 색 */
-  --color-page: #f5f7f2;
-  --color-surface: #ffffff;
-  --color-shell: #17352f; /* 사이드바·히어로 */
-  --color-shell-2: #2c524a;
-  --color-ink: #1d2522;
-  /* 기존 #65736d는 틴트 배경 위에서 4.44:1로 AA 미달이었다. 어느 배경에서도 5.9:1 이상. */
-  --color-muted: #55605a;
-  --color-border: #dce2dc; /* #e1e7df · #d9dfd8 을 흡수 */
-  --color-primary: #2f6f62;
-  --color-primary-strong: #12463c;
-  --color-accent: #d8f06a;
+  /* 표면 — 모래빛 3단. 사이드바는 딥그린이 아니라 page 로 내려앉는다. */
+  --color-page: #f6f4ef;
+  --color-surface: #fffdf9;
+  --color-sunken: #efece4;
 
-  /* 형태 — 측정 결과 이미 단일값이었다. 그대로 토큰화한다. */
-  --radius: 8px;
-  --shadow-raised: 0 14px 36px rgba(42, 58, 52, 0.08);
-  --shadow-float: 0 12px 32px rgba(42, 58, 52, 0.12);
+  /* 글자 — 위계는 색이 아니라 명도로 만든다. */
+  --color-ink: #1f2420;
+  --color-muted: #5a5f56;
+
+  /* 역할색 — 전부 세 표면에서 AA 통과. designTokens.test.ts 가 강제한다. */
+  --color-moss: #4f7350;
+  --color-moss-strong: #3c5a3d;
+  --color-clay: #96502f;
+  --color-danger: #a33a3a;
+  --color-pending: #77642f;
+  /* 기존 #2f74c0 은 sunken 위에서 4.06:1 로 미달이었다. */
+  --color-info: #39628f;
+
+  /* 틴트 — 배지 배경과 짝 글자색. */
+  --tint-moss: #e8efe6;
+  --tint-moss-ink: #2f4a30;
+  --tint-clay: #f5e9e1;
+  --tint-clay-ink: #5c3018;
+  --tint-danger: #f6e5e5;
+  --tint-danger-ink: #6b2020;
+  --tint-pending: #f2eddc;
+  --tint-pending-ink: #4a3d15;
+  --tint-info: #e4ecf4;
+  --tint-info-ink: #1f3f5e;
+
+  --color-border: #e2ddd1;
+  --color-border-strong: #cfc8b8;
+
+  /* 라운드 — 기존에는 8px 단일값이라 배지와 패널이 같은 곡률을 썼다. */
+  --radius-sm: 6px;
+  --radius: 10px;
+  --radius-lg: 14px;
+  --radius-full: 999px;
+
+  /* 그림자 — 떠 있는 것에만. 나머지 분리는 경계선으로 한다. */
+  --shadow-float: 0 8px 24px rgba(31, 36, 32, 0.1);
 
   /* 간격 4px 스케일 */
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
   --space-4: 16px;
+  --space-5: 20px;
   --space-6: 24px;
   --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
 
-  /* 모션 */
+  /* 밀도 — 업무면 행 높이. 화면 간 공통 상수여야 한다. */
+  --row-h: 44px;
+
   --ease-ui: 150ms ease-out;
+  --ease-enter: 280ms cubic-bezier(0.22, 1, 0.36, 1);
 
   color: var(--color-ink);
   background: var(--color-page);
-  /* 이 앱은 전부 한국어인데 스택에 한국어 폰트가 하나도 없었다. Inter 는 라틴 전용이라
-     한글은 OS 기본 폰트(Windows 맑은 고딕 / macOS Apple SD Gothic)로 떨어졌고,
-     보는 기기마다 서체가 달랐다. Pretendard 를 앞에 두고 파일도 실제로 불러온다(main.tsx). */
   font-family:
     "Pretendard Variable", Pretendard, "Noto Sans KR", ui-sans-serif, system-ui, -apple-system,
     BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -7770,10 +7797,10 @@ button.notif-row {
 
 .toast {
   align-items: center;
-  background: var(--color-shell);
+  background: var(--color-ink);
   border-radius: var(--radius);
   box-shadow: var(--shadow-float);
-  color: #eff8ef;
+  color: var(--color-surface);
   display: flex;
   font-size: 14px;
   gap: var(--space-2);
