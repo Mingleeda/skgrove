@@ -170,6 +170,20 @@ export function Intake({ identity, currentUser, issues, onIdentityChange, onIssu
   return (
     <section className="screen intake-screen">
       <div className="intake-main">
+        {/* 익명성 보장은 이 화면의 존재 이유인데 안내가 본문에 묻혀 있었다.
+            문구 자체는 제품 약속이라 그대로 두고 위계만 올린다. */}
+        {step === 'scope' && (
+          <div className="intake-intro">
+            <h1 className="culture-display">
+              여기서 한 말은 <span className="culture-mark">이름 없이</span> 전해집니다
+            </h1>
+            <p className="culture-lede">
+              익명으로 접수하면 작성자 정보가 본문과 분리되어 저장됩니다. 리더 화면에도 누가 썼는지
+              보이지 않아요.
+            </p>
+          </div>
+        )}
+
         <div className="intake-stepper">
           {steps.map((item, index) => (
             <button
