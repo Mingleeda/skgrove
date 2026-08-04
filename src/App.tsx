@@ -15,7 +15,9 @@ import {
 } from './teaStore';
 import type { CanStepConfig } from './canConfig';
 import { AppShell } from './components/AppShell';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { ToastRegion, useToasts } from './components/Toast';
+import { sections } from './navigation';
 import {
   initialActionItems,
   initialAgendas,
@@ -816,6 +818,9 @@ export function App() {
       onLogout={() => setCurrentUser(null)}
       onSectionChange={changeSection}
     >
+      {/* 화면 단위 경계. 접수 화면 하나가 깨졌다고 사이드바까지 사라져 다른 메뉴로
+          옮기지도 못하면 안 된다. resetKey 로 화면을 바꾸면 오류 상태를 푼다. */}
+      <ErrorBoundary label={sections.find((section) => section.id === active)?.label} resetKey={active}>
       {active === 'dashboard' && (
         <Dashboard
           openIssueCount={openIssueCount}
@@ -932,6 +937,8 @@ export function App() {
       {active === 'memory' && <Memory currentUser={currentUser} />}
       {active === 'metrics' && <Metrics currentUser={currentUser} />}
       {active === 'accounts' && isTeamLeader(currentUser) && <AccountManagement accounts={accounts} onAccountsChange={persistAccounts} />}
+      </ErrorBoundary>
+      {/* 토스트는 경계 밖에 둔다. 화면이 깨져도 저장 실패 같은 알림은 계속 보여야 한다. */}
       <ToastRegion toasts={toasts} onDismiss={dismiss} />
     </AppShell>
     </ProfilesContext.Provider>

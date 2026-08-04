@@ -36,8 +36,12 @@
 
   color: var(--color-ink);
   background: var(--color-page);
+  /* 이 앱은 전부 한국어인데 스택에 한국어 폰트가 하나도 없었다. Inter 는 라틴 전용이라
+     한글은 OS 기본 폰트(Windows 맑은 고딕 / macOS Apple SD Gothic)로 떨어졌고,
+     보는 기기마다 서체가 달랐다. Pretendard 를 앞에 두고 파일도 실제로 불러온다(main.tsx). */
   font-family:
-    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    "Pretendard Variable", Pretendard, "Noto Sans KR", ui-sans-serif, system-ui, -apple-system,
+    BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
 }
@@ -7642,6 +7646,48 @@ button.notif-row {
   font-size: 13px;
   line-height: 1.55;
   margin: -4px 0 0;
+}
+
+/* 렌더 오류 안내. 백지 대신 무엇이 잘못됐는지와 빠져나갈 길을 남긴다. */
+.error-boundary {
+  align-content: start;
+  background: var(--color-surface);
+  border: 1px solid #edc9c2;
+  border-radius: var(--radius);
+  display: grid;
+  gap: var(--space-3);
+  justify-items: start;
+  margin: var(--space-6) auto;
+  max-width: 560px;
+  padding: var(--space-8);
+}
+
+.error-boundary > svg {
+  color: #a3453c;
+}
+
+.error-boundary h2 {
+  font-size: 22px;
+  line-height: 1.35;
+}
+
+.error-boundary p {
+  color: var(--color-muted);
+  line-height: 1.6;
+}
+
+.error-boundary code {
+  background: #fdf4f2;
+  border: 1px solid #edc9c2;
+  border-radius: var(--radius);
+  color: #a3453c;
+  display: block;
+  font-family: 'SFMono-Regular', ui-monospace, Menlo, Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  padding: var(--space-3);
+  width: 100%;
 }
 
 /* ===== 상태 레이어 =====
