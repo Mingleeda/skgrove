@@ -31,6 +31,12 @@ export function AccountManagement({ accounts, onAccountsChange }: AccountManagem
     onAccountsChange(accounts.map((account) => (account.id === id ? { ...account, connectioner } : account)));
   };
 
+  const updateSlackEmail = (id: string, slackEmail: string) => {
+    onAccountsChange(
+      accounts.map((account) => (account.id === id ? { ...account, slackEmail: slackEmail.trim() || undefined } : account)),
+    );
+  };
+
   const pendingCount = accounts.filter((account) => account.status === '승인 대기').length;
   const leaderCount = accounts.filter((account) => account.role !== '팀원').length;
   const connectionerCount = accounts.filter((account) => account.connectioner).length;
@@ -71,7 +77,10 @@ export function AccountManagement({ accounts, onAccountsChange }: AccountManagem
 
       <section className="panel">
         <PanelHeader icon={UsersRound} title="가입 계정 관리" />
-        <p className="account-hint">권한·파트·상태·커넥셔너는 바꾸는 즉시 저장됩니다.</p>
+        <p className="account-hint">
+          권한·파트·상태·커넥셔너는 바꾸는 즉시 저장됩니다. 슬랙 이메일은 입력 후 다른 곳을 클릭하면 저장되고, <b>등록한 사람에게만</b>{' '}
+          슬랙 DM이 발송됩니다(미등록 시 인앱 알림만).
+        </p>
         <div className="account-table">
           <div className="account-table-head">
             <span>계정</span>
@@ -87,6 +96,13 @@ export function AccountManagement({ accounts, onAccountsChange }: AccountManagem
                 <span>
                   {account.email} · {account.joinedAt}
                 </span>
+                <input
+                  key={account.id}
+                  className="account-slack-email"
+                  defaultValue={account.slackEmail ?? ''}
+                  placeholder="슬랙 이메일(입력해야 DM 발송됨)"
+                  onBlur={(event) => updateSlackEmail(account.id, event.target.value)}
+                />
               </div>
               <select value={account.role} onChange={(event) => updateRole(account.id, event.target.value as UserRole)}>
                 {userRoles.map((role) => (
