@@ -65,7 +65,7 @@
 
 **Interfaces:**
 - Produces: `:root`에 정의된 토큰 이름 전체. 이후 모든 태스크가 이 이름만 사용한다.
-- Produces: `MAX_HARDCODED_HEX` / `MAX_HARDCODED_RGBA` 상수. 이후 태스크가 값을 낮춘다.
+- Produces: `MAX_HARDCODED_HEX` / `MAX_HARDCODED_RGBA` / `MAX_DANGLING_VAR` 상수. 이후 태스크가 값을 낮춘다.
 
 - [ ] **Step 1: 가드 테스트를 먼저 작성한다**
 
@@ -1389,7 +1389,10 @@ git commit -m "동료 성향·커피뽑기 문화면 전환
 ```ts
 const MAX_HARDCODED_HEX = 0;
 const MAX_HARDCODED_RGBA = 0;
+const MAX_DANGLING_VAR = 0;
 ```
+
+`MAX_DANGLING_VAR`는 Task 1에서 17로 시작한다. 옛 토큰(`--color-primary` 9곳, `--shadow-raised` 7곳, `--color-primary-strong` 1곳)을 가리키는 `var()` 참조 수다. 정의 없는 `var()`는 오류가 아니라 조용히 빈 값이 되므로 화면만 깨지고 테스트는 통과한다. Task 5·7·9·10·11·12가 자기 구간을 옮기면서 자연히 줄어들고, 여기서 0이 되어야 한다. 0이 안 되면 어느 태스크가 자기 셀렉터를 빠뜨린 것이다 — 상한을 올리지 말고 그 셀렉터를 찾는다.
 
 추가:
 
