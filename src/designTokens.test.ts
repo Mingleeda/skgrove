@@ -7,10 +7,12 @@ const css = readFileSync(new URL('./styles.css', import.meta.url), 'utf8');
 const rootStart = css.indexOf(':root {');
 const rootEnd = css.indexOf('\n}', rootStart);
 const rootBlock = css.slice(rootStart, rootEnd);
-const outsideRoot = css.slice(0, rootStart) + css.slice(rootEnd);
+// 주석은 스타일이 아니다. 어떤 값을 왜 버렸는지 적어 둔 설명까지 세면
+// "설명을 지우면 통과하는" 가드가 된다. 검사 전에 주석을 걷어낸다.
+const outsideRoot = (css.slice(0, rootStart) + css.slice(rootEnd)).replace(/\/\*[\s\S]*?\*\//g, '');
 
 // 래칫. 태스크가 진행될수록 낮춘다. 절대 올리지 않는다.
-const MAX_HARDCODED_HEX = 695;
+const MAX_HARDCODED_HEX = 0;
 const MAX_HARDCODED_RGBA = 95;
 const MAX_DANGLING_VAR = 0;
 
