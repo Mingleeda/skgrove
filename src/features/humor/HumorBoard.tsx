@@ -14,6 +14,7 @@ type HumorBoardProps = {
   onAddPost: (draft: { body: string; mediaUrl: string }) => void;
   onToggleLike: (postId: string) => void;
   onAddComment: (postId: string, body: string) => void;
+  onEditPost: (postId: string, draft: { body: string; mediaUrl: string }) => void;
   onDeletePost: (postId: string) => void;
   onDeleteComment: (commentId: string) => void;
 };
@@ -118,6 +119,7 @@ export function HumorBoard({
   onAddPost,
   onToggleLike,
   onAddComment,
+  onEditPost,
   onDeletePost,
   onDeleteComment,
 }: HumorBoardProps) {
@@ -127,6 +129,15 @@ export function HumorBoard({
   const [mediaUrl, setMediaUrl] = useState('');
   const [sort, setSort] = useState<'latest' | 'popular'>('latest');
   const [commentDrafts, setCommentDrafts] = useState<Record<string, string>>({});
+  // 글 수정: 상세 화면에서 본인 글의 내용/미디어를 인라인 편집.
+  const [editing, setEditing] = useState(false);
+  const [editBody, setEditBody] = useState('');
+  const [editMedia, setEditMedia] = useState('');
+
+  const openDetail = (postId: string | null) => {
+    setDetailId(postId);
+    setEditing(false);
+  };
 
   const thisMonth = new Date().toISOString().slice(0, 7);
   const lastMonth = shiftMonth(thisMonth, -1);
@@ -151,6 +162,18 @@ export function HumorBoard({
 
   const canDeletePost = (post: HumorPost) => post.author === currentUser.name || canModerate;
   const canDeleteComment = (comment: HumorComment) => comment.author === currentUser.name || canModerate;
+  const canEditPost = (post: HumorPost) => post.author === currentUser.name; // 수정은 본인 글만
+
+  const startEditPost = (post: HumorPost) => {
+    setEditBody(post.body);
+    setEditMedia(post.mediaUrl);
+    setEditing(true);
+  };
+  const saveEditPost = (postId: string) => {
+    if (!editBody.trim()) return;
+    onEditPost(postId, { body: editBody, mediaUrl: editMedia });
+    setEditing(false);
+  };
 
   // ── 글상세 화면 ──────────────────────────────
   const detailPost = detailId ? posts.find((post) => post.id === detailId) ?? null : null;
@@ -159,7 +182,7 @@ export function HumorBoard({
     const liked = detailPost.likedBy.includes(currentUser.name);
     return (
       <section className="screen humor-screen">
-        <button className="humor-back" onClick={() => setDetailId(null)}>
+        <button className="humor-back" onClick={() => openDetail(null)}>
           <ArrowLeft size={16} />
           목록으로
         </button>
@@ -170,21 +193,59 @@ export function HumorBoard({
               <strong>{detailPost.author}</strong>
               <small>{detailPost.createdAt}</small>
             </div>
-            {canDeletePost(detailPost) && (
-              <button
-                className="humor-icon-btn"
-                aria-label="글 삭제"
-                onClick={() => {
-                  onDeletePost(detailPost.id);
-                  setDetailId(null);
-                }}
-              >
-                <Trash2 size={15} />
-              </button>
+            {!editing && (canEditPost(detailPost) || canDeletePost(detailPost)) && (
+              <div className="humor-owner-actions">
+                {canEditPost(detailPost) && (
+                  <button className="humor-owner-btn edit" onClick={() => startEditPost(detailPost)}>
+                    <PenLine size={15} />
+                    수정
+                  </button>
+                )}
+                {canDeletePost(detailPost) && (
+                  <button
+                    className="humor-owner-btn delete"
+                    onClick={() => {
+                      if (!window.confirm('이 글을 삭제할까요? 되돌릴 수 없어요.')) return;
+                      onDeletePost(detailPost.id);
+                      openDetail(null);
+                    }}
+                  >
+                    <Trash2 size={15} />
+                    삭제
+                  </button>
+                )}
+              </div>
             )}
           </header>
-          <p className="humor-card-body">{detailPost.body}</p>
-          <MediaBlock media={resolveMedia(detailPost.mediaUrl)} />
+          {editing ? (
+            <div className="humor-edit">
+              <label>
+                내용
+                <textarea value={editBody} autoFocus onChange={(event) => setEditBody(event.target.value)} />
+              </label>
+              <label>
+                이미지 · 영상 링크 (선택)
+                <input
+                  value={editMedia}
+                  placeholder="이미지 주소나 유튜브 링크"
+                  onChange={(event) => setEditMedia(event.target.value)}
+                />
+              </label>
+              <div className="humor-edit-actions">
+                <button className="secondary-button" onClick={() => setEditing(false)}>
+                  취소
+                </button>
+                <button className="primary-button" disabled={!editBody.trim()} onClick={() => saveEditPost(detailPost.id)}>
+                  저장
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <p className="humor-card-body">{detailPost.body}</p>
+              <MediaBlock media={resolveMedia(detailPost.mediaUrl)} />
+            </>
+          )}
           <div className="humor-card-actions">
             <button className={liked ? 'humor-like active' : 'humor-like'} onClick={() => onToggleLike(detailPost.id)}>
               <Laugh size={16} />😂 빵터짐 {detailPost.likedBy.length}
@@ -367,7 +428,7 @@ export function HumorBoard({
         {visiblePosts.map((post) => {
           const postComments = commentsByPost.get(post.id) ?? [];
           return (
-            <button className="humor-row" key={post.id} onClick={() => setDetailId(post.id)}>
+            <button className="humor-row" key={post.id} onClick={() => openDetail(post.id)}>
               <span className="humor-row-glyph">{mediaGlyph(resolveMedia(post.mediaUrl))}</span>
               <span className="humor-row-main">
                 <strong>{post.body}</strong>

@@ -227,11 +227,19 @@ h1 {
   background: #ffffff;
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
-  display: grid;
-  gap: 2px;
+  /* dev가 아바타 버튼을 넣으면서 flex로 바꿨다. 텍스트는 .user-chip-text가 감싼다. */
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
   min-height: 42px;
   min-width: 150px;
   padding: 6px 12px;
+  position: relative;
+}
+
+.user-chip-text {
+  display: grid;
+  gap: 2px;
 }
 
 .user-chip strong {
@@ -242,6 +250,94 @@ h1 {
   color: var(--color-muted);
   font-size: 12px;
   white-space: nowrap;
+}
+
+.user-photo-button {
+  position: relative;
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  line-height: 0;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.user-photo-button .tiny-avatar {
+  width: 30px;
+  height: 30px;
+  font-size: 13px;
+}
+
+.user-chip .user-photo-edit {
+  position: absolute;
+  right: -3px;
+  bottom: -3px;
+  width: 15px;
+  height: 15px;
+  border-radius: 999px;
+  background: #2f7d5b;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid #ffffff;
+}
+
+.photo-editor-pop {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 30;
+  width: 260px;
+  background: #ffffff;
+  border: 1px solid #d9dfd8;
+  border-radius: 10px;
+  box-shadow: 0 12px 30px rgba(20, 40, 30, 0.16);
+  padding: 12px;
+  display: grid;
+  gap: 8px;
+}
+
+.photo-editor-pop label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #46524d;
+}
+
+.photo-editor-pop input {
+  width: 100%;
+  border: 1px solid #d9dfd8;
+  border-radius: 8px;
+  padding: 7px 10px;
+  font-size: 13px;
+}
+
+.photo-editor-preview {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 96px;
+  border-radius: 8px;
+  background: #f2f5f2;
+  overflow: hidden;
+}
+
+.photo-editor-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.photo-editor-preview span {
+  color: #9aa7a1;
+  font-size: 12px;
+}
+
+.photo-editor-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
 }
 
 .icon-button,
@@ -4935,7 +5031,7 @@ textarea {
 .account-summary {
   display: grid;
   gap: 14px;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .account-summary div {
@@ -4971,7 +5067,34 @@ textarea {
 .account-row {
   display: grid;
   gap: 12px;
-  grid-template-columns: minmax(240px, 1fr) 150px 190px 150px;
+  grid-template-columns: minmax(220px, 1fr) 130px 170px 130px 96px;
+}
+
+.account-hint {
+  color: #65736d;
+  font-size: 12px;
+  margin: -2px 0 10px;
+}
+
+.connectioner-toggle {
+  align-items: center;
+  color: #65736d;
+  cursor: pointer;
+  display: flex;
+  font-size: 13px;
+  font-weight: 600;
+  gap: 6px;
+}
+
+.connectioner-toggle input {
+  accent-color: #2f7d5b;
+  cursor: pointer;
+  height: 16px;
+  width: 16px;
+}
+
+.connectioner-toggle.on {
+  color: #2f7d5b;
 }
 
 .account-table-head {
@@ -6947,6 +7070,78 @@ button.notif-row {
   color: #e35d4f;
 }
 
+.humor-owner-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.humor-owner-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 14px;
+  border-radius: 8px;
+  border: 1px solid #d9dfd8;
+  background: #ffffff;
+  color: #46524d;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.humor-owner-btn.edit:hover {
+  background: #e4f3ea;
+  border-color: #2f7d5b;
+  color: #2f7d5b;
+}
+
+.humor-owner-btn.delete {
+  color: #d0554a;
+  border-color: #f0c8c2;
+}
+
+.humor-owner-btn.delete:hover {
+  background: #ffe5df;
+  border-color: #e35d4f;
+  color: #e35d4f;
+}
+
+.humor-edit {
+  display: grid;
+  gap: 12px;
+}
+
+.humor-edit label {
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #46524d;
+}
+
+.humor-edit textarea,
+.humor-edit input {
+  width: 100%;
+  border: 1px solid #d9dfd8;
+  border-radius: 8px;
+  padding: 9px 11px;
+  font: inherit;
+  font-size: 14px;
+}
+
+.humor-edit textarea {
+  min-height: 110px;
+  resize: vertical;
+}
+
+.humor-edit-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
 .humor-card-body {
   font-size: 15px;
   line-height: 1.55;
@@ -7395,3 +7590,4 @@ button.notif-row {
   font-size: 13px;
   font-weight: 600;
 }
+/* 프로필 편집 — 사진 URL 미리보기 */

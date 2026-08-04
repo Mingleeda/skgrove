@@ -1,5 +1,6 @@
 import { BarChart3, CalendarClock, CheckCircle2, Eye, Gauge, LockKeyhole, Settings2, ShieldCheck, Sparkles, UsersRound } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import { isTeamLeader } from '../../auth';
 import { loadActionItems } from '../../actionItemStore';
 import { loadAgendas } from '../../agendaStore';
 import { loadBallots } from '../../ballotStore';
@@ -342,7 +343,7 @@ export function Metrics({ currentUser }: MetricsProps) {
   const [calendarStatus, setCalendarStatus] = useState<CalendarConnection>('disconnected');
   const [selectedPart, setSelectedPart] = useState(currentUser.part === '전체' ? partNames[0] : currentUser.part);
   const [weights, setWeights] = useState(initialWeights);
-  const canViewAllLeaderMetrics = currentUser.role === '팀리더';
+  const canViewAllLeaderMetrics = isTeamLeader(currentUser); // 커넥셔너 포함
   const isPartLeader = currentUser.role === '파트리더';
 
   useEffect(() => {

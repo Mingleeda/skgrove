@@ -26,12 +26,15 @@ export type CurrentUser = {
   email: string;
   role: UserRole;
   part: TeamPart;
+  // 커넥셔너 = 시스템 구축 슈퍼관리자. 팀 역할과 별개인 전권 플래그(계정 관리에서 토글).
+  connectioner?: boolean;
 };
 
 export type ManagedAccount = CurrentUser & {
   id: string;
   status: AccountStatus;
   joinedAt: string;
+  photoUrl?: string; // 계정별 프로필 사진(직접 이미지 URL). 없으면 이니셜 칩으로 폴백.
 };
 
 // 접수자가 고른 공개 범위. '리더만 보기'는 안건 전환을 막는 약속이므로 저장해야 한다.
@@ -143,7 +146,6 @@ export type Profile = {
   feedback: string;
   guide: string;
   color: 'green' | 'red' | 'blue' | 'yellow';
-  photoUrl?: string; // 프로필 사진(직접 이미지 URL). 없으면 이니셜 칩으로 폴백.
 };
 
 export type ConnectResultMode = 'coffee' | 'teams';

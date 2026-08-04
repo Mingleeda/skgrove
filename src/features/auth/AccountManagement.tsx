@@ -1,4 +1,4 @@
-import { ShieldCheck, UserCheck, UsersRound } from 'lucide-react';
+import { KeyRound, ShieldCheck, UserCheck, UsersRound } from 'lucide-react';
 import { teamParts, userRoles } from '../../auth';
 import { PanelHeader } from '../../components/PanelHeader';
 import type { AccountStatus, ManagedAccount, TeamPart, UserRole } from '../../types';
@@ -25,8 +25,13 @@ export function AccountManagement({ accounts, onAccountsChange }: AccountManagem
     onAccountsChange(accounts.map((account) => (account.id === id ? { ...account, status } : account)));
   };
 
+  const updateConnectioner = (id: string, connectioner: boolean) => {
+    onAccountsChange(accounts.map((account) => (account.id === id ? { ...account, connectioner } : account)));
+  };
+
   const pendingCount = accounts.filter((account) => account.status === '승인 대기').length;
   const leaderCount = accounts.filter((account) => account.role !== '팀원').length;
+  const connectionerCount = accounts.filter((account) => account.connectioner).length;
 
   return (
     <section className="screen">
@@ -46,16 +51,23 @@ export function AccountManagement({ accounts, onAccountsChange }: AccountManagem
           <span>승인 대기</span>
           <strong>{pendingCount}</strong>
         </div>
+        <div>
+          <KeyRound size={22} />
+          <span>커넥셔너</span>
+          <strong>{connectionerCount}</strong>
+        </div>
       </div>
 
       <section className="panel">
         <PanelHeader icon={UsersRound} title="가입 계정 관리" />
+        <p className="account-hint">권한·파트·상태·커넥셔너는 바꾸는 즉시 저장됩니다.</p>
         <div className="account-table">
           <div className="account-table-head">
             <span>계정</span>
             <span>권한</span>
             <span>파트</span>
             <span>상태</span>
+            <span>커넥셔너</span>
           </div>
           {accounts.map((account) => (
             <div className="account-row" key={account.id}>
@@ -84,6 +96,14 @@ export function AccountManagement({ accounts, onAccountsChange }: AccountManagem
                 <option>활성</option>
                 <option>비활성</option>
               </select>
+              <label className={account.connectioner ? 'connectioner-toggle on' : 'connectioner-toggle'}>
+                <input
+                  type="checkbox"
+                  aria-label={`${account.name} 커넥셔너 전권`}
+                  checked={account.connectioner ?? false}
+                  onChange={(event) => updateConnectioner(account.id, event.target.checked)}
+                />
+              </label>
             </div>
           ))}
         </div>
