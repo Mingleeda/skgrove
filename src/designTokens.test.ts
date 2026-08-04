@@ -10,7 +10,7 @@ const rootBlock = css.slice(rootStart, rootEnd);
 const outsideRoot = css.slice(0, rootStart) + css.slice(rootEnd);
 
 // 래칫. 태스크가 진행될수록 낮춘다. 절대 올리지 않는다.
-const MAX_HARDCODED_HEX = 776;
+const MAX_HARDCODED_HEX = 770;
 const MAX_HARDCODED_RGBA = 103;
 const MAX_DANGLING_VAR = 17;
 

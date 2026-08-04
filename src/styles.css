@@ -129,14 +129,15 @@ button {
    (자체 스크롤이 없으면 낮은 창에서 마지막 항목 '계정 관리'가 잘린다.) */
 .sidebar {
   align-self: start;
-  background: #17352f;
-  color: #eff8ef;
+  background: var(--color-page);
+  border-right: 1px solid var(--color-border);
+  color: var(--color-ink);
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: var(--space-6);
   height: 100vh;
   overflow-y: auto;
-  padding: 24px 18px;
+  padding: var(--space-6) var(--space-4);
   position: sticky;
   top: 0;
 }
@@ -150,9 +151,9 @@ button {
 
 .brand-mark {
   align-items: center;
-  background: #d8f06a;
+  background: var(--color-moss);
   border-radius: var(--radius);
-  color: #17352f;
+  color: var(--color-surface);
   display: flex;
   height: 44px;
   justify-content: center;
@@ -171,7 +172,7 @@ button {
 .brand span,
 .owner-box span,
 .owner-box em {
-  color: #a9c4b8;
+  color: var(--color-muted);
   font-size: 12px;
 }
 
@@ -185,7 +186,7 @@ button {
   background: transparent;
   border: 0;
   border-radius: var(--radius);
-  color: #d8e8df;
+  color: var(--color-ink);
   display: flex;
   gap: 10px;
   min-height: 42px;
@@ -195,8 +196,8 @@ button {
 
 .nav-item:hover,
 .nav-item.active {
-  background: #284d45;
-  color: #ffffff;
+  background: var(--tint-moss);
+  color: var(--tint-moss-ink);
 }
 
 .nav-item:disabled {
@@ -219,7 +220,7 @@ button {
 }
 
 .nav-group-title {
-  color: #8fae9f;
+  color: var(--color-muted);
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.06em;
@@ -229,7 +230,7 @@ button {
 }
 
 .owner-box {
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius);
   display: grid;
   gap: 6px;
@@ -245,7 +246,7 @@ button {
   background:
     linear-gradient(120deg, rgba(216, 240, 106, 0.18), transparent 32%),
     linear-gradient(150deg, rgba(234, 91, 79, 0.1), transparent 38%),
-    #f5f7f2;
+    var(--color-surface);
   min-width: 0;
   padding: 28px;
 }
@@ -7606,11 +7607,6 @@ button.notif-row {
   outline: 2px solid #2f6f62;
   outline-offset: 2px;
   border-radius: var(--radius);
-}
-
-/* 어두운 사이드바 위에서는 같은 색 링이 배경에 묻힌다. */
-.sidebar :where(button, a):focus-visible {
-  outline-color: #d8f06a;
 }
 
 @media (prefers-reduced-motion: reduce) {
