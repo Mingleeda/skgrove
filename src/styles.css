@@ -6659,8 +6659,14 @@ button.notif-row {
 }
 
 .notif-row.unread {
-  background: #f2f7ff;
-  border-color: #c9dcff;
+  background: #e9f1ff;
+  border-color: #a9c8ff;
+  border-left: 3px solid #2f6fed;
+}
+
+.notif-row.unread .notif-body strong {
+  color: #16305c;
+  font-weight: 700;
 }
 
 .notif-kind {

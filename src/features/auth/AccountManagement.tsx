@@ -8,6 +8,8 @@ type AccountManagementProps = {
   onAccountsChange: (accounts: ManagedAccount[]) => void;
 };
 
+const ROLE_ORDER: Record<UserRole, number> = { 팀리더: 0, 파트리더: 1, 팀원: 2 };
+
 export function AccountManagement({ accounts, onAccountsChange }: AccountManagementProps) {
   const updateRole = (id: string, role: UserRole) => {
     onAccountsChange(
@@ -32,6 +34,15 @@ export function AccountManagement({ accounts, onAccountsChange }: AccountManagem
   const pendingCount = accounts.filter((account) => account.status === '승인 대기').length;
   const leaderCount = accounts.filter((account) => account.role !== '팀원').length;
   const connectionerCount = accounts.filter((account) => account.connectioner).length;
+
+  // 권한(팀리더>파트리더>팀원) → 파트 → 이름 순으로 정렬. 가입 순서(joined_at)라 뒤섞여 보이던 걸 정리한다.
+  const sortedAccounts = [...accounts].sort((a, b) => {
+    const roleDiff = ROLE_ORDER[a.role] - ROLE_ORDER[b.role];
+    if (roleDiff !== 0) return roleDiff;
+    const partDiff = a.part.localeCompare(b.part, 'ko');
+    if (partDiff !== 0) return partDiff;
+    return a.name.localeCompare(b.name, 'ko');
+  });
 
   return (
     <section className="screen">
@@ -69,7 +80,7 @@ export function AccountManagement({ accounts, onAccountsChange }: AccountManagem
             <span>상태</span>
             <span>커넥셔너</span>
           </div>
-          {accounts.map((account) => (
+          {sortedAccounts.map((account) => (
             <div className="account-row" key={account.id}>
               <div>
                 <strong>{account.name}</strong>

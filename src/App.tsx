@@ -896,6 +896,7 @@ export function App() {
           onSetTeaMemo={setTeaSessionMemo}
           onTeaTypesChange={updateTeaSessionTypes}
           onAnnounceToSlack={announceTeaToSlack}
+          onNotifyStatus={notifyStatus}
         />
       )}
       {active === 'notifications' && (
