@@ -18,6 +18,7 @@ import { isLeader, teamParts } from '../../auth';
 import type { CanStepConfig } from '../../canConfig';
 import { makeStepId } from '../../canStepsStore';
 import { PanelHeader } from '../../components/PanelHeader';
+import type { ToastTone } from '../../components/Toast';
 import { makeActionItemId } from '../../actionItemStore';
 import { summarizeCanMeeting } from '../../aiSummarize';
 import { teamRoster } from '../../data/mockData';
@@ -96,6 +97,7 @@ type MeetingsProps = {
   onSetTeaMemo: (id: string, memo: string) => void;
   onTeaTypesChange: (types: string[]) => void;
   onAnnounceToSlack: (text: string) => Promise<'sent' | 'failed' | 'disabled'>;
+  onNotifyStatus: (text: string, tone?: ToastTone) => void;
 };
 
 type Draft = {
@@ -125,6 +127,7 @@ export function Meetings({
   onSetTeaMemo,
   onTeaTypesChange,
   onAnnounceToSlack,
+  onNotifyStatus,
 }: MeetingsProps) {
   // '#meetings-tea' 딥링크로 들어오면 티미팅 탭으로 시작.
   const [tab, setTab] = useState<'can' | 'tea'>(
@@ -139,7 +142,6 @@ export function Meetings({
   const [aiLoading, setAiLoading] = useState(false);
   const [aiNote, setAiNote] = useState(''); // 결과 출처 표기(AI/로컬)
   const [resultMode, setResultMode] = useState<'original' | 'ai'>('original'); // 확정할 결과물 선택
-  const [pptxError, setPptxError] = useState('');
 
   // PPT 내보내기 버튼 클릭 시점에 동적 import가 처음 걸리면(네트워크 지연) 브라우저가 사용자
   // 제스처와의 연결을 끊어 다운로드를 조용히 막는 경우가 있다. 캔미팅 화면 진입 시 미리 받아둬
@@ -527,12 +529,11 @@ export function Meetings({
               );
 
               const exportPptx = async () => {
-                setPptxError('');
                 try {
                   await runExportPptx();
                 } catch (error) {
                   console.error('PPT export failed', error);
-                  setPptxError('PPT 생성에 실패했어요. 잠시 후 다시 시도해주세요.');
+                  onNotifyStatus('PPT 생성에 실패했어요. 잠시 후 다시 시도해주세요.', 'error');
                 }
               };
 
@@ -934,7 +935,6 @@ export function Meetings({
                                 PPT로 내보내기
                               </button>
                             )}
-                            {confirmed && pptxError && <p className="form-error">{pptxError}</p>}
                             {!confirmed && isLive && (
                               <>
                                 <button className="primary-button" onClick={confirmResult}>
@@ -1162,7 +1162,6 @@ export function Meetings({
                               PPT로 내보내기
                             </button>
                           </div>
-                          {pptxError && <p className="form-error">{pptxError}</p>}
                           {followUp && (
                             <div className="can-followup">
                               <h4 className="can-result-title">

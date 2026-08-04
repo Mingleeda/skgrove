@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { ArrowLeft, Crown, Laugh, MessageCircle, PenLine, Send, Sparkles, Trash2, Trophy, X } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, Crown, Laugh, MessageCircle, PenLine, Send, Sparkles, Trash2, Trophy, X } from 'lucide-react';
 import { Avatar } from '../../components/Avatar';
 import { PanelHeader } from '../../components/PanelHeader';
 import { monthOf, rankCommenters, rankLiked, rankPosters, topCommenter, topLiked, topPoster } from '../../humorRules';
@@ -133,10 +133,13 @@ export function HumorBoard({
   const [editing, setEditing] = useState(false);
   const [editBody, setEditBody] = useState('');
   const [editMedia, setEditMedia] = useState('');
+  // 삭제는 되돌릴 수 없는 행동 — 네이티브 confirm() 대신 카드 안에서 펼치는 확인 UI로 받는다.
+  const [deletingPost, setDeletingPost] = useState(false);
 
   const openDetail = (postId: string | null) => {
     setDetailId(postId);
     setEditing(false);
+    setDeletingPost(false);
   };
 
   const thisMonth = new Date().toISOString().slice(0, 7);
@@ -168,6 +171,7 @@ export function HumorBoard({
     setEditBody(post.body);
     setEditMedia(post.mediaUrl);
     setEditing(true);
+    setDeletingPost(false);
   };
   const saveEditPost = (postId: string) => {
     if (!editBody.trim()) return;
@@ -193,7 +197,7 @@ export function HumorBoard({
               <strong>{detailPost.author}</strong>
               <small>{detailPost.createdAt}</small>
             </div>
-            {!editing && (canEditPost(detailPost) || canDeletePost(detailPost)) && (
+            {!editing && !deletingPost && (canEditPost(detailPost) || canDeletePost(detailPost)) && (
               <div className="humor-owner-actions">
                 {canEditPost(detailPost) && (
                   <button className="humor-owner-btn edit" onClick={() => startEditPost(detailPost)}>
@@ -202,14 +206,7 @@ export function HumorBoard({
                   </button>
                 )}
                 {canDeletePost(detailPost) && (
-                  <button
-                    className="humor-owner-btn delete"
-                    onClick={() => {
-                      if (!window.confirm('이 글을 삭제할까요? 되돌릴 수 없어요.')) return;
-                      onDeletePost(detailPost.id);
-                      openDetail(null);
-                    }}
-                  >
+                  <button className="humor-owner-btn delete" onClick={() => setDeletingPost(true)}>
                     <Trash2 size={15} />
                     삭제
                   </button>
@@ -217,6 +214,27 @@ export function HumorBoard({
               </div>
             )}
           </header>
+          {deletingPost && (
+            <div className="agenda-close-box">
+              <AlertTriangle size={18} />
+              <p>이 글을 삭제하면 되돌릴 수 없어요. 댓글도 함께 사라집니다.</p>
+              <div className="vote-confirm-actions">
+                <button className="secondary-button" onClick={() => setDeletingPost(false)}>
+                  취소
+                </button>
+                <button
+                  className="primary-button"
+                  onClick={() => {
+                    onDeletePost(detailPost.id);
+                    openDetail(null);
+                  }}
+                >
+                  <Trash2 size={15} />
+                  삭제 확정
+                </button>
+              </div>
+            </div>
+          )}
           {editing ? (
             <div className="humor-edit">
               <label>
