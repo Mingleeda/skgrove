@@ -164,6 +164,15 @@ export function NotificationCenter({
                 onChange={(event) => setBody(event.target.value)}
               />
             </label>
+            {(!to || !body.trim()) && (
+              <p className="field-note gate-note">
+                {!to && !body.trim()
+                  ? '받는 사람과 내용을 채우면 보낼 수 있어요.'
+                  : !to
+                    ? '받는 사람을 고르면 보낼 수 있어요.'
+                    : '내용을 채우면 보낼 수 있어요.'}
+              </p>
+            )}
             <button className="primary-button wide" disabled={!to || !body.trim()} onClick={submit}>
               보내기
             </button>
