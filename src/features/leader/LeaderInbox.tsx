@@ -1,5 +1,6 @@
 import {
   AlarmClock,
+  ArrowLeft,
   CalendarPlus,
   FileCheck2,
   MessageSquareText,
@@ -55,7 +56,15 @@ const addDays = (days: number) => new Date(Date.now() + days * 86400000).toISOSt
 
 export function LeaderInbox({ issues, today, onIssueUpdate, onPromoteToAgenda }: LeaderInboxProps) {
   const [filter, setFilter] = useState<'전체' | IssueStatus>('전체');
-  const [selectedIssueId, setSelectedIssueId] = useState(issues[0]?.id ?? '');
+  /*
+    목록과 상세를 화면 단위로 나눈다. 예전에는 좌우 분할이었는데, 작업판이
+    584px 폭에 갇힌 채 '안건' 탭 1179px 짜리 내용을 752px 상자에 밀어넣어
+    페이지 스크롤 안에 또 스크롤이 생겼다. 리더는 한 건을 읽고 답변·1on1·
+    액션·안건화를 끝낸 뒤 다음 건으로 간다 — 목록을 곁에 두고 빠르게
+    오가는 작업이 아니다. 안건함과 같은 전환 방식으로 맞춘다.
+  */
+  const [view, setView] = useState<'list' | 'detail'>('list');
+  const [selectedIssueId, setSelectedIssueId] = useState('');
   const [activeAction, setActiveAction] = useState<LeaderAction>('reply');
   const [draft, setDraft] = useState('');
   const [agendaDrafts, setAgendaDrafts] = useState<Record<string, AgendaDraft>>({});
@@ -67,7 +76,7 @@ export function LeaderInbox({ issues, today, onIssueUpdate, onPromoteToAgenda }:
     filter === '전체'
       ? issues.filter((issue) => issue.status !== '회수' && issue.status !== '종료')
       : issues.filter((issue) => issue.status === filter);
-  const selectedIssue = visibleIssues.find((issue) => issue.id === selectedIssueId) ?? visibleIssues[0];
+  const selectedIssue = visibleIssues.find((issue) => issue.id === selectedIssueId) ?? null;
   const agendaDraft = selectedIssue ? agendaDrafts[selectedIssue.id] ?? makeAgendaDraft(selectedIssue) : null;
   const waitingCount = issues.filter((issue) => issue.status === '접수' || issue.status === '검토중').length;
   const answeredCount = issues.filter((issue) => issue.leaderReply).length;
@@ -78,6 +87,7 @@ export function LeaderInbox({ issues, today, onIssueUpdate, onPromoteToAgenda }:
 
   const chooseIssue = (issue: Issue) => {
     setSelectedIssueId(issue.id);
+    setView('detail');
     setDraft('');
     setAgendaDrafts((current) => ({ ...current, [issue.id]: current[issue.id] ?? makeAgendaDraft(issue) }));
   };
@@ -163,6 +173,7 @@ export function LeaderInbox({ issues, today, onIssueUpdate, onPromoteToAgenda }:
 
   return (
     <section className="screen leader-screen">
+      {view === 'list' && (
       <div className="leader-summary">
         <div>
           <MessageSquareText size={22} />
@@ -185,8 +196,9 @@ export function LeaderInbox({ issues, today, onIssueUpdate, onPromoteToAgenda }:
           <strong>{oldestWaiting === null ? '없음' : `${oldestWaiting}일`}</strong>
         </div>
       </div>
+      )}
 
-      {overdueCount > 0 && (
+      {view === 'list' && overdueCount > 0 && (
         <div className="notice-line action-overdue-notice">
           <AlarmClock size={18} />
           {RESPONSE_DUE_DAYS}일이 넘도록 응답이 없는 접수가 {overdueCount}건 있습니다. 대나무숲은 첫 몇 건의 응답 속도가
@@ -195,6 +207,7 @@ export function LeaderInbox({ issues, today, onIssueUpdate, onPromoteToAgenda }:
       )}
 
       <div className="leader-layout">
+        {view === 'list' ? (
         <section className="leader-inbox-list">
           <div className="toolbar leader-toolbar">
             {primaryFilters.map((item) => (
@@ -283,10 +296,14 @@ export function LeaderInbox({ issues, today, onIssueUpdate, onPromoteToAgenda }:
             ))}
           </div>
         </section>
-
+        ) : (
         <aside className="panel leader-workbench">
           {selectedIssue ? (
             <>
+              <button className="btn-ghost leader-back" onClick={() => setView('list')} type="button">
+                <ArrowLeft size={16} />
+                접수 목록으로
+              </button>
               <div className="leader-workbench-head">
                 <span className="status-pill">{selectedIssue.status}</span>
                 <h2>{selectedIssue.title}</h2>
@@ -544,6 +561,7 @@ export function LeaderInbox({ issues, today, onIssueUpdate, onPromoteToAgenda }:
             </div>
           )}
         </aside>
+        )}
       </div>
     </section>
   );

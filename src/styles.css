@@ -1602,14 +1602,12 @@ textarea {
 }
 
 .leader-layout {
-  align-items: start;
+  /* 목록과 상세가 화면 단위로 나뉘므로 한 열이면 된다. 좌우 분할이던 때는
+     작업판이 584px 에 갇힌 채 안건 탭 1179px 을 752px 상자에 넣어
+     페이지 스크롤 안에 또 스크롤이 생겼다. */
   display: grid;
   gap: var(--space-5);
-  /* 폭 배분이 거꾸로였다. 목록은 제목만 훑는 곳이라 좁아도 되고, 작업판은
-     본문을 읽고 답을 쓰는 곳이라 넓어야 한다. 예전 380px 고정에서는 본문이
-     한 줄 22자로 국문 가독 최적(35~45자)의 절반이었고, 넓은 화면에서는
-     남는 폭을 아무도 쓰지 않았다. */
-  grid-template-columns: minmax(280px, 340px) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
 }
 
 /* 열을 명시하지 않으면 암시 트랙이 max-content 로 잡혀, 안의 필터 툴바가
@@ -1768,12 +1766,18 @@ textarea {
 }
 
 .leader-workbench {
-  /* 작업판이 915px 까지 자란다. 자체 스크롤이 없으면 페이지 전체가 밀려
-     목록이 화면 밖으로 사라진다. 리더는 목록을 보면서 답을 쓴다. */
-  max-height: calc(100vh - var(--space-12));
-  overflow-y: auto;
-  position: sticky;
-  top: var(--space-6);
+  display: grid;
+  gap: var(--space-4);
+}
+
+/* 본문은 읽는 글이다. 화면이 넓어져도 한 줄이 45자를 넘지 않게 묶는다. */
+.leader-workbench .issue-body-box p {
+  max-width: 45em;
+}
+
+.leader-back {
+  justify-self: start;
+  padding-left: 0;
 }
 
 .leader-workbench,
@@ -8188,6 +8192,45 @@ button.notif-row {
   line-height: 1.7;
   margin: 0;
   max-width: 40ch;
+}
+
+/* 버튼 3단. primary = 주 액션(이끼 채움), secondary = 보조(가라앉은 면),
+   ghost = 이동·취소처럼 화면을 떠나는 동작(면 없음). */
+.btn-primary,
+.btn-secondary,
+.btn-ghost {
+  align-items: center;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  display: inline-flex;
+  font-size: 14px;
+  font-weight: 500;
+  gap: var(--space-2);
+  justify-content: center;
+  padding: 9px var(--space-4);
+  transition:
+    background var(--ease-ui),
+    border-color var(--ease-ui),
+    color var(--ease-ui);
+}
+
+.btn-primary {
+  background: var(--color-moss);
+  color: var(--color-surface);
+}
+
+.btn-primary:hover {
+  background: var(--color-moss-strong);
+}
+
+.btn-ghost {
+  background: none;
+  color: var(--color-muted);
+}
+
+.btn-ghost:hover {
+  background: var(--color-sunken);
+  color: var(--color-ink);
 }
 
 .btn-secondary {
