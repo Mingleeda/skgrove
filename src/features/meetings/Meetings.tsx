@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import {
   ArrowRight,
+  Check,
   CheckCircle2,
   ChevronLeft,
   Clock,
@@ -853,7 +854,7 @@ export function Meetings({
                             disabled={!isLive}
                             onClick={() => onToggleOpinion(opinion.id)}
                           >
-                            <span className="can-check">{opinion.selected ? '✓' : ''}</span>
+                            <span className="can-check">{opinion.selected ? <Check size={14} aria-hidden /> : null}</span>
                             <span className="can-select-body">
                               <span className="can-opinion-top">
                                 <span className="can-badge">{stepLabelOf(opinion.step)}</span>
@@ -957,7 +958,7 @@ export function Meetings({
                               {followUp ? (
                                 <>
                                   <p className="can-followup-done">
-                                    ✓ 안건 {followCount('agenda')}건 · 액션아이템 {followCount('action')}건 반영됨
+                                    <Check size={14} aria-hidden /> 안건 {followCount('agenda')}건 · 액션아이템 {followCount('action')}건 반영됨
                                     (안건함 / 대시보드에서 확인)
                                   </p>
                                   <div className="can-followup-result">

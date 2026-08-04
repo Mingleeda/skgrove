@@ -88,18 +88,11 @@ export function AppShell({
             </div>
           ))}
         </nav>
-
-        <div className="owner-box">
-          <span>{currentUser.part}</span>
-          <strong>{currentUser.name}</strong>
-          <em>{currentUser.role}</em>
-        </div>
       </aside>
 
       <main className="main">
         <header className="topbar">
           <div>
-            <p className="eyebrow">대나무숲 기반 팀문화 개선</p>
             <h1>{currentSection.label}</h1>
           </div>
           <div className="top-actions">
