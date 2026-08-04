@@ -50,7 +50,7 @@
 | `src/features/connect/Connect.tsx` | 커피뽑기 (문화면) | 수정 |
 | `src/features/dashboard/Dashboard.tsx` | 홈 (혼합) | 수정 |
 | `src/features/meetings/Meetings.tsx` | 캔미팅/티미팅 (혼합) | 수정 |
-| `docs/superpowers/specs/2026-08-04-color-mapping.md` | 202색 → 토큰 매핑표 | 신규 |
+| `docs/superpowers/specs/2026-08-04-color-mapping.md` | 199색 → 토큰 매핑표 | 신규 |
 
 `Meetings.tsx`는 1533줄로 가장 크다. 이번 범위에서 분할하지 않는다 — 시각 변경과 파일 분할을 겹치면 회귀 원인 분리가 불가능해진다. 분할이 필요하면 별도 라운드로 다룬다.
 
@@ -379,7 +379,7 @@ keep-all 단독은 긴 URL 에서 가로 넘침을 만들므로 overflow-wrap �
 
 **Interfaces:**
 - Consumes: Task 1의 토큰 이름.
-- Produces: 202개 색상값 각각에 대한 목표 토큰. Task 4~13이 이 표만 참조하고 개별 판단하지 않는다.
+- Produces: 199개 색상값 각각에 대한 목표 토큰. Task 4~13이 이 표만 참조하고 개별 판단하지 않는다.
 
 이 태스크는 코드를 바꾸지 않는다. 이후 10개 태스크가 같은 판단을 반복하지 않도록 결정을 한곳에 고정하는 것이 목적이다.
 
@@ -457,14 +457,14 @@ console.error(`총 ${rows.length}색 / ${[...counts.values()].reduce((a, b) => a
 - [ ] **Step 2: 스크립트를 실행해 표를 생성한다**
 
 Run: `node scripts/classify-colors.mjs > /tmp/mapping.md`
-Expected: 표준에러에 `총 202색 / 776회`, `/tmp/mapping.md`에 202행 표
+Expected: 표준에러에 `총 199색 / 776회`, `/tmp/mapping.md`에 199행 표
 
 - [ ] **Step 3: 매핑 문서를 작성한다**
 
 `docs/superpowers/specs/2026-08-04-color-mapping.md`를 만들고, 다음 머리말 뒤에 `/tmp/mapping.md` 내용을 붙인다.
 
 ```markdown
-# 색 매핑표 — 기존 202색 → Moss & Clay 토큰
+# 색 매핑표 — 기존 199색 → Moss & Clay 토큰
 
 `scripts/classify-colors.mjs`가 채도·명도·색상으로 1차 제안한 표다.
 "확정" 열이 비어 있으면 제안을 그대로 채택한다는 뜻이고,
@@ -497,16 +497,16 @@ Expected: 표준에러에 `총 202색 / 776회`, `/tmp/mapping.md`에 202행 표
 | `#bc7a12` | `--tint-pending` | 아바타 배경. 상태색 아님 |
 | `#ffffff` | `--color-surface` | 순백은 모래빛 베이스에서 튄다 |
 
-- [ ] **Step 4: 표가 202행인지 확인한다**
+- [ ] **Step 4: 표가 199행인지 확인한다**
 
 Run: `grep -c '^| [0-9]' docs/superpowers/specs/2026-08-04-color-mapping.md`
-Expected: `202`
+Expected: `199`
 
 - [ ] **Step 5: 커밋**
 
 ```bash
 git add scripts/classify-colors.mjs docs/superpowers/specs/2026-08-04-color-mapping.md
-git commit -m "색 매핑표 — 기존 202색을 토큰으로 보내는 기준 고정
+git commit -m "색 매핑표 — 기존 199색을 토큰으로 보내는 기준 고정
 
 이후 화면별 치환 태스크가 같은 판단을 반복하지 않게 한곳에 모은다.
 자동 분류가 틀리는 네 경우(라임, 아바타색 2종, 순백)는 직접 확정했다."
