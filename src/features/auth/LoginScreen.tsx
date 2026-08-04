@@ -1,6 +1,5 @@
 import { FormEvent, useState } from 'react';
 import { HeartHandshake, LogIn, ShieldCheck, UserPlus } from 'lucide-react';
-import { seedAccounts } from '../../accountStore';
 import { teamParts, isCompanyEmail } from '../../auth';
 import type { CurrentUser, ManagedAccount, TeamPart } from '../../types';
 
@@ -9,9 +8,12 @@ const toCurrentUser = (account: ManagedAccount): CurrentUser => ({
   email: account.email,
   role: account.role,
   part: account.part,
+  connectioner: account.connectioner ?? false,
 });
-const quickLeader = seedAccounts.find((account) => account.name === '이선민');
-const quickMember = seedAccounts.find((account) => account.name === '이두민');
+
+// 빠른 로그인(데모) 대상 계정. 리더=심상준(팀리더), 팀원=이수현(팀원).
+const DEMO_LEADER_EMAIL = 'simair@sk.com';
+const DEMO_MEMBER_EMAIL = 'suhyunle@sk.com';
 
 type LoginScreenProps = {
   accounts: ManagedAccount[];
@@ -28,6 +30,15 @@ export function LoginScreen({ accounts, onLogin, onRegister }: LoginScreenProps)
   const [part, setPart] = useState<TeamPart>('TEST혁신파트');
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
+  // 빠른 로그인(데모)은 로그인 화면 로고를 눌러야 열리는 히든 제스처. 일반 유저는 발견하기 어렵다.
+  const [showQuickLogin, setShowQuickLogin] = useState(false);
+
+  const quickLeader = accounts.find(
+    (account) => account.email.toLowerCase() === DEMO_LEADER_EMAIL && account.status === '활성',
+  );
+  const quickMember = accounts.find(
+    (account) => account.email.toLowerCase() === DEMO_MEMBER_EMAIL && account.status === '활성',
+  );
 
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -69,7 +80,7 @@ export function LoginScreen({ accounts, onLogin, onRegister }: LoginScreenProps)
 
       setError('');
       setNotice('');
-      onLogin({ name: account.name, email: account.email, role: account.role, part: account.part });
+      onLogin(toCurrentUser(account));
       return;
     }
 
@@ -89,7 +100,8 @@ export function LoginScreen({ accounts, onLogin, onRegister }: LoginScreenProps)
     <main className="login-page">
       <section className="login-intro">
         <div className="brand login-brand">
-          <div className="brand-mark">
+          {/* 로고 클릭 = 커넥셔너용 빠른 로그인(데모) 히든 토글. 일반 유저는 알기 어렵다. */}
+          <div className="brand-mark" onClick={() => setShowQuickLogin((prev) => !prev)} title="SK Grove">
             <HeartHandshake size={24} />
           </div>
           <div>
@@ -173,21 +185,23 @@ export function LoginScreen({ accounts, onLogin, onRegister }: LoginScreenProps)
           {mode === 'login' ? '로그인' : '가입 요청'}
         </button>
 
-        <div className="quick-login">
-          <span>빠른 로그인 (데모)</span>
-          <div className="quick-login-row">
-            {quickLeader && (
-              <button type="button" onClick={() => onLogin(toCurrentUser(quickLeader))}>
-                리더 · {quickLeader.name}
-              </button>
-            )}
-            {quickMember && (
-              <button type="button" onClick={() => onLogin(toCurrentUser(quickMember))}>
-                팀원 · {quickMember.name}
-              </button>
-            )}
+        {showQuickLogin && (quickLeader || quickMember) && (
+          <div className="quick-login">
+            <span>빠른 로그인 (데모)</span>
+            <div className="quick-login-row">
+              {quickLeader && (
+                <button type="button" onClick={() => onLogin(toCurrentUser(quickLeader))}>
+                  리더 · {quickLeader.name}
+                </button>
+              )}
+              {quickMember && (
+                <button type="button" onClick={() => onLogin(toCurrentUser(quickMember))}>
+                  팀원 · {quickMember.name}
+                </button>
+              )}
+            </div>
           </div>
-        </div>
+        )}
       </form>
     </main>
   );

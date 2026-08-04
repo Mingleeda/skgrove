@@ -12,6 +12,7 @@ const adminAccount: ManagedAccount = {
   part: '전체',
   status: '활성',
   joinedAt: '2026-07-24',
+  connectioner: true,
 };
 
 export const seedAccounts: ManagedAccount[] = [
@@ -24,6 +25,7 @@ export const seedAccounts: ManagedAccount[] = [
     part: 'ITS혁신파트',
     status: '활성',
     joinedAt: '2026-07-24',
+    connectioner: true,
   },
   {
     id: 'USR-03',
@@ -33,6 +35,7 @@ export const seedAccounts: ManagedAccount[] = [
     part: '혁신도구파트',
     status: '활성',
     joinedAt: '2026-07-24',
+    connectioner: true,
   },
   {
     id: 'USR-04',
@@ -53,6 +56,8 @@ type AccountRow = {
   part: ManagedAccount['part'];
   status: ManagedAccount['status'];
   joined_at: string;
+  photo_url?: string | null;
+  is_connectioner?: boolean | null;
 };
 
 export async function loadAccounts() {
@@ -61,7 +66,14 @@ export async function loadAccounts() {
 
     if (!error && data) {
       const accounts = ensureAdminAccount(data.map(accountFromRow));
-      await saveAccounts(accounts);
+      // 읽기는 DB를 다시 쓰지 않는다. 예전엔 saveAccounts로 전체 재저장했는데,
+      // 옛 번들이 뜬 클라이언트가 photo_url 등을 못 읽은 채 저장하면 공유 데이터가 손상됐다.
+      // (계정 사진이 통째로 NULL로 덮어써지던 원인) 로컬 캐시만 갱신한다.
+      try {
+        window.localStorage.setItem(ACCOUNT_STORAGE_KEY, JSON.stringify(accounts));
+      } catch {
+        // localStorage 접근 불가 시 무시
+      }
       return accounts;
     }
   }
@@ -94,18 +106,13 @@ export function makeAccountId() {
 }
 
 function ensureAdminAccount(accounts: ManagedAccount[]) {
+  // 레거시 관리자 이메일(sunmin@sk.com) 정리.
   const withoutLegacyAdmin = accounts.filter((account) => account.email.toLowerCase() !== 'sunmin@sk.com');
-  const existingAdmin = withoutLegacyAdmin.find((account) => account.email.toLowerCase() === adminAccount.email);
-
-  if (!existingAdmin) {
-    return [adminAccount, ...withoutLegacyAdmin];
-  }
-
-  return withoutLegacyAdmin.map((account) =>
-    account.email.toLowerCase() === adminAccount.email
-      ? { ...account, ...adminAccount, id: account.id || adminAccount.id }
-      : account,
-  );
+  const hasAdmin = withoutLegacyAdmin.some((account) => account.email.toLowerCase() === adminAccount.email);
+  // 관리자 계정이 아예 없을 때만 시드로 보장(최초 실행). 이미 있으면 DB 값을 그대로 존중한다.
+  // (예전엔 매번 role/part를 팀리더/전체로 덮어써서 계정 관리에서 역할을 바꿔도 원복됐다.
+  //  전권은 커넥셔너 플래그로 별도 보장되므로 역할을 강제할 필요가 없다.)
+  return hasAdmin ? withoutLegacyAdmin : [adminAccount, ...withoutLegacyAdmin];
 }
 
 function accountFromRow(row: AccountRow): ManagedAccount {
@@ -117,6 +124,8 @@ function accountFromRow(row: AccountRow): ManagedAccount {
     part: row.part,
     status: row.status,
     joinedAt: row.joined_at,
+    photoUrl: row.photo_url ?? undefined,
+    connectioner: row.is_connectioner ?? false,
   };
 }
 
@@ -129,5 +138,7 @@ function accountToRow(account: ManagedAccount): AccountRow {
     part: account.part,
     status: account.status,
     joined_at: account.joinedAt,
+    photo_url: account.photoUrl || null,
+    is_connectioner: account.connectioner ?? false,
   };
 }

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { loadAccounts, makeAccountId, saveAccounts, seedAccounts } from './accountStore';
 import { loadActionItems, makeActionItemId, saveActionItems } from './actionItemStore';
 import { finalStatus, isOpen, liveStatus, settleAgendas } from './agendaRules';
@@ -24,10 +24,9 @@ import {
   initialHumorComments,
   initialHumorPosts,
   initialIssues,
-  initialMatches,
   initialNotifications,
   initialTeaSessions,
-  matchCandidates,
+  profiles as initialProfiles,
 } from './data/mockData';
 import { ActionBoard } from './features/actions/ActionBoard';
 import { ActionCreateForm } from './features/actions/ActionCreateForm';
@@ -70,6 +69,8 @@ import {
   saveHumorComments,
   saveHumorPosts,
 } from './humorStore';
+import { loadProfiles } from './profileStore';
+import { ProfilesContext, type AvatarInfo } from './profilesContext';
 import type {
   ActionItem,
   Agenda,
@@ -85,6 +86,7 @@ import type {
   Identity,
   Issue,
   ManagedAccount,
+  Profile,
   Section,
   TeaSession,
   TeaSessionStatus,
@@ -125,7 +127,6 @@ export function App() {
   const [agendas, setAgendas] = useState<Agenda[]>(initialAgendas);
   const [ballots, setBallots] = useState<AgendaBallot[]>([]);
   const [identity, setIdentity] = useState<Identity>('익명');
-  const [matched, setMatched] = useState(initialMatches);
   const [canSessions, setCanSessions] = useState<CanSession[]>(initialCanSessions);
   const [canOpinions, setCanOpinions] = useState<CanOpinion[]>(initialCanOpinions);
   const [selectedCanId, setSelectedCanId] = useState<string | null>(null);
@@ -137,6 +138,32 @@ export function App() {
   const [notifications, setNotifications] = useState<AppNotification[]>(initialNotifications);
   const [humorPosts, setHumorPosts] = useState<HumorPost[]>(initialHumorPosts);
   const [humorComments, setHumorComments] = useState<HumorComment[]>(initialHumorComments);
+  // 알림이 DB(있으면)에서 로드 완료됐는지. 마감 임박 체크는 이게 true여야 실행(중복 슬랙 방지).
+  const [notificationsReady, setNotificationsReady] = useState(false);
+  // 계정별 아바타(색·사진). Avatar가 ProfilesContext로 읽는다. 로그인 후 DB에서 로드.
+  // 색은 성향 프로필(profiles), 사진은 계정(accounts)에서 오며 여기서 합친다.
+  const [profileDirectory, setProfileDirectory] = useState<Profile[]>(initialProfiles);
+  const profileMap = useMemo(() => {
+    const map = new Map<string, AvatarInfo>();
+    profileDirectory.forEach((profile) => map.set(profile.name, { color: profile.color }));
+    // 사진의 단일 소스는 accounts. 있으면 우선하고, 색은 성향 프로필 값을 유지한다.
+    accounts.forEach((account) => {
+      if (!account.photoUrl) return;
+      const existing = map.get(account.name);
+      map.set(account.name, { color: existing?.color ?? 'blue', photoUrl: account.photoUrl });
+    });
+    return map;
+  }, [profileDirectory, accounts]);
+
+  // 커피뽑기/조뽑기 명단 = 실제 유저(활성 계정)의 라이브 성향 프로필.
+  // 조 편성 로직이 part·birthYear·trait·style·color를 쓰므로 profiles가 소스,
+  // 탈퇴·비활성 계정은 accounts.status로 걸러 명단에서 제외한다.
+  const connectMembers = useMemo(() => {
+    const activeNames = new Set(
+      accounts.filter((account) => account.status === '활성').map((account) => account.name),
+    );
+    return profileDirectory.filter((profile) => activeNames.has(profile.name));
+  }, [profileDirectory, accounts]);
 
   const [votedAgendaIds, setVotedAgendaIds] = useState<string[]>([]);
   const [agendaForActions, setAgendaForActions] = useState<Agenda | null>(null);
@@ -197,7 +224,10 @@ export function App() {
       if (isMounted) setTeaSessions(loaded);
     });
     loadNotifications().then((loaded) => {
-      if (isMounted) setNotifications(loaded);
+      if (isMounted) {
+        setNotifications(loaded);
+        setNotificationsReady(true);
+      }
     });
     loadHumorPosts().then((loaded) => {
       if (isMounted) setHumorPosts(loaded);
@@ -211,6 +241,19 @@ export function App() {
     };
   }, []);
 
+  // 프로필 디렉토리는 로그인(currentUser) 후 로드 — loadProfiles가 currentUser를 필요로 한다.
+  useEffect(() => {
+    if (!currentUser) return;
+    let isMounted = true;
+    loadProfiles(initialProfiles, currentUser).then((loaded) => {
+      if (isMounted) setProfileDirectory(loaded);
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, [currentUser]);
+
+  // createdAt은 App이 채운다(접수 시각). 호출부가 넘기지 않는다.
   const submitIssue = (issue: Omit<Issue, 'id' | 'status' | 'createdAt'>) => {
     const next: Issue = {
       id: makeIssueId(),
@@ -293,6 +336,8 @@ export function App() {
   // 투표 마감 임박(113): 서버 타이머가 없으므로 안건이 로드/변경될 때 기회적으로 계산한다.
   // dedupeKey가 이미 만든 알림의 재생성을 막으므로 로드마다 중복 생성되지 않는다.
   useEffect(() => {
+    // 알림이 DB에서 아직 안 실려온 상태면 보류 — seen(dedupe)이 비어 있어 매 로드마다 재발신되는 걸 막는다.
+    if (!notificationsReady) return;
     const drafts: NotificationDraft[] = [];
     agendas.forEach((agenda) => {
       if (isDeadlineSoon(agenda, today())) {
@@ -302,7 +347,7 @@ export function App() {
     if (drafts.length > 0) notify(drafts);
     // notify는 최신 notifications 클로저를 쓰며, 이 effect는 알림 변경으로 재실행되지 않는다.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [agendas, accounts]);
+  }, [agendas, accounts, notificationsReady]);
 
   // 투표 대상 인원. 파트 한정 안건은 해당 파트 + 전체 소속(팀리더)만 센다.
   const eligibleCountFor = (part: Agenda['part']) =>
@@ -412,10 +457,6 @@ export function App() {
       ),
     );
     if (target && isOpen(target)) notifyStatus(`안건을 마감했습니다 · ${finalStatus(target)}`);
-  };
-
-  const shuffleTeams = () => {
-    setMatched([...matchCandidates].sort(() => Math.random() - 0.5).slice(0, 3));
   };
 
   const startCanSession = () => {
@@ -649,6 +690,17 @@ export function App() {
     }
   };
 
+  const editHumorPost = (postId: string, draft: { body: string; mediaUrl: string }) => {
+    if (!currentUser || !draft.body.trim()) return;
+    const post = humorPosts.find((item) => item.id === postId);
+    if (!post || post.author !== currentUser.name) return; // 본인 글만 수정
+    persistHumorPosts(
+      humorPosts.map((item) =>
+        item.id === postId ? { ...item, body: draft.body.trim(), mediaUrl: draft.mediaUrl.trim() } : item,
+      ),
+    );
+  };
+
   const deleteHumorPost = (postId: string) => {
     const post = humorPosts.find((item) => item.id === postId);
     if (!post || !currentUser) return;
@@ -686,6 +738,18 @@ export function App() {
   const persistAccounts = (nextAccounts: ManagedAccount[]) => {
     setAccounts(nextAccounts);
     void saveAccounts(nextAccounts);
+  };
+
+  // 자율 관리: 로그인한 본인 계정의 프로필 사진만 갱신한다.
+  const saveMyProfilePhoto = (photoUrl: string) => {
+    if (!currentUser) return;
+    persistAccounts(
+      accounts.map((account) =>
+        account.email.toLowerCase() === currentUser.email.toLowerCase()
+          ? { ...account, photoUrl: photoUrl.trim() || undefined }
+          : account,
+      ),
+    );
   };
 
   const registerAccount = (account: Omit<ManagedAccount, 'id' | 'joinedAt' | 'status'>) => {
@@ -740,9 +804,12 @@ export function App() {
   ).length;
 
   return (
+    <ProfilesContext.Provider value={profileMap}>
     <AppShell
       active={active}
       currentUser={currentUser}
+      currentPhotoUrl={accounts.find((account) => account.email.toLowerCase() === currentUser.email.toLowerCase())?.photoUrl}
+      onSavePhoto={saveMyProfilePhoto}
       unreadCount={unreadCount}
       onLogout={() => setCurrentUser(null)}
       onSectionChange={changeSection}
@@ -851,16 +918,18 @@ export function App() {
           onAddPost={addHumorPost}
           onToggleLike={toggleHumorLike}
           onAddComment={addHumorComment}
+          onEditPost={editHumorPost}
           onDeletePost={deleteHumorPost}
           onDeleteComment={deleteHumorComment}
         />
       )}
-      {active === 'profiles' && <Profiles currentUser={currentUser} />}
-      {active === 'connect' && <Connect matched={matched} onShuffleTeams={shuffleTeams} />}
+      {active === 'profiles' && <Profiles currentUser={currentUser} onProfilesChange={setProfileDirectory} />}
+      {active === 'connect' && <Connect members={connectMembers} />}
       {active === 'memory' && <Memory currentUser={currentUser} />}
       {active === 'metrics' && <Metrics currentUser={currentUser} />}
       {active === 'accounts' && isTeamLeader(currentUser) && <AccountManagement accounts={accounts} onAccountsChange={persistAccounts} />}
       <ToastRegion toasts={toasts} onDismiss={dismiss} />
     </AppShell>
+    </ProfilesContext.Provider>
   );
 }

@@ -10,6 +10,12 @@ create table if not exists public.accounts (
   updated_at timestamptz not null default now()
 );
 
+-- 계정별 프로필 사진(직접 이미지 URL). 없으면 앱에서 이니셜 칩으로 폴백.
+alter table public.accounts add column if not exists photo_url text;
+
+-- 커넥셔너(시스템 구축 슈퍼관리자) 여부 — 팀 역할과 별개인 전권 플래그. 계정 관리에서 토글.
+alter table public.accounts add column if not exists is_connectioner boolean not null default false;
+
 alter table public.accounts enable row level security;
 
 drop policy if exists "Allow prototype account reads" on public.accounts;
