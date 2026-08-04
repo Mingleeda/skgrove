@@ -8434,10 +8434,6 @@ button.notif-row {
   transform: rotate(180deg);
 }
 
-.my-issues-note {
-  margin: 0;
-  max-width: 62ch;
-}
 
 /* ===== 클릭·터치 타깃 =====
    프로필 사진 버튼이 30x30, 필터 칩이 높이 30px 이었다. WCAG 2.5.8 의
