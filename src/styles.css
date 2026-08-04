@@ -160,7 +160,7 @@ button {
 .brand {
   align-items: center;
   display: flex;
-  gap: 12px;
+  gap: var(--space-3);
   min-height: 52px;
 }
 
@@ -205,7 +205,7 @@ button {
   display: flex;
   gap: 10px;
   min-height: 42px;
-  padding: 0 12px;
+  padding: 0 var(--space-3);
   text-align: left;
 }
 
@@ -240,7 +240,7 @@ button {
   font-weight: 600;
   letter-spacing: 0.06em;
   margin: 0 0 2px;
-  padding: 0 12px;
+  padding: 0 var(--space-3);
   text-transform: uppercase;
 }
 
@@ -271,7 +271,7 @@ button {
   display: flex;
   justify-content: space-between;
   gap: 18px;
-  margin-bottom: 24px;
+  margin-bottom: var(--space-6);
 }
 
 .eyebrow {
@@ -311,7 +311,7 @@ h1 {
   gap: var(--space-2);
   min-height: 42px;
   min-width: 150px;
-  padding: 6px 12px;
+  padding: 6px var(--space-3);
   position: relative;
 }
 
@@ -375,9 +375,9 @@ h1 {
   border: 1px solid var(--color-sunken);
   border-radius: 10px;
   box-shadow: var(--shadow-float);
-  padding: 12px;
+  padding: var(--space-3);
   display: grid;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .photo-editor-pop label {
@@ -418,7 +418,7 @@ h1 {
 .photo-editor-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .icon-button,
@@ -430,7 +430,7 @@ h1 {
   align-items: center;
   border-radius: var(--radius);
   display: inline-flex;
-  gap: 8px;
+  gap: var(--space-2);
   justify-content: center;
   min-height: 40px;
   padding: 0 14px;
@@ -481,7 +481,7 @@ h1 {
   grid-template-columns: minmax(420px, 0.9fr) minmax(480px, 560px);
   min-height: 100vh;
   overflow: hidden;
-  padding: 48px 64px;
+  padding: var(--space-12) 64px;
 }
 
 .login-intro {
@@ -535,7 +535,7 @@ h1 {
   gap: 18px;
   justify-self: center;
   max-width: 560px;
-  padding: 32px;
+  padding: var(--space-8);
   position: relative;
   width: 100%;
   z-index: 1;
@@ -552,7 +552,7 @@ h1 {
   color: var(--tint-danger-ink);
   font-size: var(--text-body);
   font-weight: 700;
-  padding: 10px 12px;
+  padding: 10px var(--space-3);
 }
 
 .form-success {
@@ -562,7 +562,7 @@ h1 {
   color: var(--tint-moss-ink);
   font-size: var(--text-body);
   font-weight: 700;
-  padding: 10px 12px;
+  padding: 10px var(--space-3);
 }
 
 .auth-tabs {
@@ -570,9 +570,9 @@ h1 {
   border: 1px solid var(--color-sunken);
   border-radius: var(--radius);
   display: grid;
-  gap: 4px;
+  gap: var(--space-1);
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  padding: 4px;
+  padding: var(--space-1);
 }
 
 .auth-tabs button {
@@ -600,7 +600,7 @@ h1 {
   color: var(--tint-info-ink);
   display: grid;
   gap: 5px;
-  padding: 12px;
+  padding: var(--space-3);
 }
 
 .role-note span {
@@ -653,7 +653,7 @@ h1 {
 .hero-copy {
   color: var(--tint-moss);
   line-height: 1.6;
-  margin-top: 12px;
+  margin-top: var(--space-3);
   max-width: 680px;
 }
 
@@ -704,7 +704,7 @@ h1 {
   display: flex;
   font-size: var(--text-body);
   min-height: 38px;
-  padding: 0 12px;
+  padding: 0 var(--space-3);
 }
 
 .home-signal li:not(:last-child)::after {
@@ -718,7 +718,7 @@ h1 {
   align-items: center;
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--space-2);
   justify-content: flex-end;
   max-width: 420px;
 }
@@ -754,7 +754,7 @@ h1 {
 .stat-card {
   align-items: flex-start;
   display: grid;
-  gap: 8px;
+  gap: var(--space-2);
   min-height: 128px;
   padding: 18px;
   text-align: left;
@@ -803,14 +803,14 @@ h1 {
 
 .panel {
   min-width: 0;
-  padding: 20px;
+  padding: var(--space-5);
 }
 
 .panel-header {
   align-items: center;
   display: flex;
   gap: 10px;
-  margin-bottom: 16px;
+  margin-bottom: var(--space-4);
 }
 
 .panel-header h2 {
@@ -819,7 +819,7 @@ h1 {
 
 .epic-list {
   display: grid;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .epic-list button,
@@ -830,9 +830,9 @@ h1 {
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   display: flex;
-  gap: 12px;
+  gap: var(--space-3);
   min-height: 54px;
-  padding: 12px;
+  padding: var(--space-3);
   text-align: left;
   width: 100%;
 }
@@ -854,7 +854,7 @@ h1 {
 
 .action-list {
   display: grid;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .home-agenda-list,
@@ -879,7 +879,7 @@ h1 {
   display: grid;
   gap: 13px;
   min-height: 132px;
-  padding: 16px;
+  padding: var(--space-4);
 }
 
 .home-agenda-card div:first-child {
@@ -904,15 +904,15 @@ h1 {
 .compact-profile-list button {
   align-items: center;
   display: flex;
-  gap: 12px;
+  gap: var(--space-3);
   min-height: 70px;
-  padding: 12px;
+  padding: var(--space-3);
 }
 
 .quick-card-list div,
 .compact-profile-list div {
   display: grid;
-  gap: 4px;
+  gap: var(--space-1);
   min-width: 0;
 }
 
@@ -1045,7 +1045,7 @@ h1 {
 .intake-aside,
 .intake-panel {
   display: grid;
-  gap: 16px;
+  gap: var(--space-4);
 }
 
 .intake-stepper {
@@ -1053,9 +1053,9 @@ h1 {
   border: 1px solid var(--color-sunken);
   border-radius: var(--radius);
   display: grid;
-  gap: 4px;
+  gap: var(--space-1);
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  padding: 4px;
+  padding: var(--space-1);
 }
 
 .intake-stepper button {
@@ -1065,7 +1065,7 @@ h1 {
   border-radius: var(--radius);
   color: var(--color-muted);
   display: flex;
-  gap: 8px;
+  gap: var(--space-2);
   justify-content: center;
   min-height: 42px;
 }
@@ -1095,7 +1095,7 @@ h1 {
 .intake-choice-grid,
 .form-grid {
   display: grid;
-  gap: 12px;
+  gap: var(--space-3);
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
@@ -1107,7 +1107,7 @@ h1 {
   display: grid;
   gap: 10px;
   min-height: 150px;
-  padding: 16px;
+  padding: var(--space-4);
   text-align: left;
 }
 
@@ -1166,7 +1166,7 @@ h1 {
   font-size: var(--text-body);
   font-weight: 700;
   gap: 6px;
-  padding: 5px 12px;
+  padding: 5px var(--space-3);
 }
 
 .review-flag.anon,
@@ -1301,7 +1301,7 @@ h1 {
   display: flex;
   gap: 10px;
   min-height: 48px;
-  padding: 10px 12px;
+  padding: 10px var(--space-3);
 }
 
 .complete-panel {
@@ -1327,8 +1327,8 @@ h1 {
   border: 1px solid var(--color-clay);
   border-radius: var(--radius);
   display: grid;
-  gap: 4px;
-  padding: 12px 14px;
+  gap: var(--space-1);
+  padding: var(--space-3) 14px;
 }
 
 .anonymous-receipt strong {
@@ -1362,7 +1362,7 @@ h1 {
   border-radius: var(--radius);
   display: grid;
   gap: 5px;
-  padding: 12px;
+  padding: var(--space-3);
 }
 
 .submission-card {
@@ -1400,7 +1400,7 @@ h1 {
 
 .submission-summary div {
   display: grid;
-  gap: 4px;
+  gap: var(--space-1);
   min-width: 0;
 }
 
@@ -1411,7 +1411,7 @@ h1 {
 .submission-detail {
   border-top: 1px solid var(--color-border);
   display: grid;
-  gap: 8px;
+  gap: var(--space-2);
   margin-top: 10px;
   padding-top: 10px;
 }
@@ -1430,7 +1430,7 @@ h1 {
   border-top: 1px solid var(--color-border);
   display: grid;
   gap: 10px;
-  margin-top: 4px;
+  margin-top: var(--space-1);
   padding-top: 10px;
 }
 
@@ -1440,7 +1440,7 @@ h1 {
 
 .submission-followup-actions {
   display: grid;
-  gap: 8px;
+  gap: var(--space-2);
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
@@ -1481,14 +1481,14 @@ h1 {
 .anonymous-lookup,
 .anonymous-result {
   display: grid;
-  gap: 12px;
+  gap: var(--space-3);
 }
 
 .anonymous-result {
   background: var(--tint-moss);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
-  padding: 12px;
+  padding: var(--space-3);
 }
 
 label {
@@ -1507,7 +1507,7 @@ textarea {
   border-radius: var(--radius-sm);
   color: var(--color-ink);
   min-height: 42px;
-  padding: 10px 12px;
+  padding: 10px var(--space-3);
   width: 100%;
 }
 
@@ -1522,8 +1522,8 @@ textarea {
   border: 1px solid var(--color-sunken);
   border-radius: var(--radius);
   display: inline-flex;
-  gap: 4px;
-  padding: 4px;
+  gap: var(--space-1);
+  padding: var(--space-1);
 }
 
 .segmented button,
@@ -1579,7 +1579,7 @@ textarea {
    잡혀, 카드가 531px 열을 774px 로 밀고 나가 상태 select 와 안건화 버튼이 잘렸다. */
 .issue-list {
   display: grid;
-  gap: 12px;
+  gap: var(--space-3);
   grid-template-columns: minmax(0, 1fr);
 }
 
@@ -1600,7 +1600,7 @@ textarea {
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   display: grid;
-  gap: 8px;
+  gap: var(--space-2);
   min-height: 116px;
   padding: 18px;
 }
@@ -1631,7 +1631,7 @@ textarea {
    531px 열을 774px 로 밀고 나가 오른쪽 상세 패널 아래로 파고들었다. */
 .leader-inbox-list {
   display: grid;
-  gap: 12px;
+  gap: var(--space-3);
   grid-template-columns: minmax(0, 1fr);
   min-width: 0;
 }
@@ -1646,7 +1646,7 @@ textarea {
 .issue-card {
   align-items: center;
   display: grid;
-  gap: 16px;
+  gap: var(--space-4);
   grid-template-columns: minmax(0, 1fr) auto;
   padding: 18px;
 }
@@ -1661,7 +1661,7 @@ textarea {
   border: 0;
   color: var(--color-ink);
   display: grid;
-  gap: 8px;
+  gap: var(--space-2);
   min-width: 0;
   padding: 0;
   text-align: left;
@@ -1669,7 +1669,7 @@ textarea {
 
 .issue-main {
   display: grid;
-  gap: 8px;
+  gap: var(--space-2);
   min-width: 0;
 }
 
@@ -1742,7 +1742,7 @@ textarea {
   color: var(--color-muted);
   font-size: var(--text-meta);
   font-weight: 600;
-  padding: 5px 8px;
+  padding: 5px var(--space-2);
 }
 
 .author-card {
@@ -1751,7 +1751,7 @@ textarea {
   border-radius: var(--radius);
   display: grid;
   gap: 3px;
-  padding: 10px 12px;
+  padding: 10px var(--space-3);
   width: fit-content;
 }
 
@@ -1798,7 +1798,7 @@ textarea {
 
 .leader-inbox-list .issue-actions .secondary-button {
   min-width: 136px;
-  padding: 0 12px;
+  padding: 0 var(--space-3);
   white-space: nowrap;
 }
 
@@ -1843,9 +1843,9 @@ textarea {
   border: 1px solid var(--color-sunken);
   border-radius: var(--radius);
   display: grid;
-  gap: 4px;
+  gap: var(--space-1);
   grid-template-columns: repeat(auto-fit, minmax(84px, 1fr));
-  padding: 4px;
+  padding: var(--space-1);
 }
 
 .leader-action-tabs button {
@@ -1858,7 +1858,7 @@ textarea {
   gap: 6px;
   justify-content: center;
   min-height: 38px;
-  padding: 0 8px;
+  padding: 0 var(--space-2);
 }
 
 .leader-action-tabs .selected {
@@ -1876,7 +1876,7 @@ textarea {
 
 .agenda-refine-form {
   display: grid;
-  gap: 12px;
+  gap: var(--space-3);
 }
 
 .agenda-refine-grid {
@@ -1887,7 +1887,7 @@ textarea {
 
 .empty-panel {
   display: grid;
-  gap: 8px;
+  gap: var(--space-2);
   min-height: 220px;
   place-content: center;
   text-align: center;
@@ -1965,16 +1965,16 @@ textarea {
   border-radius: var(--radius);
   color: var(--tint-info-ink);
   display: flex;
-  gap: 8px;
+  gap: var(--space-2);
   min-height: 42px;
-  padding: 0 12px;
+  padding: 0 var(--space-3);
 }
 
 .agenda-toolbar {
   align-items: center;
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: var(--space-3);
   justify-content: space-between;
   margin-bottom: 18px;
 }
@@ -1983,7 +1983,7 @@ textarea {
   align-items: center;
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 /* 전역 input/select는 width:100%라 툴바 안에서 줄바꿈된다. 내용 폭으로 되돌린다. */
@@ -2000,9 +2000,9 @@ textarea {
   border-radius: var(--radius);
   color: var(--color-muted);
   display: inline-flex;
-  gap: 8px;
+  gap: var(--space-2);
   min-height: 40px;
-  padding: 0 12px;
+  padding: 0 var(--space-3);
 }
 
 .agenda-search input {
@@ -2017,7 +2017,7 @@ textarea {
   background: transparent;
   border: 0;
   display: grid;
-  gap: 12px;
+  gap: var(--space-3);
   padding: 0;
   text-align: left;
   width: 100%;
@@ -2031,14 +2031,14 @@ textarea {
 .agenda-form-panel,
 .agenda-detail-panel {
   display: grid;
-  gap: 16px;
+  gap: var(--space-4);
   margin: 0 auto;
   max-width: 720px;
 }
 
 .agenda-detail-head {
   display: grid;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .agenda-detail-meta {
@@ -2061,7 +2061,7 @@ textarea {
   border-radius: var(--radius);
   color: var(--color-ink);
   line-height: 1.65;
-  padding: 16px;
+  padding: var(--space-4);
   white-space: pre-wrap;
 }
 
@@ -2120,7 +2120,7 @@ textarea {
   font-weight: 600;
   gap: 10px;
   line-height: 1.45;
-  padding: 12px;
+  padding: var(--space-3);
 }
 
 .issue-locked {
@@ -2135,7 +2135,7 @@ textarea {
 
 .action-form-panel {
   display: grid;
-  gap: 16px;
+  gap: var(--space-4);
   margin: 0 auto;
   max-width: 860px;
 }
@@ -2146,7 +2146,7 @@ textarea {
   border-radius: var(--radius);
   color: var(--color-info);
   font-weight: 700;
-  padding: 12px;
+  padding: var(--space-3);
 }
 
 .action-form-source span {
@@ -2156,7 +2156,7 @@ textarea {
 
 .action-draft-list {
   display: grid;
-  gap: 12px;
+  gap: var(--space-3);
 }
 
 .action-draft-row {
@@ -2167,7 +2167,7 @@ textarea {
   display: grid;
   gap: 10px;
   grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr) auto;
-  padding: 12px;
+  padding: var(--space-3);
 }
 
 .action-draft-remove {
@@ -2190,7 +2190,7 @@ textarea {
 
 .action-card {
   display: grid;
-  gap: 12px;
+  gap: var(--space-3);
   padding: 18px;
 }
 
@@ -2224,9 +2224,9 @@ textarea {
   color: var(--color-ink);
   display: flex;
   font-size: var(--text-body);
-  gap: 8px;
+  gap: var(--space-2);
   line-height: 1.55;
-  padding: 10px 12px;
+  padding: 10px var(--space-3);
 }
 
 .action-note.review {
@@ -2244,7 +2244,7 @@ textarea {
 .action-transitions {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .action-note-editor {
@@ -2257,7 +2257,7 @@ textarea {
 }
 
 .action-overdue-notice {
-  margin-bottom: 16px;
+  margin-bottom: var(--space-4);
 }
 
 .voted-box {
@@ -2268,10 +2268,10 @@ textarea {
   color: var(--color-moss);
   display: flex;
   font-size: var(--text-body);
-  gap: 8px;
+  gap: var(--space-2);
   line-height: 1.5;
   min-height: 42px;
-  padding: 10px 12px;
+  padding: 10px var(--space-3);
 }
 
 .meeting-lane,
@@ -2288,9 +2288,9 @@ textarea {
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   display: flex;
-  gap: 12px;
+  gap: var(--space-3);
   min-height: 58px;
-  padding: 12px;
+  padding: var(--space-3);
 }
 
 .step span {
@@ -2334,7 +2334,7 @@ textarea {
   grid-column: 1 / -1;
   grid-template-columns: minmax(0, 0.95fr) minmax(360px, 1.05fr);
   min-height: 220px;
-  padding: 24px;
+  padding: var(--space-6);
 }
 
 .my-profile-card.green {
@@ -2370,7 +2370,7 @@ textarea {
 .my-profile-topline {
   align-items: center;
   display: flex;
-  gap: 12px;
+  gap: var(--space-3);
   justify-content: space-between;
 }
 
@@ -2406,9 +2406,9 @@ textarea {
   display: inline-flex;
   font-size: var(--text-body);
   font-weight: 700;
-  gap: 8px;
+  gap: var(--space-2);
   min-height: 36px;
-  padding: 0 12px;
+  padding: 0 var(--space-3);
   width: fit-content;
 }
 
@@ -2423,7 +2423,7 @@ textarea {
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: var(--radius);
   display: grid;
-  gap: 8px;
+  gap: var(--space-2);
   min-height: 142px;
   padding: 14px;
 }
@@ -2464,7 +2464,7 @@ textarea {
 .profile-detail-head,
 .profile-card-head {
   display: grid;
-  gap: 16px;
+  gap: var(--space-4);
 }
 
 .profile-survey-panel {
@@ -2474,7 +2474,7 @@ textarea {
 .profile-mini-fields,
 .profile-directory-tools {
   display: grid;
-  gap: 12px;
+  gap: var(--space-3);
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
@@ -2483,13 +2483,13 @@ textarea {
   border: 1px dashed var(--color-sunken);
   border-radius: var(--radius);
   display: grid;
-  gap: 12px;
+  gap: var(--space-3);
   padding: 14px;
 }
 
 .profile-private-fields > div:first-child {
   display: grid;
-  gap: 4px;
+  gap: var(--space-1);
 }
 
 .profile-private-fields strong {
@@ -2519,7 +2519,7 @@ textarea {
 
 .survey-choice-grid {
   display: grid;
-  gap: 8px;
+  gap: var(--space-2);
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
@@ -2531,7 +2531,7 @@ textarea {
   display: grid;
   gap: 6px;
   min-height: 86px;
-  padding: 12px;
+  padding: var(--space-3);
   text-align: left;
 }
 
@@ -2658,7 +2658,7 @@ textarea {
 .profile-chip-list span {
   color: var(--color-ink);
   line-height: 1.45;
-  padding: 10px 12px;
+  padding: 10px var(--space-3);
 }
 
 .profile-qa-list div {
@@ -2667,7 +2667,7 @@ textarea {
   display: flex;
   gap: 10px;
   min-height: 48px;
-  padding: 10px 12px;
+  padding: 10px var(--space-3);
 }
 
 .profile-qa-list svg,
@@ -2694,7 +2694,7 @@ textarea {
   border: 1px solid var(--color-sunken);
   border-radius: var(--radius);
   display: flex;
-  gap: 8px;
+  gap: var(--space-2);
   min-height: 42px;
   padding: 0 10px;
 }
@@ -2722,7 +2722,7 @@ textarea {
   display: flex;
   gap: 10px;
   min-height: 48px;
-  padding: 10px 12px;
+  padding: 10px var(--space-3);
 }
 
 .profile-result-summary strong {
@@ -2747,7 +2747,7 @@ textarea {
   border-radius: var(--radius);
   display: grid;
   gap: 10px;
-  padding: 12px;
+  padding: var(--space-3);
 }
 
 .profile-part-head {
@@ -2763,7 +2763,7 @@ textarea {
   color: var(--color-moss);
   font-size: var(--text-meta);
   font-weight: 700;
-  padding: 5px 8px;
+  padding: 5px var(--space-2);
 }
 
 .profile-part-section .profile-list-grid {
@@ -2774,10 +2774,10 @@ textarea {
   align-items: center;
   color: var(--color-ink);
   display: grid;
-  gap: 12px;
+  gap: var(--space-3);
   grid-template-columns: 40px minmax(0, 1fr) minmax(130px, auto);
   min-height: 72px;
-  padding: 12px;
+  padding: var(--space-3);
   text-align: left;
 }
 
@@ -2788,7 +2788,7 @@ textarea {
 
 .profile-list-grid div {
   display: grid;
-  gap: 4px;
+  gap: var(--space-1);
   min-width: 0;
 }
 
@@ -2826,8 +2826,8 @@ textarea {
 
 .profile-guide {
   display: grid;
-  gap: 8px;
-  padding: 16px;
+  gap: var(--space-2);
+  padding: var(--space-4);
 }
 
 .profile-guide p {
@@ -2867,7 +2867,7 @@ textarea {
   color: var(--color-ink);
   display: inline-flex;
   font-weight: 700;
-  gap: 8px;
+  gap: var(--space-2);
   justify-content: center;
   min-height: 42px;
 }
@@ -2898,7 +2898,7 @@ textarea {
 .participant-panel {
   background: var(--tint-moss);
   border: 1px solid var(--color-border);
-  gap: 12px;
+  gap: var(--space-3);
   max-height: calc(100vh - 56px);
   padding: 14px;
   position: sticky;
@@ -2908,13 +2908,13 @@ textarea {
 .participant-head {
   align-items: center;
   display: flex;
-  gap: 12px;
+  gap: var(--space-3);
   justify-content: space-between;
 }
 
 .participant-head > div {
   display: grid;
-  gap: 4px;
+  gap: var(--space-1);
 }
 
 .participant-head > div:last-child {
@@ -2936,7 +2936,7 @@ textarea {
   border: 1px solid var(--color-sunken);
   border-radius: var(--radius);
   display: flex;
-  gap: 8px;
+  gap: var(--space-2);
   min-height: 40px;
   padding: 0 10px;
 }
@@ -2960,7 +2960,7 @@ textarea {
 
 .participant-list {
   display: grid;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .part-group-list,
@@ -2973,7 +2973,7 @@ textarea {
 .coffee-chip-grid {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .coffee-chip-grid button {
@@ -2984,7 +2984,7 @@ textarea {
   font-size: var(--text-body);
   font-weight: 700;
   min-height: 34px;
-  padding: 0 12px;
+  padding: 0 var(--space-3);
 }
 
 .coffee-chip-grid button.selected {
@@ -3015,7 +3015,7 @@ textarea {
 
 .part-group-list {
   display: grid;
-  gap: 12px;
+  gap: var(--space-3);
 }
 
 .part-group {
@@ -3023,7 +3023,7 @@ textarea {
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   display: grid;
-  gap: 8px;
+  gap: var(--space-2);
   padding: 10px;
 }
 
@@ -3036,7 +3036,7 @@ textarea {
 
 .part-group-head > div {
   display: grid;
-  gap: 4px;
+  gap: var(--space-1);
 }
 
 .part-group-head span {
@@ -3062,7 +3062,7 @@ textarea {
   background: var(--tint-moss);
   grid-template-columns: 34px minmax(0, 1fr) 20px;
   min-height: 56px;
-  padding: 8px;
+  padding: var(--space-2);
 }
 
 .participant-list button.selected {
@@ -3089,29 +3089,29 @@ textarea {
 .team-member-list div > div,
 .coffee-panel > div {
   display: grid;
-  gap: 4px;
+  gap: var(--space-1);
 }
 
 .connect-workbench {
-  gap: 16px;
+  gap: var(--space-4);
 }
 
 .connect-control-panel {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   gap: 14px;
-  padding: 16px;
+  padding: var(--space-4);
 }
 
 .connect-control-grid {
   display: grid;
-  gap: 12px;
+  gap: var(--space-3);
   grid-template-columns: 1.3fr 1fr 0.8fr;
 }
 
 .connect-summary-strip {
   display: grid;
-  gap: 8px;
+  gap: var(--space-2);
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
@@ -3122,7 +3122,7 @@ textarea {
   color: var(--color-moss);
   font-weight: 700;
   min-height: 40px;
-  padding: 10px 12px;
+  padding: 10px var(--space-3);
   text-align: center;
 }
 
@@ -3204,14 +3204,14 @@ textarea {
 
 .team-result-grid {
   display: grid;
-  gap: 12px;
+  gap: var(--space-3);
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .team-result-card {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  gap: 12px;
+  gap: var(--space-3);
   padding: 14px;
 }
 
@@ -3228,7 +3228,7 @@ textarea {
 
 .team-member-list {
   display: grid;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .team-member-list > div {
@@ -3240,7 +3240,7 @@ textarea {
   gap: 10px;
   grid-template-columns: 34px minmax(0, 1fr);
   min-height: 54px;
-  padding: 8px;
+  padding: var(--space-2);
 }
 
 .coffee-panel {
@@ -3256,10 +3256,10 @@ textarea {
   border-radius: var(--radius);
   color: var(--color-surface);
   display: grid;
-  gap: 16px;
+  gap: var(--space-4);
   min-height: 260px;
   overflow: hidden;
-  padding: 24px;
+  padding: var(--space-6);
   position: relative;
   text-align: center;
 }
@@ -3334,7 +3334,7 @@ textarea {
 
 .coffee-draw-copy {
   display: grid;
-  gap: 8px;
+  gap: var(--space-2);
   justify-items: center;
   position: relative;
   z-index: 1;
@@ -3452,7 +3452,7 @@ textarea {
   gap: 6px;
   justify-items: center;
   min-height: 220px;
-  padding: 24px;
+  padding: var(--space-6);
   text-align: center;
 }
 
@@ -3491,22 +3491,22 @@ textarea {
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   display: grid;
-  gap: 12px;
-  padding: 16px;
+  gap: var(--space-3);
+  padding: var(--space-4);
 }
 
 .share-panel-head,
 .saved-result-head {
   align-items: center;
   display: flex;
-  gap: 12px;
+  gap: var(--space-3);
   justify-content: space-between;
 }
 
 .share-panel-head > div,
 .saved-result-head > div {
   display: grid;
-  gap: 4px;
+  gap: var(--space-1);
 }
 
 .share-panel-head > div:last-child {
@@ -3537,7 +3537,7 @@ textarea {
 
 .share-slide-deck {
   display: grid;
-  gap: 12px;
+  gap: var(--space-3);
 }
 
 .share-hero-slide,
@@ -3555,9 +3555,9 @@ textarea {
     linear-gradient(150deg, rgba(126, 179, 238, 0.24), transparent 42%),
     var(--color-moss-strong);
   color: var(--color-surface);
-  gap: 8px;
+  gap: var(--space-2);
   min-height: 170px;
-  padding: 24px;
+  padding: var(--space-6);
 }
 
 .share-hero-slide span,
@@ -3583,7 +3583,7 @@ textarea {
 
 .share-team-slides {
   display: grid;
-  gap: 12px;
+  gap: var(--space-3);
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
@@ -3592,19 +3592,19 @@ textarea {
   border: 1px solid var(--color-page);
   gap: 14px;
   min-height: 340px;
-  padding: 16px;
+  padding: var(--space-4);
 }
 
 .share-team-slide-head {
   align-items: start;
   display: flex;
-  gap: 12px;
+  gap: var(--space-3);
   justify-content: space-between;
 }
 
 .share-team-slide-head div {
   display: grid;
-  gap: 4px;
+  gap: var(--space-1);
 }
 
 .share-team-slide-head span,
@@ -3670,7 +3670,7 @@ textarea {
 
 .team-insight-grid {
   display: grid;
-  gap: 8px;
+  gap: var(--space-2);
   grid-template-columns: 0.9fr 1.1fr;
 }
 
@@ -3681,7 +3681,7 @@ textarea {
   display: grid;
   gap: 6px;
   min-height: 76px;
-  padding: 12px;
+  padding: var(--space-3);
 }
 
 .team-insight-grid strong {
@@ -3717,7 +3717,7 @@ textarea {
     linear-gradient(145deg, rgba(126, 179, 238, 0.24), transparent 44%),
     var(--color-moss-strong);
   color: var(--color-surface);
-  gap: 8px;
+  gap: var(--space-2);
   justify-items: center;
   min-height: 220px;
   padding: 28px;
@@ -3755,7 +3755,7 @@ textarea {
   color: var(--color-moss);
   font-weight: 700;
   margin: 0;
-  padding: 10px 12px;
+  padding: 10px var(--space-3);
 }
 
 .saved-result-list {
@@ -3778,9 +3778,9 @@ textarea {
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   display: grid;
-  gap: 12px;
+  gap: var(--space-3);
   grid-template-columns: minmax(0, 1fr) auto;
-  padding: 12px;
+  padding: var(--space-3);
 }
 
 .saved-result-list article div {
@@ -3905,13 +3905,13 @@ textarea {
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   display: flex;
-  gap: 12px;
+  gap: var(--space-3);
   min-height: 92px;
-  padding: 16px;
+  padding: var(--space-4);
 }
 
 .memory-screen {
-  gap: 20px;
+  gap: var(--space-5);
 }
 
 .memory-hero {
@@ -3945,8 +3945,8 @@ textarea {
   border: 1px solid rgba(255, 255, 255, 0.22);
   border-radius: var(--radius);
   display: grid;
-  gap: 8px;
-  padding: 16px;
+  gap: var(--space-2);
+  padding: var(--space-4);
 }
 
 .memory-dday-board svg {
@@ -3983,7 +3983,7 @@ textarea {
 }
 
 .memory-calendar-panel {
-  padding: 16px;
+  padding: var(--space-4);
 }
 
 .memory-calendar-guide {
@@ -3996,7 +3996,7 @@ textarea {
 .memory-calendar-sync {
   display: grid;
   gap: 6px;
-  margin-bottom: 12px;
+  margin-bottom: var(--space-3);
 }
 
 .memory-calendar-sync small {
@@ -4030,7 +4030,7 @@ textarea {
   border-radius: var(--radius);
   color: var(--color-ink);
   display: grid;
-  gap: 4px;
+  gap: var(--space-1);
   min-height: 60px;
   padding: 6px;
   text-align: left;
@@ -4097,10 +4097,10 @@ textarea {
   border-radius: var(--radius);
   color: var(--color-ink);
   display: grid;
-  gap: 12px;
+  gap: var(--space-3);
   grid-template-columns: 58px minmax(0, 1fr) auto;
   min-height: 74px;
-  padding: 12px;
+  padding: var(--space-3);
   text-align: left;
 }
 
@@ -4122,7 +4122,7 @@ textarea {
 
 .memory-event-card div {
   display: grid;
-  gap: 4px;
+  gap: var(--space-1);
   min-width: 0;
 }
 
@@ -4159,7 +4159,7 @@ textarea {
   align-items: center;
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .memory-meta span,
@@ -4183,7 +4183,7 @@ textarea {
   border-left: 5px solid var(--color-info);
   border-radius: var(--radius);
   display: grid;
-  gap: 12px;
+  gap: var(--space-3);
   padding: 14px;
 }
 
@@ -4212,7 +4212,7 @@ textarea {
 .memory-drive-meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .memory-drive-actions a {
@@ -4238,7 +4238,7 @@ textarea {
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   display: grid;
-  gap: 12px;
+  gap: var(--space-3);
   padding: 14px;
 }
 
@@ -4272,7 +4272,7 @@ textarea {
   color: var(--color-muted);
   font-size: var(--text-meta);
   line-height: 1.45;
-  padding: 0 12px;
+  padding: 0 var(--space-3);
 }
 
 .memory-album-head {
@@ -4281,14 +4281,14 @@ textarea {
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   display: flex;
-  gap: 12px;
+  gap: var(--space-3);
   justify-content: space-between;
   padding: 14px;
 }
 
 .memory-album-head div {
   display: grid;
-  gap: 4px;
+  gap: var(--space-1);
   min-width: 0;
 }
 
@@ -4377,7 +4377,7 @@ textarea {
   color: var(--color-surface);
   font-size: var(--text-micro);
   font-weight: 700;
-  padding: 4px 7px;
+  padding: var(--space-1) 7px;
 }
 
 .memory-post {
@@ -4385,7 +4385,7 @@ textarea {
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   display: grid;
-  margin-top: 4px;
+  margin-top: var(--space-1);
   overflow: hidden;
 }
 
@@ -4425,7 +4425,7 @@ textarea {
   align-content: start;
   display: grid;
   gap: 14px;
-  padding: 16px;
+  padding: var(--space-4);
 }
 
 .memory-asset-profile {
@@ -4466,7 +4466,7 @@ textarea {
 .memory-asset-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .memory-emoji-actions {
@@ -4512,14 +4512,14 @@ textarea {
 .memory-asset-comments {
   border-top: 1px solid var(--color-border);
   display: grid;
-  gap: 8px;
-  padding-top: 12px;
+  gap: var(--space-2);
+  padding-top: var(--space-3);
 }
 
 .memory-asset-comment-input {
   align-items: center;
   display: grid;
-  gap: 8px;
+  gap: var(--space-2);
   grid-template-columns: auto minmax(0, 1fr) auto;
 }
 
@@ -4548,7 +4548,7 @@ textarea {
   display: inline-flex;
   gap: 6px;
   min-height: 38px;
-  padding: 0 12px;
+  padding: 0 var(--space-3);
 }
 
 .memory-reactions svg {
@@ -4579,7 +4579,7 @@ textarea {
   border-radius: var(--radius);
   color: var(--color-ink);
   line-height: 1.5;
-  padding: 11px 12px;
+  padding: 11px var(--space-3);
 }
 
 .memory-gallery-strip {
@@ -4588,16 +4588,16 @@ textarea {
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   display: flex;
-  gap: 12px;
+  gap: var(--space-3);
   justify-content: space-between;
-  padding: 16px 18px;
+  padding: var(--space-4) 18px;
 }
 
 .memory-gallery-strip div {
   align-items: center;
   color: var(--color-moss-strong);
   display: flex;
-  gap: 8px;
+  gap: var(--space-2);
   white-space: nowrap;
 }
 
@@ -4630,7 +4630,7 @@ textarea {
   display: grid;
   gap: 10px;
   min-height: 96px;
-  padding: 16px;
+  padding: var(--space-4);
 }
 
 .report-grid strong {
@@ -4639,7 +4639,7 @@ textarea {
 }
 
 .metrics-screen {
-  gap: 20px;
+  gap: var(--space-5);
 }
 
 /* 히어로 배경색으로 보는 사람의 역할(팀리더=남색, 파트리더=청록, 팀원=회녹)을
@@ -4657,7 +4657,7 @@ textarea {
   gap: 18px;
   grid-template-columns: minmax(0, 1fr) 240px;
   min-height: 156px;
-  padding: 24px;
+  padding: var(--space-6);
 }
 
 
@@ -4678,8 +4678,8 @@ textarea {
   border: 1px solid rgba(255, 255, 255, 0.22);
   border-radius: var(--radius);
   display: grid;
-  gap: 8px;
-  padding: 16px;
+  gap: var(--space-2);
+  padding: var(--space-4);
 }
 
 .calendar-sync-card svg {
@@ -4697,8 +4697,8 @@ textarea {
   border: 1px solid rgba(255, 255, 255, 0.22);
   border-radius: var(--radius);
   display: grid;
-  gap: 8px;
-  padding: 16px;
+  gap: var(--space-2);
+  padding: var(--space-4);
 }
 
 .metrics-access-card svg {
@@ -4776,7 +4776,7 @@ textarea {
   display: grid;
   gap: 14px;
   grid-template-columns: minmax(0, 1fr) 280px;
-  padding: 16px;
+  padding: var(--space-4);
 }
 
 .metrics-visibility-banner > div:first-child {
@@ -4821,7 +4821,7 @@ textarea {
   border-radius: var(--radius);
   color: var(--color-muted);
   display: grid;
-  gap: 8px;
+  gap: var(--space-2);
   min-height: 120px;
   padding: 18px;
 }
@@ -4846,7 +4846,7 @@ textarea {
 
 .metrics-leader-console {
   display: grid;
-  gap: 12px;
+  gap: var(--space-3);
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
@@ -4857,7 +4857,7 @@ textarea {
   display: grid;
   gap: 7px;
   min-height: 118px;
-  padding: 16px;
+  padding: var(--space-4);
 }
 
 .metrics-leader-console svg {
@@ -4883,7 +4883,7 @@ textarea {
   display: grid;
   gap: 14px;
   grid-template-columns: minmax(0, 1fr) auto;
-  padding: 16px;
+  padding: var(--space-4);
 }
 
 .metrics-calendar-panel > div:first-child {
@@ -4910,14 +4910,14 @@ textarea {
 .calendar-sync-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--space-2);
   justify-content: flex-end;
 }
 
 .calendar-event-summary {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--space-2);
   grid-column: 1 / -1;
 }
 
@@ -4944,7 +4944,7 @@ textarea {
 .weight-controls,
 .profile-color-panel {
   display: grid;
-  gap: 12px;
+  gap: var(--space-3);
 }
 
 .metrics-side {
@@ -4973,7 +4973,7 @@ textarea {
 
 .metrics-part-list div {
   display: grid;
-  gap: 4px;
+  gap: var(--space-1);
   min-width: 0;
 }
 
@@ -4991,7 +4991,7 @@ textarea {
   border-radius: 999px;
   font-weight: 700;
   justify-self: start;
-  padding: 4px 8px;
+  padding: var(--space-1) var(--space-2);
 }
 
 .metrics-part-list small.leader-visible {
@@ -5019,7 +5019,7 @@ textarea {
 .metrics-detail-head {
   align-items: center;
   display: flex;
-  gap: 12px;
+  gap: var(--space-3);
   justify-content: space-between;
 }
 
@@ -5030,7 +5030,7 @@ textarea {
 .metrics-detail-badges {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--space-2);
   justify-content: flex-end;
 }
 
@@ -5073,9 +5073,9 @@ textarea {
   border-radius: var(--radius);
   color: var(--color-muted);
   display: grid;
-  gap: 8px;
+  gap: var(--space-2);
   min-height: 100px;
-  padding: 16px;
+  padding: var(--space-4);
 }
 
 .metrics-screen.public-member-mode .metrics-score-grid div:nth-child(3),
@@ -5103,9 +5103,9 @@ textarea {
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   display: grid;
-  gap: 16px;
+  gap: var(--space-4);
   grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
-  padding: 16px;
+  padding: var(--space-4);
 }
 
 .leader-only-card {
@@ -5118,9 +5118,9 @@ textarea {
   border: 1px dashed var(--color-sunken);
   border-radius: var(--radius);
   display: grid;
-  gap: 12px;
+  gap: var(--space-3);
   grid-template-columns: 28px minmax(0, 1fr);
-  padding: 16px;
+  padding: var(--space-4);
 }
 
 .metrics-public-note svg {
@@ -5145,7 +5145,7 @@ textarea {
 
 .meeting-health-card > div:first-child {
   display: grid;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .meeting-health-card svg {
@@ -5168,7 +5168,7 @@ textarea {
 .meeting-volume-total {
   align-items: baseline;
   display: flex;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .meeting-volume-total strong {
@@ -5201,7 +5201,7 @@ textarea {
 
 .meeting-volume-split {
   display: grid;
-  gap: 8px;
+  gap: var(--space-2);
   grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
   margin: 0;
 }
@@ -5278,7 +5278,7 @@ textarea {
   display: grid;
   gap: 5px;
   grid-template-columns: 82px minmax(0, 1fr);
-  padding: 12px;
+  padding: var(--space-3);
 }
 
 .calendar-event-list > div.long-meeting {
@@ -5294,7 +5294,7 @@ textarea {
   font-size: var(--text-meta);
   font-weight: 700;
   justify-self: start;
-  padding: 5px 8px;
+  padding: 5px var(--space-2);
 }
 
 .calendar-event-list > div.long-meeting span {
@@ -5319,14 +5319,14 @@ textarea {
   color: var(--color-muted);
   font-size: var(--text-body);
   line-height: 1.55;
-  padding: 12px;
+  padding: var(--space-3);
 }
 
 .insight-list p {
   background: var(--tint-moss);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
-  padding: 12px;
+  padding: var(--space-3);
 }
 
 .weight-controls label {
@@ -5334,9 +5334,9 @@ textarea {
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   display: grid;
-  gap: 8px;
+  gap: var(--space-2);
   grid-template-columns: minmax(92px, 1fr) minmax(90px, 1.2fr) 34px;
-  padding: 12px;
+  padding: var(--space-3);
 }
 
 .weight-controls input {
@@ -5365,7 +5365,7 @@ textarea {
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   display: grid;
-  gap: 8px;
+  gap: var(--space-2);
   min-height: 118px;
   padding: 18px;
 }
@@ -5385,13 +5385,13 @@ textarea {
 
 .account-table {
   display: grid;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .account-table-head,
 .account-row {
   display: grid;
-  gap: 12px;
+  gap: var(--space-3);
   grid-template-columns: minmax(220px, 1fr) 130px 170px 130px 96px;
 }
 
@@ -5426,7 +5426,7 @@ textarea {
   color: var(--color-muted);
   font-size: var(--text-meta);
   font-weight: 700;
-  padding: 0 12px;
+  padding: 0 var(--space-3);
 }
 
 .account-row {
@@ -5434,12 +5434,12 @@ textarea {
   background: var(--tint-moss);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
-  padding: 12px;
+  padding: var(--space-3);
 }
 
 .account-row div {
   display: grid;
-  gap: 4px;
+  gap: var(--space-1);
   min-width: 0;
 }
 
@@ -5474,7 +5474,7 @@ textarea {
   display: flex;
   font-weight: 600;
   min-height: 42px;
-  padding: 0 12px;
+  padding: 0 var(--space-3);
 }
 
 @media (max-width: 1100px) {
@@ -5499,8 +5499,8 @@ textarea {
      흰 반투명 선은 어두운 셸 전제였다. 모래빛 위에서는 1.01:1 로 안 보인다. */
   .nav-group + .nav-group {
     border-top: 1px solid var(--color-border);
-    margin-top: 12px;
-    padding-top: 12px;
+    margin-top: var(--space-3);
+    padding-top: var(--space-3);
   }
 
   .hero-panel,
@@ -5522,7 +5522,7 @@ textarea {
     background:
       linear-gradient(180deg, rgba(23, 53, 47, 0.98), rgba(29, 70, 62, 0.94) 50%, var(--tint-pending) 50%),
       var(--color-moss-strong);
-    gap: 32px;
+    gap: var(--space-8);
     padding: 28px;
   }
 
@@ -5755,7 +5755,7 @@ textarea {
   .login-page {
     display: grid;
     min-height: 100vh;
-    padding: 20px;
+    padding: var(--space-5);
   }
 
   .login-intro h1 {
@@ -5918,7 +5918,7 @@ textarea {
   }
 
   .my-profile-card {
-    padding: 20px;
+    padding: var(--space-5);
   }
 
   .my-profile-card .profile-detail-head h2 {
@@ -5935,11 +5935,11 @@ textarea {
 
 .can-tabs {
   display: inline-flex;
-  gap: 4px;
+  gap: var(--space-1);
   background: var(--color-page);
   border: 1px solid var(--color-sunken);
   border-radius: var(--radius);
-  padding: 4px;
+  padding: var(--space-1);
   width: fit-content;
 }
 
@@ -5953,7 +5953,7 @@ textarea {
   font-weight: 700;
   gap: 6px;
   min-height: 36px;
-  padding: 0 16px;
+  padding: 0 var(--space-4);
 }
 
 .can-tabs .selected {
@@ -5970,7 +5970,7 @@ textarea {
 .can-stepper {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 8px;
+  gap: var(--space-2);
   list-style: none;
   margin: 0;
   padding: 0;
@@ -6036,7 +6036,7 @@ textarea {
   color: var(--color-muted);
   font-size: 12.5px;
   margin: 4px 0 0;
-  padding: 10px 12px;
+  padding: 10px var(--space-3);
   text-align: center;
 }
 
@@ -6047,13 +6047,13 @@ textarea {
   color: var(--color-ink);
   font-size: var(--text-body);
   font-weight: 700;
-  padding: 10px 12px;
+  padding: 10px var(--space-3);
 }
 
 .can-part-picker {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .can-part-picker button {
@@ -6086,7 +6086,7 @@ textarea {
   color: var(--color-moss-strong);
   display: inline-flex;
   font-weight: 700;
-  gap: 8px;
+  gap: var(--space-2);
   justify-content: center;
   min-height: 40px;
   padding: 0 14px;
@@ -6094,8 +6094,8 @@ textarea {
 
 .can-count-row {
   display: grid;
-  gap: 8px;
-  margin-bottom: 16px;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
 }
 
 .can-count-chip {
@@ -6115,7 +6115,7 @@ textarea {
 
 .can-part-columns {
   display: grid;
-  gap: 12px;
+  gap: var(--space-3);
   grid-template-columns: repeat(4, minmax(0, 1fr));
   margin: 12px 0 16px;
 }
@@ -6126,7 +6126,7 @@ textarea {
   border-radius: var(--radius);
   display: grid;
   gap: 10px;
-  padding: 12px;
+  padding: var(--space-3);
   align-content: start;
 }
 
@@ -6134,7 +6134,7 @@ textarea {
   align-items: center;
   display: flex;
   font-size: var(--text-body);
-  gap: 8px;
+  gap: var(--space-2);
   margin: 0;
 }
 
@@ -6159,7 +6159,7 @@ textarea {
 
 .can-step-group + .can-step-group {
   border-top: 1px dashed var(--color-sunken);
-  padding-top: 8px;
+  padding-top: var(--space-2);
 }
 
 .can-step-group-title {
@@ -6175,7 +6175,7 @@ textarea {
   border-radius: var(--radius);
   display: grid;
   gap: 6px;
-  padding: 10px 12px;
+  padding: 10px var(--space-3);
 }
 
 .can-opinion p {
@@ -6219,7 +6219,7 @@ textarea {
 
 .can-select-list {
   display: grid;
-  gap: 8px;
+  gap: var(--space-2);
   margin: 12px 0 16px;
 }
 
@@ -6229,8 +6229,8 @@ textarea {
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   display: flex;
-  gap: 12px;
-  padding: 12px 14px;
+  gap: var(--space-3);
+  padding: var(--space-3) 14px;
   text-align: left;
   width: 100%;
 }
@@ -6292,7 +6292,7 @@ textarea {
   font-weight: 600;
   gap: 5px;
   margin-left: auto;
-  padding: 4px 10px;
+  padding: var(--space-1) 10px;
 }
 
 .can-waiting {
@@ -6300,7 +6300,7 @@ textarea {
   display: grid;
   gap: 10px;
   justify-items: center;
-  padding: 40px 24px;
+  padding: var(--space-10) var(--space-6);
   text-align: center;
 }
 
@@ -6326,9 +6326,9 @@ textarea {
   display: inline-flex;
   font-size: var(--text-body);
   font-weight: 700;
-  gap: 8px;
-  margin-top: 4px;
-  padding: 8px 14px;
+  gap: var(--space-2);
+  margin-top: var(--space-1);
+  padding: var(--space-2) 14px;
 }
 
 .can-count-inline {
@@ -6345,7 +6345,7 @@ textarea {
 .can-session-head {
   align-items: center;
   display: flex;
-  gap: 16px;
+  gap: var(--space-4);
   justify-content: space-between;
 }
 
@@ -6383,7 +6383,7 @@ textarea {
 .can-session-top {
   align-items: center;
   display: flex;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .can-session-card h3 {
@@ -6413,7 +6413,7 @@ textarea {
   flex-wrap: wrap;
   font-size: var(--text-meta);
   font-weight: 700;
-  gap: 12px;
+  gap: var(--space-3);
 }
 
 .can-detail-bar {
@@ -6431,9 +6431,9 @@ textarea {
   color: var(--color-moss-strong);
   display: inline-flex;
   font-weight: 700;
-  gap: 4px;
+  gap: var(--space-1);
   min-height: 36px;
-  padding: 0 12px;
+  padding: 0 var(--space-3);
 }
 
 .can-detail-topic {
@@ -6460,7 +6460,7 @@ textarea {
 .can-ai {
   display: grid;
   gap: 10px;
-  margin-bottom: 16px;
+  margin-bottom: var(--space-4);
 }
 
 .can-ai-head {
@@ -6477,14 +6477,14 @@ textarea {
 
 .can-header-grid {
   display: grid;
-  gap: 12px;
+  gap: var(--space-3);
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .can-step-picker {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .can-step-picker button {
@@ -6534,14 +6534,14 @@ textarea {
   flex-wrap: wrap;
   font-size: var(--text-body);
   font-weight: 700;
-  gap: 12px;
+  gap: var(--space-3);
   justify-content: space-between;
   padding: 10px 14px;
 }
 
 .can-step-editor {
   display: grid;
-  gap: 12px;
+  gap: var(--space-3);
 }
 
 .can-step-row {
@@ -6571,7 +6571,7 @@ textarea {
 .quick-login {
   border-top: 1px solid var(--color-border);
   display: grid;
-  gap: 8px;
+  gap: var(--space-2);
   padding-top: 14px;
 }
 
@@ -6583,7 +6583,7 @@ textarea {
 
 .quick-login-row {
   display: grid;
-  gap: 8px;
+  gap: var(--space-2);
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
@@ -6594,7 +6594,7 @@ textarea {
   color: var(--color-moss-strong);
   font-weight: 700;
   min-height: 40px;
-  padding: 0 12px;
+  padding: 0 var(--space-3);
 }
 
 .quick-login-row button:hover {
@@ -6604,7 +6604,7 @@ textarea {
 .can-template {
   border: 1px solid var(--color-sunken);
   border-radius: var(--radius);
-  margin-bottom: 12px;
+  margin-bottom: var(--space-3);
   overflow: hidden;
 }
 
@@ -6628,7 +6628,7 @@ textarea {
 .can-template-steps td {
   border: 1px solid var(--color-page);
   font-size: var(--text-body);
-  padding: 9px 12px;
+  padding: 9px var(--space-3);
   text-align: left;
   vertical-align: top;
 }
@@ -6680,7 +6680,7 @@ textarea {
 
 .can-followup {
   border-top: 1px solid var(--color-border);
-  margin-top: 16px;
+  margin-top: var(--space-4);
   padding-top: 14px;
 }
 
@@ -6691,7 +6691,7 @@ textarea {
   color: var(--color-moss);
   font-size: var(--text-body);
   font-weight: 700;
-  padding: 12px 14px;
+  padding: var(--space-3) 14px;
 }
 
 .can-followup-list {
@@ -6709,14 +6709,14 @@ textarea {
   flex-wrap: wrap;
   gap: 10px;
   justify-content: space-between;
-  padding: 10px 12px;
+  padding: 10px var(--space-3);
 }
 
 .can-followup-main {
   align-items: center;
   display: flex;
   flex: 1 1 320px;
-  gap: 8px;
+  gap: var(--space-2);
   min-width: 0;
 }
 
@@ -6732,7 +6732,7 @@ textarea {
 .can-followup-fields {
   display: flex;
   flex: 1 1 100%;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .can-followup-fields input {
@@ -6760,8 +6760,8 @@ textarea {
   border-radius: var(--radius);
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  padding: 8px 12px;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
 }
 
 .can-followup-rc {
@@ -6799,7 +6799,7 @@ textarea {
 /* ===== 티미팅 운영 보드 ===== */
 .tea-form-row {
   display: grid;
-  gap: 12px;
+  gap: var(--space-3);
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
 }
 
@@ -6810,7 +6810,7 @@ textarea {
 .tea-list-head {
   align-items: center;
   display: flex;
-  gap: 12px;
+  gap: var(--space-3);
   justify-content: space-between;
 }
 
@@ -6831,14 +6831,14 @@ textarea {
   border-radius: 10px;
   display: grid;
   gap: 10px;
-  padding: 12px 14px;
+  padding: var(--space-3) 14px;
 }
 
 .tea-topic-row {
   align-items: center;
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: var(--space-3);
   justify-content: space-between;
 }
 
@@ -6880,7 +6880,7 @@ textarea {
   border-radius: 999px;
   font-size: var(--text-micro);
   font-weight: 600;
-  padding: 4px 10px;
+  padding: var(--space-1) 10px;
 }
 
 .tea-status-badge.제안 {
@@ -6911,7 +6911,7 @@ textarea {
   align-items: flex-end;
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: var(--space-3);
 }
 
 .tea-group-controls label {
@@ -6925,7 +6925,7 @@ textarea {
 
 .tea-group-grid {
   display: grid;
-  gap: 12px;
+  gap: var(--space-3);
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
 }
 
@@ -6934,8 +6934,8 @@ textarea {
   border: 1px solid var(--color-border);
   border-radius: 10px;
   display: grid;
-  gap: 8px;
-  padding: 12px 14px;
+  gap: var(--space-2);
+  padding: var(--space-3) 14px;
 }
 
 .tea-group-card h4 {
@@ -6956,7 +6956,7 @@ textarea {
 .tea-group-member {
   align-items: center;
   display: flex;
-  gap: 8px;
+  gap: var(--space-2);
   justify-content: space-between;
 }
 
@@ -6967,7 +6967,7 @@ textarea {
 /* 이번 회차 구성 + 슬랙 공지 */
 .tea-round {
   display: grid;
-  gap: 12px;
+  gap: var(--space-3);
 }
 
 .tea-round .secondary-button {
@@ -6978,16 +6978,16 @@ textarea {
   align-items: center;
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: var(--space-3);
   justify-content: space-between;
-  margin-top: 4px;
+  margin-top: var(--space-1);
 }
 
 .tea-announce-actions {
   align-items: center;
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .tea-announce-confirm {
@@ -6997,8 +6997,8 @@ textarea {
   border-radius: var(--radius);
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  padding: 6px 8px 6px 12px;
+  gap: var(--space-2);
+  padding: 6px var(--space-2) 6px var(--space-3);
 }
 
 .tea-announce-confirm > span {
@@ -7016,7 +7016,7 @@ textarea {
   line-height: 1.65;
   margin: 0;
   overflow-x: auto;
-  padding: 14px 16px;
+  padding: 14px var(--space-4);
   white-space: pre-wrap;
   word-break: break-word;
 }
@@ -7055,7 +7055,7 @@ textarea {
   height: 16px;
   justify-content: center;
   min-width: 16px;
-  padding: 0 4px;
+  padding: 0 var(--space-1);
   position: absolute;
   right: -4px;
   top: -4px;
@@ -7064,13 +7064,13 @@ textarea {
 .notif-head {
   align-items: center;
   display: flex;
-  gap: 12px;
+  gap: var(--space-3);
   justify-content: space-between;
 }
 
 .notif-list {
   display: grid;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .notif-row {
@@ -7079,8 +7079,8 @@ textarea {
   border: 1px solid var(--color-border);
   border-radius: 10px;
   display: flex;
-  gap: 12px;
-  padding: 12px 14px;
+  gap: var(--space-3);
+  padding: var(--space-3) 14px;
   text-align: left;
   width: 100%;
 }
@@ -7109,8 +7109,8 @@ button.notif-row {
   flex: none;
   font-size: var(--text-micro);
   font-weight: 600;
-  gap: 4px;
-  padding: 4px 10px;
+  gap: var(--space-1);
+  padding: var(--space-1) 10px;
 }
 
 .notif-kind.issue {
@@ -7179,9 +7179,9 @@ button.notif-row {
   border-radius: 12px;
   color: var(--color-surface);
   display: flex;
-  gap: 20px;
+  gap: var(--space-5);
   justify-content: space-between;
-  padding: 24px 26px;
+  padding: var(--space-6) 26px;
 }
 
 .humor-hero h2 {
@@ -7213,7 +7213,7 @@ button.notif-row {
   gap: 2px;
   justify-items: center;
   min-width: 130px;
-  padding: 14px 16px;
+  padding: 14px var(--space-4);
   text-align: center;
 }
 
@@ -7232,7 +7232,7 @@ button.notif-row {
 
 .humor-rankers {
   display: grid;
-  gap: 12px;
+  gap: var(--space-3);
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
@@ -7241,8 +7241,8 @@ button.notif-row {
   border: 1px solid var(--color-clay);
   border-radius: 10px;
   display: grid;
-  gap: 8px;
-  padding: 16px;
+  gap: var(--space-2);
+  padding: var(--space-4);
 }
 
 .humor-ranker.empty {
@@ -7271,8 +7271,8 @@ button.notif-row {
   align-items: center;
   border-radius: var(--radius);
   display: flex;
-  gap: 8px;
-  padding: 4px 6px;
+  gap: var(--space-2);
+  padding: var(--space-1) 6px;
 }
 
 .humor-podium li.top {
@@ -7324,8 +7324,8 @@ button.notif-row {
   color: var(--color-muted);
   display: flex;
   font-size: var(--text-body);
-  gap: 8px;
-  margin-bottom: 4px;
+  gap: var(--space-2);
+  margin-bottom: var(--space-1);
 }
 
 .humor-compose-author .tiny-avatar {
@@ -7381,7 +7381,7 @@ button.notif-row {
   font-size: var(--text-body);
   font-weight: 700;
   gap: 6px;
-  padding: 4px 0;
+  padding: var(--space-1) 0;
 }
 
 .humor-back:hover {
@@ -7391,7 +7391,7 @@ button.notif-row {
 /* 목록 = 가벼운 행(미디어는 아이콘만, 실제 로드는 상세에서) */
 .humor-list {
   display: grid;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .humor-row {
@@ -7402,7 +7402,7 @@ button.notif-row {
   cursor: pointer;
   display: flex;
   gap: 14px;
-  padding: 14px 16px;
+  padding: 14px var(--space-4);
   text-align: left;
   width: 100%;
 }
@@ -7420,7 +7420,7 @@ button.notif-row {
 
 .humor-row-main {
   display: grid;
-  gap: 4px;
+  gap: var(--space-1);
   min-width: 0;
 }
 
@@ -7451,7 +7451,7 @@ button.notif-row {
   flex: 0 0 auto;
   font-size: var(--text-body);
   font-weight: 700;
-  gap: 12px;
+  gap: var(--space-3);
   margin-left: auto;
 }
 
@@ -7474,7 +7474,7 @@ button.notif-row {
   border-radius: 10px;
   box-shadow: 0 12px 30px rgba(42, 58, 52, 0.07);
   display: grid;
-  gap: 12px;
+  gap: var(--space-3);
   padding: 18px;
 }
 
@@ -7517,7 +7517,7 @@ button.notif-row {
 .humor-owner-actions {
   margin-left: auto;
   display: flex;
-  gap: 8px;
+  gap: var(--space-2);
   flex-shrink: 0;
 }
 
@@ -7554,7 +7554,7 @@ button.notif-row {
 
 .humor-edit {
   display: grid;
-  gap: 12px;
+  gap: var(--space-3);
 }
 
 .humor-edit label {
@@ -7583,7 +7583,7 @@ button.notif-row {
 .humor-edit-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .humor-card-body {
@@ -7638,14 +7638,14 @@ button.notif-row {
   color: var(--color-muted);
   display: block;
   font-size: var(--text-meta);
-  margin-top: 4px;
+  margin-top: var(--space-1);
 }
 
 .humor-card-actions {
   border-top: 1px solid var(--color-page);
   display: flex;
   gap: 10px;
-  padding-top: 12px;
+  padding-top: var(--space-3);
 }
 
 .humor-like {
@@ -7672,7 +7672,7 @@ button.notif-row {
   border-top: 1px solid var(--color-page);
   display: grid;
   gap: 10px;
-  padding-top: 12px;
+  padding-top: var(--space-3);
 }
 
 .humor-comment {
@@ -7712,7 +7712,7 @@ button.notif-row {
 
 .humor-comment-input {
   display: flex;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .humor-comment-input input {
@@ -7722,7 +7722,7 @@ button.notif-row {
 .humor-comment-input .secondary-button {
   align-items: center;
   display: flex;
-  padding: 8px 12px;
+  padding: var(--space-2) var(--space-3);
 }
 
 @media (max-width: 720px) {
@@ -7765,8 +7765,8 @@ button.notif-row {
   border-left: 3px solid var(--color-moss);
   border-radius: 10px;
   display: grid;
-  gap: 8px;
-  padding: 14px 16px;
+  gap: var(--space-2);
+  padding: 14px var(--space-4);
 }
 
 .agenda-publish-preview strong {
@@ -7799,7 +7799,7 @@ button.notif-row {
   border-radius: 10px;
   display: grid;
   gap: 10px;
-  padding: 14px 16px;
+  padding: 14px var(--space-4);
 }
 
 .agenda-close-box:has(> .secondary-button:only-child) {
@@ -7816,7 +7816,7 @@ button.notif-row {
 
 .vote-confirm-actions {
   display: flex;
-  gap: 8px;
+  gap: var(--space-2);
   justify-content: flex-end;
 }
 
@@ -8433,9 +8433,7 @@ button.notif-row {
   font-size: var(--text-body-lg);
   font-weight: 600;
   justify-content: flex-start;
-  /* 좌우 패딩만 없앤다. padding:0 으로 두면 높이가 20px 이 되어
-     겨냥해 누르기 어려운 타깃이 된다. */
-  min-height: 40px;
+  /* 좌우 패딩만 없앤다. padding: 0 으로 두면 높이가 var(--space-5) 이 되어 겨냥해 누르기 어려운 타깃이 된다. */ min-height: var(--space-10);
   padding: var(--space-2) 0;
   width: 100%;
 }
@@ -8563,4 +8561,14 @@ button.notif-row {
   align-items: center;
   display: inline-flex;
   gap: var(--space-2);
+}
+
+@media (max-width: 720px) {
+  /* 데스크톱 패딩(9px)만으로는 버튼 3단이 36px 경계에 걸린다.
+     엄지로 누르는 화면에서는 최소 높이를 따로 준다. */
+  .btn-primary,
+  .btn-secondary,
+  .btn-ghost {
+    min-height: 40px;
+  }
 }
