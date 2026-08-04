@@ -1,21 +1,15 @@
 import {
-  BarChart3,
   CheckCircle2,
-  ChevronRight,
   Coffee,
   FileCheck2,
   Inbox,
   MessageSquarePlus,
   ShieldCheck,
   Sparkles,
-  UserRound,
   Vote,
 } from 'lucide-react';
-import { participationRate } from '../../agendaRules';
-import { Avatar } from '../../components/Avatar';
 import { EmptyState } from '../../components/EmptyState';
 import { PanelHeader } from '../../components/PanelHeader';
-import { profiles } from '../../data/mockData';
 import type { ActionItem, Agenda, CurrentUser, Identity, Section } from '../../types';
 
 type DashboardProps = {
@@ -53,15 +47,7 @@ export function Dashboard({
     },
   ];
 
-  // 투표 참여율: 대상 인원이 잡힌 안건들의 평균. 근거가 없으면 숫자를 만들지 않는다.
-  const ratedAgendas = agendas.filter((agenda) => agenda.eligibleCount > 0);
-  const averageParticipation =
-    ratedAgendas.length > 0
-      ? Math.round(ratedAgendas.reduce((sum, agenda) => sum + participationRate(agenda), 0) / ratedAgendas.length)
-      : null;
   const activeAgendas = votingAgendas.slice(0, 2);
-  // '동료' 카드에 본인이 들어가 있었다. 자기 성향은 내 프로필에서 본다.
-  const featuredProfiles = profiles.filter((profile) => profile.name !== currentUser.name).slice(0, 3);
 
   // 홈에서 방식을 고른 뜻이 접수 화면까지 이어져야 한다.
   // 이전에는 두 버튼이 똑같이 화면만 옮겨서, 고른 방식이 버려지고 다시 물었다.
@@ -151,20 +137,6 @@ export function Dashboard({
             </div>
           </section>
 
-          <section className="panel">
-            <PanelHeader icon={UserRound} title="동료 성향 카드" />
-            <div className="compact-profile-list">
-              {featuredProfiles.map((profile) => (
-                <button key={profile.name} onClick={() => onSectionChange('profiles')}>
-                  <Avatar name={profile.name} color={profile.color} />
-                  <div>
-                    <strong>{profile.name}</strong>
-                    <small>{profile.trait}</small>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </section>
         </div>
 
         <div className="home-col">
@@ -221,36 +193,6 @@ export function Dashboard({
         </div>
       </div>
 
-      <section className="panel culture-summary">
-        <PanelHeader icon={BarChart3} title="팀 문화 요약" />
-        {/* 실제 집계로 계산할 수 있는 값만 숫자로 보여준다.
-            근거 없는 숫자가 한 칸이라도 섞이면 옆의 진짜 숫자까지 못 믿게 된다.
-            같은 이유로 '보기'를 숫자 자리에 넣지 않는다. 지표 칸과 이동 칸을 나눈다.
-            '리더 처리 대기'는 위 '접수 의견'과 같은 openIssueCount였다. 한 화면에
-            같은 수를 두 이름으로 쓰면 둘 다 못 믿는다. 이동 칸으로 바꾼다. */}
-        <div className="summary-strip">
-          <button className="summary-metric" onClick={() => onSectionChange('agenda')}>
-            <span>투표 참여율</span>
-            <strong>{averageParticipation === null ? '집계 전' : `${averageParticipation}%`}</strong>
-            <small>대상 인원이 정해진 안건의 평균</small>
-          </button>
-          <button className="summary-link" onClick={() => onSectionChange('leader')}>
-            <span>리더 관리함</span>
-            <small>접수된 의견의 처리 현황</small>
-            <ChevronRight size={16} />
-          </button>
-          <button className="summary-link" onClick={() => onSectionChange('metrics')}>
-            <span>파트지수 리포트</span>
-            <small>파트별 문화 지표</small>
-            <ChevronRight size={16} />
-          </button>
-          <button className="summary-link" onClick={() => onSectionChange('memory')}>
-            <span>팀 추억</span>
-            <small>함께한 기록 모아보기</small>
-            <ChevronRight size={16} />
-          </button>
-        </div>
-      </section>
     </section>
   );
 }

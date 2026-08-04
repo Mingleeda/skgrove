@@ -46,10 +46,10 @@ const partOrder = ['TEST혁신파트', 'ITS혁신파트', '혁신도구파트'];
 function getAgeMood(birthYear: string) {
   const year = Number(birthYear);
 
-  if (!Number.isFinite(year)) return { key: 'unknown', label: '감각 미입력' };
-  if (year >= 1997) return { key: 'fresh', label: '새싹 감각' };
-  if (year >= 1990) return { key: 'bridge', label: '브릿지 감각' };
-  return { key: 'steady', label: '든든한 감각' };
+  if (!Number.isFinite(year)) return { key: 'unknown', label: '미입력' };
+  if (year >= 1997) return { key: 'fresh', label: '새싹' };
+  if (year >= 1990) return { key: 'bridge', label: '브릿지' };
+  return { key: 'steady', label: '든든한' };
 }
 
 function shuffleProfiles(items: Profile[]) {
@@ -267,7 +267,7 @@ function analyzeAllTeams(groups: TeamGroup[]) {
 
   return {
     title: `${groups.length}개 조 · 평균 ${averageMembers}명`,
-    description: `파트 ${partCount}종, 감각 ${ageCount}종이 섞인 결과예요. 아래 카드는 각 조 멤버의 개인 프로필 성향과 일하는 방식을 바탕으로 팀 특징을 읽어낸 내용입니다.`,
+    description: `파트 ${partCount}종, 세대 ${ageCount}종이 섞인 결과예요. 아래 카드는 각 조 멤버의 개인 프로필 성향과 일하는 방식을 바탕으로 팀 특징을 읽어낸 내용입니다.`,
   };
 }
 
@@ -409,7 +409,7 @@ export function Connect({ members }: ConnectProps) {
 
     setIsDrawing(true);
     setTeams([]);
-    setTeamEventText('파트와 감각을 테이블 위에 골고루 펼치는 중...');
+    setTeamEventText('파트와 세대를 테이블 위에 골고루 펼치는 중...');
 
     window.setTimeout(() => {
       const nextTeams = buildBalancedTeams(selectedParticipants, teamCount, balanceRule);
@@ -503,7 +503,7 @@ export function Connect({ members }: ConnectProps) {
               <Search size={17} />
               <input
                 aria-label="참여자 검색"
-                placeholder={mode === 'coffee' ? '이름으로 빠르게 찾기' : '이름, 파트, 감각으로 찾기'}
+                placeholder={mode === 'coffee' ? '이름으로 빠르게 찾기' : '이름, 파트, 세대로 찾기'}
                 value={participantSearch}
                 onChange={(event) => setParticipantSearch(event.target.value)}
               />
@@ -597,7 +597,7 @@ export function Connect({ members }: ConnectProps) {
                   {teamAdjustedNote && <p className="form-error">{teamAdjustedNote}</p>}
                   <div className="connect-summary-strip">
                     <span>파트 {selectedParts}종</span>
-                    <span>감각 {selectedAgeMoods}종</span>
+                    <span>세대 {selectedAgeMoods}종</span>
                     <span>예상 {teamCount}개 조</span>
                   </div>
                   <button className="primary-button wide" disabled={selectedParticipants.length < 2 || isDrawing} onClick={drawTeams} type="button">

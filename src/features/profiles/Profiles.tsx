@@ -70,36 +70,6 @@ const feedbackChoices: SurveyChoice[] = [
   { label: '근거 포함', value: '수정 이유와 기대 효과가 같이 있으면 바로 반영합니다.', helper: '왜 바꾸는지까지 이해' },
 ];
 
-function getAgeMood(birthYear: string) {
-  const year = Number(birthYear);
-
-  if (!Number.isFinite(year)) {
-    return {
-      label: '감각 미입력',
-      helper: '조섞기에서 연령대가 한쪽으로 몰리지 않게 하려면 생년을 입력해주세요.',
-    };
-  }
-
-  if (year >= 1997) {
-    return {
-      label: '새싹 감각',
-      helper: '새로운 관점과 빠른 적응력을 팀에 더해요.',
-    };
-  }
-
-  if (year >= 1990) {
-    return {
-      label: '브릿지 감각',
-      helper: '경험과 변화 사이를 자연스럽게 이어요.',
-    };
-  }
-
-  return {
-    label: '든든한 감각',
-    helper: '쌓인 맥락과 안정감을 팀에 더해요.',
-  };
-}
-
 export function Profiles({ currentUser, onProfilesChange }: ProfilesProps) {
   const [profileList, setProfileList] = useState<Profile[]>(initialProfiles);
   const [selectedName, setSelectedName] = useState(() => {
@@ -153,9 +123,6 @@ export function Profiles({ currentUser, onProfilesChange }: ProfilesProps) {
     ...draft,
     color: draftColor,
   };
-  const myAgeMood = myProfile ? getAgeMood(myProfile.birthYear) : undefined;
-  const previewAgeMood = getAgeMood(previewProfile.birthYear);
-  const selectedAgeMood = selectedProfile ? getAgeMood(selectedProfile.birthYear) : undefined;
 
   useEffect(() => {
     let isMounted = true;
@@ -254,7 +221,6 @@ export function Profiles({ currentUser, onProfilesChange }: ProfilesProps) {
             </div>
             <div className="profile-mood-row">
               <p>{myProfile.trait}</p>
-              {myAgeMood && <span className="age-mood-pill">{myAgeMood.label}</span>}
             </div>
           </div>
           <div className="my-profile-notes">
@@ -269,10 +235,6 @@ export function Profiles({ currentUser, onProfilesChange }: ProfilesProps) {
             <div>
               <span>피드백</span>
               <strong>{myProfile.feedback}</strong>
-            </div>
-            <div>
-              <span>조섞기 무드</span>
-              <strong>{myAgeMood?.helper}</strong>
             </div>
             <div>
               <span>동료 이해 가이드</span>
@@ -355,7 +317,6 @@ export function Profiles({ currentUser, onProfilesChange }: ProfilesProps) {
           </div>
           <p>{previewProfile.trait}</p>
           <div className="profile-chip-list">
-            <span>{previewAgeMood.label}</span>
             <span>{previewProfile.role}</span>
             <span>{previewProfile.collaboration}</span>
           </div>
@@ -396,7 +357,6 @@ export function Profiles({ currentUser, onProfilesChange }: ProfilesProps) {
                 <strong>{profile.name}{profile.name === currentUser.name ? ' · 나' : ''}</strong>
                 <small>{profile.part} · {profile.englishName}</small>
               </div>
-              <em>{getAgeMood(profile.birthYear).label}</em>
             </button>
           ))}
         </div>
@@ -427,11 +387,6 @@ export function Profiles({ currentUser, onProfilesChange }: ProfilesProps) {
               <Sparkles size={20} />
               <span>성향</span>
               <strong>{selectedProfile.trait}</strong>
-            </div>
-            <div>
-              <UserRound size={20} />
-              <span>조섞기 무드</span>
-              <strong>{selectedAgeMood?.label}</strong>
             </div>
             <div>
               <MessageCircle size={20} />
