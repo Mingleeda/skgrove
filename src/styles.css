@@ -8572,3 +8572,83 @@ button.notif-row {
     min-height: 40px;
   }
 }
+
+/* ===== 팀 성향 분포 =====
+   순위나 점수를 만들지 않는다. 각 축에서 어떤 성향이 몇 명인지만 보여주고,
+   누르면 그 조건으로 목록을 좁히는 필터로 동작한다. */
+.overview-axes {
+  display: grid;
+  gap: var(--space-5);
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.overview-axis {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.overview-axis > strong {
+  color: var(--color-muted);
+  font-size: var(--text-meta);
+  font-weight: 500;
+}
+
+.overview-bar {
+  align-items: center;
+  min-height: 32px;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  display: grid;
+  gap: var(--space-2);
+  grid-template-columns: 5.5em minmax(0, 1fr) 2em;
+  padding: var(--space-1) var(--space-2);
+  text-align: left;
+  width: 100%;
+}
+
+.overview-bar:hover {
+  background: var(--color-page);
+}
+
+.overview-bar.is-active {
+  background: var(--tint-moss);
+  border-color: var(--color-moss);
+}
+
+.overview-bar-label {
+  color: var(--color-ink);
+  font-size: var(--text-body);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.overview-bar-track {
+  background: var(--color-sunken);
+  border-radius: var(--radius-full);
+  display: block;
+  height: 6px;
+  overflow: hidden;
+}
+
+.overview-bar-track > span {
+  background: var(--color-moss);
+  display: block;
+  height: 100%;
+}
+
+.overview-bar-count {
+  color: var(--color-muted);
+  font-size: var(--text-meta);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+/* .overview-bar 기본 규칙이 위 미디어쿼리보다 뒤에 있어 같은 특이도에서 이긴다.
+   순서가 이기는 싸움이므로 모바일 값을 파일 끝에 둔다. */
+@media (max-width: 720px) {
+  .overview-bar {
+    min-height: 40px;
+  }
+}

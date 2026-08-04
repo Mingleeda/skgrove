@@ -1,5 +1,6 @@
 import {
   BadgeCheck,
+  BarChart3,
   BriefcaseBusiness,
   MessageCircle,
   PenLine,
@@ -16,6 +17,9 @@ import type { CurrentUser, Profile } from '../../types';
 
 type ProfileDraft = Omit<Profile, 'color'>;
 type ProfilesProps = {
+  /* 'mine' = 마이페이지(내 카드+편집), 'directory' = 동료 성향(목록+상세).
+     같은 상태와 저장 로직을 쓰므로 컴포넌트를 쪼개지 않고 렌더만 가른다. */
+  mode: 'mine' | 'directory';
   currentUser: CurrentUser;
   // 편집/로드 시 상위(App)의 프로필 디렉토리에 반영 → Avatar 전역 갱신.
   onProfilesChange?: (profiles: Profile[]) => void;
@@ -51,6 +55,28 @@ const roleChoices: SurveyChoice[] = [
   { label: '품질 정리', value: '품질 기준 정리와 테스트 흐름 설계', helper: '완료 기준과 빠진 조건을 꼼꼼히 봅니다.' },
 ];
 
+/*
+  조뽑기 균형은 Connect.tsx 의 getAgeMood 가 연도 구간(>=1997 / >=1990 / 그 외)
+  으로 판정한다. 사용자에게 정확한 연도를 받을 이유가 없으므로 구간을 직접
+  고르게 하고, 저장은 각 구간의 대표 연도로 한다. 스키마와 조뽑기 로직을
+  건드리지 않으면서 수집하는 개인정보만 줄인다.
+*/
+const generationChoices = [
+  { label: '새싹', value: '1999', hint: '1997년생 이후' },
+  { label: '브릿지', value: '1993', hint: '1990~1996년생' },
+  { label: '든든한', value: '1985', hint: '1989년생 이전' },
+];
+
+// 기존 프로필은 임의 연도(1994, 1988…)를 갖고 있다. 대표값과 === 로 비교하면
+// 아무것도 선택되지 않으므로, 어느 구간에 드는지로 판정한다.
+function generationValueOf(birthYear: string) {
+  const year = Number(birthYear);
+  if (!Number.isFinite(year) || !birthYear) return '';
+  if (year >= 1997) return '1999';
+  if (year >= 1990) return '1993';
+  return '1985';
+}
+
 const traitChoices: SurveyChoice[] = [
   { label: '관계형', value: '관계형 촉진자', helper: '팀 분위기와 연결감을 민감하게 봅니다.' },
   { label: '실행형', value: '실행형 문제 해결가', helper: '문제를 쪼개고 바로 움직입니다.' },
@@ -70,7 +96,7 @@ const feedbackChoices: SurveyChoice[] = [
   { label: '근거 포함', value: '수정 이유와 기대 효과가 같이 있으면 바로 반영합니다.', helper: '왜 바꾸는지까지 이해' },
 ];
 
-export function Profiles({ currentUser, onProfilesChange }: ProfilesProps) {
+export function Profiles({ mode, currentUser, onProfilesChange }: ProfilesProps) {
   const [profileList, setProfileList] = useState<Profile[]>(initialProfiles);
   const [selectedName, setSelectedName] = useState(() => {
     return initialProfiles.find((profile) => profile.name === currentUser.name)?.name ?? initialProfiles[0]?.name ?? '';
@@ -198,7 +224,7 @@ export function Profiles({ currentUser, onProfilesChange }: ProfilesProps) {
 
   return (
     <section className="screen profiles-screen">
-      {myProfile && (
+      {mode === 'mine' && myProfile && (
         <section className={`my-profile-card ${myProfile.color}`}>
           <div className="my-profile-main">
             <div className="my-profile-topline">
@@ -244,7 +270,7 @@ export function Profiles({ currentUser, onProfilesChange }: ProfilesProps) {
         </section>
       )}
 
-      {isEditing && (
+      {mode === 'mine' && isEditing && (
         <section className="panel profile-form-panel profile-survey-panel">
           <PanelHeader icon={PenLine} title="성향 카드 짧은 설문" />
           <div className="profile-mini-fields">
@@ -257,26 +283,32 @@ export function Profiles({ currentUser, onProfilesChange }: ProfilesProps) {
               <input value={draft.character} onChange={(event) => updateDraft('character', event.target.value)} />
             </label>
           </div>
+          {/*
+            예전에는 태어난 연도와 생일을 직접 받았다. 생일은 저장만 되고 어디에도
+            표시·계산되지 않는 죽은 필드여서 수집을 멈춘다. 연도는 조뽑기 균형에만
+            쓰이므로 구간을 직접 고르게 한다 — 정확한 연도가 필요한 곳이 없다.
+            라벨 옆에 실제 구간을 적는다. 이름이 뜻을 숨기면 모르는 사람은 못
+            알아듣고 아는 사람은 간파하므로, 완곡어법이 양쪽 모두에게 실패한다.
+          */}
           <div className="profile-private-fields">
             <div>
-              <strong>조섞기용 셀프 기록</strong>
-              <span>카드에는 생년 대신 무드 라벨로만 보여요. 조섞기에서는 연령대가 한쪽으로 몰리지 않게 쓰입니다.</span>
+              <strong>조뽑기 세대 구간</strong>
+              <span>
+                조뽑기에서 한쪽으로 몰리지 않게 섞는 데만 쓰입니다. 내 카드에도 동료 목록에도 보이지 않아요.
+              </span>
             </div>
-            <div className="profile-mini-fields">
-              <label>
-                태어난 연도
-                <input
-                  inputMode="numeric"
-                  maxLength={4}
-                  placeholder="1996"
-                  value={draft.birthYear}
-                  onChange={(event) => updateDraft('birthYear', event.target.value)}
-                />
-              </label>
-              <label>
-                생일
-                <input placeholder="MM-DD" value={draft.birthday} onChange={(event) => updateDraft('birthday', event.target.value)} />
-              </label>
+            <div className="survey-choice-grid">
+              {generationChoices.map((choice) => (
+                <button
+                  key={choice.value}
+                  type="button"
+                  className={generationValueOf(draft.birthYear) === choice.value ? 'selected' : ''}
+                  onClick={() => updateDraft('birthYear', choice.value)}
+                >
+                  <strong>{choice.label}</strong>
+                  <span>{choice.hint}</span>
+                </button>
+              ))}
             </div>
           </div>
           <SurveyQuestion title="주로 맡는 역할은?" field="role" value={draft.role} choices={roleChoices} onSelect={updateDraft} />
@@ -304,7 +336,7 @@ export function Profiles({ currentUser, onProfilesChange }: ProfilesProps) {
         편집이 아닐 때도 띄우면 바로 위 '내 프로필 카드'와 같은 사람을 한 번 더
         그리는 셈이 된다. 실제로 이 화면은 아무것도 안 해도 본인이 네 번 나왔다.
       */}
-      {isEditing && (
+      {mode === 'mine' && isEditing && (
       <aside className="profile-side">
         <section className={`profile-card feature-preview ${previewProfile.color}`}>
           <div className="profile-card-head">
@@ -324,6 +356,66 @@ export function Profiles({ currentUser, onProfilesChange }: ProfilesProps) {
       </aside>
       )}
 
+      {/*
+        분포 요약. 순위나 점수를 만들지 않는다 — 32명 성향에 순위를 매기면
+        프로파일링이 되고, 익명 발언을 전제로 하는 이 앱과 충돌한다.
+        각 축에서 어떤 성향이 몇 명인지만 보여주고, 누르면 그 조건으로 목록을 좁힌다.
+      */}
+      {mode === 'directory' && (
+      <section className="panel profile-overview">
+        <PanelHeader icon={BarChart3} title="팀 성향 분포" />
+        {(() => {
+          // 선택지 중 하나를 실제로 고른 사람만 분포에 잡힌다. 나머지는 시드
+          // 기본값이라 어느 막대에도 안 들어간다. 그 사실을 감추면 '다 1'인
+          // 그래프가 집계 결과처럼 읽힌다.
+          const answered = filteredProfiles.filter((profile) =>
+            traitChoices.some((choice) => choice.value === profile.trait),
+          ).length;
+          return (
+            <p className="field-note">
+              {filteredProfiles.length}명 중 <strong>{answered}명</strong>이 성향 카드를 작성했습니다. 작성한 사람만
+              분포에 반영됩니다. 항목을 누르면 그 성향만 모아 봅니다.
+            </p>
+          );
+        })()}
+        <div className="overview-axes">
+          {[
+            { 축: '주로 맡는 역할', 값들: roleChoices, field: 'role' as const },
+            { 축: '일하는 성향', 값들: traitChoices, field: 'trait' as const },
+            { 축: '협업 방식', 값들: collaborationChoices, field: 'collaboration' as const },
+            { 축: '피드백 선호', 값들: feedbackChoices, field: 'feedback' as const },
+          ].map(({ 축, 값들, field }) => {
+            const total = filteredProfiles.length || 1;
+            return (
+              <div className="overview-axis" key={축}>
+                <strong>{축}</strong>
+                {값들.map((choice) => {
+                  const count = filteredProfiles.filter((profile) => profile[field] === choice.value).length;
+                  const active = searchTerm === choice.value;
+                  return (
+                    <button
+                      key={choice.value}
+                      type="button"
+                      className={active ? 'overview-bar is-active' : 'overview-bar'}
+                      onClick={() => setSearchTerm(active ? '' : choice.value)}
+                      title={`${choice.label} ${count}명`}
+                    >
+                      <span className="overview-bar-label">{choice.label}</span>
+                      <span className="overview-bar-track">
+                        <span style={{ width: `${Math.round((count / total) * 100)}%` }} />
+                      </span>
+                      <span className="overview-bar-count">{count}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            );
+          })}
+        </div>
+      </section>
+      )}
+
+      {mode === 'directory' && (
       <section className="panel profile-directory">
         <PanelHeader icon={Sparkles} title="동료 프로필 찾기" />
         <div className="profile-directory-tools">
@@ -361,13 +453,14 @@ export function Profiles({ currentUser, onProfilesChange }: ProfilesProps) {
           ))}
         </div>
       </section>
+      )}
 
       {/*
         상세는 디렉터리에서 동료를 골랐을 때 여는 패널이다. selectedProfile 은
         고른 사람이 없으면 내 프로필로 떨어지는데, 그러면 맨 위 '내 프로필 카드'와
         같은 사람을 같은 항목으로 한 번 더 그린다. 본인일 때는 띄우지 않는다.
       */}
-      {selectedProfile && selectedProfile.name !== myProfile?.name && (
+      {mode === 'directory' && selectedProfile && selectedProfile.name !== myProfile?.name && (
         <section className="panel profile-detail">
           <div className="profile-detail-head">
             <div className={`avatar ${selectedProfile.color}`}>{selectedProfile.name.slice(0, 1)}</div>

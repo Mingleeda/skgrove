@@ -5,6 +5,7 @@ import {
   CalendarDays,
   FileCheck2,
   Home,
+  IdCard,
   Inbox,
   Laugh,
   MessageSquarePlus,
@@ -42,6 +43,7 @@ export const sections: AppSection[] = [
   { id: 'metrics', label: '파트지수 / 리포트', icon: BarChart3, owner: '김수정' },
   { id: 'notifications', label: '알림 / 메시지', icon: Bell, owner: '김승현' },
   { id: 'accounts', label: '계정 관리', icon: UsersRound, owner: '팀리더' },
+  { id: 'mypage', label: '마이페이지', icon: IdCard, owner: '본인' },
 ];
 
 const bySection = (id: Section) => sections.find((section) => section.id === id)!;
@@ -59,6 +61,6 @@ export const navGroups: NavGroup[] = [
   },
   {
     title: '살펴보기 · 관리',
-    items: ['metrics', 'notifications', 'accounts'].map((id) => bySection(id as Section)),
+    items: ['metrics', 'notifications', 'accounts', 'mypage'].map((id) => bySection(id as Section)),
   },
 ];

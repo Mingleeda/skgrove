@@ -1,5 +1,6 @@
 export type Section =
   | 'dashboard'
+  | 'mypage'
   | 'intake'
   | 'leader'
   | 'agenda'

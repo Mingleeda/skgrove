@@ -932,7 +932,12 @@ export function App() {
           onDeleteComment={deleteHumorComment}
         />
       )}
-      {active === 'profiles' && <Profiles currentUser={currentUser} onProfilesChange={setProfileDirectory} />}
+      {active === 'profiles' && (
+        <Profiles mode="directory" currentUser={currentUser} onProfilesChange={setProfileDirectory} />
+      )}
+      {active === 'mypage' && (
+        <Profiles mode="mine" currentUser={currentUser} onProfilesChange={setProfileDirectory} />
+      )}
       {active === 'connect' && <Connect members={connectMembers} />}
       {active === 'memory' && <Memory currentUser={currentUser} />}
       {active === 'metrics' && <Metrics currentUser={currentUser} />}
