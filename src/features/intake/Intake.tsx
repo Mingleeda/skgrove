@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import {
-  AlertTriangle,
   CheckCircle2,
   ChevronDown,
   ChevronRight,
+  Eye,
   EyeOff,
   FileText,
   KeyRound,
+  Lock,
   Megaphone,
   MessageSquarePlus,
   Send,
@@ -298,20 +299,44 @@ export function Intake({ identity, currentUser, issues, onIdentityChange, onIssu
         {step === 'review' && (
           <section className="panel intake-panel">
             <PanelHeader icon={ShieldCheck} title="제출 전 확인" />
+            {/* 제출 전에 꼭 다시 확인해야 하는 값은 익명/실명과 공개 범위 둘뿐이다.
+                카테고리·긴급도와 같은 회색 라벨로 묻어두면 눈에 걸리지 않으므로 맨 위로 올린다. */}
             <div className="review-box">
-              <span>{identity}</span>
-              <h2>{title}</h2>
-              <p>{body}</p>
-              <dl>
-                {identity === '실명' && (
-                  <div><dt>작성자</dt><dd>{currentUser.name} · {currentUser.part} · {currentUser.email}</dd></div>
+              <div className="review-flags">
+                <span className={identity === '익명' ? 'review-flag anon' : 'review-flag named'}>
+                  {identity === '익명' ? <EyeOff size={14} /> : <ShieldCheck size={14} />}
+                  {identity === '익명' ? '익명으로 접수' : '실명으로 접수'}
+                </span>
+                <span className={visibility === '리더만 보기' ? 'review-flag closed' : 'review-flag open'}>
+                  {visibility === '리더만 보기' ? <Lock size={14} /> : <Eye size={14} />}
+                  {visibility}
+                </span>
+              </div>
+
+              <div className="review-section">
+                <p className="review-section-label">작성한 내용</p>
+                <h2>{title}</h2>
+                <p>{body}</p>
+                {/* 기대 변화는 선택 항목이다. 비어 있는데 라벨만 남으면 빈 줄로 읽힌다. */}
+                {expectedChange.trim() && (
+                  <div className="review-expected">
+                    <strong>기대 변화</strong>
+                    <p>{expectedChange}</p>
+                  </div>
                 )}
-                <div><dt>전달 대상</dt><dd>{target}</dd></div>
-                <div><dt>카테고리</dt><dd>{category}</dd></div>
-                <div><dt>긴급도</dt><dd>{urgency}</dd></div>
-                <div><dt>공개 범위</dt><dd>{visibility}</dd></div>
-                <div><dt>기대 변화</dt><dd>{expectedChange}</dd></div>
-              </dl>
+              </div>
+
+              <div className="review-section">
+                <p className="review-section-label">전달 설정</p>
+                <dl>
+                  {identity === '실명' && (
+                    <div><dt>작성자</dt><dd>{currentUser.name} · {currentUser.part} · {currentUser.email}</dd></div>
+                  )}
+                  <div><dt>전달 대상</dt><dd>{target}</dd></div>
+                  <div><dt>카테고리</dt><dd>{category}</dd></div>
+                  <div><dt>긴급도</dt><dd>{urgency}</dd></div>
+                </dl>
+              </div>
             </div>
 
             <ReviewGate
@@ -322,13 +347,14 @@ export function Intake({ identity, currentUser, issues, onIdentityChange, onIssu
               onReadyChange={setReviewReady}
             />
 
-            {/* 외부 전송 고지는 검토 결과와 무관하게 항상 보인다. */}
-            <p className="field-note">
-              다듬기 검토를 위해 작성 내용이 외부 AI로 전송됩니다. 이름·메일·소속은 보내지 않습니다.
-            </p>
-            <div className="notice-line">
-              <AlertTriangle size={18} />
-              개인정보, 실명 비방, 민감 정보가 포함되어 있지 않은지 한 번 더 확인해주세요.
+            {/* 경고를 세 개 쌓으면 서로를 무력화한다. 막는 역할은 위의 ReviewGate 하나만 맡고,
+                항상 보여야 하는 안내 두 줄은 조용한 톤으로 묶는다. 외부 전송 고지는 검토 결과와 무관하게 항상 보인다. */}
+            <div className="submit-notes">
+              <ShieldCheck size={16} />
+              <div>
+                <p>개인정보, 실명 비방, 민감 정보가 포함되어 있지 않은지 한 번 더 확인해주세요.</p>
+                <p>다듬기 검토를 위해 작성 내용이 외부 AI로 전송됩니다. 이름·메일·소속은 보내지 않습니다.</p>
+              </div>
             </div>
             <div className="form-actions">
               <button className="secondary-button" onClick={() => setStep('content')}>

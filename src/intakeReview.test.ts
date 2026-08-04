@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { reviewIntake, sanitizeFindings } from './intakeReview';
+import { groupFindings, reviewIntake, sanitizeFindings, type ReviewFinding } from './intakeReview';
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -130,5 +130,51 @@ describe('reviewIntake', () => {
     await reviewIntake({ title: '제목', body: '본문', expectedChange: '기대' });
     const sent = JSON.parse(fetchMock.mock.calls[0][1].body as string);
     expect(Object.keys(sent).sort()).toEqual(['body', 'expectedChange', 'title']);
+  });
+});
+
+describe('groupFindings', () => {
+  const f = (patch: Partial<ReviewFinding>): ReviewFinding => ({
+    field: 'title',
+    kind: 'personal-attack',
+    reason: '특정인의 능력에 대한 평가 표현입니다.',
+    rewritten: '박부장의 업무 처리 방식에 대한 개선이 필요합니다.',
+    ...patch,
+  });
+
+  it('사유와 대안이 같으면 한 장으로 합치고 항목만 모은다', () => {
+    const groups = groupFindings([f({ field: 'title' }), f({ field: 'body' }), f({ field: 'expectedChange' })]);
+    expect(groups).toHaveLength(1);
+    expect(groups[0].fields).toEqual(['title', 'body', 'expectedChange']);
+  });
+
+  it('대안이 다르면 합치지 않는다', () => {
+    const groups = groupFindings([f({ field: 'title' }), f({ field: 'body', rewritten: '다른 대안입니다.' })]);
+    expect(groups).toHaveLength(2);
+  });
+
+  it('사유가 다르면 합치지 않는다', () => {
+    const groups = groupFindings([f({ field: 'title' }), f({ field: 'body', reason: '다른 사유입니다.' })]);
+    expect(groups).toHaveLength(2);
+  });
+
+  it('kind가 다르면 합치지 않는다', () => {
+    const groups = groupFindings([f({ field: 'title' }), f({ field: 'body', kind: 'profanity' })]);
+    expect(groups).toHaveLength(2);
+  });
+
+  it('같은 항목이 두 번 실려 와도 라벨을 중복시키지 않는다', () => {
+    const groups = groupFindings([f({ field: 'body' }), f({ field: 'body' })]);
+    expect(groups).toHaveLength(1);
+    expect(groups[0].fields).toEqual(['body']);
+  });
+
+  it('입력 순서를 유지한다', () => {
+    const groups = groupFindings([f({ field: 'body', rewritten: 'B' }), f({ field: 'title', rewritten: 'A' })]);
+    expect(groups.map((g) => g.rewritten)).toEqual(['B', 'A']);
+  });
+
+  it('빈 배열은 빈 배열이다', () => {
+    expect(groupFindings([])).toEqual([]);
   });
 });

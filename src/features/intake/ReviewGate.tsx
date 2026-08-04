@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { AlertTriangle, PenLine, RefreshCw, ShieldCheck, Sparkles } from 'lucide-react';
-import { reviewIntake, type ReviewField, type ReviewFinding } from '../../intakeReview';
+import { groupFindings, reviewIntake, type ReviewField, type ReviewFinding } from '../../intakeReview';
 
 // 검토 입력을 객체로 받지 않는다. 매 렌더마다 새 객체가 되어 재검토가 무한히 돈다.
 //
@@ -26,6 +26,7 @@ const FIELD_LABEL: Record<ReviewField, string> = {
   body: '내용',
   expectedChange: '기대 변화',
 };
+
 
 export function ReviewGate({
   title,
@@ -101,15 +102,16 @@ export function ReviewGate({
         <strong>다듬어야 접수할 수 있어요</strong>
       </div>
 
-      {state.findings.map((finding, index) => (
-        <article className="review-finding" key={`${finding.field}-${index}`}>
-          <span className={`review-kind ${finding.kind}`}>
-            {finding.kind === 'profanity' ? '욕설' : '인신공격'} · {FIELD_LABEL[finding.field]}
+      {groupFindings(state.findings).map((group, index) => (
+        <article className="review-finding" key={`${group.kind}-${index}`}>
+          <span className={`review-kind ${group.kind}`}>
+            {group.kind === 'profanity' ? '욕설' : '인신공격'} ·{' '}
+            {group.fields.map((field) => FIELD_LABEL[field]).join(', ')}
           </span>
-          {finding.reason && <p className="review-reason">{finding.reason}</p>}
+          {group.reason && <p className="review-reason">{group.reason}</p>}
           {/* 참고 예시일 뿐이다. 그대로 쓰라는 뜻이 아니라는 걸 라벨로 분명히 한다. */}
           <p className="review-suggestion-label">이렇게 바꿔볼 수 있어요</p>
-          <p className="review-rewritten">{finding.rewritten}</p>
+          <p className="review-rewritten">{group.rewritten}</p>
         </article>
       ))}
 

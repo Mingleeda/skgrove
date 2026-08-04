@@ -44,6 +44,35 @@ export function sanitizeFindings(raw: unknown): ReviewFinding[] {
     .filter((item): item is ReviewFinding => item !== null);
 }
 
+export type FindingGroup = Pick<ReviewFinding, 'kind' | 'reason' | 'rewritten'> & { fields: ReviewField[] };
+
+// 같은 문장을 제목·내용·기대 변화에 그대로 쓰면, 사유도 대안도 똑같은 카드가 항목 수만큼 쌓인다.
+// 세 번 읽어도 작성자가 얻는 정보는 하나다. 항목명만 합쳐 한 장으로 보여준다.
+export function groupFindings(findings: ReviewFinding[]): FindingGroup[] {
+  const groups: FindingGroup[] = [];
+  const index = new Map<string, FindingGroup>();
+
+  for (const finding of findings) {
+    const key = `${finding.kind}|${finding.reason}|${finding.rewritten}`;
+    const existing = index.get(key);
+    if (existing) {
+      // 같은 항목이 두 번 실려 오면 라벨이 "제목, 제목"이 된다.
+      if (!existing.fields.includes(finding.field)) existing.fields.push(finding.field);
+      continue;
+    }
+    const group: FindingGroup = {
+      kind: finding.kind,
+      reason: finding.reason,
+      rewritten: finding.rewritten,
+      fields: [finding.field],
+    };
+    index.set(key, group);
+    groups.push(group);
+  }
+
+  return groups;
+}
+
 async function postOnce(url: string, input: ReviewInput): Promise<ReviewResult> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);

@@ -822,6 +822,7 @@ export function App() {
           currentUser={currentUser}
           actionItems={actionItems}
           onSectionChange={changeSection}
+          onIdentityChange={setIdentity}
         />
       )}
       {active === 'intake' && (

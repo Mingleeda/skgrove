@@ -18,8 +18,11 @@ const statusFilters: StatusFilter[] = ['전체', ...actionStatuses];
 
 // 완료된 항목도 목표일이 과거일 수 있다. 부호를 보고 문구를 정해야
 // "-1일 남음" 같은 표시가 나오지 않는다.
-function dueLabel(left: number | null) {
+// 완료된 건에 "9일 지남"을 붙이면 아직 밀린 일로 읽힌다. 상단 배너의 지연 건수는
+// isOverdue로 완료를 이미 빼고 세므로, 카드 문구만 배너와 어긋나 있었다.
+function dueLabel(left: number | null, done: boolean) {
   if (left === null) return '목표일 미정';
+  if (done) return left < 0 ? '목표일 이후 완료' : '완료';
   if (left < 0) return `${Math.abs(left)}일 지남`;
   if (left === 0) return '오늘 마감';
   return `${left}일 남음`;
@@ -131,7 +134,8 @@ export function ActionBoard({ items, accounts, currentUser, today, onUpdate }: A
                 <h2>{item.title}</h2>
 
                 <p className="action-card-meta">
-                  담당 {item.owner} · {item.due ? `목표일 ${item.due} (${dueLabel(left)})` : '목표일 미정'}
+                  담당 {item.owner} ·{' '}
+                  {item.due ? `목표일 ${item.due} (${dueLabel(left, item.status === '완료')})` : '목표일 미정'}
                 </p>
 
                 {item.outcome && (

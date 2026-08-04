@@ -481,12 +481,15 @@ export function Memory({ currentUser }: MemoryProps) {
                 <button
                   className={day.memory?.id === selectedMemory.id ? 'selected' : ''}
                   key={day.key}
+                  // 칸이 좁아 제목을 넣을 수 없다. 이름은 툴팁과 아래 행사 목록에서 읽는다.
+                  title={day.memory ? `${day.memory.title} · ${getDday(day.memory.date)}` : `${day.label} 추억 만들기`}
+                  aria-label={day.memory ? `${day.label} ${day.memory.title}` : `${day.label} 추억 만들기`}
                   onClick={() => selectCalendarDay(day.key, day.memory)}
                 >
                   <span>{day.label}</span>
                   {day.memory ? (
                     <>
-                      <strong>{day.memory.title}</strong>
+                      <span className="memory-day-dot" aria-hidden="true" />
                       <small>{getDday(day.memory.date)}</small>
                     </>
                   ) : (

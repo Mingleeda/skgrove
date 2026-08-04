@@ -225,8 +225,13 @@ export function LeaderInbox({ issues, today, onIssueUpdate, onPromoteToAgenda }:
                   </div>
                 </button>
                 <div className="issue-actions">
-                  <span className="status-pill">{issue.status}</span>
-                  <select value={issue.status} onChange={(event) => changeStatus(issue, event.target.value as IssueStatus)}>
+                  {/* 바로 옆 select 가 이미 현재 상태를 값으로 보여준다.
+                      같은 낱말을 배지로 한 번 더 찍어 "접수 접수"로 읽혔다. */}
+                  <select
+                    aria-label={`${issue.title} 상태`}
+                    value={issue.status}
+                    onChange={(event) => changeStatus(issue, event.target.value as IssueStatus)}
+                  >
                     {filters
                       .filter((item): item is IssueStatus => item !== '전체')
                       .map((status) => (

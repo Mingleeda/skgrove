@@ -329,6 +329,19 @@ export function Connect({ members }: ConnectProps) {
   }, [visibleParticipants]);
 
   const teamCount = getTeamCount(selectedParticipants.length, teamBasis, teamValue);
+  // 입력한 값이 그대로 쓰이지 못한 경우에만 이유를 밝힌다.
+  const teamAdjustedNote = (() => {
+    if (selectedParticipants.length === 0) return '';
+    if (teamBasis === 'count') {
+      if (teamValue > selectedParticipants.length) {
+        return `참여자가 ${selectedParticipants.length}명이라 ${teamValue}개 조로 나눌 수 없어요. ${teamCount}개 조로 진행합니다.`;
+      }
+      if (teamValue < 1) return `조 개수는 1개 이상이어야 해요. ${teamCount}개 조로 진행합니다.`;
+      return '';
+    }
+    if (teamValue < 2) return `조당 인원은 2명 이상이어야 해요. 2명 기준 ${teamCount}개 조로 진행합니다.`;
+    return '';
+  })();
   const selectedParts = new Set(selectedParticipants.map((profile) => profile.part)).size;
   const selectedAgeMoods = new Set(selectedParticipants.map((profile) => getAgeMood(profile.birthYear).key)).size;
   const teamShareText = teams.length > 0 ? buildTeamShareText(teams, balanceRule, teamBasis, teamValue) : '';
@@ -460,7 +473,8 @@ export function Connect({ members }: ConnectProps) {
   return (
     <section className="screen connect-screen">
       <section className="panel connect-studio">
-        <PanelHeader icon={Shuffle} title="커피뽑기 / 조뽑기" />
+        {/* 상단 헤더가 이미 '커피뽑기 / 조뽑기'다. 같은 제목을 두 번 쓰지 않는다. */}
+        <PanelHeader icon={Shuffle} title="뽑기 방식 고르기" />
         <div className="connect-mode-tabs" role="tablist" aria-label="뽑기 방식">
           <button className={mode === 'teams' ? 'selected' : ''} onClick={() => setMode('teams')} type="button">
             <UsersRound size={18} />
@@ -576,6 +590,9 @@ export function Connect({ members }: ConnectProps) {
                       />
                     </label>
                   </div>
+                  {/* getTeamCount가 인원수에 맞춰 조용히 깎아냈다. 입력칸은 4를 보여주는데
+                      실제로는 3개 조로 돌아가서, 왜 다른지 알 길이 없었다. 덮어쓰지 말고 알린다. */}
+                  {teamAdjustedNote && <p className="form-error">{teamAdjustedNote}</p>}
                   <div className="connect-summary-strip">
                     <span>파트 {selectedParts}종</span>
                     <span>감각 {selectedAgeMoods}종</span>
