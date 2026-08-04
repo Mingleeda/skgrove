@@ -533,3 +533,14 @@ create table if not exists public.can_opinions (
 alter table public.can_opinions enable row level security;
 drop policy if exists "Allow prototype can opinions all" on public.can_opinions;
 create policy "Allow prototype can opinions all" on public.can_opinions for all using (true) with check (true);
+
+-- 팀 공용 설정(캔미팅 단계, 티미팅 세션 유형 등) — key/value.
+-- 이 설정들은 "모든 캔미팅에 공통 적용"되는 팀 약속이라 기기별 localStorage가 아니라 DB에 둔다.
+create table if not exists public.app_config (
+  key text primary key,
+  value jsonb not null,
+  updated_at timestamptz not null default now()
+);
+alter table public.app_config enable row level security;
+drop policy if exists "Allow prototype app config all" on public.app_config;
+create policy "Allow prototype app config all" on public.app_config for all using (true) with check (true);

@@ -7,13 +7,22 @@ import { hasVoted, loadBallots, makeVoterKey, saveBallots } from './ballotStore'
 import { isLeader, isTeamLeader, teamParts } from './auth';
 import { loadCanSteps, saveCanSteps } from './canStepsStore';
 import {
+  loadCanOpinions,
+  loadCanSessions,
+  makeCanOpinionId,
+  makeCanSessionId,
+  saveCanOpinions,
+  saveCanSessions,
+} from './canStore';
+import {
+  DEFAULT_TEA_SESSION_TYPES,
   loadTeaSessionTypes,
   loadTeaSessions,
   makeTeaSessionId,
   saveTeaSessionTypes,
   saveTeaSessions,
 } from './teaStore';
-import type { CanStepConfig } from './canConfig';
+import { CAN_STEPS, type CanStepConfig } from './canConfig';
 import { AppShell } from './components/AppShell';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { ToastRegion, useToasts } from './components/Toast';
@@ -133,10 +142,10 @@ export function App() {
   const [canOpinions, setCanOpinions] = useState<CanOpinion[]>(initialCanOpinions);
   const [selectedCanId, setSelectedCanId] = useState<string | null>(null);
   const [actionItems, setActionItems] = useState<ActionItem[]>(initialActionItems);
-  const [canSteps, setCanSteps] = useState<CanStepConfig[]>(loadCanSteps);
-  // DB(있으면)에서 비동기 로드하므로 초기값은 시드로 두고 useEffect에서 덮어쓴다. (유형 config는 로컬 동기)
+  // DB(있으면)에서 비동기 로드하므로 초기값은 시드/기본값으로 두고 useEffect에서 덮어쓴다.
+  const [canSteps, setCanSteps] = useState<CanStepConfig[]>(CAN_STEPS);
   const [teaSessions, setTeaSessions] = useState<TeaSession[]>(initialTeaSessions);
-  const [teaSessionTypes, setTeaSessionTypes] = useState<string[]>(loadTeaSessionTypes);
+  const [teaSessionTypes, setTeaSessionTypes] = useState<string[]>(DEFAULT_TEA_SESSION_TYPES);
   const [notifications, setNotifications] = useState<AppNotification[]>(initialNotifications);
   const [humorPosts, setHumorPosts] = useState<HumorPost[]>(initialHumorPosts);
   const [humorComments, setHumorComments] = useState<HumorComment[]>(initialHumorComments);
@@ -224,6 +233,18 @@ export function App() {
     });
     loadTeaSessions().then((loaded) => {
       if (isMounted) setTeaSessions(loaded);
+    });
+    loadTeaSessionTypes().then((loaded) => {
+      if (isMounted) setTeaSessionTypes(loaded);
+    });
+    loadCanSessions().then((loaded) => {
+      if (isMounted) setCanSessions(loaded);
+    });
+    loadCanOpinions().then((loaded) => {
+      if (isMounted) setCanOpinions(loaded);
+    });
+    loadCanSteps().then((loaded) => {
+      if (isMounted) setCanSteps(loaded);
     });
     loadNotifications().then((loaded) => {
       if (isMounted) {
@@ -463,8 +484,19 @@ export function App() {
     if (target && isOpen(target)) notifyStatus(`안건을 마감했습니다 · ${finalStatus(target)}`);
   };
 
+  const persistCanSessions = (next: CanSession[]) => {
+    setCanSessions(next);
+    void saveCanSessions(next);
+  };
+
+  const persistCanOpinions = (next: CanOpinion[]) => {
+    setCanOpinions(next);
+    void saveCanOpinions(next);
+  };
+
   const startCanSession = () => {
-    const id = `CAN-S-${canSessions.length + 1}`;
+    // 공용 DB에서는 목록 길이 기반 id가 다른 사람과 충돌한다 → 고유 id 사용.
+    const id = makeCanSessionId();
     const draft: CanSession = {
       id,
       topic: '',
@@ -476,36 +508,33 @@ export function App() {
       resultSummary: '',
       followUp: null,
     };
-    setCanSessions((prev) => [draft, ...prev]);
+    persistCanSessions([draft, ...canSessions]);
     setSelectedCanId(id);
   };
 
   const updateCanSession = (session: CanSession) => {
-    setCanSessions((prev) => prev.map((item) => (item.id === session.id ? session : item)));
+    persistCanSessions(canSessions.map((item) => (item.id === session.id ? session : item)));
   };
 
   const addCanOpinion = (opinion: Omit<CanOpinion, 'id' | 'selected'>) => {
-    setCanOpinions((prev) => [
-      ...prev,
-      { ...opinion, id: `CAN-${String(prev.length + 1).padStart(2, '0')}`, selected: false },
-    ]);
+    persistCanOpinions([...canOpinions, { ...opinion, id: makeCanOpinionId(), selected: false }]);
   };
 
   const toggleCanOpinion = (id: string) => {
-    setCanOpinions((prev) =>
-      prev.map((opinion) => (opinion.id === id ? { ...opinion, selected: !opinion.selected } : opinion)),
+    persistCanOpinions(
+      canOpinions.map((opinion) => (opinion.id === id ? { ...opinion, selected: !opinion.selected } : opinion)),
     );
   };
 
   const updateCanSteps = (steps: CanStepConfig[]) => {
     setCanSteps(steps);
-    saveCanSteps(steps);
+    void saveCanSteps(steps);
   };
 
   const confirmCanResult = (sessionId: string, summary: string, groups: CanResultGroup[]) => {
     if (!summary.trim()) return;
-    setCanSessions((prev) =>
-      prev.map((session) =>
+    persistCanSessions(
+      canSessions.map((session) =>
         session.id === sessionId ? { ...session, resultSummary: summary, resultGroups: groups } : session,
       ),
     );
@@ -556,8 +585,8 @@ export function App() {
         if (owner) followDrafts.push(actionDraft(item, owner, today()));
       });
     }
-    setCanSessions((prev) =>
-      prev.map((session) => (session.id === sessionId ? { ...session, followUp: { routes, actionMeta } } : session)),
+    persistCanSessions(
+      canSessions.map((session) => (session.id === sessionId ? { ...session, followUp: { routes, actionMeta } } : session)),
     );
     // 112/114: 캔미팅 후속으로 만든 안건·액션도 동일하게 알림
     if (followDrafts.length > 0) notify(followDrafts);
@@ -638,7 +667,7 @@ export function App() {
 
   const updateTeaSessionTypes = (types: string[]) => {
     setTeaSessionTypes(types);
-    saveTeaSessionTypes(types);
+    void saveTeaSessionTypes(types);
   };
 
   // 이번 티미팅 공지문을 팀 전체 채널로 전송.
