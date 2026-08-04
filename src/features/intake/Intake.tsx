@@ -16,7 +16,6 @@ import { PanelHeader } from '../../components/PanelHeader';
 import { MIN_MEMBERS_TO_REVEAL } from '../../metricsPrivacy';
 import type { CurrentUser, Identity, Issue, IssueVisibility, Urgency } from '../../types';
 import { ReviewGate } from './ReviewGate';
-import type { ReviewField } from '../../intakeReview';
 
 type IntakeProps = {
   identity: Identity;
@@ -74,13 +73,6 @@ export function Intake({ identity, currentUser, issues, onIdentityChange, onIssu
     if (myIssueFilter === '완료') return issue.status === '회수' || issue.status === '종료' || issue.status === '답변완료' || issue.status === '액션아이템';
     return true;
   });
-
-  // AI 제안을 해당 필드에 반영한다. 반영하면 ReviewGate가 바뀐 값으로 자동 재검토한다.
-  const applyReviewFix = (field: ReviewField, rewritten: string) => {
-    if (field === 'title') setTitle(rewritten);
-    if (field === 'body') setBody(rewritten);
-    if (field === 'expectedChange') setExpectedChange(rewritten);
-  };
 
   const submit = () => {
     // 버튼이 잠겨 있어도 다른 경로로 호출될 수 있으니 여기서 한 번 더 막는다.
@@ -326,7 +318,6 @@ export function Intake({ identity, currentUser, issues, onIdentityChange, onIssu
               title={title}
               body={body}
               expectedChange={expectedChange}
-              onApplyFix={applyReviewFix}
               onEditManually={() => setStep('content')}
               onReadyChange={setReviewReady}
             />

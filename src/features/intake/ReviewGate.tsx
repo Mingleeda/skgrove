@@ -3,11 +3,14 @@ import { AlertTriangle, PenLine, RefreshCw, ShieldCheck, Sparkles } from 'lucide
 import { reviewIntake, type ReviewField, type ReviewFinding } from '../../intakeReview';
 
 // 검토 입력을 객체로 받지 않는다. 매 렌더마다 새 객체가 되어 재검토가 무한히 돈다.
+//
+// 제안을 자동 반영하는 버튼은 두지 않는다. 실제로 돌려보니 모델이 문제 표현만
+// 바꾸는 게 아니라 항목 전체를 다시 써서, 대상(누가)과 사안(무슨 일)이 통째로
+// 사라지고 입력에 없던 주제가 들어왔다. 고치는 것은 작성자가 한다.
 type ReviewGateProps = {
   title: string;
   body: string;
   expectedChange: string;
-  onApplyFix: (field: ReviewField, rewritten: string) => void;
   onEditManually: () => void;
   onReadyChange: (ready: boolean) => void;
 };
@@ -28,7 +31,6 @@ export function ReviewGate({
   title,
   body,
   expectedChange,
-  onApplyFix,
   onEditManually,
   onReadyChange,
 }: ReviewGateProps) {
@@ -105,17 +107,16 @@ export function ReviewGate({
             {finding.kind === 'profanity' ? '욕설' : '인신공격'} · {FIELD_LABEL[finding.field]}
           </span>
           {finding.reason && <p className="review-reason">{finding.reason}</p>}
+          {/* 참고 예시일 뿐이다. 그대로 쓰라는 뜻이 아니라는 걸 라벨로 분명히 한다. */}
+          <p className="review-suggestion-label">이렇게 바꿔볼 수 있어요</p>
           <p className="review-rewritten">{finding.rewritten}</p>
-          <button className="primary-button" onClick={() => onApplyFix(finding.field, finding.rewritten)}>
-            제안대로 수정
-          </button>
         </article>
       ))}
 
       <div className="review-gate-foot">
-        <button className="secondary-button" onClick={onEditManually}>
+        <button className="primary-button" onClick={onEditManually}>
           <PenLine size={16} />
-          내가 직접 고치기
+          내용 고치러 가기
         </button>
         {/* 앱이 받지 못하는 말도 사람은 받을 수 있어야 한다. 막다른 길을 만들지 않는다. */}
         <p className="field-note">

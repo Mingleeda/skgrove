@@ -7497,3 +7497,11 @@ button.notif-row {
   gap: var(--space-2);
   justify-items: start;
 }
+
+/* 제안 문구는 참고용이다. 자동 반영이 없다는 걸 라벨로 분명히 한다. */
+.review-suggestion-label {
+  color: var(--color-muted);
+  font-size: 12px;
+  font-weight: 700;
+  margin: 0;
+}
