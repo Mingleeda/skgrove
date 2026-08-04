@@ -5123,6 +5123,24 @@ textarea {
   font-size: 13px;
 }
 
+.account-slack-email {
+  border: 1px solid transparent;
+  background: transparent;
+  border-radius: 6px;
+  color: var(--color-muted);
+  font-size: 12px;
+  padding: 3px 6px;
+  margin-top: 2px;
+  width: 100%;
+}
+
+.account-slack-email:hover,
+.account-slack-email:focus {
+  background: #fff;
+  border-color: #d9dfd8;
+  color: inherit;
+}
+
 .part-static {
   align-items: center;
   background: #e8f3ef;

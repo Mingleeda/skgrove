@@ -35,6 +35,9 @@ export type ManagedAccount = CurrentUser & {
   status: AccountStatus;
   joinedAt: string;
   photoUrl?: string; // 계정별 프로필 사진(직접 이미지 URL). 없으면 이니셜 칩으로 폴백.
+  // 슬랙 DM 발송용 이메일. 앱 로그인 이메일과 슬랙 계정 이메일이 다를 수 있어 별도 관리.
+  // 없으면 앱 이메일(email)로 폴백.
+  slackEmail?: string;
 };
 
 // 접수자가 고른 공개 범위. '리더만 보기'는 안건 전환을 막는 약속이므로 저장해야 한다.
