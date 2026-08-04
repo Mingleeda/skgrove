@@ -274,6 +274,10 @@ export function Profiles({ currentUser, onProfilesChange }: ProfilesProps) {
               <span>조섞기 무드</span>
               <strong>{myAgeMood?.helper}</strong>
             </div>
+            <div>
+              <span>동료 이해 가이드</span>
+              <strong>{myProfile.guide}</strong>
+            </div>
           </div>
         </section>
       )}
@@ -333,6 +337,12 @@ export function Profiles({ currentUser, onProfilesChange }: ProfilesProps) {
         </section>
       )}
 
+      {/*
+        편집 중 입력이 카드에 어떻게 보이는지 확인하는 라이브 프리뷰다.
+        편집이 아닐 때도 띄우면 바로 위 '내 프로필 카드'와 같은 사람을 한 번 더
+        그리는 셈이 된다. 실제로 이 화면은 아무것도 안 해도 본인이 네 번 나왔다.
+      */}
+      {isEditing && (
       <aside className="profile-side">
         <section className={`profile-card feature-preview ${previewProfile.color}`}>
           <div className="profile-card-head">
@@ -350,8 +360,8 @@ export function Profiles({ currentUser, onProfilesChange }: ProfilesProps) {
             <span>{previewProfile.collaboration}</span>
           </div>
         </section>
-
       </aside>
+      )}
 
       <section className="panel profile-directory">
         <PanelHeader icon={Sparkles} title="동료 프로필 찾기" />
@@ -392,7 +402,12 @@ export function Profiles({ currentUser, onProfilesChange }: ProfilesProps) {
         </div>
       </section>
 
-      {selectedProfile && (
+      {/*
+        상세는 디렉터리에서 동료를 골랐을 때 여는 패널이다. selectedProfile 은
+        고른 사람이 없으면 내 프로필로 떨어지는데, 그러면 맨 위 '내 프로필 카드'와
+        같은 사람을 같은 항목으로 한 번 더 그린다. 본인일 때는 띄우지 않는다.
+      */}
+      {selectedProfile && selectedProfile.name !== myProfile?.name && (
         <section className="panel profile-detail">
           <div className="profile-detail-head">
             <div className={`avatar ${selectedProfile.color}`}>{selectedProfile.name.slice(0, 1)}</div>

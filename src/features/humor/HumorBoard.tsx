@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
-import { AlertTriangle, ArrowLeft, Crown, Laugh, MessageCircle, PenLine, Send, Sparkles, Trash2, Trophy, X } from 'lucide-react';
+import type { ElementType } from 'react';
+import { AlertTriangle, ArrowLeft, Crown, FileText, Image as ImageIcon, Laugh, Link2, MessageCircle, Medal, PenLine, PlayCircle, Send, Sparkles, Trash2, Trophy, X } from 'lucide-react';
 import { Avatar } from '../../components/Avatar';
 import { PanelHeader } from '../../components/PanelHeader';
 import { monthOf, rankCommenters, rankLiked, rankPosters, topCommenter, topLiked, topPoster } from '../../humorRules';
@@ -63,12 +64,17 @@ function resolveMedia(url: string): Media | null {
   return null; // 미지원·위험 scheme은 미디어로 취급하지 않음
 }
 
-// 목록 행에 붙는 미디어 표시(무거운 플레이어 대신 종류 아이콘만).
-function mediaGlyph(media: Media | null): string {
-  if (!media) return '📝';
-  if (media.type === 'image') return '🖼️';
-  if (media.type === 'youtube' || media.type === 'video') return '▶️';
-  return '🔗';
+/*
+  목록 행에 붙는 미디어 표시(무거운 플레이어 대신 종류 아이콘만).
+  이모지는 OS 마다 다른 그림으로 그려진다 — 한국어 폰트를 Pretendard 로 고정한 것과
+  같은 이유로 인터페이스 기호는 아이콘을 쓴다. 스크린리더가 "사진" 대신 "액자"를
+  읽는 문제와 --color-* 토큰으로 색을 못 맞추는 문제도 함께 사라진다.
+*/
+function mediaGlyph(media: Media | null): ElementType {
+  if (!media) return FileText;
+  if (media.type === 'image') return ImageIcon;
+  if (media.type === 'youtube' || media.type === 'video') return PlayCircle;
+  return Link2;
 }
 
 // 상세에서만 실제 미디어를 로드(첫 목록 화면은 가볍게 유지).
@@ -102,14 +108,16 @@ function MediaBlock({ media }: { media: Media | null }) {
   }
   return (
     <a className="humor-card-link" href={media.src} target="_blank" rel="noreferrer">
-      🔗 링크 열기
+      <Link2 size={16} />
+      링크 열기
     </a>
   );
 }
 
-type RankerCard = { key: string; emoji: string; title: string; unit: string; list: Ranker[] };
+type RankerCard = { key: string; icon: ElementType; title: string; unit: string; list: Ranker[] };
 
-const MEDALS = ['🥇', '🥈', '🥉'];
+// 1·2·3위. 메달 이모지는 OS 마다 색과 모양이 달라 순위가 안 읽히는 기기가 있었다.
+const MEDAL_RANK = ['1위', '2위', '3위'];
 
 export function HumorBoard({
   posts,
@@ -266,10 +274,12 @@ export function HumorBoard({
           )}
           <div className="humor-card-actions">
             <button className={liked ? 'humor-like active' : 'humor-like'} onClick={() => onToggleLike(detailPost.id)}>
-              <Laugh size={16} />😂 빵터짐 {detailPost.likedBy.length}
+              <Laugh size={16} />
+              빵터짐 {detailPost.likedBy.length}
             </button>
             <span className="humor-comment-count">
-              <MessageCircle size={16} />💬 댓글 {postComments.length}
+              <MessageCircle size={16} />
+              댓글 {postComments.length}
             </span>
           </div>
           <div className="humor-comments">
@@ -310,15 +320,15 @@ export function HumorBoard({
 
   // ── 목록 화면 ────────────────────────────────
   const rankers: RankerCard[] = [
-    { key: 'liked', emoji: '😂', title: '빵터짐왕', unit: '좋아요', list: rankLiked(posts, thisMonth) },
-    { key: 'poster', emoji: '✍️', title: '글쓰기왕', unit: '글', list: rankPosters(posts, thisMonth) },
-    { key: 'commenter', emoji: '💬', title: '댓글왕', unit: '댓글', list: rankCommenters(comments, thisMonth) },
+    { key: 'liked', icon: Laugh, title: '빵터짐왕', unit: '좋아요', list: rankLiked(posts, thisMonth) },
+    { key: 'poster', icon: PenLine, title: '글쓰기왕', unit: '글', list: rankPosters(posts, thisMonth) },
+    { key: 'commenter', icon: MessageCircle, title: '댓글왕', unit: '댓글', list: rankCommenters(comments, thisMonth) },
   ];
 
   const lastWinners = [
-    { emoji: '😂', ranker: topLiked(posts, lastMonth) },
-    { emoji: '✍️', ranker: topPoster(posts, lastMonth) },
-    { emoji: '💬', ranker: topCommenter(comments, lastMonth) },
+    { icon: Laugh, label: '빵터짐왕', ranker: topLiked(posts, lastMonth) },
+    { icon: PenLine, label: '글쓰기왕', ranker: topPoster(posts, lastMonth) },
+    { icon: MessageCircle, label: '댓글왕', ranker: topCommenter(comments, lastMonth) },
   ].filter((item) => item.ranker);
 
   const visiblePosts = [...posts];
@@ -341,8 +351,8 @@ export function HumorBoard({
       <div className="humor-hero">
         <div>
           <p className="eyebrow">YU~MER BOARD</p>
-          <h2>유~머 한 잔 하고 가세요 ☕</h2>
-          <p>아재개그·짤·웃긴 영상 다 환영이에요. 매달 웃음 랭커에게 작은 상품도 드립니다 🎁</p>
+          <h2>유~머 한 잔 하고 가세요</h2>
+          <p>아재개그·짤·웃긴 영상 다 환영이에요. 매달 웃음 랭커에게 작은 상품도 드립니다</p>
         </div>
         <div className="humor-hero-badge">
           <Sparkles size={20} />
@@ -359,7 +369,8 @@ export function HumorBoard({
             <div className={`humor-ranker ${card.list.length ? '' : 'empty'}`} key={card.key}>
               <span className="humor-ranker-crown">
                 <Crown size={16} />
-                {card.emoji} {card.title}
+                <card.icon size={16} aria-hidden />
+                {card.title}
               </span>
               {card.list.length === 0 ? (
                 <p className="humor-ranker-none">아직 없음</p>
@@ -367,7 +378,7 @@ export function HumorBoard({
                 <ol className="humor-podium">
                   {card.list.map((ranker, index) => (
                     <li key={ranker.name} className={index === 0 ? 'top' : ''}>
-                      <span className="humor-medal">{MEDALS[index]}</span>
+                      <span className="humor-medal">{MEDAL_RANK[index]}</span>
                       <Avatar name={ranker.name} />
                       <strong>{ranker.name}</strong>
                       <em>
@@ -382,8 +393,11 @@ export function HumorBoard({
           ))}
         </div>
         <p className="humor-hall-foot">
-          🏅 지난 달 수상자 ·{' '}
-          {lastWinners.length === 0 ? '기록 없음' : lastWinners.map((item) => `${item.emoji} ${item.ranker!.name}`).join('  ')}
+          <Medal size={14} aria-hidden />
+          지난 달 수상자 ·{' '}
+          {lastWinners.length === 0
+            ? '기록 없음'
+            : lastWinners.map((item) => `${item.label} ${item.ranker!.name}`).join('  ·  ')}
         </p>
       </section>
 
@@ -447,7 +461,12 @@ export function HumorBoard({
           const postComments = commentsByPost.get(post.id) ?? [];
           return (
             <button className="humor-row" key={post.id} onClick={() => openDetail(post.id)}>
-              <span className="humor-row-glyph">{mediaGlyph(resolveMedia(post.mediaUrl))}</span>
+              <span className="humor-row-glyph">
+                {(() => {
+                  const Glyph = mediaGlyph(resolveMedia(post.mediaUrl));
+                  return <Glyph size={18} aria-hidden />;
+                })()}
+              </span>
               <span className="humor-row-main">
                 <strong>{post.body}</strong>
                 <small>
@@ -456,8 +475,14 @@ export function HumorBoard({
                 </small>
               </span>
               <span className="humor-row-stats">
-                <span>😂 {post.likedBy.length}</span>
-                <span>💬 {postComments.length}</span>
+                <span>
+                  <Laugh size={14} />
+                  {post.likedBy.length}
+                </span>
+                <span>
+                  <MessageCircle size={14} />
+                  {postComments.length}
+                </span>
               </span>
             </button>
           );

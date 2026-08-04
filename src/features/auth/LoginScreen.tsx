@@ -111,7 +111,6 @@ export function LoginScreen({ accounts, onLogin, onRegister }: LoginScreenProps)
         </div>
 
         <div>
-          <p className="eyebrow">팀문화 개선 웹앱</p>
           <h1>편하게 말하고, 함께 정하고, 작게 바꿔요</h1>
           <p>사내 계정으로 로그인하면 의견 접수, 안건 투표, 리더 관리 흐름을 바로 사용할 수 있습니다.</p>
         </div>

@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { CheckCircle2, FileCheck2, FilePlus2, Search, ThumbsUp, Timer } from 'lucide-react';
+import { FilePlus2, Search, Vote } from 'lucide-react';
 import { daysLeft, isOpen, voteTotal } from '../../agendaRules';
 import { teamParts } from '../../auth';
 import type { Agenda, CurrentUser, TeamPart, VoteChoice } from '../../types';
+import { EmptyState } from '../../components/EmptyState';
 import { AgendaDetail } from './AgendaDetail';
 import { AgendaForm, type AgendaDraft } from './AgendaForm';
 import {
@@ -128,64 +129,52 @@ export function AgendaBoard({
       </div>
 
       {visibleAgendas.length === 0 ? (
-        <div className="panel empty-panel">
-          <strong>조건에 맞는 안건이 없습니다.</strong>
-          <span>필터를 바꾸거나 새 안건을 등록해보세요.</span>
-        </div>
+        <EmptyState
+          icon={Vote}
+          title="조건에 맞는 안건이 없어요"
+          description="필터를 바꾸거나 새 안건을 등록하면 여기에서 바로 투표할 수 있습니다."
+          action={{ label: '안건 등록', onClick: () => setView('create') }}
+        />
       ) : (
-        <div className="agenda-grid">
+        // 카드 그리드는 1280px 에 3건만 담겼다. 행이면 같은 자리에 12건이 들어간다.
+        // 투표는 되돌릴 수 없으므로 행에서는 확정하지 않고 상세로만 보낸다.
+        <div className="work-list">
           {visibleAgendas.map((agenda) => {
             const rate = approveRate(agenda);
             const open = isOpen(agenda);
             const remaining = daysLeft(agenda, today);
+            const tone =
+              agenda.status === '통과' ? 'moss' : agenda.status === '부결' ? 'danger' : 'pending';
 
             return (
-              <article className="agenda-card" key={agenda.id}>
-                <button className="agenda-open" onClick={() => openDetail(agenda.id)}>
-                  <div className="agenda-top">
-                    <span className={`status-dot ${agenda.status}`}>{agenda.status}</span>
-                    <small>{agenda.source}</small>
-                  </div>
-                  <h2>{agenda.title}</h2>
-                  <p className="agenda-card-meta">
-                    {agenda.category} · {agenda.part} · {agenda.createdAt} · {voteTotal(agenda)}표
-                  </p>
-                  {open && remaining !== null && (
-                    <p className="agenda-deadline">
-                      <Timer size={14} />
-                      {remaining <= 0 ? '오늘 마감' : `${remaining}일 남음`}
-                    </p>
-                  )}
-                  <div className="vote-bar">
-                    <span style={{ width: `${rate}%` }} />
-                  </div>
-                  <div className="vote-counts">
-                    <span>찬성 {agenda.approve}</span>
-                    <span>반대 {agenda.reject}</span>
-                  </div>
-                </button>
-
-                {!open ? (
-                  <div className="passed-box">
-                    <FileCheck2 size={18} />
-                    {agenda.status === '통과' ? '액션아이템 생성 대상' : '부결된 안건'}
-                  </div>
-                ) : voted.has(agenda.id) ? (
-                  <div className="voted-box">
-                    <CheckCircle2 size={18} />
-                    투표 완료
-                  </div>
-                ) : (
-                  // 투표는 되돌릴 수 없다. 목록에서 바로 확정하면 스크롤 중 오클릭 한 번이
-                  // 영구 확정이 되므로, 카드에서는 상세로 보내기만 하고 확정은 상세에서 받는다.
-                  <div className="vote-actions">
-                    <button className="vote-open" onClick={() => openDetail(agenda.id)}>
-                      <ThumbsUp size={17} />
-                      투표하기
-                    </button>
-                  </div>
-                )}
-              </article>
+              <button
+                type="button"
+                className="work-row"
+                key={agenda.id}
+                onClick={() => openDetail(agenda.id)}
+                title={`${agenda.title} — ${agenda.category} · ${agenda.part} · ${agenda.createdAt} · ${voteTotal(agenda)}표`}
+              >
+                <span className="work-row-dot" style={{ background: `var(--color-${tone})` }} />
+                <span className="work-row-title">{agenda.title}</span>
+                <span className="work-row-sub">
+                  {agenda.category} · {voteTotal(agenda)}표
+                </span>
+                <span className="work-row-bar">
+                  <span style={{ width: `${rate}%`, background: `var(--color-${tone})` }} />
+                </span>
+                <span className="work-row-pct">{rate}%</span>
+                <span className="work-row-meta">
+                  {open
+                    ? voted.has(agenda.id)
+                      ? '투표 완료'
+                      : remaining !== null && remaining <= 0
+                        ? '오늘 마감'
+                        : remaining !== null
+                          ? `${remaining}일 남음`
+                          : '투표중'
+                    : agenda.createdAt.slice(5)}
+                </span>
+              </button>
             );
           })}
         </div>
