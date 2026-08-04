@@ -1229,7 +1229,7 @@ h1 {
   margin: 0;
 }
 
-@media (max-width: 520px) {
+@media (max-width: 720px) {
   .review-box dl div {
     gap: 2px;
     grid-template-columns: 1fr;
@@ -6278,7 +6278,7 @@ textarea {
 
 .can-stage-badge.done {
   background: var(--color-moss-strong);
-  color: var(--color-pending);
+  color: var(--tint-pending);
 }
 
 .can-session-meta {
@@ -6314,7 +6314,7 @@ textarea {
   font-size: 16px;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1100px) {
   .can-stepper {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -6383,7 +6383,7 @@ textarea {
   margin: -6px 0 0;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1100px) {
   .can-header-grid {
     grid-template-columns: 1fr;
   }
@@ -6436,7 +6436,7 @@ textarea {
   width: 36px;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1100px) {
   .can-step-row {
     grid-template-columns: 1fr;
   }

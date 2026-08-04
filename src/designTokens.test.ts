@@ -124,3 +124,12 @@ describe('한국어 타이포그래피', () => {
     expect(css).toMatch(/font-variant-numeric:\s*tabular-nums/);
   });
 });
+
+describe('반응형', () => {
+  // 화면마다 520/720/900/1100 이 뒤섞여 있었다. 같은 폭에서 화면마다 다르게
+  // 무너지지 않도록 두 개로 고정한다.
+  it('브레이크포인트는 720px 과 1100px 두 개뿐이다', () => {
+    const widths = [...css.matchAll(/@media\s*\(max-width:\s*(\d+)px\)/g)].map((m) => m[1]);
+    expect([...new Set(widths)].sort()).toEqual(['1100', '720']);
+  });
+});
