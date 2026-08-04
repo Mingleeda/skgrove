@@ -745,6 +745,7 @@ export function Memory({ currentUser }: MemoryProps) {
                         onChange={(event) =>
                           setAssetCommentDrafts({ ...assetCommentDrafts, [selectedAsset.id]: event.target.value })
                         }
+                        aria-label="댓글 달기"
                         placeholder="댓글 달기"
                       />
                       <button className="secondary-button" type="button" onClick={() => addAssetComment(selectedAsset.id)}>

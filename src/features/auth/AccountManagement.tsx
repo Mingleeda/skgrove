@@ -99,12 +99,17 @@ export function AccountManagement({ accounts, onAccountsChange }: AccountManagem
                 <input
                   key={account.id}
                   className="account-slack-email"
+                  aria-label={`${account.name} 슬랙 이메일`}
                   defaultValue={account.slackEmail ?? ''}
                   placeholder="슬랙 이메일(입력해야 DM 발송됨)"
                   onBlur={(event) => updateSlackEmail(account.id, event.target.value)}
                 />
               </div>
-              <select value={account.role} onChange={(event) => updateRole(account.id, event.target.value as UserRole)}>
+              <select
+                aria-label={`${account.name} 권한`}
+                value={account.role}
+                onChange={(event) => updateRole(account.id, event.target.value as UserRole)}
+              >
                 {userRoles.map((role) => (
                   <option key={role}>{role}</option>
                 ))}
@@ -112,13 +117,21 @@ export function AccountManagement({ accounts, onAccountsChange }: AccountManagem
               {account.role === '팀리더' ? (
                 <span className="part-static">전체</span>
               ) : (
-                <select value={account.part} onChange={(event) => updatePart(account.id, event.target.value as TeamPart)}>
+                <select
+                  aria-label={`${account.name} 소속 파트`}
+                  value={account.part}
+                  onChange={(event) => updatePart(account.id, event.target.value as TeamPart)}
+                >
                   {teamParts.map((part) => (
                     <option key={part}>{part}</option>
                   ))}
                 </select>
               )}
-              <select value={account.status} onChange={(event) => updateStatus(account.id, event.target.value as AccountStatus)}>
+              <select
+                aria-label={`${account.name} 계정 상태`}
+                value={account.status}
+                onChange={(event) => updateStatus(account.id, event.target.value as AccountStatus)}
+              >
                 <option>승인 대기</option>
                 <option>활성</option>
                 <option>비활성</option>

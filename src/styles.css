@@ -8329,7 +8329,10 @@ button.notif-row {
   font-size: 15px;
   font-weight: 600;
   justify-content: flex-start;
-  padding: 0;
+  /* 좌우 패딩만 없앤다. padding:0 으로 두면 높이가 20px 이 되어
+     겨냥해 누르기 어려운 타깃이 된다. */
+  min-height: 40px;
+  padding: var(--space-2) 0;
   width: 100%;
 }
 
@@ -8345,4 +8348,21 @@ button.notif-row {
 .my-issues-note {
   margin: 0;
   max-width: 62ch;
+}
+
+/* ===== 클릭·터치 타깃 =====
+   프로필 사진 버튼이 30x30, 필터 칩이 높이 30px 이었다. WCAG 2.5.8 의
+   최소 24px 은 넘지만 실제로 겨냥해서 누르기 편한 크기는 아니다.
+   아바타는 보이는 크기를 그대로 두고 히트 영역만 넓힌다(음수 마진으로
+   주변 요소 위치는 유지). */
+.user-photo-button {
+  margin: -5px;
+  padding: 5px;
+}
+
+.filter,
+.toolbar button,
+.my-issues-toolbar button,
+.humor-controls button {
+  min-height: 36px;
 }

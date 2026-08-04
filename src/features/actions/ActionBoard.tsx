@@ -108,7 +108,7 @@ export function ActionBoard({ items, accounts, currentUser, today, onUpdate }: A
             <Search size={16} />
             <input value={keyword} onChange={(event) => setKeyword(event.target.value)} placeholder="액션 검색" />
           </label>
-          <select value={owner} onChange={(event) => setOwner(event.target.value as OwnerFilter)}>
+          <select aria-label="담당자로 거르기" value={owner} onChange={(event) => setOwner(event.target.value as OwnerFilter)}>
             <option>전체</option>
             <option>내 담당</option>
           </select>
@@ -173,7 +173,11 @@ export function ActionBoard({ items, accounts, currentUser, today, onUpdate }: A
                 <div className="action-assign-row">
                   <label>
                     담당자
-                    <select value={item.owner} onChange={(event) => onUpdate({ ...item, owner: event.target.value })}>
+                    <select
+                      aria-label={`${item.title} 담당자`}
+                      value={item.owner}
+                      onChange={(event) => onUpdate({ ...item, owner: event.target.value })}
+                    >
                       <option>미정</option>
                       {ownerOptions(item.owner).map((name) => (
                         <option key={name}>{name}</option>

@@ -501,6 +501,7 @@ export function Connect({ members }: ConnectProps) {
             <div className="participant-search">
               <Search size={17} />
               <input
+                aria-label="참여자 검색"
                 placeholder={mode === 'coffee' ? '이름으로 빠르게 찾기' : '이름, 파트, 감각으로 찾기'}
                 value={participantSearch}
                 onChange={(event) => setParticipantSearch(event.target.value)}

@@ -111,12 +111,12 @@ export function AgendaBoard({
             <Search size={16} />
             <input value={keyword} onChange={(event) => setKeyword(event.target.value)} placeholder="안건 검색" />
           </label>
-          <select value={part} onChange={(event) => setPart(event.target.value as TeamPart)}>
+          <select aria-label="파트로 거르기" value={part} onChange={(event) => setPart(event.target.value as TeamPart)}>
             {partFilters.map((item) => (
               <option key={item}>{item}</option>
             ))}
           </select>
-          <select value={sort} onChange={(event) => setSort(event.target.value as AgendaSort)}>
+          <select aria-label="정렬 기준" value={sort} onChange={(event) => setSort(event.target.value as AgendaSort)}>
             {agendaSorts.map((item) => (
               <option key={item}>{item}</option>
             ))}
