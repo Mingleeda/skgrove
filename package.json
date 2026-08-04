@@ -11,6 +11,7 @@
     "test:watch": "vitest",
     "proxy": "node scripts/proxy.mjs",
     "ai-proxy": "node scripts/ai-proxy.mjs",
+    "review-proxy": "node scripts/review-proxy.mjs",
     "notify-proxy": "node scripts/notify-proxy.mjs"
   },
   "dependencies": {
