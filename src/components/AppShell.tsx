@@ -141,9 +141,16 @@ export function AppShell({
               <Bell size={19} />
               {unreadCount > 0 && <span className="notif-badge">{unreadCount > 99 ? '99+' : unreadCount}</span>}
             </button>
-            <button className="primary-button" onClick={() => onSectionChange('intake')}>
+            {/* 좁은 폭에서는 라벨을 감추고 아이콘만 남긴다(CSS). 감춰도 뜻이
+                전달되게 title 과 aria-label 을 함께 둔다. */}
+            <button
+              className="primary-button intake-cta"
+              onClick={() => onSectionChange('intake')}
+              aria-label="의견 접수"
+              title="의견 접수"
+            >
               <MessageSquarePlus size={18} />
-              의견 접수
+              <span>의견 접수</span>
             </button>
             <button className="icon-button" onClick={onLogout} title="로그아웃">
               <LogOut size={19} />
