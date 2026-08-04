@@ -69,8 +69,8 @@
 
   /* 그림자는 한 종류. 2겹(가까운 것 + 먼 것)이고 검정이 아니라 잉크색을 쓴다.
      회색 그림자는 화면 전체 색조를 흐린다. */
-  --shadow-soft: 0 2px 4px rgba(44, 58, 52, 0.04), 0 8px 24px rgba(44, 58, 52, 0.06);
-  --shadow-raised: var(--shadow-soft);
+  /* 카드는 띄우지 않는다. 층은 배경 톤 차이로 만든다.
+     그림자는 정말로 떠 있는 것(토스트·모달·드롭다운)에만 쓰므로 한 종류면 충분하다. */
   --shadow-float: 0 4px 8px rgba(44, 58, 52, 0.06), 0 16px 40px rgba(44, 58, 52, 0.1);
 
   /* 간격 4px 스케일 */
@@ -165,14 +165,14 @@ button {
 }
 
 .brand strong {
-  font-size: 18px;
+  font-size: 20px;
 }
 
 .brand span,
 .owner-box span,
 .owner-box em {
-  color: #a9c4b8;
-  font-size: 12px;
+  color: #cfe2d8;
+  font-size: 13px;
 }
 
 .nav {
@@ -219,8 +219,8 @@ button {
 }
 
 .nav-group-title {
-  color: #8fae9f;
-  font-size: 11px;
+  color: #cfe2d8;
+  font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.06em;
   margin: 0 0 2px;
@@ -272,7 +272,7 @@ p {
 }
 
 h1 {
-  font-size: 30px;
+  font-size: 34px;
   line-height: 1.2;
 }
 
@@ -310,7 +310,7 @@ h1 {
 
 .user-chip span {
   color: var(--color-muted);
-  font-size: 12px;
+  font-size: 13px;
   white-space: nowrap;
 }
 
@@ -362,7 +362,7 @@ h1 {
 }
 
 .photo-editor-pop label {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   color: #46524d;
 }
@@ -393,7 +393,7 @@ h1 {
 
 .photo-editor-preview span {
   color: #9aa7a1;
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .photo-editor-actions {
@@ -476,7 +476,7 @@ h1 {
 }
 
 .login-intro h1 {
-  font-size: 40px;
+  font-size: 34px;
   line-height: 1.16;
   max-width: 600px;
 }
@@ -518,7 +518,7 @@ h1 {
 }
 
 .login-panel h2 {
-  font-size: 28px;
+  font-size: 26px;
 }
 
 .form-error {
@@ -599,7 +599,7 @@ h1 {
 }
 
 .hero-panel h2 {
-  font-size: 28px;
+  font-size: 26px;
   line-height: 1.25;
   max-width: 680px;
 }
@@ -619,7 +619,7 @@ h1 {
 }
 
 .home-hero h2 {
-  font-size: 30px;
+  font-size: 34px;
   line-height: 1.25;
   max-width: 760px;
 }
@@ -657,8 +657,8 @@ h1 {
 }
 
 .home-signal-label {
-  color: #a9c4b8;
-  font-size: 12px;
+  color: #cfe2d8;
+  font-size: 13px;
   font-weight: 700;
 }
 
@@ -676,15 +676,15 @@ h1 {
   border-radius: var(--radius);
   color: #eff8ef;
   display: flex;
-  font-size: 14px;
+  font-size: 15px;
   min-height: 38px;
   padding: 0 12px;
 }
 
 .home-signal li:not(:last-child)::after {
-  color: #a9c4b8;
+  color: #cfe2d8;
   content: '↓';
-  font-size: 12px;
+  font-size: 13px;
   margin-left: auto;
 }
 
@@ -713,16 +713,21 @@ h1 {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
+/* 분리 장치를 하나만 쓴다.
+   예전에는 배경 + 테두리 + 그림자를 동시에 걸어 한 화면에 9곳이 3중으로 분리됐다.
+   상자가 26개 겹쳐 보이는 게 화면이 낡아 보이던 가장 큰 이유였다.
+   면(배경)과 실선 한 겹만 남기고 그림자는 뺀다. 그림자는 정말 떠 있는 것
+   (모달·드롭다운)에만 쓴다. */
 .stat-card,
 .panel,
 .issue-card,
 .agenda-card,
 .profile-card,
 .memory-card {
-  background: rgba(255, 255, 255, 0.86);
-  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
   border-radius: var(--radius);
-  box-shadow: var(--shadow-raised);
+  box-shadow: none;
 }
 
 .stat-card {
@@ -735,23 +740,17 @@ h1 {
 }
 
 .stat-card strong {
-  font-size: 28px;
+  font-size: 26px;
 }
 
-.stat-card.mint svg {
-  color: #1b8a63;
-}
-
-.stat-card.violet svg {
-  color: #7651d8;
-}
-
-.stat-card.blue svg {
-  color: #2f74c0;
-}
-
+/* 지표 카드 아이콘을 넷 다 다른 색으로 칠하면 아무것도 강조되지 않고,
+   다색 아이콘은 옛 대시보드 인상을 강화한다. 숫자가 주인공이므로 아이콘은 물러난다.
+   색은 상태(경고·오류)에만 쓴다. */
+.stat-card.mint svg,
+.stat-card.violet svg,
+.stat-card.blue svg,
 .stat-card.amber svg {
-  color: #bc7a12;
+  color: var(--color-ink-faint);
 }
 
 .two-column {
@@ -787,8 +786,15 @@ h1 {
   margin-bottom: 16px;
 }
 
+/* 패널마다 제목 아이콘을 진하게 달면 23개가 동시에 손을 들어 아무것도 강조되지 않는다.
+   지우면 허전하므로 색만 물린다. 강조는 제목 글자가 맡는다. */
+.panel-header > svg {
+  color: var(--color-ink-faint);
+}
+
 .panel-header h2 {
-  font-size: 18px;
+  font-size: 20px;
+  letter-spacing: -0.01em;
 }
 
 .epic-list {
@@ -862,7 +868,7 @@ h1 {
 }
 
 .home-agenda-card strong {
-  font-size: 18px;
+  font-size: 20px;
   line-height: 1.35;
 }
 
@@ -948,12 +954,12 @@ h1 {
 
 .summary-strip strong {
   color: var(--color-stage);
-  font-size: 24px;
+  font-size: 26px;
 }
 
 .summary-strip small {
   color: var(--color-muted);
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.45;
 }
 
@@ -991,7 +997,7 @@ h1 {
 .action-row em {
   color: var(--color-mint-deep);
   flex-shrink: 0;
-  font-size: 12px;
+  font-size: 13px;
   font-style: normal;
   margin-left: auto;
   white-space: nowrap;
@@ -1047,7 +1053,7 @@ h1 {
   background: #dfe8dd;
   border-radius: 999px;
   display: flex;
-  font-size: 12px;
+  font-size: 13px;
   height: 24px;
   justify-content: center;
   width: 24px;
@@ -1162,14 +1168,14 @@ h1 {
 
 .review-section-label {
   color: var(--color-muted);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.02em;
   margin: 0;
 }
 
 .review-box h2 {
-  font-size: 22px;
+  font-size: 20px;
   line-height: 1.35;
 }
 
@@ -1189,7 +1195,7 @@ h1 {
 
 .review-expected strong {
   color: var(--color-muted);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
 }
 
@@ -1304,14 +1310,14 @@ h1 {
 
 .anonymous-receipt span {
   color: var(--color-ink);
-  font-size: 24px;
+  font-size: 26px;
   font-weight: 900;
   letter-spacing: 0;
 }
 
 .anonymous-receipt small {
   color: #76513a;
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.45;
 }
 
@@ -1565,7 +1571,6 @@ textarea {
   background: rgba(255, 255, 255, 0.86);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
-  box-shadow: var(--shadow-raised);
   display: grid;
   gap: 8px;
   min-height: 116px;
@@ -1582,7 +1587,7 @@ textarea {
 }
 
 .leader-summary strong {
-  font-size: 28px;
+  font-size: 26px;
 }
 
 .leader-layout {
@@ -1641,7 +1646,7 @@ textarea {
 .issue-main h2,
 .agenda-card h2,
 .memory-card h2 {
-  font-size: 18px;
+  font-size: 20px;
   line-height: 1.35;
 }
 
@@ -1650,7 +1655,7 @@ textarea {
 .status-dot {
   border-radius: 999px;
   display: inline-flex;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 800;
   justify-content: center;
   padding: 5px 9px;
@@ -1684,7 +1689,7 @@ textarea {
   background: #eef3f0;
   border-radius: 999px;
   color: var(--color-muted);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 800;
   padding: 5px 8px;
 }
@@ -1706,7 +1711,7 @@ textarea {
 
 .author-card span {
   color: var(--color-muted);
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .author-card.prominent {
@@ -1759,7 +1764,7 @@ textarea {
 }
 
 .leader-workbench-head h2 {
-  font-size: 22px;
+  font-size: 20px;
   line-height: 1.35;
 }
 
@@ -2024,7 +2029,7 @@ textarea {
 
 .issue-body-box strong {
   color: #4d5c56;
-  font-size: 12px;
+  font-size: 13px;
   letter-spacing: 0.02em;
 }
 
@@ -2136,7 +2141,7 @@ textarea {
 
 .action-card-head small {
   color: var(--color-muted);
-  font-size: 12px;
+  font-size: 13px;
   text-align: right;
 }
 
@@ -2211,7 +2216,7 @@ textarea {
   border-radius: var(--radius);
   color: var(--color-mint-deep);
   display: flex;
-  font-size: 14px;
+  font-size: 15px;
   gap: 8px;
   line-height: 1.5;
   min-height: 42px;
@@ -2334,7 +2339,7 @@ textarea {
 }
 
 .my-profile-card .profile-detail-head h2 {
-  font-size: 30px;
+  font-size: 34px;
 }
 
 .my-profile-card .profile-detail-head strong {
@@ -2395,7 +2400,7 @@ textarea {
   border: 1px solid rgba(216, 240, 106, 0.42);
   border-radius: 999px;
   color: #f5ffd0;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 900;
   min-height: 30px;
   padding: 6px 10px;
@@ -2487,7 +2492,7 @@ textarea {
 
 .survey-choice-grid span {
   color: var(--color-muted);
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.4;
 }
 
@@ -2523,7 +2528,7 @@ textarea {
 
 .profile-card-head h2,
 .profile-detail-head h2 {
-  font-size: 22px;
+  font-size: 20px;
   line-height: 1.25;
   margin: 3px 0;
 }
@@ -2533,7 +2538,7 @@ textarea {
   border-radius: var(--radius);
   color: #ffffff;
   display: flex;
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 900;
   height: 64px;
   justify-content: center;
@@ -2705,7 +2710,7 @@ textarea {
   background: #e8f3ef;
   border-radius: 999px;
   color: var(--color-mint-deep);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 900;
   padding: 5px 8px;
 }
@@ -2985,7 +2990,7 @@ textarea {
 
 .part-group-head span {
   color: var(--color-muted);
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .participant-list button {
@@ -3167,7 +3172,7 @@ textarea {
 
 .team-result-head strong {
   color: var(--color-stage);
-  font-size: 18px;
+  font-size: 20px;
 }
 
 .team-member-list {
@@ -3289,13 +3294,13 @@ textarea {
   border: 1px solid rgba(255, 255, 255, 0.24);
   border-radius: 999px;
   color: #eff8ef;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 900;
   padding: 6px 10px;
 }
 
 .coffee-draw-copy strong {
-  font-size: 22px;
+  font-size: 20px;
   line-height: 1.35;
 }
 
@@ -3303,7 +3308,7 @@ textarea {
   background: rgba(255, 255, 255, 0.94);
   border-radius: var(--radius);
   color: var(--color-stage);
-  font-size: 30px;
+  font-size: 34px;
   font-style: normal;
   font-weight: 900;
   min-width: 160px;
@@ -3507,7 +3512,7 @@ textarea {
 .share-hero-slide span,
 .coffee-share-slide span {
   color: var(--color-lime);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 900;
   letter-spacing: 0;
 }
@@ -3554,13 +3559,13 @@ textarea {
 .share-team-slide-head span,
 .team-insight-grid span {
   color: var(--color-muted);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 900;
 }
 
 .share-team-slide-head strong {
   color: var(--color-stage);
-  font-size: 24px;
+  font-size: 26px;
   line-height: 1.22;
 }
 
@@ -3568,7 +3573,7 @@ textarea {
   background: var(--color-stage);
   border-radius: 999px;
   color: #ffffff;
-  font-size: 12px;
+  font-size: 13px;
   font-style: normal;
   font-weight: 900;
   padding: 7px 10px;
@@ -3873,7 +3878,7 @@ textarea {
 }
 
 .memory-hero h2 {
-  font-size: 25px;
+  font-size: 26px;
   line-height: 1.28;
   max-width: 760px;
 }
@@ -3904,7 +3909,7 @@ textarea {
 
 .memory-dday-board strong {
   color: var(--color-lime);
-  font-size: 30px;
+  font-size: 34px;
 }
 
 /* 340px 안에 7열 캘린더가 들어가 칸이 37px 이었다. 행사 제목은 물론 날짜 "7/20"
@@ -3945,7 +3950,7 @@ textarea {
 
 .memory-calendar-sync small {
   color: var(--color-muted);
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.45;
 }
 
@@ -3963,7 +3968,7 @@ textarea {
 
 .memory-weekdays span {
   color: var(--color-muted);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 900;
   text-align: center;
 }
@@ -3997,12 +4002,12 @@ textarea {
 
 .memory-calendar button > span {
   color: var(--color-muted);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 900;
 }
 
 .memory-calendar strong {
-  font-size: 11px;
+  font-size: 13px;
   line-height: 1.35;
 }
 
@@ -4039,7 +4044,6 @@ textarea {
   background: rgba(255, 255, 255, 0.86);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
-  box-shadow: var(--shadow-raised);
   color: var(--color-ink);
   display: grid;
   gap: 12px;
@@ -4112,7 +4116,7 @@ textarea {
   background: #eef3f0;
   border-radius: 999px;
   color: #55625d;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 800;
   padding: 6px 9px;
 }
@@ -4173,7 +4177,7 @@ textarea {
   border: 1px solid #d6deea;
   border-radius: 999px;
   color: #1f476f;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 900;
   padding: 6px 9px;
 }
@@ -4215,7 +4219,7 @@ textarea {
 
 .memory-file-drop small {
   color: var(--color-muted);
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.45;
   padding: 0 12px;
 }
@@ -4238,7 +4242,7 @@ textarea {
 }
 
 .memory-album-head strong {
-  font-size: 18px;
+  font-size: 20px;
 }
 
 .memory-album-head span {
@@ -4448,7 +4452,7 @@ textarea {
   color: var(--color-stage);
   display: inline-flex;
   gap: 6px;
-  font-size: 12px;
+  font-size: 13px;
   min-height: 32px;
   padding: 0 10px;
   text-decoration: none;
@@ -4532,7 +4536,6 @@ textarea {
   background: rgba(255, 255, 255, 0.86);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
-  box-shadow: var(--shadow-raised);
   display: flex;
   gap: 12px;
   justify-content: space-between;
@@ -4581,7 +4584,7 @@ textarea {
 
 .report-grid strong {
   color: var(--color-stage);
-  font-size: 28px;
+  font-size: 26px;
 }
 
 .metrics-screen {
@@ -4608,7 +4611,7 @@ textarea {
 
 
 .metrics-hero h2 {
-  font-size: 27px;
+  font-size: 26px;
   line-height: 1.26;
   max-width: 760px;
 }
@@ -4765,7 +4768,6 @@ textarea {
   background: rgba(255, 255, 255, 0.86);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
-  box-shadow: var(--shadow-raised);
   color: var(--color-muted);
   display: grid;
   gap: 8px;
@@ -4779,7 +4781,7 @@ textarea {
 
 .metrics-summary strong {
   color: var(--color-stage);
-  font-size: 30px;
+  font-size: 34px;
 }
 
 .metrics-screen.team-leader-mode .metrics-summary div,
@@ -4984,7 +4986,7 @@ textarea {
 .leader-scope-badge,
 .public-scope-badge {
   border-radius: 999px;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 900;
   padding: 7px 11px;
 }
@@ -5003,7 +5005,7 @@ textarea {
   background: var(--color-lime);
   border-radius: 999px;
   color: var(--color-stage);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 900;
   padding: 7px 11px;
 }
@@ -5042,7 +5044,7 @@ textarea {
 
 .metrics-score-grid strong {
   color: var(--color-stage);
-  font-size: 28px;
+  font-size: 26px;
 }
 
 .meeting-health-card {
@@ -5155,7 +5157,7 @@ textarea {
 
 .meeting-volume-split dt {
   color: var(--color-muted);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
 }
 
@@ -5204,7 +5206,7 @@ textarea {
 .tone-list span {
   border-radius: 999px;
   color: #ffffff;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 900;
   padding: 6px 9px;
 }
@@ -5238,7 +5240,7 @@ textarea {
   background: #e8f3ef;
   border-radius: 999px;
   color: var(--color-stage);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 900;
   justify-self: start;
   padding: 5px 8px;
@@ -5255,7 +5257,7 @@ textarea {
 
 .calendar-event-list > div:not(.panel-header) small {
   color: var(--color-muted);
-  font-size: 12px;
+  font-size: 13px;
   grid-column: 2;
 }
 
@@ -5311,7 +5313,6 @@ textarea {
   background: rgba(255, 255, 255, 0.86);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
-  box-shadow: var(--shadow-raised);
   display: grid;
   gap: 8px;
   min-height: 118px;
@@ -5328,7 +5329,7 @@ textarea {
 }
 
 .account-summary strong {
-  font-size: 28px;
+  font-size: 26px;
 }
 
 .account-table {
@@ -5345,7 +5346,7 @@ textarea {
 
 .account-hint {
   color: #65736d;
-  font-size: 12px;
+  font-size: 13px;
   margin: -2px 0 10px;
 }
 
@@ -5372,7 +5373,7 @@ textarea {
 
 .account-table-head {
   color: var(--color-muted);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 900;
   padding: 0 12px;
 }
@@ -5401,7 +5402,7 @@ textarea {
   background: transparent;
   border-radius: 6px;
   color: var(--color-muted);
-  font-size: 12px;
+  font-size: 13px;
   padding: 3px 6px;
   margin-top: 2px;
   width: 100%;
@@ -5619,7 +5620,7 @@ textarea {
   }
 
   .login-intro h1 {
-    font-size: 28px;
+    font-size: 26px;
   }
 
   .login-assurance {
@@ -5662,7 +5663,7 @@ textarea {
   }
 
   .home-hero h2 {
-    font-size: 24px;
+    font-size: 26px;
   }
 
   .hero-actions {
@@ -5782,7 +5783,7 @@ textarea {
   }
 
   .my-profile-card .profile-detail-head h2 {
-    font-size: 24px;
+    font-size: 26px;
   }
 }
 
@@ -5864,7 +5865,7 @@ textarea {
 }
 
 .can-step strong {
-  font-size: 14px;
+  font-size: 15px;
 }
 
 .can-step.active {
@@ -5993,7 +5994,7 @@ textarea {
 .can-part-column h3 {
   align-items: center;
   display: flex;
-  font-size: 14px;
+  font-size: 15px;
   gap: 8px;
   margin: 0;
 }
@@ -6004,7 +6005,7 @@ textarea {
   border-radius: 999px;
   color: var(--color-lime);
   display: inline-flex;
-  font-size: 12px;
+  font-size: 13px;
   height: 22px;
   justify-content: center;
   min-width: 22px;
@@ -6024,7 +6025,7 @@ textarea {
 
 .can-step-group-title {
   color: #3f6d3a;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 800;
   margin: 2px 0 0;
 }
@@ -6060,7 +6061,7 @@ textarea {
   background: #eaf1e6;
   border-radius: 999px;
   color: #2b4a3f;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 800;
   padding: 3px 9px;
 }
@@ -6148,7 +6149,7 @@ textarea {
   border-radius: 999px;
   color: var(--color-stage);
   display: inline-flex;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 800;
   gap: 5px;
   margin-left: auto;
@@ -6228,7 +6229,6 @@ textarea {
   background: rgba(255, 255, 255, 0.86);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
-  box-shadow: var(--shadow-raised);
   display: grid;
   gap: 10px;
   padding: 18px;
@@ -6257,7 +6257,7 @@ textarea {
   background: #eef2ea;
   border-radius: 999px;
   color: #46544f;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 800;
   margin-left: auto;
   padding: 3px 10px;
@@ -6272,7 +6272,7 @@ textarea {
   color: #5a675f;
   display: flex;
   flex-wrap: wrap;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
   gap: 12px;
 }
@@ -6333,7 +6333,7 @@ textarea {
 
 .can-ai-note {
   color: #8a948d;
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .can-header-grid {
@@ -6366,7 +6366,7 @@ textarea {
 
 .can-step-hint {
   color: #5a675f;
-  font-size: 12px;
+  font-size: 13px;
   margin: -6px 0 0;
 }
 
@@ -6438,7 +6438,7 @@ textarea {
 
 .quick-login > span {
   color: var(--color-muted);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
 }
 
@@ -6603,7 +6603,7 @@ textarea {
 
 .can-followup-warn {
   color: #b83324;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
   margin: 8px 0 0;
 }
@@ -6637,7 +6637,7 @@ textarea {
 
 .can-route-badge {
   border-radius: 999px;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 800;
   padding: 3px 9px;
 }
@@ -6718,7 +6718,7 @@ textarea {
 }
 
 .tea-topic-main strong {
-  font-size: 14px;
+  font-size: 15px;
   line-height: 1.5;
 }
 
@@ -6739,7 +6739,7 @@ textarea {
 
 .tea-status-badge {
   border-radius: 999px;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 800;
   padding: 4px 10px;
 }
@@ -6810,7 +6810,7 @@ textarea {
 
 .tea-group-card h4 span {
   color: var(--color-muted);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
 }
 
@@ -6884,7 +6884,7 @@ textarea {
 
 .tea-copy-notice {
   color: #1f7a43;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
   margin: 0;
 }
@@ -6968,7 +6968,7 @@ button.notif-row {
   color: #55635c;
   display: inline-flex;
   flex: none;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 800;
   gap: 4px;
   padding: 4px 10px;
@@ -7007,7 +7007,7 @@ button.notif-row {
 }
 
 .notif-body strong {
-  font-size: 14px;
+  font-size: 15px;
   line-height: 1.45;
 }
 
@@ -7020,7 +7020,7 @@ button.notif-row {
 
 .notif-body small {
   color: #8a948d;
-  font-size: 11px;
+  font-size: 13px;
 }
 
 .notif-dot {
@@ -7046,13 +7046,13 @@ button.notif-row {
 }
 
 .humor-hero h2 {
-  font-size: 24px;
+  font-size: 26px;
   margin: 2px 0 6px;
 }
 
 .humor-hero p {
   color: rgba(255, 255, 255, 0.86);
-  font-size: 14px;
+  font-size: 15px;
   max-width: 560px;
 }
 
@@ -7088,7 +7088,7 @@ button.notif-row {
 
 .humor-hero-badge small {
   color: rgba(255, 255, 255, 0.8);
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .humor-rankers {
@@ -7147,13 +7147,13 @@ button.notif-row {
 }
 
 .humor-podium .tiny-avatar {
-  font-size: 12px;
+  font-size: 13px;
   height: 26px;
   width: 26px;
 }
 
 .humor-podium strong {
-  font-size: 14px;
+  font-size: 15px;
 }
 
 .humor-podium li.top strong {
@@ -7162,7 +7162,7 @@ button.notif-row {
 
 .humor-podium em {
   color: var(--color-muted);
-  font-size: 12px;
+  font-size: 13px;
   font-style: normal;
   font-weight: 700;
   margin-left: auto;
@@ -7171,7 +7171,7 @@ button.notif-row {
 /* #94a29a 는 2.54:1 로 AA 미달이었다. 빈 상태도 읽혀야 빈 상태다. */
 .humor-ranker-none {
   color: var(--color-muted);
-  font-size: 14px;
+  font-size: 15px;
 }
 
 .humor-hall-foot {
@@ -7239,7 +7239,7 @@ button.notif-row {
   color: #40514a;
   cursor: pointer;
   display: inline-flex;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 700;
   gap: 6px;
   padding: 4px 0;
@@ -7296,12 +7296,12 @@ button.notif-row {
   align-items: center;
   color: #8a978f;
   display: flex;
-  font-size: 12px;
+  font-size: 13px;
   gap: 6px;
 }
 
 .humor-row-main small .tiny-avatar {
-  font-size: 11px;
+  font-size: 13px;
   height: 20px;
   width: 20px;
 }
@@ -7352,7 +7352,7 @@ button.notif-row {
 
 .humor-card-head small {
   color: #8a978f;
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .humor-card-head .humor-icon-btn {
@@ -7433,7 +7433,7 @@ button.notif-row {
   border-radius: 8px;
   padding: 9px 11px;
   font: inherit;
-  font-size: 14px;
+  font-size: 15px;
 }
 
 .humor-edit textarea {
@@ -7484,7 +7484,7 @@ button.notif-row {
   border-radius: var(--radius);
   color: var(--color-mint-deep);
   display: inline-flex;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
   gap: 6px;
   padding: 10px 14px;
@@ -7498,7 +7498,7 @@ button.notif-row {
 .humor-media-hint {
   color: #8a978f;
   display: block;
-  font-size: 12px;
+  font-size: 13px;
   margin-top: 4px;
 }
 
@@ -7556,14 +7556,14 @@ button.notif-row {
 }
 
 .humor-comment-body p {
-  font-size: 14px;
+  font-size: 15px;
   line-height: 1.5;
   margin: 2px 0;
 }
 
 .humor-comment-body small {
   color: #9aa79f;
-  font-size: 11px;
+  font-size: 13px;
 }
 
 .humor-comment-empty {
@@ -7637,7 +7637,7 @@ button.notif-row {
 
 .agenda-publish-preview strong {
   color: var(--color-mint-deep);
-  font-size: 12px;
+  font-size: 13px;
   letter-spacing: 0.02em;
 }
 
@@ -7717,7 +7717,7 @@ button.notif-row {
 }
 
 .error-boundary h2 {
-  font-size: 22px;
+  font-size: 20px;
   line-height: 1.35;
 }
 
@@ -7733,7 +7733,7 @@ button.notif-row {
   color: #a3453c;
   display: block;
   font-family: 'SFMono-Regular', ui-monospace, Menlo, Consolas, monospace;
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.5;
   overflow-wrap: anywhere;
   padding: var(--space-3);
@@ -7825,7 +7825,7 @@ button.notif-row {
   box-shadow: var(--shadow-float);
   color: #eff8ef;
   display: flex;
-  font-size: 14px;
+  font-size: 15px;
   gap: var(--space-2);
   max-width: min(90vw, 460px);
   padding: var(--space-3) var(--space-4);
@@ -7870,7 +7870,7 @@ button.notif-row {
   border-radius: 999px;
   color: var(--color-muted);
   display: inline-flex;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   gap: var(--space-1);
   margin-top: var(--space-2);
@@ -8007,7 +8007,7 @@ button.notif-row {
   background: #fbeee7;
   border-radius: 999px;
   color: #a3453c;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
   padding: var(--space-1) var(--space-2);
   width: fit-content;
@@ -8043,7 +8043,7 @@ button.notif-row {
 /* 제안 문구는 참고용이다. 자동 반영이 없다는 걸 라벨로 분명히 한다. */
 .review-suggestion-label {
   color: var(--color-muted);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
   margin: 0;
 }
