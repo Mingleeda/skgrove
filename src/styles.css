@@ -1020,8 +1020,10 @@ h1 {
 }
 
 .intake-screen {
-  align-items: start;
-  grid-template-columns: minmax(0, 1fr) 360px;
+  /* 옆 열 973px 중 669px 이 조작요소 0인 순수 설명이었다. 설명 패널 합계가
+     실제 접수 폼(434px)보다 컸다. 말하러 온 화면의 절반이 사용법 설명이면
+     문턱이 된다. 설명은 지우지 않고 필요한 순간·자리로 옮겼다. */
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .intake-main,
@@ -8315,4 +8317,27 @@ button.notif-row {
   .culture-display {
     font-size: 23px;
   }
+}
+
+/* 접수 화면의 익명 조회 여닫이. 헤더 자리를 그대로 버튼으로 쓴다. */
+.lookup-toggle {
+  font-size: 15px;
+  font-weight: 600;
+  justify-content: flex-start;
+  padding: 0;
+  width: 100%;
+}
+
+.lookup-toggle svg:last-child {
+  margin-left: auto;
+  transition: transform var(--ease-ui);
+}
+
+.lookup-toggle svg.is-open {
+  transform: rotate(180deg);
+}
+
+.my-issues-note {
+  margin: 0;
+  max-width: 62ch;
 }

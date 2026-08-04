@@ -14,7 +14,6 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import { PanelHeader } from '../../components/PanelHeader';
-import { MIN_MEMBERS_TO_REVEAL } from '../../metricsPrivacy';
 import type { CurrentUser, Identity, Issue, IssueVisibility, Urgency } from '../../types';
 import { ReviewGate } from './ReviewGate';
 
@@ -55,6 +54,10 @@ export function Intake({ identity, currentUser, issues, onIdentityChange, onIssu
   const [responseDrafts, setResponseDrafts] = useState<Record<string, string>>({});
   const [myIssueFilter, setMyIssueFilter] = useState<MyIssueFilter>('전체');
   const [expandedIssueIds, setExpandedIssueIds] = useState<Record<string, boolean>>({});
+  /* 익명 접수 조회는 '쓰는' 흐름이 아니라 '접수번호를 받은 사람이 나중에
+     확인하러 오는' 경로다. 상시 펼쳐두면 말하러 온 화면에 관계없는 폼이
+     하나 더 놓인다. 필요할 때만 연다. */
+  const [lookupOpen, setLookupOpen] = useState(false);
   const [anonymousReceiptId, setAnonymousReceiptId] = useState('');
   const [anonymousAccessCode, setAnonymousAccessCode] = useState('');
   const [anonymousLookupError, setAnonymousLookupError] = useState('');
@@ -430,6 +433,13 @@ export function Intake({ identity, currentUser, issues, onIdentityChange, onIssu
             </div>
           </div>
 
+          {/* 예전에는 이 설명이 옆 열에 같은 제목의 별도 패널로 있었다.
+              같은 이름이 목록과 설명 둘을 가리켜 라벨이 충돌했다.
+              헤더는 제목과 필터를 한 줄에 놓는 가로 배치라 그 밖에 둔다. */}
+          <p className="field-note my-issues-note">
+            사내메일 기준으로 실명 접수 건만 보여줍니다. 리더 답변이나 1on1 제안이 오면 여기에서 바로 응답할 수 있어요.
+          </p>
+
           <div className="submission-list">
             {visibleMyIssues.length > 0 ? (
               visibleMyIssues.map((issue) => {
@@ -509,34 +519,13 @@ export function Intake({ identity, currentUser, issues, onIdentityChange, onIssu
         </section>
       </div>
 
-      <aside className="intake-aside">
         <section className="panel">
-          <PanelHeader icon={ShieldCheck} title="익명성 안내" />
-          <div className="privacy-list">
-            <div><strong>익명 선택</strong><span>리더 화면에는 작성자 이름과 메일이 보이지 않습니다.</span></div>
-            <div><strong>실명 선택</strong><span>후속 대화가 필요한 개선 제안에 적합합니다.</span></div>
-            <div><strong>안건 후보</strong><span>공개 가능으로 제출하면 투표 안건 전환 후보가 됩니다.</span></div>
-            {/* 임계값은 응답 전에 알려야 의미가 있다. 나중에 알면 이미 낸 뒤다. */}
-            <div>
-              <strong>파트 집계 기준</strong>
-              <span>
-                파트지수는 {MIN_MEMBERS_TO_REVEAL}명 이상인 파트만 공개됩니다. 인원이 적은 파트는 리더에게도 표시되지
-                않습니다.
-              </span>
-            </div>
-          </div>
-        </section>
-
-        <section className="panel">
-          <PanelHeader icon={Megaphone} title="내 접수 현황" />
-          <div className="privacy-list">
-            <div><strong>실명 접수만 추적</strong><span>내 접수 현황은 사내메일 기준으로 실명 접수 건만 보여줍니다.</span></div>
-            <div><strong>답변 후 후속 응답</strong><span>리더 답변이나 1on1 제안이 오면 메인 현황에서 바로 응답할 수 있습니다.</span></div>
-          </div>
-        </section>
-
-        <section className="panel">
-          <PanelHeader icon={KeyRound} title="익명 접수 조회" />
+          <button className="btn-ghost lookup-toggle" onClick={() => setLookupOpen((prev) => !prev)} type="button">
+            <KeyRound size={18} />
+            익명으로 접수한 건 조회하기
+            <ChevronDown size={16} className={lookupOpen ? 'is-open' : ''} />
+          </button>
+          {lookupOpen && (
           <div className="anonymous-lookup">
             <label>
               접수번호
@@ -597,8 +586,8 @@ export function Intake({ identity, currentUser, issues, onIdentityChange, onIssu
               </div>
             )}
           </div>
+          )}
         </section>
-      </aside>
     </section>
   );
 }

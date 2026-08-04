@@ -110,10 +110,11 @@ export function LoginScreen({ accounts, onLogin, onRegister }: LoginScreenProps)
           </div>
         </div>
 
-        <div>
-          <h1>편하게 말하고, 함께 정하고, 작게 바꿔요</h1>
-          <p>사내 계정으로 로그인하면 의견 접수, 안건 투표, 리더 관리 흐름을 바로 사용할 수 있습니다.</p>
-        </div>
+        {/*
+          기능 나열("의견 접수, 안건 투표, 리더 관리")은 바로 옆 로그인 폼과
+          중복이고, 무엇을 하는 앱인지는 위 헤드라인이 이미 말한다.
+        */}
+        <h1>편하게 말하고, 함께 정하고, 조금씩 바꿔요</h1>
 
         <div className="login-assurance">
           <ShieldCheck size={20} />
