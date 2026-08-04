@@ -5659,6 +5659,7 @@ textarea {
     white-space: nowrap;
   }
 
+
   .main {
     padding: 18px;
   }
@@ -8475,4 +8476,66 @@ button.notif-row {
 /* 비활성 버튼 옆에 왜 못 누르는지를 둔다. */
 .gate-note {
   margin: 0 0 var(--space-2);
+}
+
+/* ===== 모바일 오버라이드 =====
+   .work-row 등 기본 규칙이 파일 뒤쪽에 있어, 앞선 미디어쿼리에 두면
+   같은 특이도에서 나중 규칙에 진다. 순서가 이기는 싸움이라 끝에 둔다. */
+@media (max-width: 720px) {
+/*
+  모바일에는 호버가 없어 title 툴팁으로 잘린 글을 볼 방법이 없다.
+  좁은 폭에서는 자르지 말고 줄바꿈한다 — 세로 공간은 싸고 가로는 비싸다.
+  행 높이 고정(--row-h)도 함께 푼다. 390px 에 제목·분류·진행바·퍼센트·
+  날짜를 한 줄로 넣는 건 애초에 불가능하다.
+*/
+.work-row {
+  align-items: start;
+  column-gap: var(--space-2);
+  display: grid;
+  grid-template-areas:
+    'dot title title'
+    'dot sub pct'
+    'dot bar meta';
+  grid-template-columns: 7px minmax(0, 1fr) auto;
+  height: auto;
+  padding: var(--space-3) var(--space-4);
+  row-gap: var(--space-1);
+}
+
+.work-row-dot {
+  grid-area: dot;
+  margin-top: 7px;
+}
+
+.work-row-title {
+  grid-area: title;
+  overflow: visible;
+  white-space: normal;
+  word-break: keep-all;
+}
+
+.work-row-sub {
+  grid-area: sub;
+  max-width: none;
+}
+
+.work-row-bar {
+  grid-area: bar;
+  width: 100%;
+}
+
+.work-row-pct {
+  grid-area: pct;
+}
+
+.work-row-meta {
+  grid-area: meta;
+  justify-self: end;
+}
+
+.humor-row-main strong {
+  overflow: visible;
+  white-space: normal;
+  word-break: keep-all;
+}
 }
