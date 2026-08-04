@@ -1,9 +1,16 @@
 import { BarChart3, CalendarClock, CheckCircle2, Eye, Gauge, LockKeyhole, Settings2, ShieldCheck, Sparkles, UsersRound } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { isTeamLeader } from '../../auth';
+import { loadAccounts } from '../../accountStore';
 import { loadActionItems } from '../../actionItemStore';
 import { loadAgendas } from '../../agendaStore';
 import { loadBallots } from '../../ballotStore';
+import {
+  calendarConfigured,
+  connectGoogleCalendar,
+  fetchCalendarEvents,
+  toMetricEvents,
+} from '../../googleCalendar';
 import {
   initialAgendas,
   initialCanOpinions,
@@ -12,9 +19,32 @@ import {
   profiles,
 } from '../../data/mockData';
 import { loadIssues } from '../../issueStore';
+import {
+  DEFAULT_CALENDAR_WINDOW_DAYS,
+  LONG_MEETING_MINUTES,
+  WEEKLY_MEETING_BUDGET_HOURS,
+  clampScore,
+  formatHours,
+  meetingBudgetUsage,
+  meetingHealth,
+  weeklyMeetingHours,
+  weeklyMinutes,
+} from '../../meetingRules';
 import { MIN_MEMBERS_TO_REVEAL, isRevealable } from '../../metricsPrivacy';
 import { loadTeaSessions } from '../../teaStore';
-import type { ActionItem, Agenda, AgendaBallot, CanOpinion, CanSession, CurrentUser, Issue, Profile, TeaSession } from '../../types';
+import type {
+  ActionItem,
+  Agenda,
+  AgendaBallot,
+  CalendarConnection,
+  CalendarMetricEvent,
+  CanOpinion,
+  CanSession,
+  CurrentUser,
+  Issue,
+  Profile,
+  TeaSession,
+} from '../../types';
 
 type PartMetric = {
   name: string;
@@ -61,6 +91,8 @@ type MetricsActivity = {
   agendas: Agenda[];
   ballots: AgendaBallot[];
   calendarEvents: CalendarMetricEvent[];
+  /** calendarEvents 를 모은 기간(일). 합계를 주당 값으로 되돌리는 분모다. */
+  calendarWindowDays: number;
   canOpinions: CanOpinion[];
   canSessions: CanSession[];
   connectShareTexts: string[];
@@ -68,26 +100,15 @@ type MetricsActivity = {
   teaSessions: TeaSession[];
 };
 
-type CalendarMeetingType = '원온원' | '파트회의' | '캔미팅' | '티미팅';
-
-type CalendarMetricEvent = {
-  id: string;
-  title: string;
-  part: string;
-  type: CalendarMeetingType;
-  startsAt: string;
-  durationMinutes: number;
-  attendees: number;
-  isRecurring: boolean;
-};
-
-type CalendarConnection = 'disconnected' | 'connected' | 'synced';
+// CalendarMeetingType · CalendarMetricEvent · CalendarConnection 은 types.ts 로 옮겼다.
+// googleCalendar.ts 의 매핑 함수와 같은 타입을 써야 하기 때문이다.
 
 const initialActivity: MetricsActivity = {
   actionItems: [],
   agendas: initialAgendas,
   ballots: [],
   calendarEvents: [],
+  calendarWindowDays: DEFAULT_CALENDAR_WINDOW_DAYS,
   canOpinions: initialCanOpinions,
   canSessions: initialCanSessions,
   connectShareTexts: [],
@@ -101,6 +122,8 @@ type MetricsProps = {
 
 const CALENDAR_STORAGE_KEY = 'skgrove:metrics-calendar-events';
 const CALENDAR_STATUS_KEY = 'skgrove:metrics-calendar-status';
+// 몇 일치를 모은 값인지 함께 남긴다. 이게 없으면 저장된 합계를 주당으로 되돌릴 수 없다.
+const CALENDAR_WINDOW_KEY = 'skgrove:metrics-calendar-window-days';
 
 const sampleCalendarEvents: CalendarMetricEvent[] = [
   {
@@ -155,14 +178,10 @@ const sampleCalendarEvents: CalendarMetricEvent[] = [
   },
 ];
 
-function clampScore(score: number) {
-  return Math.max(0, Math.min(100, Math.round(score)));
-}
-
+// clampScore·회의 건강도 계산은 meetingRules.ts 로 옮겼다. 테스트가 붙는 자리다.
 function getMeetingHealth(part: PartMetric) {
-  const weeklyMeetingHours = (part.oneOnOneMinutes + part.partMeetingMinutes) / 60;
-  const overload = Math.max(0, weeklyMeetingHours - 12) * 3 + part.longMeetingRate * 0.7;
-  return clampScore(100 - overload);
+  // part.oneOnOneMinutes / partMeetingMinutes 는 이미 '주당' 값이다(buildPartMetrics 참고).
+  return meetingHealth(part.oneOnOneMinutes, part.partMeetingMinutes, part.longMeetingRate);
 }
 
 function getReflectionRate(part: PartMetric) {
@@ -289,9 +308,15 @@ function readCalendarStatus(): CalendarConnection {
   return 'disconnected';
 }
 
-function saveCalendarState(status: CalendarConnection, events: CalendarMetricEvent[]) {
+function readCalendarWindowDays(): number {
+  const saved = Number(window.localStorage.getItem(CALENDAR_WINDOW_KEY));
+  return Number.isFinite(saved) && saved > 0 ? saved : DEFAULT_CALENDAR_WINDOW_DAYS;
+}
+
+function saveCalendarState(status: CalendarConnection, events: CalendarMetricEvent[], windowDays: number) {
   window.localStorage.setItem(CALENDAR_STATUS_KEY, status);
   window.localStorage.setItem(CALENDAR_STORAGE_KEY, JSON.stringify(events));
+  window.localStorage.setItem(CALENDAR_WINDOW_KEY, String(windowDays));
 }
 
 function buildPartMetrics(activity: MetricsActivity): PartMetric[] {
@@ -312,10 +337,22 @@ function buildPartMetrics(activity: MetricsActivity): PartMetric[] {
     const calendarMeetingMinutes = partCalendarEvents
       .filter((event) => event.type !== '원온원')
       .reduce((sum, event) => sum + event.durationMinutes, 0);
-    const longCalendarMeetings = partCalendarEvents.filter((event) => event.durationMinutes >= 60).length;
-    const oneOnOneMinutes = calendarOneOnOneMinutes || members.length * 25 + issuePressure * 20;
-    const partMeetingMinutes = calendarMeetingMinutes || canSessionCount * 80 + teaCount * 45 + canOpinions.length * 12;
-    const longMeetingRate = partCalendarEvents.length > 0
+    const longCalendarMeetings = partCalendarEvents.filter(
+      (event) => event.durationMinutes >= LONG_MEETING_MINUTES,
+    ).length;
+    // 캘린더는 90일치를 읽어온다. 그 합계를 주당 값으로 맞춘 뒤에 쓴다.
+    // 안 그러면 12.9주치가 1주로 들어가 어떤 파트든 과부하로 잡힌다.
+    const windowDays = activity.calendarWindowDays;
+    // 캘린더가 붙어 있으면 그 값을 쓴다. 원온원이 0건인 것도 사실이므로 추정식으로 되돌리지 않는다.
+    // 예전에는 `|| 추정식` 이라 0이 곧 '데이터 없음'으로 취급됐다.
+    const hasCalendar = partCalendarEvents.length > 0;
+    const oneOnOneMinutes = hasCalendar
+      ? weeklyMinutes(calendarOneOnOneMinutes, windowDays)
+      : members.length * 25 + issuePressure * 20;
+    const partMeetingMinutes = hasCalendar
+      ? weeklyMinutes(calendarMeetingMinutes, windowDays)
+      : canSessionCount * 80 + teaCount * 45 + canOpinions.length * 12;
+    const longMeetingRate = hasCalendar
       ? clampScore((longCalendarMeetings / partCalendarEvents.length) * 100)
       : clampScore((canSessionCount * 8 + teaCount * 4 + issuePressure * 3) / Math.max(1, members.length) * 5);
 
@@ -341,6 +378,8 @@ export function Metrics({ currentUser }: MetricsProps) {
   const [partMetrics, setPartMetrics] = useState<PartMetric[]>(() => buildPartMetrics(initialActivity));
   const [calendarEvents, setCalendarEvents] = useState<CalendarMetricEvent[]>([]);
   const [calendarStatus, setCalendarStatus] = useState<CalendarConnection>('disconnected');
+  const [calendarBusy, setCalendarBusy] = useState(false);
+  const [calendarError, setCalendarError] = useState('');
   const [selectedPart, setSelectedPart] = useState(currentUser.part === '전체' ? partNames[0] : currentUser.part);
   const [weights, setWeights] = useState(initialWeights);
   const canViewAllLeaderMetrics = isTeamLeader(currentUser); // 커넥셔너 포함
@@ -351,6 +390,8 @@ export function Metrics({ currentUser }: MetricsProps) {
 
     const savedCalendarStatus = readCalendarStatus();
     const savedCalendarEvents = readCalendarEvents();
+    // 저장된 합계가 몇 일치인지 함께 복원해야 주당 값으로 되돌릴 수 있다.
+    const savedCalendarWindowDays = readCalendarWindowDays();
     setCalendarStatus(savedCalendarStatus);
     setCalendarEvents(savedCalendarEvents);
 
@@ -367,6 +408,7 @@ export function Metrics({ currentUser }: MetricsProps) {
         agendas,
         ballots,
         calendarEvents: savedCalendarEvents,
+        calendarWindowDays: savedCalendarWindowDays,
         canOpinions: initialCanOpinions,
         canSessions: initialCanSessions,
         connectShareTexts: readConnectShareTexts(),
@@ -412,29 +454,80 @@ export function Metrics({ currentUser }: MetricsProps) {
   const activeCalendarEvents = calendarEvents.filter((event) => event.part === activePart.name);
   const longCalendarEventCount = activeCalendarEvents.filter((event) => event.durationMinutes >= 60).length;
 
-  const applyCalendarEvents = (status: CalendarConnection, events: CalendarMetricEvent[]) => {
+  const applyCalendarEvents = (
+    status: CalendarConnection,
+    events: CalendarMetricEvent[],
+    windowDays: number,
+  ) => {
     setCalendarStatus(status);
     setCalendarEvents(events);
-    saveCalendarState(status, events);
+    saveCalendarState(status, events, windowDays);
     const nextActivity = {
       ...activity,
       calendarEvents: events,
+      calendarWindowDays: windowDays,
       connectShareTexts: readConnectShareTexts(),
     };
     setActivity(nextActivity);
     setPartMetrics(buildPartMetrics(nextActivity));
   };
 
-  const connectCalendar = () => {
-    applyCalendarEvents('connected', calendarEvents);
+  // 최근 90일치를 읽는다. 회의 습관을 보는 지표라 오래된 일정은 도움이 안 되고,
+  // 범위를 넓힐수록 구글 응답도 무거워진다.
+  const CALENDAR_LOOKBACK_DAYS = 90;
+
+  const syncGoogleCalendar = async () => {
+    if (calendarBusy) return;
+    setCalendarBusy(true);
+    setCalendarError('');
+    try {
+      const connected = await connectGoogleCalendar();
+      if (!connected.ok || !connected.accessToken) {
+        setCalendarError(
+          connected.reason === 'disabled'
+            ? '캘린더 연동이 아직 설정되지 않았어요. 아래 샘플로 계산 흐름만 확인할 수 있습니다.'
+            : `구글 연결에 실패했어요: ${connected.reason ?? '알 수 없는 오류'}`,
+        );
+        return;
+      }
+
+      const now = Date.now();
+      const result = await fetchCalendarEvents(
+        connected.accessToken,
+        new Date(now - CALENDAR_LOOKBACK_DAYS * 86400000).toISOString(),
+        new Date(now).toISOString(),
+      );
+      if (!result.ok || !result.events) {
+        setCalendarError(`일정을 읽지 못했어요: ${result.reason ?? '알 수 없는 오류'}`);
+        return;
+      }
+
+      // 파트 판정은 계정 정보를 가진 이 화면에서 한다. 조직 구성을 프록시로 보내지 않는다.
+      const accounts = await loadAccounts();
+      const events = toMetricEvents(result.events, accounts);
+      applyCalendarEvents('synced', events, CALENDAR_LOOKBACK_DAYS);
+
+      if (events.length === 0) {
+        // 0건을 조용히 넘기면 "연동했는데 왜 그대로지?"가 된다. 이유를 밝힌다.
+        setCalendarError(
+          `읽어온 일정 ${result.events.length}건 중 파트를 정할 수 있는 회의가 없었어요. ` +
+            '참석자 메일이 계정에 등록되어 있어야 파트별로 집계됩니다.',
+        );
+      }
+    } finally {
+      setCalendarBusy(false);
+    }
   };
 
   const importSampleCalendar = () => {
-    applyCalendarEvents('synced', sampleCalendarEvents);
+    // 샘플은 한 주치 회의를 흉내낸 것이다. 90일 분모로 나누면 없는 것처럼 보인다.
+    applyCalendarEvents('synced', sampleCalendarEvents, DEFAULT_CALENDAR_WINDOW_DAYS);
+    setCalendarError('');
   };
 
   const disconnectCalendar = () => {
-    applyCalendarEvents('disconnected', []);
+    applyCalendarEvents('disconnected', [], DEFAULT_CALENDAR_WINDOW_DAYS);
+    setCalendarError('');
   };
 
   const updateWeight = (key: keyof MetricWeights, value: number) => {
@@ -550,22 +643,28 @@ export function Metrics({ currentUser }: MetricsProps) {
             <span>
               {calendarStatus === 'synced'
                 ? '캘린더 회의가 파트지수 회의 건강도와 긴 회의 감점에 반영되고 있어요.'
-                : '실제 OAuth 연결 전까지는 샘플 회의 데이터로 계산 흐름을 확인할 수 있어요.'}
+                : calendarConfigured()
+                  ? '최근 90일 회의를 읽어 회의 건강도와 긴 회의 감점에 반영합니다. 캘린더를 읽기만 하고 쓰지 않아요.'
+                  : '연동이 아직 설정되지 않았어요. 샘플 회의로 계산 흐름을 먼저 확인할 수 있습니다.'}
             </span>
           </div>
           <div className="calendar-sync-actions">
-            <button className="secondary-button" type="button" onClick={connectCalendar}>
-              연결 상태로 보기
+            <button type="button" disabled={calendarBusy} onClick={() => void syncGoogleCalendar()}>
+              {calendarBusy ? '구글 캘린더 읽는 중…' : '구글 캘린더 연결'}
             </button>
-            <button type="button" onClick={importSampleCalendar}>
-              샘플 회의 가져오기
-            </button>
+            {/* 연동을 설정하기 전에도 계산 흐름은 볼 수 있어야 한다. */}
+            {!calendarConfigured() && (
+              <button className="secondary-button" type="button" onClick={importSampleCalendar}>
+                샘플 회의로 보기
+              </button>
+            )}
             {calendarStatus !== 'disconnected' && (
               <button className="secondary-button" type="button" onClick={disconnectCalendar}>
                 연결 해제
               </button>
             )}
           </div>
+          {calendarError && <p className="form-error">{calendarError}</p>}
           <div className="calendar-event-summary">
             <span>선택 파트 회의 {activeCalendarEvents.length}개</span>
             <span>60분 이상 {longCalendarEventCount}개</span>
@@ -656,15 +755,44 @@ export function Metrics({ currentUser }: MetricsProps) {
                 <strong>회의 건강도</strong>
                 <span>{activePart.meetingTrend}</span>
               </div>
-              <div className="meeting-bars">
-                <label>
-                  원온원
-                  <span style={{ width: `${Math.min(100, activePart.oneOnOneMinutes / 5)}%` }} />
-                </label>
-                <label>
-                  파트회의
-                  <span style={{ width: `${Math.min(100, activePart.partMeetingMinutes / 7)}%` }} />
-                </label>
+              {/* 예전에는 막대 두 개뿐이고 폭이 분÷5, 분÷7 이라는 근거 없는 값이었다.
+                  몇 시간인지도, 기준이 얼마인지도 화면에 없어서 많고 적음을 판단할 수 없었다. */}
+              <div className="meeting-volume">
+                <div className="meeting-volume-total">
+                  <strong>주 {weeklyMeetingHours(activePart.oneOnOneMinutes, activePart.partMeetingMinutes)}시간</strong>
+                  <span>기준 {WEEKLY_MEETING_BUDGET_HOURS}시간</span>
+                </div>
+                <div
+                  className={
+                    meetingBudgetUsage(activePart.oneOnOneMinutes, activePart.partMeetingMinutes) > 100
+                      ? 'meeting-budget-bar over'
+                      : 'meeting-budget-bar'
+                  }
+                >
+                  <span
+                    style={{
+                      width: `${Math.min(100, meetingBudgetUsage(activePart.oneOnOneMinutes, activePart.partMeetingMinutes))}%`,
+                    }}
+                  />
+                </div>
+                <dl className="meeting-volume-split">
+                  <div>
+                    <dt>원온원</dt>
+                    <dd>{formatHours(activePart.oneOnOneMinutes)}</dd>
+                  </div>
+                  <div>
+                    <dt>파트회의</dt>
+                    <dd>{formatHours(activePart.partMeetingMinutes)}</dd>
+                  </div>
+                  <div>
+                    <dt>{LONG_MEETING_MINUTES}분 이상</dt>
+                    <dd>
+                      {activeCalendarEvents.length > 0
+                        ? `${longCalendarEventCount}건 / ${activeCalendarEvents.length}건`
+                        : `${activePart.longMeetingRate}%`}
+                    </dd>
+                  </div>
+                </dl>
               </div>
             </div>
           ) : (

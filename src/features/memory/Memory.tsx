@@ -13,6 +13,13 @@ import {
 import { useEffect, useMemo, useState } from 'react';
 import type { ChangeEvent } from 'react';
 import {
+  calendarConfigured,
+  connectGoogleCalendar,
+  fetchCalendarEvents,
+  mergeMemories,
+  toMemoryEvents,
+} from '../../googleCalendar';
+import {
   loadMemories,
   saveMemories,
   uploadMemoryAssetFile,
@@ -268,6 +275,8 @@ export function Memory({ currentUser }: MemoryProps) {
   const [selectedId, setSelectedId] = useState(initialMemories[0].id);
   const [selectedAssetId, setSelectedAssetId] = useState(initialMemories[0].assets[0]?.id ?? 0);
   const [assetCommentDrafts, setAssetCommentDrafts] = useState<Record<number, string>>({});
+  const [calendarBusy, setCalendarBusy] = useState(false);
+  const [calendarNotice, setCalendarNotice] = useState('');
 
   const selectedMemory = memories.find((memory) => memory.id === selectedId) ?? memories[0];
   const selectedAsset = selectedMemory.assets.find((asset) => asset.id === selectedAssetId) ?? selectedMemory.assets[0];
@@ -295,6 +304,54 @@ export function Memory({ currentUser }: MemoryProps) {
   const persistMemories = (nextMemories: TeamMemory[]) => {
     setMemories(nextMemories);
     void saveMemories(nextMemories);
+  };
+
+  // 구글 캘린더의 '종일 일정'만 행사로 가져온다. 시간이 잡힌 일정은 회의라
+  // 추억 캘린더에 올리면 팀데이·워크샵이 회의에 묻힌다.
+  // 앞뒤 6개월을 본다 — 지난 행사는 기록으로, 앞으로의 행사는 D-day 로 쓰인다.
+  const CALENDAR_WINDOW_DAYS = 180;
+
+  const importCalendarEvents = async () => {
+    if (calendarBusy) return;
+    setCalendarBusy(true);
+    setCalendarNotice('');
+    try {
+      const connected = await connectGoogleCalendar();
+      if (!connected.ok || !connected.accessToken) {
+        setCalendarNotice(
+          connected.reason === 'disabled'
+            ? '캘린더 연동이 아직 설정되지 않았어요.'
+            : `구글 연결에 실패했어요: ${connected.reason ?? '알 수 없는 오류'}`,
+        );
+        return;
+      }
+
+      const now = Date.now();
+      const result = await fetchCalendarEvents(
+        connected.accessToken,
+        new Date(now - CALENDAR_WINDOW_DAYS * 86400000).toISOString(),
+        new Date(now + CALENDAR_WINDOW_DAYS * 86400000).toISOString(),
+      );
+      if (!result.ok || !result.events) {
+        setCalendarNotice(`일정을 읽지 못했어요: ${result.reason ?? '알 수 없는 오류'}`);
+        return;
+      }
+
+      const nextId = memories.reduce((max, memory) => Math.max(max, memory.id), 0) + 1;
+      const incoming = toMemoryEvents(result.events, nextId, currentUser.name);
+      const merged = mergeMemories(memories, incoming);
+      const added = merged.length - memories.length;
+
+      if (added > 0) persistMemories(merged);
+      // 0건도 결과다. 조용히 넘기면 눌렀는데 아무 일도 안 난 것처럼 보인다.
+      setCalendarNotice(
+        added > 0
+          ? `행사 ${added}건을 가져왔어요.`
+          : '새로 가져올 행사가 없어요. 구글 캘린더의 종일 일정만 행사로 가져옵니다.',
+      );
+    } finally {
+      setCalendarBusy(false);
+    }
   };
 
   const selectCalendarDay = (date: string, memory?: TeamMemory) => {
@@ -471,6 +528,21 @@ export function Memory({ currentUser }: MemoryProps) {
               <h2>행사 선택</h2>
             </div>
             <p className="memory-calendar-guide">빈 날짜를 누르면 바로 추억 공간이 만들어져요.</p>
+            <div className="memory-calendar-sync">
+              <button
+                className="secondary-button wide"
+                type="button"
+                disabled={calendarBusy}
+                onClick={() => void importCalendarEvents()}
+              >
+                <CalendarDays size={16} />
+                {calendarBusy ? '구글 캘린더 읽는 중…' : '구글 캘린더에서 행사 가져오기'}
+              </button>
+              {!calendarConfigured() && (
+                <small>연동을 설정하면 캘린더의 종일 일정이 행사로 들어옵니다.</small>
+              )}
+              {calendarNotice && <small className="memory-calendar-notice">{calendarNotice}</small>}
+            </div>
             <div className="memory-weekdays">
               {['일', '월', '화', '수', '목', '금', '토'].map((day) => (
                 <span key={day}>{day}</span>

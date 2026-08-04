@@ -198,6 +198,52 @@ export type TeamMemory = {
   reactions: Record<MemoryReaction, number>;
 };
 
+// 구글 캘린더에서 읽어온 회의. 파트지수의 회의 건강도와 긴 회의 감점의 입력이다.
+// Metrics.tsx 안에만 있던 타입을 googleCalendar.ts 와 나눠 쓰려고 올렸다.
+export type CalendarMeetingType = '원온원' | '파트회의' | '캔미팅' | '티미팅';
+
+export type CalendarMetricEvent = {
+  id: string;
+  title: string;
+  part: string;
+  type: CalendarMeetingType;
+  startsAt: string;
+  durationMinutes: number;
+  attendees: number;
+  isRecurring: boolean;
+};
+
+export type CalendarConnection = 'disconnected' | 'connected' | 'synced';
+
+// 프록시가 돌려주는 원시 일정. 구글 응답에서 필요한 것만 남긴 형태다.
+// 파트 판정은 계정 정보를 가진 프론트가 하므로 프록시는 참석자 메일까지만 넘긴다.
+/** 구글이 일정에 붙여주는 유형. default 만 회의 후보다. */
+export type GoogleEventType = 'default' | 'focusTime' | 'outOfOffice' | 'workingLocation' | 'birthday' | 'fromGmail';
+
+/** 내가 그 초대에 어떻게 답했는지. */
+export type AttendeeResponse = 'accepted' | 'declined' | 'tentative' | 'needsAction';
+
+export type RawCalendarEvent = {
+  id: string;
+  title: string;
+  /** 종일 일정이면 'YYYY-MM-DD', 시간 일정이면 ISO datetime. */
+  startsAt: string;
+  endsAt: string;
+  /** 종일 일정은 회의가 아니라 행사로 본다. */
+  isAllDay: boolean;
+  isRecurring: boolean;
+  attendeeEmails: string[];
+  organizerEmail?: string;
+  location?: string;
+  description?: string;
+  /** 집중 시간·부재중 등은 회의가 아니다. 값이 없으면 default 로 본다. */
+  eventType?: GoogleEventType;
+  /** 내가 거절한 회의는 참석하지 않았으므로 회의 시간에 넣지 않는다. */
+  selfResponse?: AttendeeResponse;
+  /** 캘린더에 '한가함'으로 표시한 일정. 보통 회의가 아니다. 값이 없으면 '바쁨'으로 본다. */
+  showsAsBusy?: boolean;
+};
+
 export type PartScore = {
   name: string;
   score: number;

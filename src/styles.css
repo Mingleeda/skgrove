@@ -3883,6 +3883,23 @@ textarea {
   margin: -6px 0 12px;
 }
 
+.memory-calendar-sync {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.memory-calendar-sync small {
+  color: var(--color-muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.memory-calendar-notice {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
 .memory-weekdays,
 .memory-calendar {
   display: grid;
@@ -5034,42 +5051,65 @@ textarea {
   line-height: 1.5;
 }
 
-.meeting-bars {
+/* 회의량. 예전 .meeting-bars 는 막대 두 개뿐이고 폭이 분÷5, 분÷7 이라는 임의값이었다.
+   주당 총 시간을 숫자로 보여주고, 막대는 주당 예산(12시간) 대비로 정규화한다. */
+.meeting-volume {
   display: grid;
-  gap: 12px;
+  gap: 10px;
 }
 
-.meeting-bars label {
+.meeting-volume-total {
+  align-items: baseline;
+  display: flex;
+  gap: 8px;
+}
+
+.meeting-volume-total strong {
+  color: #17352f;
+  font-size: 26px;
+}
+
+.meeting-volume-total span {
+  color: var(--color-muted);
+  font-size: 13px;
+}
+
+.meeting-budget-bar {
   background: #e3e9e2;
   border-radius: 999px;
-  color: #17352f;
-  display: block;
-  font-size: 12px;
-  font-weight: 900;
-  height: 34px;
+  height: 10px;
   overflow: hidden;
-  padding: 0;
-  position: relative;
 }
 
-.meeting-bars label::before {
-  content: attr(data-label);
-}
-
-.meeting-bars label {
-  align-items: center;
-  display: flex;
-  padding-left: 12px;
-}
-
-.meeting-bars span {
-  background: #6aaa89;
-  bottom: 0;
+.meeting-budget-bar > span {
+  background: var(--color-primary);
   display: block;
-  left: 0;
-  opacity: 0.32;
-  position: absolute;
-  top: 0;
+  height: 100%;
+}
+
+/* 예산을 넘긴 상태를 색으로도 알린다. 색만으로 나르지 않도록 위 숫자와 함께 읽힌다. */
+.meeting-budget-bar.over > span {
+  background: #b83324;
+}
+
+.meeting-volume-split {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+  margin: 0;
+}
+
+.meeting-volume-split dt {
+  color: var(--color-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.meeting-volume-split dd {
+  color: #17352f;
+  font-size: 15px;
+  font-weight: 700;
+  margin: 0;
 }
 
 .color-stack {
