@@ -41,6 +41,7 @@
 | `src/features/leader/LeaderInbox.tsx` | 리더 관리함 | 수정 |
 | `src/features/notifications/NotificationCenter.tsx` | 알림 목록 | 수정 |
 | `src/features/auth/AccountManagement.tsx` | 계정 관리 | 수정 |
+| `src/features/auth/LoginScreen.tsx` | 로그인 (문화면) | 수정 |
 | `src/features/metrics/Metrics.tsx` | 리포트 | 수정 |
 | `src/features/intake/Intake.tsx` | 대나무숲 접수 (문화면) | 수정 |
 | `src/features/memory/Memory.tsx` | 팀 추억 (문화면) | 수정 |
@@ -531,14 +532,14 @@ git commit -m "색 매핑표 — 기존 202색을 토큰으로 보내는 기준 
 `src/designTokens.test.ts`에서:
 
 ```ts
-const MAX_HARDCODED_HEX = 660;
-const MAX_HARDCODED_RGBA = 95;
+const MAX_HARDCODED_HEX = 770;
+const MAX_HARDCODED_RGBA = 103;
 ```
 
 - [ ] **Step 2: 테스트를 실행해 실패를 확인한다**
 
 Run: `npm test -- designTokens`
-Expected: FAIL — `expected 776 to be less than or equal to 660`
+Expected: FAIL — `expected 776 to be less than or equal to 770`
 
 - [ ] **Step 3: 셸 규칙을 토큰으로 치환한다**
 
@@ -595,7 +596,7 @@ git commit -m "셸 반전 — 사이드바를 딥그린에서 모래빛으로
 브랜드색이 표면을 점유하던 구조를 뒤집는다. 사이드바는 page 로
 내려앉고 본문이 surface 로 올라온다. 활성 항목만 이끼 틴트를 쓴다.
 
-하드코딩 hex 776 → 660."
+하드코딩 hex 776 → 770. 셸 구간의 실측 잔량은 11곳뿐이다."
 ```
 
 ---
@@ -604,7 +605,16 @@ git commit -m "셸 반전 — 사이드바를 딥그린에서 모래빛으로
 
 **Files:**
 - Modify: `src/styles.css` (`button`, `.btn-*`, `.badge`, `.chip`, `input`, `select`, `textarea` 규칙)
+- Modify: `src/styles.css` — 아래 공용 프리미티브 90개 규칙도 이 태스크가 소유한다
 - Modify: `src/designTokens.test.ts` (래칫 하향)
+
+**이 태스크가 소유하는 공용 프리미티브** (기능 접두사가 없어 다른 태스크에 안 잡히는 것들, hex 129곳 · rgba 18곳):
+
+`.status-dot.통과` `.status-dot.부결` `.status-dot.투표중` · `.waiting-badge` `.reward-badge` `.public-scope-badge` · `.priority.높음` `.priority.보통` · `.notice-line` `.role-note` `.privacy-promotion-note` `.passed-box` · `.form-error` `.form-success` · `.segmented` `.toolbar` `.step` · `.error-boundary` · `.user-chip` `.user-photo-edit` `.status-reason-editor` `.saved-result-list`
+
+`.status-dot.*`는 Task 7의 `.work-row-dot`과 역할이 같다. 클래스를 합치지는 말고(호출처가 많다) 색만 같은 토큰을 쓰게 한다. `.waiting-badge` `.reward-badge` `.public-scope-badge` `.priority.*`는 Task 5에서 만드는 `.badge-*` 틴트 짝을 재사용한다 — 새 색을 만들지 않는다.
+
+`.login-*`은 이 태스크가 아니라 Task 10이 문화면으로 다룬다.
 
 **Interfaces:**
 - Produces: `.btn-primary` `.btn-secondary` `.btn-ghost` 3단 버튼 클래스.
@@ -612,7 +622,7 @@ git commit -m "셸 반전 — 사이드바를 딥그린에서 모래빛으로
 
 - [ ] **Step 1: 래칫을 낮추고 배지 클래스 존재를 검증하는 테스트를 추가한다**
 
-`src/designTokens.test.ts`에서 상한을 `MAX_HARDCODED_HEX = 540`, `MAX_HARDCODED_RGBA = 80`으로 낮추고 다음을 추가:
+`src/designTokens.test.ts`에서 상한을 `MAX_HARDCODED_HEX = 503`, `MAX_HARDCODED_RGBA = 78`으로 낮추고 다음을 추가:
 
 ```ts
 describe('공통 UI 클래스', () => {
@@ -715,7 +725,7 @@ git commit -m "버튼 3단·배지 5종 공통 클래스
 통과·부결·투표중·대기 배지가 화면마다 다른 스타일이었다.
 틴트 짝 하나로 묶고, 이후 화면은 이 클래스만 쓴다.
 
-하드코딩 hex 660 → 540."
+하드코딩 hex 770 → 503. 공용 프리미티브 129곳을 함께 처리한 결과다."
 ```
 
 ---
@@ -857,7 +867,7 @@ git commit -m "빈 상태 컴포넌트 신설 + 안건함 적용
 
 - [ ] **Step 1: 래칫을 낮추고 행 클래스 검증을 추가한다**
 
-`MAX_HARDCODED_HEX = 470`으로 낮추고 추가:
+`MAX_HARDCODED_HEX = 478`로 낮추고 추가:
 
 ```ts
 describe('업무면 행 문법', () => {
@@ -1018,7 +1028,7 @@ git commit -m "안건함 카드 → 행 · 퍼센트를 주인공으로
 
 행은 고정 높이라 긴 한글 제목이 잘린다. title 속성으로 전문을 남긴다.
 
-하드코딩 hex 540 → 470."
+하드코딩 hex 503 → 478."
 ```
 
 ---
@@ -1035,7 +1045,7 @@ git commit -m "안건함 카드 → 행 · 퍼센트를 주인공으로
 - Consumes: Task 7의 `.work-*` 클래스, Task 5 배지, Task 6 `EmptyState`.
 - Produces: 없음 (기존 클래스 재사용).
 
-- [ ] **Step 1: 래칫을 `MAX_HARDCODED_HEX = 390`으로 낮춘다**
+- [ ] **Step 1: 래칫을 `MAX_HARDCODED_HEX = 438`로 낮춘다**
 
 - [ ] **Step 2: 테스트를 실행해 실패를 확인한다**
 
@@ -1076,7 +1086,7 @@ git commit -m "액션아이템·리더 관리함 행 전환
 안건함과 같은 --row-h·같은 배지를 쓴다. 목록 사이를 옮겨다닐 때
 눈이 다시 적응하지 않아도 되게 한다.
 
-하드코딩 hex 470 → 390."
+하드코딩 hex 478 → 438."
 ```
 
 ---
@@ -1095,7 +1105,7 @@ git commit -m "액션아이템·리더 관리함 행 전환
 
 `Metrics.tsx`에는 인라인 `style={{}}`이 있다(막대 폭 등 계산값). 계산값은 유지하고 색만 `var(--color-*)` 참조로 바꾼다.
 
-- [ ] **Step 1: 래칫을 `MAX_HARDCODED_HEX = 300`, `MAX_HARDCODED_RGBA = 60`으로 낮춘다**
+- [ ] **Step 1: 래칫을 `MAX_HARDCODED_HEX = 361`, `MAX_HARDCODED_RGBA = 52`으로 낮춘다**
 
 - [ ] **Step 2: 테스트를 실행해 실패를 확인한다**
 
@@ -1128,7 +1138,7 @@ git commit -m "알림·계정관리·리포트 업무면 전환
 리포트의 인라인 style 은 계산값만 남기고 색은 토큰 참조로 바꾼다.
 예산 초과 표시는 색 단독으로 나르지 않는 기존 처리를 유지한다.
 
-하드코딩 hex 390 → 300."
+하드코딩 hex 438 → 361."
 ```
 
 ---
@@ -1138,7 +1148,8 @@ git commit -m "알림·계정관리·리포트 업무면 전환
 **Files:**
 - Modify: `src/features/intake/Intake.tsx`
 - Modify: `src/features/intake/ReviewGate.tsx`
-- Modify: `src/styles.css` (`.submission-*` 18개, `.review-*` 36개, `.issue-*` 18개 클래스)
+- Modify: `src/features/auth/LoginScreen.tsx`
+- Modify: `src/styles.css` (`.submission-*` 18개, `.review-*` 36개, `.issue-*` 18개, `.login-*` 클래스)
 - Modify: `src/designTokens.test.ts` (래칫 하향)
 
 **Interfaces:**
@@ -1153,7 +1164,7 @@ git commit -m "알림·계정관리·리포트 업무면 전환
 
 문화면 문법의 기준 구현이다.
 
-- [ ] **Step 1: 래칫을 `MAX_HARDCODED_HEX = 220`으로 낮추고 문화면 클래스 검증을 추가한다**
+- [ ] **Step 1: 래칫을 `MAX_HARDCODED_HEX = 326`으로 낮추고 문화면 클래스 검증을 추가한다**
 
 ```ts
 describe('문화면 문법', () => {
@@ -1241,21 +1252,27 @@ Expected: FAIL — `.culture-display` 없음
 
 `ReviewGate`의 경고색은 `--color-danger` + `--tint-danger`로 통일한다.
 
-- [ ] **Step 5: 테스트·빌드·육안 확인**
+- [ ] **Step 5: 로그인 화면을 문화면으로 바꾼다**
+
+`LoginScreen.tsx`는 앱의 첫인상이고 히어로 구조라 문화면에 속한다. 히어로 제목을 `.culture-display`, 설명을 `.culture-lede`로 바꾼다. 좌측 딥그린 패널은 `--color-page` + 우측 경계선으로 내려앉히고, 우측 로그인 카드는 `--color-surface` + `--color-border` + `--radius-lg`로 한다.
+
+Task 2에서 고친 `word-break: keep-all`이 이 화면의 "작게" 잘림을 이미 해결했는지 확인한다 — 이 화면이 그 버그의 최초 발견처다.
+
+- [ ] **Step 6: 테스트·빌드·육안 확인**
 
 Run: `npm test && npm run build && npm run dev`
-Expected: 전부 PASS. 접수 화면 제목이 28px, 강조 어절에 이끼 틴트
+Expected: 전부 PASS. 접수 화면 제목이 28px, 강조 어절에 이끼 틴트. 로그인 화면의 "작게"가 한 줄에 붙어 있다
 
-- [ ] **Step 6: 커밋**
+- [ ] **Step 7: 커밋**
 
 ```bash
-git add src/features/intake src/styles.css src/designTokens.test.ts
-git commit -m "대나무숲 접수 문화면 전환 + 문화면 공통 클래스
+git add src/features/intake src/features/auth/LoginScreen.tsx src/styles.css src/designTokens.test.ts
+git commit -m "대나무숲 접수·로그인 문화면 전환 + 문화면 공통 클래스
 
 익명성 안내가 본문에 묻혀 있었다. 28px 디스플레이와 틴트 강조로
 올린다. 익명성 보장 범위 문구 자체는 제품 약속이라 바꾸지 않았다.
 
-하드코딩 hex 300 → 220."
+하드코딩 hex 361 → 326."
 ```
 
 ---
@@ -1273,7 +1290,7 @@ git commit -m "대나무숲 접수 문화면 전환 + 문화면 공통 클래스
 
 `.memory-*`는 125개로 단일 기능 중 가장 많다. 치환량이 크므로 이 태스크만 별도로 둔다.
 
-- [ ] **Step 1: 래칫을 `MAX_HARDCODED_HEX = 120`, `MAX_HARDCODED_RGBA = 30`으로 낮춘다**
+- [ ] **Step 1: 래칫을 `MAX_HARDCODED_HEX = 191`, `MAX_HARDCODED_RGBA = 33`으로 낮춘다**
 
 - [ ] **Step 2: 테스트를 실행해 실패를 확인한다**
 
@@ -1304,7 +1321,7 @@ git commit -m "팀 추억·유머게시판 문화면 전환
 
 미디어 그리드의 레이아웃 계산값은 건드리지 않고 색만 바꿨다.
 
-하드코딩 hex 220 → 120."
+하드코딩 hex 326 → 191."
 ```
 
 ---
@@ -1322,7 +1339,7 @@ git commit -m "팀 추억·유머게시판 문화면 전환
 
 커피뽑기에는 `@keyframes` 8개(`spin-board` `float-token` `coffee-pulse` `cup-left` `cup-main` `cup-right` `winner-pop` `name-flash` `confetti-burst`)가 몰려 있다. 애니메이션 자체는 유지하고 색만 토큰으로 바꾼다. 이 화면의 즐거움이 앱에서 유일하게 살아 있는 모션이다.
 
-- [ ] **Step 1: 래칫을 `MAX_HARDCODED_HEX = 40`, `MAX_HARDCODED_RGBA = 12`로 낮춘다**
+- [ ] **Step 1: 래칫을 `MAX_HARDCODED_HEX = 124`, `MAX_HARDCODED_RGBA = 14`로 낮춘다**
 
 - [ ] **Step 2: 테스트를 실행해 실패를 확인한다**
 
@@ -1351,7 +1368,7 @@ git commit -m "동료 성향·커피뽑기 문화면 전환
 커피뽑기 애니메이션 8종은 유지하고 색만 토큰으로 바꿨다.
 축하 연출의 다색 표현은 새 색을 만들지 않고 4개 틴트를 순환한다.
 
-하드코딩 hex 120 → 40."
+하드코딩 hex 191 → 124."
 ```
 
 ---
@@ -1435,7 +1452,7 @@ git commit -m "홈·캔미팅 혼합 문법 + 브레이크포인트 통일
 브레이크포인트가 520/720/900/1100 네 종류로 뒤섞여 있던 것을
 720/1100 두 개로 통합한다.
 
-하드코딩 hex 40 → 0. 토큰 경유율 100% 달성."
+하드코딩 hex 124 → 0. 토큰 경유율 100% 달성."
 ```
 
 ---
@@ -1508,8 +1525,10 @@ git commit -m "전 화면 순회 검증 — 발견 결함 수정
 | 7절 실행 순서 | Task 1→14 배치가 스펙 7절 1~7단계에 대응 |
 | 8절 검증 기준 | Task 14 (+ 각 태스크 말미) |
 | 2절 파랑 토큰 공백 | Task 1 (`--color-info` 추가) |
+| 로그인 화면 | Task 10 (초안에서 누락되어 있었다) |
+| 공용 프리미티브 90개 규칙 | Task 5 (초안에서 어느 태스크에도 없었다) |
 
-누락 없음.
+누락 없음. 사전 점검에서 로그인 화면과 공용 프리미티브 두 건이 무주공산이었던 것을 찾아 배정했다.
 
 **플레이스홀더 점검**
 
@@ -1520,21 +1539,24 @@ git commit -m "전 화면 순회 검증 — 발견 결함 수정
 - `EmptyStateProps`는 Task 6에서 정의하고 Task 7·8·11이 같은 필드명(`icon` `title` `description` `action`)으로 소비한다. 일치.
 - `.work-*` 클래스는 Task 7에서 정의하고 Task 8·9·13이 같은 이름으로 소비한다. 일치.
 - `.culture-*` 클래스는 Task 10에서 정의하고 Task 11·12·13이 같은 이름으로 소비한다. 일치.
-- 래칫 상수 `MAX_HARDCODED_HEX`는 Task 1에서 776으로 시작해 660→540→470→390→300→220→120→40→0으로 단조 감소한다. 역전 없음.
+- 래칫 상수 `MAX_HARDCODED_HEX`는 Task 1에서 776으로 시작해 770→503→478→438→361→326→191→124→0으로 단조 감소한다. 역전 없음.
+- 각 상한은 셀렉터 접두사별 실측 잔량에서 계산했고 여유 5를 뒀다. 초안의 추정값은 6개 구간에서 도달 불가능했다(예: 셸 구간은 hex가 11곳뿐인데 116곳 제거를 요구했다).
 
 ## 래칫 요약
 
-| Task | hex 상한 | rgba 상한 |
-|---:|---:|---:|
-| 1 | 776 | 103 |
-| 4 | 660 | 95 |
-| 5 | 540 | 80 |
-| 7 | 470 | 80 |
-| 8 | 390 | 80 |
-| 9 | 300 | 60 |
-| 10 | 220 | 60 |
-| 11 | 120 | 30 |
-| 12 | 40 | 12 |
-| 13 | 0 | 0 |
+| Task | 구간 | 구간 실측 hex | hex 상한 | rgba 상한 |
+|---:|---|---:|---:|---:|
+| 1 | 기준선 | — | 776 | 103 |
+| 4 | 셸 | 11 | 770 | 103 |
+| 5 | 공통 UI + 공용 프리미티브 | 267 | 503 | 78 |
+| 7 | 안건 | 25 | 478 | 77 |
+| 8 | 액션·리더 | 40 | 438 | 76 |
+| 9 | 알림·계정·리포트 | 77 | 361 | 52 |
+| 10 | 접수·로그인 | 35 | 326 | 52 |
+| 11 | 추억·유머 | 135 | 191 | 33 |
+| 12 | 성향·커피 | 67 | 124 | 14 |
+| 13 | 홈·미팅·미디어쿼리 | 114 | 0 | 0 |
 
-중간 상한은 각 태스크의 대상 클래스 수에서 추정한 값이다. 실제 치환 결과가 상한보다 낮으면 그 태스크에서 상한을 실제값으로 더 낮춰 커밋한다. 상한을 올리는 방향의 수정은 금지다.
+상한은 셀렉터 접두사별 실측 잔량(합계 771 + 셀렉터·주석 내 잔여 5)에서 계산하고 여유 5를 뒀다. 실제 치환 결과가 상한보다 낮으면 그 태스크에서 상한을 실제값으로 더 낮춰 커밋한다. **상한을 올리는 방향의 수정은 금지다.**
+
+상한에 도달하지 못하는 태스크가 생기면 그것은 구간 분류가 틀렸다는 신호다. 상한을 올리지 말고 보고한다 — 누락된 규칙이 어느 구간에 속하는지 다시 정해야 한다.
