@@ -111,12 +111,22 @@ export function AppShell({
                   <Camera size={11} />
                 </span>
               </button>
-              <div className="user-chip-text">
+              {/*
+                사이드바는 일을 하러 가는 곳이고(대나무숲·안건함·액션), 헤더 우측은
+                나에 관한 것이다(내 사진·알림·로그아웃). 마이페이지는 후자에 속해
+                메뉴가 아니라 이 칩이 입구가 된다. 사진 변경도 이미 여기 붙어 있다.
+              */}
+              <button
+                className="user-chip-text"
+                type="button"
+                onClick={() => onSectionChange('mypage')}
+                title="마이페이지"
+              >
                 <strong>{currentUser.name}</strong>
                 <span>
                   {currentUser.role} · {currentUser.part}
                 </span>
-              </div>
+              </button>
               {photoOpen && (
                 <div className="photo-editor-pop">
                   <label htmlFor="user-photo-url">프로필 사진 URL</label>

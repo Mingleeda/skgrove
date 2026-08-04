@@ -8652,3 +8652,24 @@ button.notif-row {
     min-height: 40px;
   }
 }
+
+/* 헤더 사용자 칩이 마이페이지 입구가 됐다. 버튼이지만 칩 안에 들어가므로
+   면을 갖지 않고, 눌리는 것임을 호버로만 알린다. */
+.user-chip-text {
+  align-items: flex-start;
+  background: none;
+  border: none;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  /* 칩 안에 들어가므로 면은 없지만, 겨냥해 누를 수 있는 크기는 가져야 한다. */
+  justify-content: center;
+  min-height: 36px;
+  padding: 0 var(--space-1);
+  text-align: left;
+}
+
+.user-chip-text:hover strong {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}

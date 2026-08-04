@@ -149,6 +149,8 @@ export function Profiles({ mode, currentUser, onProfilesChange }: ProfilesProps)
     ...draft,
     color: draftColor,
   };
+  // 편집 중이면 저장 전 값을, 아니면 저장본을 그린다.
+  const cardProfile = isEditing ? previewProfile : myProfile;
 
   useEffect(() => {
     let isMounted = true;
@@ -224,8 +226,14 @@ export function Profiles({ mode, currentUser, onProfilesChange }: ProfilesProps)
 
   return (
     <section className="screen profiles-screen">
+      {/*
+        편집 중에는 이 카드가 draft 를 그린다. 예전에는 저장본을 그리는 이 카드와
+        draft 를 그리는 작은 미리보기 카드가 따로 있었는데, 미리보기 쪽이 항목이
+        적어(역할·협업만) 실물과 달랐고 어느 쪽이 저장본인지 표시도 없었다.
+        카드 하나가 실제 레이아웃 그대로 갱신되는 편이 낫다.
+      */}
       {mode === 'mine' && myProfile && (
-        <section className={`my-profile-card ${myProfile.color}`}>
+        <section className={`my-profile-card ${cardProfile.color}`}>
           <div className="my-profile-main">
             <div className="my-profile-topline">
               <div className="my-profile-label">
@@ -238,33 +246,33 @@ export function Profiles({ mode, currentUser, onProfilesChange }: ProfilesProps)
               </button>
             </div>
             <div className="profile-detail-head">
-              <div className={`avatar ${myProfile.color}`}>{myProfile.name.slice(0, 1)}</div>
+              <div className={`avatar ${cardProfile.color}`}>{cardProfile.name.slice(0, 1)}</div>
               <div>
-                <span>{myProfile.part}</span>
-                <h2>{myProfile.name}</h2>
-                <strong>{myProfile.englishName} · {myProfile.character}</strong>
+                <span>{cardProfile.part}</span>
+                <h2>{cardProfile.name}</h2>
+                <strong>{cardProfile.englishName} · {cardProfile.character}</strong>
               </div>
             </div>
             <div className="profile-mood-row">
-              <p>{myProfile.trait}</p>
+              <p>{cardProfile.trait}</p>
             </div>
           </div>
           <div className="my-profile-notes">
             <div>
               <span>역할</span>
-              <strong>{myProfile.role}</strong>
+              <strong>{cardProfile.role}</strong>
             </div>
             <div>
               <span>협업</span>
-              <strong>{myProfile.collaboration}</strong>
+              <strong>{cardProfile.collaboration}</strong>
             </div>
             <div>
               <span>피드백</span>
-              <strong>{myProfile.feedback}</strong>
+              <strong>{cardProfile.feedback}</strong>
             </div>
             <div>
               <span>동료 이해 가이드</span>
-              <strong>{myProfile.guide}</strong>
+              <strong>{cardProfile.guide}</strong>
             </div>
           </div>
         </section>
@@ -331,36 +339,6 @@ export function Profiles({ mode, currentUser, onProfilesChange }: ProfilesProps)
         </section>
       )}
 
-      {/*
-        편집 중 입력이 카드에 어떻게 보이는지 확인하는 라이브 프리뷰다.
-        편집이 아닐 때도 띄우면 바로 위 '내 프로필 카드'와 같은 사람을 한 번 더
-        그리는 셈이 된다. 실제로 이 화면은 아무것도 안 해도 본인이 네 번 나왔다.
-      */}
-      {mode === 'mine' && isEditing && (
-      <aside className="profile-side">
-        <section className={`profile-card feature-preview ${previewProfile.color}`}>
-          <div className="profile-card-head">
-            <div className="avatar">{previewProfile.name.slice(0, 1)}</div>
-            <div>
-              <span>{previewProfile.part}</span>
-              <h2>{previewProfile.name}</h2>
-              <strong>{previewProfile.englishName} · {previewProfile.character}</strong>
-            </div>
-          </div>
-          <p>{previewProfile.trait}</p>
-          <div className="profile-chip-list">
-            <span>{previewProfile.role}</span>
-            <span>{previewProfile.collaboration}</span>
-          </div>
-        </section>
-      </aside>
-      )}
-
-      {/*
-        분포 요약. 순위나 점수를 만들지 않는다 — 32명 성향에 순위를 매기면
-        프로파일링이 되고, 익명 발언을 전제로 하는 이 앱과 충돌한다.
-        각 축에서 어떤 성향이 몇 명인지만 보여주고, 누르면 그 조건으로 목록을 좁힌다.
-      */}
       {mode === 'directory' && (
       <section className="panel profile-overview">
         <PanelHeader icon={BarChart3} title="팀 성향 분포" />
@@ -385,12 +363,20 @@ export function Profiles({ mode, currentUser, onProfilesChange }: ProfilesProps)
             { 축: '협업 방식', 값들: collaborationChoices, field: 'collaboration' as const },
             { 축: '피드백 선호', 값들: feedbackChoices, field: 'feedback' as const },
           ].map(({ 축, 값들, field }) => {
-            const total = filteredProfiles.length || 1;
+            /*
+              분모를 전체 인원(32)으로 잡으면 4명이 답한 상태에서 한 칸이 최대
+              3% 라 막대가 원리적으로 찰 수 없다. 축 안에서 가장 많은 칸을
+              기준으로 삼아야 같은 축의 항목끼리 비교가 된다.
+            */
+            const counts = 값들.map(
+              (choice) => filteredProfiles.filter((profile) => profile[field] === choice.value).length,
+            );
+            const peak = Math.max(...counts, 1);
             return (
               <div className="overview-axis" key={축}>
                 <strong>{축}</strong>
-                {값들.map((choice) => {
-                  const count = filteredProfiles.filter((profile) => profile[field] === choice.value).length;
+                {값들.map((choice, index) => {
+                  const count = counts[index];
                   const active = searchTerm === choice.value;
                   return (
                     <button
@@ -402,7 +388,7 @@ export function Profiles({ mode, currentUser, onProfilesChange }: ProfilesProps)
                     >
                       <span className="overview-bar-label">{choice.label}</span>
                       <span className="overview-bar-track">
-                        <span style={{ width: `${Math.round((count / total) * 100)}%` }} />
+                        <span style={{ width: `${Math.round((count / peak) * 100)}%` }} />
                       </span>
                       <span className="overview-bar-count">{count}</span>
                     </button>
