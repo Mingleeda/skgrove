@@ -8941,11 +8941,13 @@ button.notif-row {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+/* 이제 포스터 하나만 감싼다. 아래 메타줄(날짜·자리)은 상세로 옮겼다.
+   text-align 은 남겨야 한다 — button 의 기본값이 center 라 지우면 포스터 제목이
+   가운데로 밀린다(상세 화면 포스터와도 어긋난다). */
 .poster-cell {
   background: none;
   border: 0;
-  display: grid;
-  gap: var(--space-2);
+  display: block;
   padding: 0;
   text-align: left;
   width: 100%;
@@ -8954,32 +8956,6 @@ button.notif-row {
 .poster-cell:hover .poster {
   border-color: var(--color-border-strong);
   box-shadow: var(--shadow-float);
-}
-
-.poster-meta {
-  align-items: center;
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  font-size: var(--text-meta);
-}
-
-.poster-meta-when {
-  color: var(--color-ink);
-  font-weight: 500;
-}
-
-.poster-meta-seats {
-  color: var(--color-muted);
-}
-
-.poster-meta-mine {
-  background: var(--tint-moss);
-  border-radius: var(--radius-full);
-  color: var(--tint-moss-ink);
-  font-size: var(--text-micro);
-  margin-left: auto;
-  padding: 2px 8px;
 }
 
 .gathering-toolbar {

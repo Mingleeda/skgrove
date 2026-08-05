@@ -267,28 +267,19 @@ export function GatheringBoard({
           title={filter === '모집중' ? '지금 열린 자리가 없어요' : '해당하는 모임이 없어요'}
         />
       ) : (
-        /* 인스타처럼 포스터가 격자로 쌓인다. 지난 모임도 지우지 않는 이유가 여기 있다 —
-           "쌓이면 한눈에 보기 좋게"가 이 화면의 목적이다. */
+        /*
+          인스타 격자처럼 포스터만 쌓는다. 날짜·정원·내 신청 여부는 전부 상세로 미룬다.
+          목록은 "무엇이 있나"를 훑는 곳이고, 판단에 필요한 사실은 눌러서 본다.
+
+          배지(모집중/마감)만 남겼다. 이건 내용이 아니라 문 상태다 — 없으면 이미 닫힌
+          모임을 눌러야만 알 수 있어 헛걸음이 생긴다.
+        */
         <div className="poster-grid">
           {visible.map((item) => {
             const status = deriveStatus(item, signups, now);
-            const left = spotsLeft(item, signups);
-            const seat = mySeat(item, signups, currentUser.name);
             return (
               <button className="poster-cell" key={item.id} onClick={() => openDetail(item.id)} type="button">
                 <PosterFrame badge={status} badgeTone={STATUS_TONE[status]} gathering={item} />
-                {/* 날짜·정원 같은 상세는 눌러서 본다(인스타 격자와 같은 이유).
-                    남은 자리만 남긴다 — 지금 들어갈 수 있는지가 누를지 말지를 가른다. */}
-                <div className="poster-meta">
-                  <span className="poster-meta-seats">
-                    {item.capacity === null
-                      ? `${confirmedCount(item, signups)}명 참여`
-                      : left && left > 0
-                        ? `${left}자리 남음`
-                        : `${confirmedCount(item, signups)}/${item.capacity} 마감`}
-                  </span>
-                  {seat && <span className="poster-meta-mine">{seat === '확정' ? '신청함' : `대기 ${seat.대기}`}</span>}
-                </div>
               </button>
             );
           })}
