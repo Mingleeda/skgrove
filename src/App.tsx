@@ -80,6 +80,19 @@ import {
   saveHumorComments,
   saveHumorPosts,
 } from './humorStore';
+import { makePoster } from './aiPoster';
+import {
+  cacheSignups,
+  deleteGatheringRecord,
+  deleteSignup,
+  insertSignup,
+  loadGatherings,
+  loadSignups,
+  saveGatherings,
+  uploadGatheringImage,
+} from './gatheringStore';
+import { GatheringBoard } from './features/gatherings/GatheringBoard';
+import type { GatheringDraft } from './features/gatherings/GatheringForm';
 import { loadProfiles } from './profileStore';
 import { ProfilesContext, type AvatarInfo } from './profilesContext';
 import type {
@@ -92,6 +105,9 @@ import type {
   CanResultGroup,
   CanSession,
   CurrentUser,
+  Gathering,
+  GatheringKind,
+  GatheringSignup,
   HumorComment,
   HumorPost,
   Identity,
@@ -105,6 +121,15 @@ import type {
 } from './types';
 
 const today = () => new Date().toISOString().slice(0, 10);
+
+/* 'YYYY-MM-DDTHH:mm' 로컬 시각. 모임 상태는 저장하지 않고 이 값으로 파생시키므로
+   (gatheringRules.deriveStatus) 화면마다 따로 만들지 않고 여기서 한 번만 만든다.
+   toISOString 은 UTC 라 저녁 모임이 다음 날로 넘어간다 — 로컬 기준이어야 한다. */
+const nowStamp = () => {
+  const date = new Date();
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+};
 
 // 대나무숲/캔미팅에서 자동 생성된 안건의 기본 투표 기간(7일).
 // 사람이 마감일을 정할 기회가 없는 경로라 기한 없이 방치되는 것을 막는다.
@@ -149,6 +174,8 @@ export function App() {
   const [notifications, setNotifications] = useState<AppNotification[]>(initialNotifications);
   const [humorPosts, setHumorPosts] = useState<HumorPost[]>(initialHumorPosts);
   const [humorComments, setHumorComments] = useState<HumorComment[]>(initialHumorComments);
+  const [gatherings, setGatherings] = useState<Gathering[]>([]);
+  const [gatheringSignups, setGatheringSignups] = useState<GatheringSignup[]>([]);
   // 알림이 DB(있으면)에서 로드 완료됐는지. 마감 임박 체크는 이게 true여야 실행(중복 슬랙 방지).
   const [notificationsReady, setNotificationsReady] = useState(false);
   // 계정별 아바타(색·사진). Avatar가 ProfilesContext로 읽는다. 로그인 후 DB에서 로드.
@@ -257,6 +284,12 @@ export function App() {
     });
     loadHumorComments().then((loaded) => {
       if (isMounted) setHumorComments(loaded);
+    });
+    loadGatherings().then((loaded) => {
+      if (isMounted) setGatherings(loaded);
+    });
+    loadSignups().then((loaded) => {
+      if (isMounted) setGatheringSignups(loaded);
     });
 
     return () => {
@@ -785,6 +818,88 @@ export function App() {
     );
   };
 
+  /* ===== 번개 모임 / 일정공모 ===== */
+
+  const persistGatherings = (next: Gathering[]) => {
+    setGatherings(next);
+    void saveGatherings(next);
+  };
+
+  const createGathering = async (kind: GatheringKind, draft: GatheringDraft) => {
+    if (!currentUser) return;
+    const id = `GAT-${Date.now().toString(36).toUpperCase()}`;
+    const { imageFile, ...rest } = draft;
+
+    const base: Gathering = {
+      ...rest,
+      id,
+      kind,
+      host: currentUser.name,
+      createdAt: today(),
+      canceled: false,
+    };
+
+    // 사진을 넣었으면 그걸 쓰고, 없을 때만 포스터를 만든다.
+    // 둘 다 실패해도 모임은 등록돼야 한다 — 대표 이미지는 부가물이지 본질이 아니다.
+    let enriched = base;
+    if (imageFile) {
+      const { imageUrl } = await uploadGatheringImage(id, imageFile);
+      enriched = { ...base, imageUrl };
+    } else {
+      const { poster } = await makePoster(base);
+      enriched = { ...base, poster };
+    }
+
+    persistGatherings([enriched, ...gatherings]);
+  };
+
+  /*
+    신청은 배열 통째로 저장하지 않고 한 건만 insert 한다. 두 사람이 같은 순간에
+    신청할 때 나중 쓰기가 앞 쓰기를 지우면 한 명이 조용히 사라지는데, 선착순에서는
+    그게 가장 치명적이다. DB 쓰기가 실패하면 화면에도 반영하지 않아
+    "신청됐다는데 명단에 없는" 상태를 만들지 않는다.
+  */
+  const joinGathering = async (gathering: Gathering) => {
+    if (!currentUser) return;
+    if (gatheringSignups.some((s) => s.gatheringId === gathering.id && s.name === currentUser.name)) return;
+
+    const signup: GatheringSignup = {
+      id: `SGN-${Date.now().toString(36).toUpperCase()}`,
+      gatheringId: gathering.id,
+      name: currentUser.name,
+      createdAt: new Date().toISOString(),
+    };
+
+    const ok = await insertSignup(signup);
+    if (!ok) return;
+    const next = [...gatheringSignups, signup];
+    setGatheringSignups(next);
+    cacheSignups(next);
+  };
+
+  const leaveGathering = async (gathering: Gathering) => {
+    if (!currentUser) return;
+    const mine = gatheringSignups.find((s) => s.gatheringId === gathering.id && s.name === currentUser.name);
+    if (!mine) return;
+
+    const ok = await deleteSignup(mine.id);
+    if (!ok) return;
+    // 레코드 하나가 빠지면 대기 첫 번째가 저절로 확정된다(gatheringRules.splitRoster).
+    const next = gatheringSignups.filter((s) => s.id !== mine.id);
+    setGatheringSignups(next);
+    cacheSignups(next);
+  };
+
+  const cancelGathering = (gathering: Gathering) => {
+    // 신청자가 있는 모임을 지우면 그들의 기록까지 사라진다. 지우지 않고 취소로 남긴다.
+    persistGatherings(gatherings.map((item) => (item.id === gathering.id ? { ...item, canceled: true } : item)));
+    if (gatheringSignups.every((s) => s.gatheringId !== gathering.id)) {
+      // 아무도 신청하지 않았다면 흔적을 남길 이유가 없다.
+      void deleteGatheringRecord(gathering.id);
+      persistGatherings(gatherings.filter((item) => item.id !== gathering.id));
+    }
+  };
+
   const registerAccount = (account: Omit<ManagedAccount, 'id' | 'joinedAt' | 'status'>) => {
     persistAccounts([
       ...accounts,
@@ -935,6 +1050,22 @@ export function App() {
           onTeaTypesChange={updateTeaSessionTypes}
           onAnnounceToSlack={announceTeaToSlack}
           onNotifyStatus={notifyStatus}
+        />
+      )}
+      {(active === 'flash' || active === 'callup') && (
+        /* 메뉴는 둘이지만 화면은 하나다. kind 로만 갈라 규칙·포스터·명단이 한 벌로 유지된다.
+           key 를 주지 않으면 메뉴를 옮겨도 이전 메뉴의 상세·필터 상태가 남는다. */
+        <GatheringBoard
+          key={active}
+          kind={active === 'flash' ? 'flash' : 'callup'}
+          gatherings={gatherings}
+          signups={gatheringSignups}
+          currentUser={currentUser}
+          now={nowStamp()}
+          onCreate={(draft) => void createGathering(active === 'flash' ? 'flash' : 'callup', draft)}
+          onJoin={(gathering) => void joinGathering(gathering)}
+          onLeave={(gathering) => void leaveGathering(gathering)}
+          onCancelGathering={cancelGathering}
         />
       )}
       {active === 'notifications' && (

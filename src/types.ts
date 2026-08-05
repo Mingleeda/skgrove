@@ -6,6 +6,8 @@ export type Section =
   | 'agenda'
   | 'actions'
   | 'meetings'
+  | 'flash'
+  | 'callup'
   | 'profiles'
   | 'connect'
   | 'memory'
@@ -350,4 +352,56 @@ export type HumorComment = {
   author: string;
   body: string;
   createdAt: string;
+};
+
+// ===== 번개 모임 / 일정공모 =====
+// 메뉴는 둘이지만 모델은 하나다. 입력값이 90% 같은데 타입을 쪼개면 정원·대기자
+// 승계 같은 규칙이 두 벌이 되고, 한쪽만 고치는 버그가 생긴다. kind 로만 가른다.
+//   flash  = 번개 모임: 오늘·내일 급조. 리드타임이 짧고 캐주얼하다.
+//   callup = 일정공모: 미리 계획한 선착순 모집. 마감일이 따로 의미를 갖는다.
+export type GatheringKind = 'flash' | 'callup';
+
+// 상태는 저장하지 않고 정원·시각으로 파생시킨다(gatheringRules.deriveStatus).
+// 저장하면 "마감인데 모집중으로 남아 있는" 어긋남이 반드시 생긴다.
+// 취소만은 주최자의 의사라 파생할 수 없어 별도 플래그로 둔다.
+export type GatheringStatus = '모집중' | '마감' | '진행함' | '종료' | '취소';
+
+export type GatheringCost = '없음' | 'n빵' | '주최자 부담';
+
+// LLM 이 정하는 것은 '문구와 색'까지다. 그림 자체를 만들지 않는다.
+// 포스터가 쌓였을 때 한눈에 보이려면 틀이 같아야 하고, 개성은 이 세 값으로 낸다.
+export type GatheringPoster = {
+  headline: string; // 포스터에 크게 박히는 한 줄
+  caption: string; // 그 아래 짧은 부연
+  tone: 'moss' | 'clay' | 'info' | 'pending'; // 기존 역할색 토큰에서만 고른다
+  motif: string; // lucide 아이콘 이름. 목록 밖 값이 오면 렌더에서 기본값으로 떨어진다
+  source: 'ai' | 'local'; // 폴백으로 만든 것인지 표시 — 나중에 재생성 판단 근거
+};
+
+export type Gathering = {
+  id: string;
+  kind: GatheringKind;
+  title: string;
+  startAt: string; // 'YYYY-MM-DDTHH:mm' — 모임 시작
+  place: string; // 자유 텍스트. 온라인이면 링크를 여기 적는다
+  capacity: number | null; // null = 제한 없음. 0 은 허용하지 않는다
+  closeAt: string; // 신청 마감. 기본값은 startAt
+  minPeople: number | null; // 이 인원 미달이면 주최자가 접기 쉽게 — 등록 심리 장벽을 낮춘다
+  desc: string;
+  part: TeamPart; // 기본 '전체'
+  cost: GatheringCost;
+  imageUrl?: string; // 첨부한 사진. 있으면 포스터 대신 이 이미지를 쓴다
+  poster?: GatheringPoster; // 사진이 없을 때만 채워진다
+  host: string; // 주최자 실명 — 로그인 사용자에서 자동
+  createdAt: string; // 'YYYY-MM-DD'
+  canceled: boolean;
+};
+
+// 신청은 별도 레코드다. Gathering 안에 배열로 넣으면 두 사람이 동시에 신청할 때
+// 통째로 덮어써 한쪽이 사라진다(선착순에서 가장 치명적인 실패).
+export type GatheringSignup = {
+  id: string;
+  gatheringId: string;
+  name: string; // 신청자 실명
+  createdAt: string; // ISO. 선착순 순서의 유일한 근거
 };

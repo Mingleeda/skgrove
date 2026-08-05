@@ -544,3 +544,44 @@ create table if not exists public.app_config (
 alter table public.app_config enable row level security;
 drop policy if exists "Allow prototype app config all" on public.app_config;
 create policy "Allow prototype app config all" on public.app_config for all using (true) with check (true);
+
+-- 번개 모임 / 일정공모 — 메뉴는 둘이지만 kind 하나로 가르는 한 테이블.
+-- 상태(모집중/마감/진행함)는 저장하지 않는다. 정원·시각으로 앱이 파생한다.
+-- 저장하면 아무도 접속하지 않는 사이 '모집중'으로 남는 어긋남이 생긴다.
+create table if not exists public.gatherings (
+  id text primary key,
+  kind text not null default 'flash',
+  title text not null default '',
+  start_at text not null default '',
+  place text not null default '',
+  capacity integer,               -- null = 인원 제한 없음
+  close_at text not null default '',
+  min_people integer,             -- null = 최소 인원 없음
+  description text not null default '',
+  part text not null default '전체',
+  cost text not null default '없음',
+  image_url text,                 -- 첨부 사진. 없으면 poster 를 쓴다
+  poster jsonb,                   -- LLM/로컬이 만든 문구·색·아이콘
+  host text not null default '',
+  created_at text not null default '',
+  canceled boolean not null default false
+);
+alter table public.gatherings enable row level security;
+drop policy if exists "Allow prototype gatherings all" on public.gatherings;
+create policy "Allow prototype gatherings all" on public.gatherings for all using (true) with check (true);
+
+-- 신청은 별도 행이다. 모임 안에 배열로 넣으면 두 사람이 같은 순간에 신청할 때
+-- 나중 쓰기가 앞 쓰기를 지워 한 명이 조용히 사라진다(선착순에서 가장 치명적).
+-- created_at 이 선착순 순서의 유일한 근거이므로 반드시 값이 있어야 한다.
+create table if not exists public.gathering_signups (
+  id text primary key,
+  gathering_id text not null references public.gatherings(id) on delete cascade,
+  name text not null,
+  created_at text not null,
+  -- 한 사람이 같은 모임에 두 번 줄 서지 못하게 DB 에서도 막는다.
+  unique (gathering_id, name)
+);
+create index if not exists gathering_signups_gathering_idx on public.gathering_signups (gathering_id, created_at);
+alter table public.gathering_signups enable row level security;
+drop policy if exists "Allow prototype gathering signups all" on public.gathering_signups;
+create policy "Allow prototype gathering signups all" on public.gathering_signups for all using (true) with check (true);

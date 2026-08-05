@@ -2,6 +2,7 @@ import type { ElementType } from 'react';
 import {
   BarChart3,
   Bell,
+  CalendarClock,
   CalendarDays,
   FileCheck2,
   Home,
@@ -14,6 +15,7 @@ import {
   UserRound,
   UsersRound,
   Vote,
+  Zap,
 } from 'lucide-react';
 import type { Section } from './types';
 
@@ -36,6 +38,8 @@ export const sections: AppSection[] = [
   { id: 'agenda', label: '안건함 / 투표', icon: Vote, owner: '이상협' },
   { id: 'actions', label: '액션아이템', icon: FileCheck2, owner: '이상협' },
   { id: 'meetings', label: '캔미팅 / 티미팅', icon: CalendarDays, owner: '김승현 · 이상협' },
+  { id: 'flash', label: '번개 모임', icon: Zap, owner: '공통' },
+  { id: 'callup', label: '일정 공모', icon: CalendarClock, owner: '공통' },
   { id: 'profiles', label: '동료 성향', icon: UserRound, owner: '김수정' },
   { id: 'connect', label: '커피뽑기 / 조뽑기', icon: Shuffle, owner: '김수정' },
   { id: 'memory', label: '팀 추억', icon: Sparkles, owner: '김수정' },
@@ -60,7 +64,9 @@ export const navGroups: NavGroup[] = [
   },
   {
     title: '함께하기',
-    items: ['meetings', 'profiles', 'connect', 'memory', 'humor'].map((id) => bySection(id as Section)),
+    items: ['meetings', 'flash', 'callup', 'profiles', 'connect', 'memory', 'humor'].map((id) =>
+      bySection(id as Section),
+    ),
   },
   {
     title: '살펴보기 · 관리',
