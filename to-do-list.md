@@ -15,10 +15,10 @@ npm install && npm run dev
 
 | 이름 | 사내메일 | 권한 | 보이는 메뉴 |
 |---|---|---|---|
-| 이선민 | `sunmin.l@sk.com` | 팀리더 | 15개 |
-| 이두민 | `dumin@sk.com` | 팀원 | 13개 |
-| 김승현 | `k2h9205@sk.com` | 파트리더 | 14개 |
-| 김수정 | `crystalk@sk.com` | 팀원 | 13개 |
+| 이선민 | `sunmin.l@sk.com` | 팀리더 | 14개 |
+| 이두민 | `dumin@sk.com` | 팀원 | 12개 |
+| 김승현 | `k2h9205@sk.com` | 파트리더 | 13개 |
+| 김수정 | `crystalk@sk.com` | 팀원 | 12개 |
 
 마이페이지는 사이드바에 없다. **헤더 우측 사용자 칩**을 누르면 들어간다.
 
@@ -35,17 +35,27 @@ npm install && npm run dev
 - 두 역할 × 두 폭(1280px / 390px) 접근성 결함 **0**
 - 하드코딩 색상값 **0** / 정의 없는 `var()` **0**
 
-### 새로 붙은 기능 — 번개 모임 / 일정 공모
+### 새로 붙은 기능 — 모임 · 번개
 
-메뉴는 둘이지만 **모델·규칙·화면은 한 벌**이다(`kind: 'flash' | 'callup'`).
-입력값이 90% 같아서 타입을 쪼개면 정원·승계 규칙이 두 벌이 된다.
+**한때 '번개 모임'과 '일정 공모' 두 메뉴였다가 하나로 합쳤다.**
+규칙(`gatheringRules.ts`, `aiPoster.ts`)에 `kind` 분기가 단 하나도 없었기 때문이다.
+실제로 다른 건 등록할 때 **기본 날짜(오늘 vs 일주일 뒤)와 날짜 칩 노출** 둘뿐이었다.
+
+그 정도 차이로 메뉴를 나누면 "이건 번개인가 공모인가"를 등록자가 판단해야 하고,
+보는 쪽은 두 메뉴를 다 열어야 놓치지 않는다. `kind` 는 **등록 폼의 첫 선택**으로
+내렸고, 고르면 기본 날짜와 칩이 따라 바뀐다.
+
+> `kind` 는 저장되지만 피드·상세 어디에도 표시하지 않는다. 표시할 만한 차이가
+> 아니기 때문이다 — 다음 주로 잡은 '번개'와 '공모'는 구별되지 않는다.
+> 실제로 의미 있는 신호는 포스터 아래 "6시간 뒤 / 3일 뒤"가 이미 나르고 있다.
+> 나중에 필터가 필요해지면 그때 붙이면 된다.
 
 | 파일 | 역할 |
 |---|---|
 | `src/gatheringRules.ts` | 선착순·대기 승계·상태 파생. 순수 함수, 28 테스트 |
 | `src/aiPoster.ts` | 포스터 문구/색/아이콘. 엔드포인트 없으면 로컬 폴백, 9 테스트 |
 | `src/gatheringStore.ts` | Supabase + localStorage. 신청만 건별 insert/delete |
-| `src/features/gatherings/` | `GatheringBoard`(피드·상세) · `GatheringForm` · `PosterFrame` |
+| `src/features/gatherings/` | `GatheringBoard`(피드·상세) · `GatheringForm`(종류 선택 포함) · `PosterFrame` |
 
 **꼭 알아야 할 설계 두 가지**
 
@@ -66,6 +76,8 @@ npm install && npm run dev
 - 새 모임이 열렸을 때의 **공지 알림은 없다.** 승계·취소만 알린다
   (`notificationRules.gatheringPromotedDraft` / `gatheringCanceledDrafts`).
   전체 공지는 슬랙 소음이 될 수 있어 판단을 남겨뒀다.
+- 피드에 **시험용 포스터 7건**이 localStorage 에만 들어 있다(3열 격자 확인용).
+  지우려면 브라우저 콘솔에서 `localStorage.removeItem('skgrove:gatherings')`.
 
 ### 브라우저 자동화 주의
 

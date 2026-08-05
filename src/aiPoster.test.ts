@@ -57,6 +57,9 @@ describe('로컬 포스터 폴백', () => {
     expect(localPoster(meetup({ title: '점심 같이 먹어요' })).motif).toBe('UtensilsCrossed');
     expect(localPoster(meetup({ title: '주말 등산 가실 분' })).motif).toBe('Mountain');
     expect(localPoster(meetup({ title: '생일 축하 자리' })).motif).toBe('PartyPopper');
+    // 업무 성격 모임도 자주 열린다. 목록에 없으면 해시 폴백으로 엉뚱한 아이콘이 붙는다
+    // ('분기 회고 워크샵'이 포크·나이프로 나왔다).
+    expect(localPoster(meetup({ title: '분기 회고 워크샵' })).motif).toBe('BookOpen');
   });
 
   it('아는 낱말이 없어도 아이콘은 반드시 하나 정해진다', () => {

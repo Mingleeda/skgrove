@@ -7,10 +7,9 @@ import type { Gathering, GatheringCost, GatheringKind, TeamPart } from '../../ty
 export type GatheringDraft = Pick<
   Gathering,
   'title' | 'startAt' | 'place' | 'capacity' | 'closeAt' | 'minPeople' | 'desc' | 'part' | 'cost'
-> & { imageFile: File | null };
+> & { kind: GatheringKind; imageFile: File | null };
 
 type GatheringFormProps = {
-  kind: GatheringKind;
   onSubmit: (draft: GatheringDraft) => void;
   onCancel: () => void;
 };
@@ -43,11 +42,26 @@ const FLASH_CHIPS: Array<{ label: string; value: () => string }> = [
   { label: '내일 저녁', value: () => at(1, 18) },
 ];
 
-export function GatheringForm({ kind, onSubmit, onCancel }: GatheringFormProps) {
+export function GatheringForm({ onSubmit, onCancel }: GatheringFormProps) {
+  /*
+    한때 이 선택이 사이드바 메뉴 두 개였다. 규칙에 kind 분기가 하나도 없어서
+    (정원·대기·승계·상태·포스터 전부 동일) 메뉴를 나눈 대가는 "이건 번개인가
+    공모인가"라는 판단을 사용자에게 떠넘긴 것뿐이었다. 여기로 내렸다.
+    고르면 기본 날짜와 날짜 칩이 그에 맞게 바뀐다 — 실제로 다른 건 그 둘뿐이다.
+  */
+  const [kind, setKind] = useState<GatheringKind>('flash');
   const isFlash = kind === 'flash';
 
   const [title, setTitle] = useState('');
-  const [startAt, setStartAt] = useState(isFlash ? at(0, 18) : at(7, 18));
+  const [startAt, setStartAt] = useState(at(0, 18));
+
+  // 종류를 바꾸면 기본 날짜도 그에 맞게 옮긴다. 사용자가 직접 고른 뒤 종류만
+  // 바꿨을 때 그 값을 덮어쓰지 않도록, 기본값 그대로일 때만 옮긴다.
+  const chooseKind = (next: GatheringKind) => {
+    setKind(next);
+    const wasDefault = startAt === at(0, 18) || startAt === at(7, 18);
+    if (wasDefault) setStartAt(next === 'flash' ? at(0, 18) : at(7, 18));
+  };
   const [place, setPlace] = useState('');
   const [unlimited, setUnlimited] = useState(false);
   const [capacity, setCapacity] = useState('6');
@@ -112,6 +126,7 @@ export function GatheringForm({ kind, onSubmit, onCancel }: GatheringFormProps) 
 
     setError('');
     onSubmit({
+      kind,
       title: trimmedTitle,
       startAt,
       place: trimmedPlace,
@@ -127,7 +142,28 @@ export function GatheringForm({ kind, onSubmit, onCancel }: GatheringFormProps) 
 
   return (
     <section className="panel gathering-form">
-      <PanelHeader icon={isFlash ? Zap : CalendarClock} title={isFlash ? '번개 열기' : '일정 공모하기'} />
+      <PanelHeader icon={Zap} title="모임 열기" />
+
+      <div className="intake-choice-grid">
+        <button
+          className={isFlash ? 'choice-card selected' : 'choice-card'}
+          onClick={() => chooseKind('flash')}
+          type="button"
+        >
+          <Zap size={22} />
+          <strong>번개</strong>
+          <span>오늘·내일 바로 만나요. 날짜를 칩으로 한 번에 고릅니다.</span>
+        </button>
+        <button
+          className={!isFlash ? 'choice-card selected' : 'choice-card'}
+          onClick={() => chooseKind('callup')}
+          type="button"
+        >
+          <CalendarClock size={22} />
+          <strong>미리 잡는 일정</strong>
+          <span>날짜를 정해두고 선착순으로 모아요. 기본값이 일주일 뒤입니다.</span>
+        </button>
+      </div>
 
       <label className="field">
         <span className="field-label">

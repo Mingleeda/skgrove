@@ -195,7 +195,7 @@ export function Dashboard({
               <button
                 className="home-gathering-row"
                 key={item.id}
-                onClick={() => onSectionChange(item.kind === 'flash' ? 'flash' : 'callup')}
+                onClick={() => onSectionChange('gatherings')}
                 type="button"
               >
                 {item.kind === 'flash' ? <Zap size={17} /> : <CalendarClock size={17} />}

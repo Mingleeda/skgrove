@@ -25,12 +25,11 @@ import {
   spotsLeft,
   timeUntil,
 } from '../../gatheringRules';
-import type { CurrentUser, Gathering, GatheringKind, GatheringSignup, GatheringStatus } from '../../types';
+import type { CurrentUser, Gathering, GatheringSignup, GatheringStatus } from '../../types';
 import { GatheringForm, type GatheringDraft } from './GatheringForm';
 import { PosterFrame } from './PosterFrame';
 
 type GatheringBoardProps = {
-  kind: GatheringKind;
   gatherings: Gathering[];
   signups: GatheringSignup[];
   currentUser: CurrentUser;
@@ -56,7 +55,6 @@ const STATUS_TONE: Record<GatheringStatus, 'moss' | 'clay' | 'muted'> = {
 };
 
 export function GatheringBoard({
-  kind,
   gatherings,
   signups,
   currentUser,
@@ -66,14 +64,12 @@ export function GatheringBoard({
   onLeave,
   onCancelGathering,
 }: GatheringBoardProps) {
-  const isFlash = kind === 'flash';
   const [view, setView] = useState<BoardView>('feed');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [filter, setFilter] = useState<Filter>('모집중');
 
-  const mine = gatherings.filter((item) => item.kind === kind);
   const visible = sortGatherings(
-    mine.filter((item) => {
+    gatherings.filter((item) => {
       const status = deriveStatus(item, signups, now);
       if (filter === '모집중') return status === '모집중' || status === '마감';
       if (filter === '내가 신청') return mySeat(item, signups, currentUser.name) !== null;
@@ -100,7 +96,7 @@ export function GatheringBoard({
   if (view === 'create') {
     return (
       <section className="screen">
-        <GatheringForm kind={kind} onSubmit={create} onCancel={() => setView('feed')} />
+        <GatheringForm onSubmit={create} onCancel={() => setView('feed')} />
       </section>
     );
   }
@@ -260,19 +256,15 @@ export function GatheringBoard({
         </div>
         <button className="primary-button" onClick={() => setView('create')} type="button">
           <Plus size={18} />
-          {isFlash ? '번개 열기' : '공모 올리기'}
+          모임 열기
         </button>
       </div>
 
       {visible.length === 0 ? (
         <EmptyState
-          action={{ label: isFlash ? '번개 열기' : '공모 올리기', onClick: () => setView('create') }}
-          description={
-            isFlash
-              ? '오늘 점심이든 퇴근 후든, 먼저 열면 누군가는 옵니다.'
-              : '미리 날짜를 잡아두면 선착순으로 사람이 모입니다.'
-          }
-          icon={isFlash ? Zap : CalendarClock}
+          action={{ label: '모임 열기', onClick: () => setView('create') }}
+          description="오늘 점심이든 다음 주 워크샵이든, 먼저 열면 누군가는 옵니다."
+          icon={Zap}
           title={filter === '모집중' ? '지금 열린 자리가 없어요' : '해당하는 모임이 없어요'}
         />
       ) : (

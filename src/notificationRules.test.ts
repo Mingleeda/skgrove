@@ -178,16 +178,18 @@ describe('번개/공모 알림', () => {
     canceled: false,
   };
 
-  it('승계 알림은 올라온 본인에게, 모임 종류에 맞는 화면으로 간다', () => {
+  it('승계 알림은 올라온 본인에게 간다', () => {
     const draft = gatheringPromotedDraft(meetup, '김수정', TODAY);
     expect(draft.kind).toBe('gathering');
     expect(draft.recipientName).toBe('김수정');
-    expect(draft.section).toBe('flash');
     expect(draft.title).toContain('자리가 났어요');
   });
 
-  it('일정 공모 알림은 공모 화면으로 간다', () => {
-    expect(gatheringPromotedDraft({ ...meetup, kind: 'callup' }, '김수정', TODAY).section).toBe('callup');
+  it('번개든 공모든 같은 화면으로 보낸다', () => {
+    // 메뉴를 하나로 합쳤다. kind 로 목적지가 갈리면 합친 의미가 없다.
+    expect(gatheringPromotedDraft(meetup, '김수정', TODAY).section).toBe('gatherings');
+    expect(gatheringPromotedDraft({ ...meetup, kind: 'callup' }, '김수정', TODAY).section).toBe('gatherings');
+    expect(gatheringCanceledDrafts({ ...meetup, kind: 'callup' }, ['김수정'], TODAY)[0].section).toBe('gatherings');
   });
 
   it('취소 알림은 대기자까지 모두에게 가되 주최자는 뺀다', () => {

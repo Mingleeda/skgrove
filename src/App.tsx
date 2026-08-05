@@ -109,7 +109,6 @@ import type {
   CanSession,
   CurrentUser,
   Gathering,
-  GatheringKind,
   GatheringSignup,
   HumorComment,
   HumorPost,
@@ -156,8 +155,7 @@ const SECTION_BY_HASH: Record<string, Section> = {
   '#accounts': 'accounts',
   '#notifications': 'notifications',
   '#humor': 'humor',
-  '#flash': 'flash',
-  '#callup': 'callup',
+  '#gatherings': 'gatherings',
 };
 
 export function App() {
@@ -830,15 +828,15 @@ export function App() {
     void saveGatherings(next);
   };
 
-  const createGathering = async (kind: GatheringKind, draft: GatheringDraft) => {
+  const createGathering = async (draft: GatheringDraft) => {
     if (!currentUser) return;
     const id = `GAT-${Date.now().toString(36).toUpperCase()}`;
+    // kind 는 이제 메뉴가 아니라 폼의 첫 선택에서 온다.
     const { imageFile, ...rest } = draft;
 
     const base: Gathering = {
       ...rest,
       id,
-      kind,
       host: currentUser.name,
       createdAt: today(),
       canceled: false,
@@ -1076,17 +1074,13 @@ export function App() {
           onNotifyStatus={notifyStatus}
         />
       )}
-      {(active === 'flash' || active === 'callup') && (
-        /* 메뉴는 둘이지만 화면은 하나다. kind 로만 갈라 규칙·포스터·명단이 한 벌로 유지된다.
-           key 를 주지 않으면 메뉴를 옮겨도 이전 메뉴의 상세·필터 상태가 남는다. */
+      {active === 'gatherings' && (
         <GatheringBoard
-          key={active}
-          kind={active === 'flash' ? 'flash' : 'callup'}
           gatherings={gatherings}
           signups={gatheringSignups}
           currentUser={currentUser}
           now={nowStamp()}
-          onCreate={(draft) => void createGathering(active === 'flash' ? 'flash' : 'callup', draft)}
+          onCreate={(draft) => void createGathering(draft)}
           onJoin={(gathering) => void joinGathering(gathering)}
           onLeave={(gathering) => void leaveGathering(gathering)}
           onCancelGathering={cancelGathering}

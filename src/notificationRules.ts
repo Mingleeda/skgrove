@@ -198,11 +198,6 @@ export function messageDraft(
 // 이 두 알림이 없으면 대기 명단이 껍데기가 된다. 자리가 났는데 본인이 앱을
 // 다시 열어보기 전까지 모르면, 자동 승계는 아무 일도 일어나지 않은 것과 같다.
 
-/** 모임 종류에 맞는 화면. 알림을 눌렀을 때 엉뚱한 메뉴로 가지 않게 한다. */
-function gatheringSection(gathering: Gathering) {
-  return gathering.kind === 'flash' ? ('flash' as const) : ('callup' as const);
-}
-
 /**
  * 대기 → 확정 승계. 앞사람이 취소해 자리가 났을 때 올라온 사람에게만 보낸다.
  * dedupeKey 에 '#promoted' 를 붙여 같은 모임의 취소 알림과 섞이지 않게 한다.
@@ -214,7 +209,7 @@ export function gatheringPromotedDraft(gathering: Gathering, name: string, now: 
     fromName: '시스템',
     title: `자리가 났어요 · ${gathering.title}`,
     body: `대기하던 자리가 확정으로 바뀌었어요. ${gathering.place}에서 만나요.`,
-    section: gatheringSection(gathering),
+    section: 'gatherings',
     sourceId: gathering.id,
     dedupeKey: dedupeKey('gathering', `${gathering.id}#promoted`, name),
     createdAt: now,
@@ -235,7 +230,7 @@ export function gatheringCanceledDrafts(gathering: Gathering, names: string[], n
       fromName: '시스템',
       title: `취소됐어요 · ${gathering.title}`,
       body: `${gathering.host}님이 모임을 접었어요. 그 시간은 다시 비워두셔도 됩니다.`,
-      section: gatheringSection(gathering),
+      section: 'gatherings',
       sourceId: gathering.id,
       dedupeKey: dedupeKey('gathering', `${gathering.id}#canceled`, name),
       createdAt: now,
