@@ -27,7 +27,10 @@ export async function loadTeaSessions(): Promise<TeaSession[]> {
     if (!error && data) {
       const sessions = (data as TeaSessionRow[]).map(sessionFromRow);
       window.localStorage.setItem(SESSIONS_KEY, JSON.stringify(sessions));
-      return sessions.length > 0 ? sessions : initialTeaSessions;
+      // DB 가 비어 있으면 빈 목록이다. 여기서 목업으로 채우면 그 가짜 세션이 다음
+      // 저장 때 실제 DB 로 함께 upsert 돼(첫 제안이 목업까지 끌고 들어간다) 데이터가
+      // 오염된다. 목업은 Supabase 가 아예 없는 로컬 데모에서만 쓴다(아래 분기).
+      return sessions;
     }
   }
   try {
