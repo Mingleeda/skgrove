@@ -205,6 +205,11 @@ export function App() {
   const [humorComments, setHumorComments] = useState<HumorComment[]>(initialHumorComments);
   const [gatherings, setGatherings] = useState<Gathering[]>([]);
   const [gatheringSignups, setGatheringSignups] = useState<GatheringSignup[]>([]);
+  /*
+    등록 직후 배경에서 그림을 그리는 동안의 id 목록. 저장하지 않는다 —
+    새로고침하면 그리기도 같이 끝나 있으므로 남겨두면 영영 '그리는 중' 이 된다.
+  */
+  const [imagePendingIds, setImagePendingIds] = useState<string[]>([]);
   const [marketItems, setMarketItems] = useState<MarketItem[]>([]);
   const [marketBids, setMarketBids] = useState<MarketBid[]>([]);
   // 알림이 DB(있으면)에서 로드 완료됐는지. 마감 임박 체크는 이게 true여야 실행(중복 슬랙 방지).
@@ -943,11 +948,18 @@ export function App() {
       실패하면 아무것도 하지 않는다 — 포스터가 그대로 남는 것이 정상 동작이다.
     */
     if (!imageFile) {
+      setImagePendingIds((prev) => [...prev, id]);
       void (async () => {
-        const generated = await requestGatheringImage(enriched);
-        if (!generated) return;
-        const { imageUrl } = await uploadGatheringImage(id, generated);
-        patchGathering(id, { imageUrl });
+        try {
+          const generated = await requestGatheringImage(enriched);
+          if (!generated) return;
+          const { imageUrl } = await uploadGatheringImage(id, generated);
+          patchGathering(id, { imageUrl });
+        } finally {
+          // 성공이든 실패든 표시는 걷는다. 실패했는데 모래시계가 남으면
+          // 영영 그리는 중인 것처럼 보인다.
+          setImagePendingIds((prev) => prev.filter((pendingId) => pendingId !== id));
+        }
       })();
     }
   };
@@ -1292,6 +1304,7 @@ export function App() {
           onCreate={(draft) => void createGathering(draft)}
           onJoin={(gathering) => void joinGathering(gathering)}
           onLeave={(gathering) => void leaveGathering(gathering)}
+          imagePendingIds={imagePendingIds}
           onCancelGathering={cancelGathering}
         />
       )}
