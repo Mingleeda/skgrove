@@ -9000,6 +9000,271 @@ button.notif-row {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+/* ===== 인스타 홈 =====
+   히어로 · 스탯 격자 · 2열 패널을 단일 컬럼으로 합쳤다. 인스타 홈에는
+   설명이 없다 — 스토리와 게시물뿐이다. 무엇을 하는 앱인지는 첫 방문에만
+   필요한데 히어로는 매 방문마다 그 자리를 차지했다. */
+
+/* .screen 이 grid 라 가로 정렬은 justify-items 가 한다. align-items 를 쓰면
+   세로 축에 걸려서 트레이(margin:0 auto)만 가운데로 가고 컬럼은 왼쪽에 남는다. */
+.ig-home {
+  justify-items: center;
+}
+
+.ig-col {
+  display: grid;
+  gap: var(--space-5);
+  max-width: 470px;
+  width: 100%;
+}
+
+/* 히어로 대신 여기서 바로 쓰기 시작한다. */
+.ig-composer {
+  align-items: center;
+  display: flex;
+  gap: var(--space-2);
+}
+
+.ig-composer-field {
+  background: var(--color-sunken);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  color: var(--color-muted);
+  flex: 1;
+  font-size: var(--text-body);
+  min-height: 40px;
+  min-width: 0;
+  overflow: hidden;
+  padding: 0 var(--space-4);
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ig-composer-field:hover {
+  border-color: var(--color-border-strong);
+}
+
+.ig-composer-go {
+  align-items: center;
+  background: var(--color-btn-soft);
+  border: 0;
+  border-radius: var(--radius);
+  color: var(--color-ink);
+  display: flex;
+  flex: none;
+  font-size: var(--text-micro);
+  font-weight: 600;
+  gap: 5px;
+  min-height: 40px;
+  padding: 0 var(--space-3);
+}
+
+.ig-composer-go:hover {
+  background: var(--color-btn-soft-press);
+}
+
+/* 인스타 프로필의 게시물·팔로워 줄과 같은 자리. 숫자가 곧 이동 경로다. */
+.ig-stats {
+  border-bottom: 1px solid var(--color-border);
+  border-top: 1px solid var(--color-border);
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.ig-stats button {
+  background: none;
+  border: 0;
+  display: grid;
+  gap: 1px;
+  justify-items: center;
+  padding: var(--space-3) var(--space-1);
+}
+
+.ig-stats button:hover {
+  background: var(--color-sunken);
+}
+
+.ig-stats b {
+  font-size: var(--text-body-lg);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+.ig-stats span {
+  color: var(--color-muted);
+  font-size: var(--text-micro);
+}
+
+/* 사진이 없는 게시물. 인스타에는 없는 형태지만 이 앱의 안건·액션에는
+   보여줄 이미지가 없다. 대신 테두리로 게시물임을 표시한다. */
+.ig-post.plain {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  gap: 0;
+  padding: var(--space-4);
+}
+
+.ig-post.plain .ig-post-head {
+  padding: 0 0 var(--space-3);
+}
+
+.ig-headline {
+  font-size: var(--text-body-lg);
+  font-weight: 600;
+  line-height: var(--leading-tight);
+}
+
+.ig-post-status.late {
+  color: var(--color-danger);
+}
+
+/* 스토리 투표 스티커. 막대가 배경으로 깔리고 글자가 그 위에 얹힌다. */
+.ig-poll {
+  display: grid;
+  gap: 6px;
+}
+
+.ig-opt {
+  align-items: center;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  display: flex;
+  font-size: var(--text-body);
+  min-height: 40px;
+  overflow: hidden;
+  padding: 0 var(--space-3);
+  position: relative;
+}
+
+.ig-opt-bar {
+  background: var(--color-sunken);
+  bottom: 0;
+  left: 0;
+  position: absolute;
+  top: 0;
+}
+
+.ig-opt.win .ig-opt-bar {
+  background: var(--tint-primary);
+}
+
+.ig-opt b {
+  font-weight: 600;
+  position: relative;
+}
+
+.ig-opt em {
+  font-style: normal;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  margin-left: auto;
+  position: relative;
+}
+
+.ig-list {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.ig-list-row {
+  align-items: center;
+  background: none;
+  border: 0;
+  border-radius: var(--radius);
+  display: flex;
+  gap: var(--space-3);
+  min-height: 44px;
+  padding: var(--space-2);
+  text-align: left;
+  width: 100%;
+}
+
+.ig-list-row:hover {
+  background: var(--color-sunken);
+}
+
+.ig-list-row svg {
+  color: var(--color-muted);
+  flex: none;
+}
+
+.ig-list-row.late svg {
+  color: var(--color-danger);
+}
+
+.ig-list-row span {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+
+.ig-list-row b {
+  font-size: var(--text-body);
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ig-list-row em {
+  color: var(--color-muted);
+  font-size: var(--text-micro);
+  font-style: normal;
+}
+
+.ig-quiet {
+  color: var(--color-muted);
+  font-size: var(--text-body);
+  gap: var(--space-2);
+  line-height: var(--leading-normal);
+}
+
+/* 매일 같은 링크라 게시물로 만들지 않는다. 피드 아래 조용히 둔다. */
+.ig-quick {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.ig-quick button {
+  align-items: center;
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  display: flex;
+  gap: var(--space-3);
+  min-height: 56px;
+  padding: var(--space-3);
+  text-align: left;
+  width: 100%;
+}
+
+.ig-quick button:hover {
+  background: var(--color-sunken);
+}
+
+.ig-quick button svg {
+  color: var(--color-muted);
+  flex: none;
+}
+
+.ig-quick span {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+
+.ig-quick b {
+  font-size: var(--text-body);
+  font-weight: 600;
+}
+
+.ig-quick em {
+  color: var(--color-muted);
+  font-size: var(--text-micro);
+  font-style: normal;
+}
+
 /* ===== 인스타 피드 문법 =====
    격자가 "무엇이 있나"만 보여줬다면 피드는 한 건씩 보여주는 대신
    갈지 말지를 정하는 사실(누가 열었나 · 언제 · 몇 자리)을 함께 놓는다.
