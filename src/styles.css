@@ -5,54 +5,78 @@
   여기 있는 것을 쓴다.
 */
 :root {
-  /* 표면 — 모래빛 3단. 사이드바는 딥그린이 아니라 page 로 내려앉는다. */
-  --color-page: #f6f4ef;
-  --color-surface: #fffdf9;
-  --color-sunken: #efece4;
+  /* 표면 — 클린 뉴트럴 3단. 배경은 거의 무채색이고 정보는 흰 카드로 띄운다.
+     design.md 2.1. 예전 모래빛(#f6f4ef)은 표면 자체가 색을 갖고 있어
+     그 위에 올린 파랑이 탁해 보였다. */
+  --color-page: #f6f7fb;
+  --color-surface: #ffffff;
+  /* hover · 입력 · 비활성 면. page 보다 한 단계만 진하다. */
+  --color-sunken: #f1f3f9;
 
   /* 글자 — 위계는 색이 아니라 명도로 만든다. */
-  --color-ink: #1f2420;
-  --color-muted: #5a5f56;
+  --color-ink: #0b1220;
+  /* 가이드는 Gray 500 #6b7280 이지만 page(#f6f7fb) 위에서 4.46:1 로 AA 미달이다.
+     이 앱은 본문 상당수가 카드 밖 page 위에 있어 한 단계 진한 Gray 600 을 쓴다.
+     design.md 9.2. */
+  --color-muted: #4b5563;
 
-  /* 역할색 — 전부 세 표면에서 AA 통과. designTokens.test.ts 가 강제한다. */
-  --color-moss: #4f7350;
-  --color-moss-strong: #3c5a3d;
-  --color-clay: #96502f;
-  --color-danger: #a33a3a;
-  --color-pending: #77642f;
-  /* 기존 #2f74c0 은 sunken 위에서 4.06:1 로 미달이었다. */
-  --color-info: #39628f;
+  /* 역할색 — 전부 세 표면에서 AA 통과. designTokens.test.ts 가 강제한다.
+     "강조는 딱 한 번" 원칙(design.md 1)에 따라 브랜드 색조는 파랑 하나뿐이고,
+     초록·빨강은 상태에만 쓴다. clay·pending 은 이 원칙에서 설 자리가 없어 없앴다. */
+  --color-primary: #2563eb;
+  --color-primary-strong: #1d4ed8;
+  --color-primary-soft: #93c5fd;
+  /* 주요 실행 버튼은 파랑이 아니라 검정이다. 파랑을 버튼까지 쓰면
+     링크·선택·진행바와 구분이 사라진다. */
+  --color-cta: #111827;
+  --color-cta-ink: #ffffff;
+  /* 가이드의 #059669 는 흰 배경에서 3.77:1 로 AA 미달이라 한 단계 내렸다. */
+  --color-success: #047857;
+  /* 가이드의 #dc2626 은 sunken 위에서 4.30:1 로 미달이라 한 단계 내렸다. */
+  --color-danger: #b91c1c;
 
-  /* 틴트 — 배지 배경과 짝 글자색. */
-  --tint-moss: #e8efe6;
-  --tint-moss-ink: #2f4a30;
-  --tint-clay: #f5e9e1;
-  --tint-clay-ink: #5c3018;
-  --tint-danger: #f6e5e5;
-  --tint-danger-ink: #6b2020;
-  --tint-pending: #f2eddc;
-  --tint-pending-ink: #4a3d15;
-  --tint-info: #e4ecf4;
-  --tint-info-ink: #1f3f5e;
+  /* 틴트 — 배지 배경과 짝 글자색. 짝으로만 쓰고, 틴트 배경에 역할색을 얹지 않는다.
+     글자색이 가이드의 칩 텍스트보다 진한 것은 AAA(7:1) 기준 때문이다. */
+  --tint-primary: #eef2ff;
+  --tint-primary-ink: #1e3a8a;
+  --tint-success: #ecfdf5;
+  --tint-success-ink: #065f46;
+  --tint-danger: #fef2f2;
+  --tint-danger-ink: #991b1b;
+  --tint-neutral: #f1f3f9;
+  --tint-neutral-ink: #374151;
+  /* 아바타는 배지가 아니라 사람을 가리키는 표시라 짝을 따로 둔다. */
+  --tint-avatar: #dbeafe;
+  --tint-avatar-ink: #1e3a8a;
 
-  --color-border: #e2ddd1;
-  --color-border-strong: #cfc8b8;
+  /* 어두운 히어로 면. 예전에는 딥그린 그라디언트 두 겹이었는데, 그라디언트는
+     색을 정하지 못했을 때 쓰는 기본값이고 화면마다 각도·정지점이 달라
+     같은 앱으로 읽히지 않았다. 색조 없는 잉크 한 톤으로 평평하게 둔다. */
+  --surface-dark: #111827;
 
-  /* 라운드 — 기존에는 8px 단일값이라 배지와 패널이 같은 곡률을 썼다. */
-  --radius-sm: 6px;
-  --radius: 10px;
-  --radius-lg: 14px;
+  --color-border: #e7eaf3;
+  --color-border-strong: #d3d9e8;
+  /* 마감 지남 카드는 좌측 강조 바가 아니라 테두리 색만 바꾼다(design.md 5.2). */
+  --color-border-danger: #fecaca;
+
+  /* 라운드 — 카드 16 / 버튼·입력 12 / 칩 full (design.md 4). */
+  --radius-sm: 8px;
+  --radius: 12px;
+  --radius-lg: 16px;
   --radius-full: 999px;
 
-  /* 그림자 — 떠 있는 것에만. 나머지 분리는 경계선으로 한다. */
-  --shadow-float: 0 8px 24px rgba(31, 36, 32, 0.1);
+  /* 그림자 — 카드에 아주 은은하게 한 겹, 떠 있는 것에 한 겹.
+     경계선과 병용한다. 두 번째 레이어의 음수 spread 가 번짐을 좁혀
+     "떠 있다"가 아니라 "얹혀 있다"로 읽히게 한다. */
+  --shadow-card: 0 1px 2px rgba(11, 18, 32, 0.06), 0 8px 24px -18px rgba(11, 18, 32, 0.5);
+  --shadow-float: 0 8px 24px rgba(11, 18, 32, 0.12);
 
   /* 사진 위 글자용 어둠. 첨부 사진은 밝기를 알 수 없으므로 글자를 얹으려면
      스크림이 필요하다. 하드코딩하지 않고 토큰으로 두는 이유는 두 가지다 —
      포스터가 늘어도 어둠의 세기가 한 곳에서만 바뀌고, styles.css 본문의
      rgba 개수를 늘리지 않는다(designTokens.test.ts 가 상한을 지킨다). */
-  --scrim-strong: rgba(20, 24, 21, 0.72);
-  --scrim-none: rgba(20, 24, 21, 0);
+  --scrim-strong: rgba(11, 18, 32, 0.72);
+  --scrim-none: rgba(11, 18, 32, 0);
 
   /* 어두운 면(내 프로필 카드) 위의 구분선. 흰 계열 반투명이라야 배경 그라디언트가
      비쳐 보인다. 토큰으로 두면 styles.css 본문의 rgba 개수를 늘리지 않는다. */
@@ -82,15 +106,17 @@
     BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
-  /* 타이포 스케일. 예전에는 서로 다른 크기가 21종, line-height 가 19종이었다.
-     13px 와 14px, 1.5 와 1.55 는 눈으로 구분되지 않으면서 리듬만 깬다.
-     7단계로 줄이고 각 단계에 행간을 붙여 둔다. */
-  --text-micro: 11px;
-  --text-meta: 12px;
-  --text-body: 13px;
-  --text-body-lg: 15px;
-  --text-title: 18px;
-  --text-heading: 22px;
+  /* 타이포 스케일. 7단계를 유지하되 design.md 3 의 치수로 올렸다.
+     이전 값(본문 13px, 메타 12px)은 영문 어드민 규격이라 한국어 UI 에서
+     작았다. 가이드의 Body 14 / Meta 13 / Caption 12 에 맞춘다.
+     display 28 = 페이지 타이틀, title 20 = 카드 제목, heading 24 는
+     그 사이를 잇는 화면 제목이다. */
+  --text-micro: 12px;
+  --text-meta: 13px;
+  --text-body: 14px;
+  --text-body-lg: 16px;
+  --text-title: 20px;
+  --text-heading: 24px;
   --text-display: 28px;
 
   --leading-tight: 1.35;
@@ -155,7 +181,9 @@ button {
    (자체 스크롤이 없으면 낮은 창에서 마지막 항목 '계정 관리'가 잘린다.) */
 .sidebar {
   align-self: start;
-  background: var(--color-page);
+  /* 사이드바는 흰 면이고 본문이 회색 면이다(design.md 5.7). 예전에는 반대라
+     내비게이션이 콘텐츠보다 뒤로 물러나 보였다. */
+  background: var(--color-surface);
   border-right: 1px solid var(--color-border);
   color: var(--color-ink);
   display: flex;
@@ -177,7 +205,7 @@ button {
 
 .brand-mark {
   align-items: center;
-  background: var(--color-moss);
+  background: var(--color-primary);
   border-radius: var(--radius);
   color: var(--color-surface);
   display: flex;
@@ -220,10 +248,16 @@ button {
   text-align: left;
 }
 
-.nav-item:hover,
+/* 선택과 hover 를 같은 색으로 두면 "지금 어디 있는지"가 마우스만 올려도 흔들린다.
+   선택은 틴트 + 굵기로, hover 는 가라앉은 면으로만 알린다(design.md 5.7). */
+.nav-item:hover {
+  background: var(--color-sunken);
+}
+
 .nav-item.active {
-  background: var(--tint-moss);
-  color: var(--tint-moss-ink);
+  background: var(--tint-primary);
+  color: var(--tint-primary-ink);
+  font-weight: 600;
 }
 
 .nav-item:disabled {
@@ -269,10 +303,7 @@ button {
 }
 
 .main {
-  background:
-    linear-gradient(120deg, color-mix(in srgb, var(--tint-pending) 45%, transparent), transparent 32%),
-    linear-gradient(150deg, color-mix(in srgb, var(--tint-clay) 30%, transparent), transparent 38%),
-    var(--color-surface);
+  background: var(--color-page);
   min-width: 0;
   padding: 28px;
 }
@@ -368,7 +399,7 @@ h1 {
   width: 15px;
   height: 15px;
   border-radius: 999px;
-  background: var(--color-moss);
+  background: var(--color-primary);
   color: var(--color-surface);
   display: flex;
   align-items: center;
@@ -455,16 +486,24 @@ h1 {
   width: 42px;
 }
 
+/* 주요 실행 버튼은 검정이다(design.md 1.3 · 5.1). 파랑을 버튼까지 쓰면
+   링크 · 선택 항목 · 진행바와 같은 색이 되어 "누를 것"이 구분되지 않는다. */
 .primary-button {
-  background: var(--color-moss-strong);
-  border: 1px solid var(--color-moss-strong);
-  color: var(--color-surface);
+  background: var(--color-cta);
+  border: 1px solid var(--color-cta);
+  color: var(--color-cta-ink);
+  font-weight: 600;
 }
 
 .secondary-button {
   background: var(--color-surface);
-  border: 1px solid var(--color-sunken);
-  color: var(--color-moss-strong);
+  border: 1px solid var(--color-border);
+  color: var(--color-ink);
+  font-weight: 500;
+}
+
+.secondary-button:hover:not(:disabled) {
+  background: var(--color-page);
 }
 
 .secondary-button:disabled {
@@ -483,10 +522,10 @@ h1 {
 
 .login-page {
   align-items: center;
-  background:
-    linear-gradient(90deg, rgba(23, 53, 47, 0.98), rgba(29, 70, 62, 0.94) 52%, var(--tint-pending) 52%),
-    var(--color-moss-strong);
-  color: var(--color-surface);
+  /* 첫 화면이 어두운 면이면 로그인 뒤 흰 앱과 다른 제품처럼 보인다.
+     가이드의 화이트 베이스를 첫 화면부터 지킨다(design.md 1.1). */
+  background: var(--color-page);
+  color: var(--color-ink);
   display: grid;
   gap: 64px;
   grid-template-columns: minmax(420px, 0.9fr) minmax(480px, 560px);
@@ -501,13 +540,10 @@ h1 {
   max-width: 620px;
 }
 
-/*
-  .brand span 은 사이드바와 로그인 화면이 함께 쓰는 클래스다. 셸 반전으로
-  muted(어두운 글자) 기준이 되면서 아직 딥그린인 로그인 패널에서 2.02:1 이 됐다.
-  로그인 화면 자체를 리디자인하기 전까지 이 화면의 대비를 되돌려 둔다.
-*/
+/* 로그인 면이 밝아져 사이드바와 같은 muted 기준을 쓸 수 있게 됐다.
+   예전의 딥그린 배경용 오버라이드는 필요 없다. */
 .login-brand span {
-  color: var(--color-page);
+  color: var(--color-muted);
 }
 
 .login-intro h1 {
@@ -517,18 +553,20 @@ h1 {
 }
 
 .login-intro p {
-  color: var(--tint-moss);
+  color: var(--color-muted);
   line-height: 1.65;
   margin-top: 14px;
   max-width: 520px;
 }
 
+/* 익명 보장 문구는 안심시키는 말이라 경고 색을 쓰지 않는다.
+   파랑 틴트 짝으로 조용히 둔다. */
 .login-assurance {
   align-items: center;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: var(--tint-primary);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius);
-  color: var(--tint-moss);
+  color: var(--tint-primary-ink);
   display: flex;
   gap: 10px;
   min-height: 54px;
@@ -538,9 +576,9 @@ h1 {
 
 .login-panel {
   background: var(--color-surface);
-  border: 1px solid var(--color-page);
-  border-radius: var(--radius);
-  box-shadow: 0 24px 60px rgba(23, 53, 47, 0.16);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
   color: var(--color-ink);
   display: grid;
   gap: 18px;
@@ -567,10 +605,10 @@ h1 {
 }
 
 .form-success {
-  background: var(--tint-moss);
-  border: 1px solid var(--color-moss);
+  background: var(--tint-success);
+  border: 1px solid var(--color-success);
   border-radius: var(--radius);
-  color: var(--tint-moss-ink);
+  color: var(--tint-success-ink);
   font-size: var(--text-body);
   font-weight: 700;
   padding: 10px var(--space-3);
@@ -600,15 +638,15 @@ h1 {
 
 .auth-tabs .selected {
   background: var(--color-surface);
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
   font-weight: 600;
 }
 
 .role-note {
-  background: var(--tint-info);
-  border: 1px solid var(--color-info);
+  background: var(--tint-primary);
+  border: 1px solid var(--color-primary);
   border-radius: var(--radius);
-  color: var(--tint-info-ink);
+  color: var(--tint-primary-ink);
   display: grid;
   gap: 5px;
   padding: var(--space-3);
@@ -621,9 +659,7 @@ h1 {
 
 .hero-panel {
   align-items: center;
-  background:
-    linear-gradient(120deg, var(--color-moss-strong), var(--color-moss)),
-    radial-gradient(circle at 80% 20%, color-mix(in srgb, var(--tint-pending) 60%, transparent), transparent 36%);
+  background: var(--surface-dark);
   border-radius: var(--radius);
   color: var(--color-surface);
   display: grid;
@@ -641,9 +677,7 @@ h1 {
 
 .home-hero {
   align-items: center;
-  background:
-    linear-gradient(120deg, rgba(23, 53, 47, 0.96), rgba(37, 82, 72, 0.94)),
-    linear-gradient(150deg, rgba(216, 240, 106, 0.28), transparent 42%);
+  background: var(--surface-dark);
   border-radius: var(--radius-lg);
   color: var(--color-surface);
   display: grid;
@@ -662,7 +696,7 @@ h1 {
 }
 
 .hero-copy {
-  color: var(--tint-moss);
+  color: var(--tint-primary);
   line-height: 1.6;
   margin-top: var(--space-3);
   max-width: 680px;
@@ -694,7 +728,7 @@ h1 {
 }
 
 .home-signal-label {
-  color: var(--tint-moss);
+  color: var(--tint-primary);
   font-size: var(--text-meta);
   font-weight: 700;
 }
@@ -711,7 +745,7 @@ h1 {
   align-items: center;
   background: rgba(255, 255, 255, 0.12);
   border-radius: var(--radius);
-  color: var(--tint-moss);
+  color: var(--tint-primary);
   display: flex;
   font-size: var(--text-body);
   min-height: 38px;
@@ -719,7 +753,7 @@ h1 {
 }
 
 .home-signal li:not(:last-child)::after {
-  color: var(--tint-moss);
+  color: var(--tint-primary);
   content: '↓';
   font-size: var(--text-meta);
   margin-left: auto;
@@ -756,10 +790,12 @@ h1 {
 .agenda-card,
 .profile-card,
 .memory-card {
-  background: rgba(255, 255, 255, 0.86);
+  /* 반투명 흰색이었다. 회색 페이지 위에서 카드가 살짝 회색으로 물들어
+     "흰 카드로 띄운다"(design.md 1.1)가 성립하지 않았다. 불투명 흰색으로 둔다. */
+  background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-float);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
 }
 
 .stat-card {
@@ -776,19 +812,19 @@ h1 {
 }
 
 .stat-card.mint svg {
-  color: var(--color-moss);
+  color: var(--color-primary);
 }
 
 .stat-card.violet svg {
-  color: var(--color-info);
+  color: var(--color-primary);
 }
 
 .stat-card.blue svg {
-  color: var(--color-info);
+  color: var(--color-primary);
 }
 
 .stat-card.amber svg {
-  color: var(--color-pending);
+  color: var(--color-primary);
 }
 
 .two-column {
@@ -831,9 +867,9 @@ h1 {
 /* 패널을 열기 전에 알아야 하는 한 마디. 제목 옆이 아니라 줄 끝에 두어
    제목을 밀어내지 않는다. */
 .panel-header-note {
-  background: var(--tint-clay);
+  background: var(--tint-neutral);
   border-radius: var(--radius-full);
-  color: var(--tint-clay-ink);
+  color: var(--tint-neutral-ink);
   font-size: var(--text-micro);
   font-weight: 500;
   margin-left: auto;
@@ -850,7 +886,7 @@ h1 {
 .action-row,
 .score-row {
   align-items: center;
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   display: flex;
@@ -892,7 +928,7 @@ h1 {
 .quick-card-list button,
 .compact-profile-list button,
 .summary-strip button {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   color: var(--color-ink);
@@ -968,19 +1004,19 @@ h1 {
   AA(4.5:1) 미달이었다.
 */
 .tiny-avatar.green {
-  background: var(--color-moss);
+  background: var(--color-primary);
 }
 
 .tiny-avatar.red {
-  background: var(--color-clay);
+  background: var(--color-primary);
 }
 
 .tiny-avatar.blue {
-  background: var(--color-info);
+  background: var(--color-primary);
 }
 
 .tiny-avatar.yellow {
-  background: var(--color-pending);
+  background: var(--color-primary);
 }
 
 .culture-summary {
@@ -1003,7 +1039,7 @@ h1 {
 }
 
 .summary-strip strong {
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
   font-size: var(--text-heading);
 }
 
@@ -1019,7 +1055,7 @@ h1 {
 }
 
 .summary-link span {
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
   font-weight: 700;
   grid-column: 1;
 }
@@ -1045,7 +1081,7 @@ h1 {
 /* 상태값("진행중")이 줄어들 수 있게 두면 제목이 긴 행에서 "진행/중"으로 쪼개진다.
    남는 폭은 제목이 가져가고 상태는 한 줄로 고정한다. */
 .action-row em {
-  color: var(--color-moss);
+  color: var(--color-primary);
   flex-shrink: 0;
   font-size: var(--text-meta);
   font-style: normal;
@@ -1057,19 +1093,19 @@ h1 {
    주의이고, danger 는 부결·삭제처럼 되돌릴 수 없는 것에 남겨둔다.
    (0,2,0) 이라 위의 .action-row (0,1,0) 을 순서와 무관하게 이긴다. */
 .action-row.overdue {
-  background: var(--tint-clay);
-  border-color: var(--color-clay);
+  background: var(--tint-neutral);
+  border-color: var(--color-primary);
 }
 
 /* 색만으로 지연을 알리면 색각 이상 사용자에게 전달되지 않는다.
    "6일 지남" 문구가 같은 정보를 글로도 나른다. */
 .action-row.overdue span {
-  color: var(--tint-clay-ink);
+  color: var(--tint-neutral-ink);
   font-weight: 500;
 }
 
 .action-row.overdue em {
-  color: var(--tint-clay-ink);
+  color: var(--tint-neutral-ink);
 }
 
 .form-screen {
@@ -1115,13 +1151,13 @@ h1 {
 
 .intake-stepper button.active {
   background: var(--color-surface);
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
   font-weight: 600;
 }
 
 .intake-stepper span {
   align-items: center;
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border-radius: 999px;
   display: flex;
   font-size: var(--text-meta);
@@ -1131,7 +1167,7 @@ h1 {
 }
 
 .intake-stepper .active span {
-  background: var(--color-moss-strong);
+  background: var(--color-primary-strong);
   color: var(--color-surface);
 }
 
@@ -1143,7 +1179,7 @@ h1 {
 }
 
 .choice-card {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   color: var(--color-ink);
@@ -1155,12 +1191,12 @@ h1 {
 }
 
 .choice-card.selected {
-  background: var(--tint-moss);
-  border-color: var(--color-moss);
+  background: var(--tint-primary);
+  border-color: var(--color-primary);
 }
 
 .choice-card svg {
-  color: var(--color-moss);
+  color: var(--color-primary);
 }
 
 .choice-card span,
@@ -1215,15 +1251,15 @@ h1 {
 .review-flag.anon,
 .review-flag.closed {
   background: var(--color-page);
-  border-color: var(--color-moss);
-  color: var(--color-moss-strong);
+  border-color: var(--color-primary);
+  color: var(--color-primary-strong);
 }
 
 .review-flag.named,
 .review-flag.open {
-  background: var(--tint-clay);
-  border-color: var(--color-clay);
-  color: var(--color-clay);
+  background: var(--tint-neutral);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
 }
 
 .review-section {
@@ -1304,7 +1340,7 @@ h1 {
 /* 접수 직전 안내. 빨강(ReviewGate)·노랑(notice-line)·회색(field-note)이
    연달아 쌓여 서로를 무력화했다. 막는 역할은 ReviewGate만 맡고 여기는 조용히 둔다. */
 .submit-notes {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   color: var(--color-muted);
@@ -1314,7 +1350,7 @@ h1 {
 }
 
 .submit-notes > svg {
-  color: var(--color-moss);
+  color: var(--color-primary);
   flex-shrink: 0;
   margin-top: 2px;
 }
@@ -1337,10 +1373,10 @@ h1 {
 
 .notice-line {
   align-items: center;
-  background: var(--tint-clay);
-  border: 1px solid var(--color-clay);
+  background: var(--tint-neutral);
+  border: 1px solid var(--color-primary);
   border-radius: var(--radius);
-  color: var(--tint-clay-ink);
+  color: var(--tint-neutral-ink);
   display: flex;
   gap: 10px;
   min-height: 48px;
@@ -1353,7 +1389,7 @@ h1 {
 }
 
 .complete-panel > svg {
-  color: var(--color-moss);
+  color: var(--color-success);
 }
 
 .complete-panel h2 {
@@ -1366,8 +1402,8 @@ h1 {
 }
 
 .anonymous-receipt {
-  background: var(--tint-clay);
-  border: 1px solid var(--color-clay);
+  background: var(--tint-neutral);
+  border: 1px solid var(--color-primary);
   border-radius: var(--radius);
   display: grid;
   gap: var(--space-1);
@@ -1375,7 +1411,7 @@ h1 {
 }
 
 .anonymous-receipt strong {
-  color: var(--color-clay);
+  color: var(--color-primary);
   font-size: var(--text-body);
 }
 
@@ -1387,7 +1423,7 @@ h1 {
 }
 
 .anonymous-receipt small {
-  color: var(--color-clay);
+  color: var(--color-primary);
   font-size: var(--text-meta);
   line-height: 1.45;
 }
@@ -1400,7 +1436,7 @@ h1 {
 
 .privacy-list div,
 .submission-list > div:not(.empty-state) {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   display: grid;
@@ -1495,8 +1531,8 @@ h1 {
 
 .submission-withdraw {
   align-items: center;
-  background: var(--tint-clay);
-  border: 1px solid var(--color-clay);
+  background: var(--tint-neutral);
+  border: 1px solid var(--color-primary);
   border-radius: var(--radius);
   display: flex;
   gap: 10px;
@@ -1505,7 +1541,7 @@ h1 {
 }
 
 .submission-withdraw span {
-  color: var(--color-clay);
+  color: var(--color-primary);
   font-size: var(--text-body);
   line-height: 1.45;
 }
@@ -1528,7 +1564,7 @@ h1 {
 }
 
 .anonymous-result {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   padding: var(--space-3);
@@ -1547,11 +1583,26 @@ select,
 textarea {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius);
   color: var(--color-ink);
   min-height: 42px;
   padding: 10px var(--space-3);
   width: 100%;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--color-muted);
+}
+
+/* 포커스 링은 절대 지우지 않는다(design.md 7). 테두리를 투명하게 만들고
+   ring 을 그 자리에 얹어야 링이 테두리 위에 겹쳐 두 겹으로 보이지 않는다. */
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  border-color: transparent;
+  outline: none;
+  box-shadow: 0 0 0 2px var(--color-primary);
 }
 
 textarea {
@@ -1579,7 +1630,7 @@ textarea {
 .segmented .selected,
 .filter.active {
   background: var(--color-surface);
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
 }
 
 .privacy-visual {
@@ -1601,15 +1652,15 @@ textarea {
 }
 
 .privacy-node.hidden {
-  background: var(--color-info);
+  background: var(--color-primary);
 }
 
 .privacy-node.visible {
-  background: var(--color-moss-strong);
+  background: var(--color-primary-strong);
 }
 
 .privacy-node.action {
-  background: var(--color-clay);
+  background: var(--color-primary);
 }
 
 .privacy-line {
@@ -1649,7 +1700,7 @@ textarea {
 }
 
 .leader-summary svg {
-  color: var(--color-moss);
+  color: var(--color-primary);
 }
 
 .leader-summary span {
@@ -1695,8 +1746,8 @@ textarea {
 }
 
 .issue-card.selected {
-  border-color: var(--color-moss);
-  box-shadow: 0 16px 42px rgba(47, 111, 98, 0.16);
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-float);
 }
 
 .issue-select {
@@ -1743,15 +1794,15 @@ textarea {
 }
 
 .priority.보통 {
-  background: var(--tint-pending);
-  color: var(--tint-pending-ink);
+  background: var(--tint-primary);
+  color: var(--tint-primary-ink);
 }
 
 .priority.낮음,
 .status-pill {
   align-items: center;
-  background: var(--tint-moss);
-  color: var(--tint-moss-ink);
+  background: var(--tint-primary);
+  color: var(--tint-primary-ink);
   display: inline-flex;
   gap: var(--space-1);
 }
@@ -1759,18 +1810,18 @@ textarea {
 /* 배지 짝 글자색을 쓰던 자리에 역할색을 쓰면 대비가 떨어진다.
    틴트 위에서는 --tint-*-ink 를 쓴다(AAA 7:1 이상, 가드 테스트가 강제). */
 .status-pill.action-진행중 {
-  background: var(--tint-info);
-  color: var(--tint-info-ink);
+  background: var(--tint-primary);
+  color: var(--tint-primary-ink);
 }
 
 .status-pill.action-완료 {
-  background: var(--tint-moss);
-  color: var(--tint-moss-ink);
+  background: var(--tint-success);
+  color: var(--tint-success-ink);
 }
 
 .status-pill.action-재검토 {
-  background: var(--tint-clay);
-  color: var(--tint-clay-ink);
+  background: var(--tint-neutral);
+  color: var(--tint-neutral-ink);
 }
 
 .issue-flags {
@@ -1789,7 +1840,7 @@ textarea {
 }
 
 .author-card {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   display: grid;
@@ -1799,7 +1850,7 @@ textarea {
 }
 
 .author-card strong {
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
   font-size: var(--text-body);
 }
 
@@ -1906,12 +1957,12 @@ textarea {
 
 .leader-action-tabs .selected {
   background: var(--color-surface);
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
   font-weight: 600;
 }
 
 .leader-history {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   padding: 14px;
@@ -1955,17 +2006,18 @@ textarea {
 
 /*
   Task 7의 .work-row-dot과 역할이 같다. 클래스는 합치지 않되(호출처가 많다)
-  상태 → 색 대응은 같은 표를 따른다: 통과=moss, 부결=danger, 투표중=pending.
-  기존 값(각각 info/moss/clay 계열)은 화면마다 다른 임의 배정이었다.
+  상태 → 색 대응은 같은 표를 따른다(design.md 9.3):
+  통과=success, 부결=danger, 투표중=primary.
+  초록은 브랜드에서 빠지고 "통과·완료" 상태에만 남았다.
 */
 .status-dot.투표중 {
-  background: var(--tint-pending);
-  color: var(--tint-pending-ink);
+  background: var(--tint-primary);
+  color: var(--tint-primary-ink);
 }
 
 .status-dot.통과 {
-  background: var(--tint-moss);
-  color: var(--tint-moss-ink);
+  background: var(--tint-success);
+  color: var(--tint-success-ink);
 }
 
 .status-dot.부결 {
@@ -1973,9 +2025,11 @@ textarea {
   color: var(--tint-danger-ink);
 }
 
+/* 진행바 트랙은 페이지색이 아니라 파랑 틴트다(design.md 5.5). 카드 위에
+   얹히는 요소라 페이지색을 쓰면 카드와 같은 흰 면 위에서 사라진다. */
 .vote-bar,
 .score-track {
-  background: var(--color-page);
+  background: var(--tint-primary);
   border-radius: 999px;
   height: 10px;
   overflow: hidden;
@@ -1983,7 +2037,7 @@ textarea {
 
 .vote-bar span,
 .score-track span {
-  background: var(--color-moss);
+  background: var(--color-primary);
   display: block;
   height: 100%;
 }
@@ -2003,10 +2057,10 @@ textarea {
 
 .passed-box {
   align-items: center;
-  background: var(--tint-info);
-  border: 1px solid var(--color-info);
+  background: var(--tint-success);
+  border: 1px solid var(--color-success);
   border-radius: var(--radius);
-  color: var(--tint-info-ink);
+  color: var(--tint-success-ink);
   display: flex;
   gap: var(--space-2);
   min-height: 42px;
@@ -2099,7 +2153,7 @@ textarea {
 }
 
 .agenda-detail-body {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   color: var(--color-ink);
@@ -2120,7 +2174,7 @@ textarea {
 
 .agenda-deadline {
   align-items: center;
-  color: var(--color-clay);
+  color: var(--color-primary);
   display: flex;
   font-size: var(--text-body);
   font-weight: 700;
@@ -2128,7 +2182,7 @@ textarea {
 }
 
 .issue-body-box {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   display: grid;
@@ -2154,10 +2208,10 @@ textarea {
 
 .privacy-promotion-note {
   align-items: center;
-  background: var(--tint-moss);
-  border: 1px solid var(--color-moss);
+  background: var(--tint-primary);
+  border: 1px solid var(--color-primary);
   border-radius: var(--radius);
-  color: var(--tint-moss-ink);
+  color: var(--tint-primary-ink);
   display: flex;
   font-size: var(--text-body);
   font-weight: 600;
@@ -2184,16 +2238,16 @@ textarea {
 }
 
 .action-form-source {
-  background: var(--tint-info);
-  border: 1px solid var(--tint-info);
+  background: var(--tint-primary);
+  border: 1px solid var(--tint-primary);
   border-radius: var(--radius);
-  color: var(--color-info);
+  color: var(--color-primary);
   font-weight: 700;
   padding: var(--space-3);
 }
 
 .action-form-source span {
-  color: var(--color-info);
+  color: var(--color-primary);
   font-weight: 600;
 }
 
@@ -2204,7 +2258,7 @@ textarea {
 
 .action-draft-row {
   align-items: end;
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   display: grid;
@@ -2261,7 +2315,7 @@ textarea {
 
 .action-note {
   align-items: start;
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   color: var(--color-ink);
@@ -2273,9 +2327,9 @@ textarea {
 }
 
 .action-note.review {
-  background: var(--tint-clay);
-  border-color: var(--color-clay);
-  color: var(--color-clay);
+  background: var(--tint-neutral);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
 }
 
 .action-assign-row {
@@ -2299,16 +2353,22 @@ textarea {
   min-height: 90px;
 }
 
+/* 목표일이 지났다는 알림은 "지남" 상태다(design.md 5.3). 파랑 안내가 아니라
+   경고 짝을 쓴다 — 아래 카드의 빨간 테두리와 같은 사실을 가리키는데
+   배너만 파랑이면 둘이 다른 일로 읽힌다. */
 .action-overdue-notice {
+  background: var(--tint-danger);
+  border-color: var(--color-border-danger);
+  color: var(--tint-danger-ink);
   margin-bottom: var(--space-4);
 }
 
 .voted-box {
   align-items: center;
-  background: var(--tint-moss);
-  border: 1px solid var(--color-moss);
+  background: var(--tint-primary);
+  border: 1px solid var(--color-primary);
   border-radius: var(--radius);
-  color: var(--color-moss);
+  color: var(--color-primary);
   display: flex;
   font-size: var(--text-body);
   gap: var(--space-2);
@@ -2327,7 +2387,7 @@ textarea {
 
 .step {
   align-items: center;
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   display: flex;
@@ -2338,7 +2398,7 @@ textarea {
 
 .step span {
   align-items: center;
-  background: var(--color-moss-strong);
+  background: var(--color-primary-strong);
   border-radius: var(--radius);
   color: var(--color-surface);
   display: flex;
@@ -2352,9 +2412,9 @@ textarea {
 }
 
 .category-cloud button {
-  background: var(--tint-clay);
-  border: 1px solid var(--color-clay);
-  color: var(--color-clay);
+  background: var(--tint-neutral);
+  border: 1px solid var(--color-primary);
+  color: var(--color-primary);
 }
 
 .profile-grid {
@@ -2369,9 +2429,7 @@ textarea {
 }
 
 .my-profile-card {
-  background:
-    linear-gradient(120deg, rgba(23, 53, 47, 0.96), rgba(40, 77, 69, 0.94)),
-    var(--color-moss-strong);
+  background: var(--surface-dark);
   border-radius: var(--radius);
   color: var(--color-surface);
   display: grid;
@@ -2385,27 +2443,19 @@ textarea {
 }
 
 .my-profile-card.green {
-  background:
-    linear-gradient(120deg, rgba(23, 53, 47, 0.96), rgba(47, 111, 98, 0.92)),
-    var(--color-moss-strong);
+  background: var(--surface-dark);
 }
 
 .my-profile-card.red {
-  background:
-    linear-gradient(120deg, rgba(23, 53, 47, 0.96), rgba(170, 70, 63, 0.92)),
-    var(--color-moss-strong);
+  background: var(--surface-dark);
 }
 
 .my-profile-card.blue {
-  background:
-    linear-gradient(120deg, rgba(23, 53, 47, 0.96), rgba(47, 97, 155, 0.92)),
-    var(--color-moss-strong);
+  background: var(--surface-dark);
 }
 
 .my-profile-card.yellow {
-  background:
-    linear-gradient(120deg, rgba(23, 53, 47, 0.96), rgba(150, 107, 39, 0.92)),
-    var(--color-moss-strong);
+  background: var(--surface-dark);
 }
 
 .my-profile-main,
@@ -2434,7 +2484,7 @@ textarea {
 .my-profile-card .profile-detail-head span,
 .my-profile-card .my-profile-id span,
 .my-profile-card p {
-  color: var(--tint-moss);
+  color: var(--tint-primary);
 }
 
 .my-profile-card .profile-detail-head h2,
@@ -2452,7 +2502,7 @@ textarea {
   background: rgba(255, 255, 255, 0.13);
   border: 1px solid rgba(255, 255, 255, 0.22);
   border-radius: 999px;
-  color: var(--tint-moss);
+  color: var(--tint-primary);
   display: inline-flex;
   font-size: var(--text-body);
   font-weight: 700;
@@ -2509,7 +2559,7 @@ textarea {
 }
 
 .my-profile-notes span {
-  color: var(--tint-moss);
+  color: var(--tint-primary);
   font-size: var(--text-meta);
   font-weight: 600;
 }
@@ -2531,10 +2581,10 @@ textarea {
 }
 
 .age-mood-pill {
-  background: rgba(216, 240, 106, 0.18);
-  border: 1px solid rgba(216, 240, 106, 0.42);
+  background: var(--tint-primary);
+  border: 1px solid var(--color-border);
   border-radius: 999px;
-  color: var(--tint-pending);
+  color: var(--tint-primary-ink);
   font-size: var(--text-meta);
   font-weight: 700;
   min-height: 30px;
@@ -2563,7 +2613,7 @@ textarea {
 }
 
 .profile-private-fields {
-  background: var(--tint-pending);
+  background: var(--tint-primary);
   border: 1px dashed var(--color-sunken);
   border-radius: var(--radius);
   display: grid;
@@ -2577,7 +2627,7 @@ textarea {
 }
 
 .profile-private-fields strong {
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
 }
 
 .profile-private-fields span {
@@ -2608,7 +2658,7 @@ textarea {
 }
 
 .survey-choice-grid button {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   color: var(--color-ink);
@@ -2620,9 +2670,9 @@ textarea {
 }
 
 .survey-choice-grid button.selected {
-  background: var(--tint-moss);
-  border-color: var(--color-moss);
-  box-shadow: inset 0 0 0 1px var(--color-moss);
+  background: var(--tint-primary);
+  border-color: var(--color-primary);
+  box-shadow: inset 0 0 0 1px var(--color-primary);
 }
 
 .survey-choice-grid span {
@@ -2668,48 +2718,21 @@ textarea {
   margin: 3px 0;
 }
 
+/* 아바타는 사람을 가리키는 표시라 상태 배지와 다른 짝을 쓴다(design.md 5.6).
+   예전에는 green/red/blue/yellow 네 변형이 있었는데, 색이 사람에 대해
+   말해주는 것이 없으면서 "강조는 딱 한 번" 원칙만 깼다. 변형을 없애고
+   하나로 합친다 — 사람은 이니셜로 구분한다. */
 .avatar {
   align-items: center;
+  background: var(--tint-avatar);
   border-radius: var(--radius);
-  color: var(--color-surface);
+  color: var(--tint-avatar-ink);
   display: flex;
   font-size: var(--text-heading);
   font-weight: 700;
   height: 64px;
   justify-content: center;
   width: 64px;
-}
-
-.profile-card.green .avatar {
-  background: var(--color-moss);
-}
-
-.profile-card.red .avatar {
-  background: var(--color-clay);
-}
-
-.profile-card.blue .avatar {
-  background: var(--color-info);
-}
-
-.profile-card.yellow .avatar {
-  background: var(--color-pending);
-}
-
-.avatar.green {
-  background: var(--color-moss);
-}
-
-.avatar.red {
-  background: var(--color-clay);
-}
-
-.avatar.blue {
-  background: var(--color-info);
-}
-
-.avatar.yellow {
-  background: var(--color-pending);
 }
 
 .profile-card strong {
@@ -2734,7 +2757,7 @@ textarea {
 .profile-list-grid button,
 .profile-detail-grid div,
 .profile-guide {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
 }
@@ -2756,7 +2779,7 @@ textarea {
 
 .profile-qa-list svg,
 .profile-detail-grid svg {
-  color: var(--color-moss);
+  color: var(--color-primary);
 }
 
 .profile-directory,
@@ -2800,7 +2823,7 @@ textarea {
 
 .profile-result-summary {
   align-items: center;
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   display: flex;
@@ -2810,7 +2833,7 @@ textarea {
 }
 
 .profile-result-summary strong {
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
   white-space: nowrap;
 }
 
@@ -2826,7 +2849,7 @@ textarea {
 }
 
 .profile-part-section {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   display: grid;
@@ -2842,9 +2865,9 @@ textarea {
 }
 
 .profile-part-head span {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border-radius: 999px;
-  color: var(--color-moss);
+  color: var(--color-primary);
   font-size: var(--text-meta);
   font-weight: 700;
   padding: 5px var(--space-2);
@@ -2866,8 +2889,8 @@ textarea {
 }
 
 .profile-list-grid button.selected {
-  background: var(--tint-moss);
-  border-color: var(--color-moss);
+  background: var(--tint-primary);
+  border-color: var(--color-primary);
 }
 
 .profile-list-grid div {
@@ -2934,7 +2957,7 @@ textarea {
 }
 
 .connect-mode-tabs {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-page);
   border-radius: var(--radius);
   display: grid;
@@ -2958,8 +2981,8 @@ textarea {
 
 .connect-mode-tabs button.selected {
   background: var(--color-surface);
-  color: var(--color-moss-strong);
-  box-shadow: 0 10px 24px rgba(23, 53, 47, 0.1);
+  color: var(--color-primary-strong);
+  box-shadow: var(--shadow-float);
 }
 
 .connect-layout {
@@ -2980,7 +3003,7 @@ textarea {
 }
 
 .participant-panel {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   gap: var(--space-3);
   max-height: calc(100vh - 56px);
@@ -3072,29 +3095,29 @@ textarea {
 }
 
 .coffee-chip-grid button.selected {
-  background: var(--color-moss-strong);
-  border-color: var(--color-moss-strong);
+  background: var(--color-primary-strong);
+  border-color: var(--color-primary-strong);
   color: var(--color-surface);
 }
 
 .coffee-chip-grid button.selected.green {
-  background: var(--color-moss);
-  border-color: var(--color-moss);
+  background: var(--color-primary);
+  border-color: var(--color-primary);
 }
 
 .coffee-chip-grid button.selected.red {
-  background: var(--color-clay);
-  border-color: var(--color-clay);
+  background: var(--color-primary);
+  border-color: var(--color-primary);
 }
 
 .coffee-chip-grid button.selected.blue {
-  background: var(--color-info);
-  border-color: var(--color-info);
+  background: var(--color-primary);
+  border-color: var(--color-primary);
 }
 
 .coffee-chip-grid button.selected.yellow {
-  background: var(--color-pending);
-  border-color: var(--color-pending);
+  background: var(--color-primary);
+  border-color: var(--color-primary);
 }
 
 .part-group-list {
@@ -3143,30 +3166,30 @@ textarea {
 }
 
 .participant-list.compact button {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   grid-template-columns: 34px minmax(0, 1fr) 20px;
   min-height: 56px;
   padding: var(--space-2);
 }
 
 .participant-list button.selected {
-  background: var(--tint-moss);
-  border-color: var(--color-moss);
+  background: var(--tint-primary);
+  border-color: var(--color-primary);
 }
 
 .participant-list button.selected.red {
   background: var(--tint-danger);
-  border-color: var(--color-clay);
+  border-color: var(--color-primary);
 }
 
 .participant-list button.selected.blue {
-  background: var(--tint-info);
-  border-color: var(--color-info);
+  background: var(--tint-primary);
+  border-color: var(--color-primary);
 }
 
 .participant-list button.selected.yellow {
-  background: var(--tint-clay);
-  border-color: var(--color-pending);
+  background: var(--tint-neutral);
+  border-color: var(--color-primary);
 }
 
 .participant-list button > div,
@@ -3200,10 +3223,10 @@ textarea {
 }
 
 .connect-summary-strip span {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
-  color: var(--color-moss);
+  color: var(--color-primary);
   font-weight: 700;
   min-height: 40px;
   padding: 10px var(--space-3);
@@ -3212,10 +3235,7 @@ textarea {
 
 .draw-stage {
   align-items: center;
-  background:
-    linear-gradient(135deg, rgba(216, 240, 106, 0.22), transparent 36%),
-    linear-gradient(145deg, rgba(234, 91, 79, 0.1), transparent 42%),
-    var(--color-moss-strong);
+  background: var(--surface-dark);
   color: var(--color-surface);
   gap: 14px;
   min-height: 170px;
@@ -3226,10 +3246,7 @@ textarea {
 }
 
 .draw-stage.coffee {
-  background:
-    linear-gradient(135deg, rgba(255, 214, 138, 0.22), transparent 40%),
-    linear-gradient(145deg, rgba(47, 116, 192, 0.18), transparent 42%),
-    var(--color-moss-strong);
+  background: var(--surface-dark);
 }
 
 .draw-stage strong {
@@ -3248,7 +3265,7 @@ textarea {
 
 .draw-orbit span {
   animation: float-token 2.8s ease-in-out infinite;
-  background: var(--color-pending);
+  background: var(--color-primary);
   border-radius: var(--radius);
   display: block;
   height: 34px;
@@ -3270,14 +3287,14 @@ textarea {
 
 .draw-orbit span:nth-child(3) {
   animation-delay: 0.24s;
-  background: var(--color-clay);
+  background: var(--color-primary);
   left: 112px;
   top: 32px;
 }
 
 .draw-orbit span:nth-child(4) {
   animation-delay: 0.36s;
-  background: var(--color-info);
+  background: var(--color-primary);
   left: 166px;
   top: 12px;
 }
@@ -3306,7 +3323,7 @@ textarea {
 }
 
 .team-result-head strong {
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
   font-size: var(--text-title);
 }
 
@@ -3317,7 +3334,7 @@ textarea {
 
 .team-member-list > div {
   align-items: center;
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   display: grid;
@@ -3333,10 +3350,7 @@ textarea {
 
 .coffee-draw-stage {
   align-items: center;
-  background:
-    linear-gradient(135deg, rgba(255, 217, 117, 0.28), transparent 40%),
-    linear-gradient(145deg, rgba(47, 116, 192, 0.22), transparent 44%),
-    var(--color-moss-strong);
+  background: var(--surface-dark);
   border-radius: var(--radius);
   color: var(--color-surface);
   display: grid;
@@ -3365,10 +3379,7 @@ textarea {
 }
 
 .coffee-draw-stage.finished {
-  background:
-    linear-gradient(135deg, rgba(216, 240, 106, 0.34), transparent 44%),
-    linear-gradient(145deg, rgba(234, 91, 79, 0.22), transparent 44%),
-    var(--color-moss-strong);
+  background: var(--surface-dark);
 }
 
 .coffee-cup-track {
@@ -3387,7 +3398,7 @@ textarea {
   background: var(--color-surface);
   border: 4px solid rgba(255, 255, 255, 0.34);
   border-radius: var(--radius) 8px 18px 18px;
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
   display: flex;
   height: 76px;
   justify-content: center;
@@ -3395,8 +3406,8 @@ textarea {
 }
 
 .coffee-cup.main {
-  background: var(--tint-pending);
-  color: var(--color-moss-strong);
+  background: var(--tint-primary);
+  color: var(--color-primary-strong);
   height: 88px;
 }
 
@@ -3428,7 +3439,7 @@ textarea {
   background: rgba(255, 255, 255, 0.16);
   border: 1px solid rgba(255, 255, 255, 0.24);
   border-radius: 999px;
-  color: var(--tint-moss);
+  color: var(--tint-primary);
   font-size: var(--text-meta);
   font-weight: 700;
   padding: 6px 10px;
@@ -3442,7 +3453,7 @@ textarea {
 .coffee-draw-copy em {
   background: rgba(255, 255, 255, 0.94);
   border-radius: var(--radius);
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
   font-size: var(--text-display);
   font-style: normal;
   font-weight: 700;
@@ -3461,7 +3472,7 @@ textarea {
 }
 
 .coffee-confetti span {
-  background: var(--color-pending);
+  background: var(--color-primary);
   border-radius: 3px;
   display: block;
   height: 18px;
@@ -3482,19 +3493,19 @@ textarea {
 }
 
 .coffee-confetti span:nth-child(3) {
-  background: var(--color-clay);
+  background: var(--color-primary);
   right: 30%;
   top: 16%;
 }
 
 .coffee-confetti span:nth-child(4) {
-  background: var(--color-info);
+  background: var(--color-primary);
   right: 14%;
   top: 26%;
 }
 
 .coffee-confetti span:nth-child(5) {
-  background: var(--color-pending);
+  background: var(--color-primary);
   bottom: 18%;
   left: 20%;
 }
@@ -3542,22 +3553,22 @@ textarea {
 
 .coffee-winner-card.green svg,
 .coffee-winner-card.green strong {
-  color: var(--color-moss);
+  color: var(--color-primary);
 }
 
 .coffee-winner-card.red svg,
 .coffee-winner-card.red strong {
-  color: var(--color-clay);
+  color: var(--color-primary);
 }
 
 .coffee-winner-card.blue svg,
 .coffee-winner-card.blue strong {
-  color: var(--color-info);
+  color: var(--color-primary);
 }
 
 .coffee-winner-card.yellow svg,
 .coffee-winner-card.yellow strong {
-  color: var(--color-pending);
+  color: var(--color-primary);
 }
 
 .coffee-winner-card span {
@@ -3607,7 +3618,7 @@ textarea {
 }
 
 .share-panel pre {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   color: var(--color-ink);
@@ -3634,10 +3645,7 @@ textarea {
 }
 
 .share-hero-slide {
-  background:
-    linear-gradient(120deg, rgba(216, 240, 106, 0.28), transparent 36%),
-    linear-gradient(150deg, rgba(126, 179, 238, 0.24), transparent 42%),
-    var(--color-moss-strong);
+  background: var(--surface-dark);
   color: var(--color-surface);
   gap: var(--space-2);
   min-height: 170px;
@@ -3646,7 +3654,7 @@ textarea {
 
 .share-hero-slide span,
 .coffee-share-slide span {
-  color: var(--tint-pending);
+  color: var(--tint-primary);
   font-size: var(--text-meta);
   font-weight: 700;
   letter-spacing: 0;
@@ -3660,7 +3668,7 @@ textarea {
 
 .share-hero-slide p,
 .coffee-share-slide p {
-  color: var(--tint-moss);
+  color: var(--tint-primary);
   line-height: 1.55;
   max-width: 720px;
 }
@@ -3672,7 +3680,7 @@ textarea {
 }
 
 .share-team-slide {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-page);
   gap: 14px;
   min-height: 340px;
@@ -3699,13 +3707,13 @@ textarea {
 }
 
 .share-team-slide-head strong {
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
   font-size: var(--text-heading);
   line-height: 1.22;
 }
 
 .share-team-slide-head em {
-  background: var(--color-moss-strong);
+  background: var(--color-primary-strong);
   border-radius: 999px;
   color: var(--color-surface);
   font-size: var(--text-meta);
@@ -3733,8 +3741,8 @@ textarea {
 }
 
 .share-member-cloud span.green {
-  border-color: var(--color-moss);
-  color: var(--color-moss);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
 }
 
 .share-member-cloud span.red {
@@ -3743,13 +3751,13 @@ textarea {
 }
 
 .share-member-cloud span.blue {
-  border-color: var(--color-info);
-  color: var(--color-info);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
 }
 
 .share-member-cloud span.yellow {
-  border-color: var(--color-clay);
-  color: var(--color-clay);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
 }
 
 .team-insight-grid {
@@ -3780,7 +3788,7 @@ textarea {
 
 .profile-signal-list span {
   background: var(--color-surface);
-  border-left: 4px solid var(--color-moss);
+  border-left: 4px solid var(--color-primary);
   border-radius: var(--radius);
   color: var(--color-ink);
   font-size: var(--text-body);
@@ -3796,10 +3804,7 @@ textarea {
 
 .coffee-share-slide {
   align-items: center;
-  background:
-    linear-gradient(135deg, rgba(255, 217, 117, 0.26), transparent 42%),
-    linear-gradient(145deg, rgba(126, 179, 238, 0.24), transparent 44%),
-    var(--color-moss-strong);
+  background: var(--surface-dark);
   color: var(--color-surface);
   gap: var(--space-2);
   justify-items: center;
@@ -3809,34 +3814,26 @@ textarea {
 }
 
 .coffee-share-slide.green {
-  background:
-    linear-gradient(135deg, rgba(216, 240, 106, 0.3), transparent 42%),
-    var(--color-moss);
+  background: var(--surface-dark);
 }
 
 .coffee-share-slide.red {
-  background:
-    linear-gradient(135deg, rgba(255, 217, 117, 0.28), transparent 42%),
-    var(--color-danger);
+  background: var(--color-danger);
 }
 
 .coffee-share-slide.blue {
-  background:
-    linear-gradient(135deg, rgba(216, 240, 106, 0.24), transparent 42%),
-    var(--color-info);
+  background: var(--surface-dark);
 }
 
 .coffee-share-slide.yellow {
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.28), transparent 42%),
-    var(--color-clay);
+  background: var(--color-primary);
 }
 
 .share-notice {
-  background: var(--tint-moss);
-  border: 1px solid var(--color-moss);
+  background: var(--tint-primary);
+  border: 1px solid var(--color-primary);
   border-radius: var(--radius);
-  color: var(--color-moss);
+  color: var(--color-primary);
   font-weight: 700;
   margin: 0;
   padding: 10px var(--space-3);
@@ -3848,7 +3845,7 @@ textarea {
 }
 
 .saved-result-list > p {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px dashed var(--color-sunken);
   border-radius: var(--radius);
   color: var(--color-muted);
@@ -3858,7 +3855,7 @@ textarea {
 
 .saved-result-list article {
   align-items: center;
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   display: grid;
@@ -3985,7 +3982,7 @@ textarea {
 
 .match-card {
   align-items: center;
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   display: flex;
@@ -4000,9 +3997,7 @@ textarea {
 
 .memory-hero {
   align-items: center;
-  background:
-    linear-gradient(120deg, rgba(23, 53, 47, 0.96), rgba(44, 83, 74, 0.94)),
-    linear-gradient(150deg, rgba(241, 211, 144, 0.3), transparent 38%);
+  background: var(--surface-dark);
   border-radius: var(--radius);
   color: var(--color-surface);
   display: grid;
@@ -4019,7 +4014,7 @@ textarea {
 }
 
 .memory-hero p:last-child {
-  color: var(--tint-moss);
+  color: var(--tint-primary);
   line-height: 1.55;
   margin-top: 10px;
 }
@@ -4033,17 +4028,19 @@ textarea {
   padding: var(--space-4);
 }
 
+/* 어두운 히어로 위에서는 액센트가 밝은 쪽이어야 한다. --color-primary(#2563eb)를
+   그대로 쓰면 잉크 면 위에서 2.42:1 로 읽히지 않는다. 밝은 짝을 쓴다. */
 .memory-dday-board svg {
-  color: var(--color-pending);
+  color: var(--color-primary-soft);
 }
 
 .memory-dday-board span,
 .memory-dday-board small {
-  color: var(--tint-moss);
+  color: var(--tint-primary);
 }
 
 .memory-dday-board strong {
-  color: var(--color-pending);
+  color: var(--color-primary-soft);
   font-size: var(--text-display);
 }
 
@@ -4090,7 +4087,7 @@ textarea {
 }
 
 .memory-calendar-notice {
-  color: var(--color-moss);
+  color: var(--color-primary);
   font-weight: 600;
 }
 
@@ -4109,7 +4106,7 @@ textarea {
 }
 
 .memory-calendar button {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   color: var(--color-ink);
@@ -4123,16 +4120,16 @@ textarea {
 /* 월 달력 칸에 행사 제목을 넣을 자리는 없다. 표시만 남기고 이름은 바로 아래
    행사 목록과 툴팁이 맡는다. */
 .memory-day-dot {
-  background: var(--color-moss);
+  background: var(--color-primary);
   border-radius: 999px;
   height: 6px;
   width: 6px;
 }
 
 .memory-calendar button.selected {
-  background: var(--tint-moss);
-  border-color: var(--color-moss);
-  box-shadow: inset 0 0 0 1px var(--color-moss);
+  background: var(--tint-primary);
+  border-color: var(--color-primary);
+  box-shadow: inset 0 0 0 1px var(--color-primary);
 }
 
 .memory-calendar button > span {
@@ -4148,7 +4145,7 @@ textarea {
 
 .memory-calendar small {
   align-self: end;
-  background: var(--color-moss-strong);
+  background: var(--color-primary-strong);
   border-radius: 999px;
   color: var(--color-surface);
   font-size: var(--text-micro);
@@ -4189,12 +4186,12 @@ textarea {
 }
 
 .memory-event-card.selected {
-  border-color: var(--color-moss);
+  border-color: var(--color-primary);
 }
 
 .memory-event-card > span {
   align-items: center;
-  background: var(--color-moss-strong);
+  background: var(--color-primary-strong);
   border-radius: var(--radius);
   color: var(--color-surface);
   display: flex;
@@ -4257,14 +4254,14 @@ textarea {
 }
 
 .memory-tags span {
-  background: var(--tint-clay);
-  color: var(--color-clay);
+  background: var(--tint-neutral);
+  color: var(--color-primary);
 }
 
 .memory-drive-panel {
-  background: var(--tint-info);
-  border: 1px solid var(--color-info);
-  border-left: 5px solid var(--color-info);
+  background: var(--tint-primary);
+  border: 1px solid var(--color-primary);
+  border-left: 5px solid var(--color-primary);
   border-radius: var(--radius);
   display: grid;
   gap: var(--space-3);
@@ -4278,12 +4275,12 @@ textarea {
 }
 
 .memory-drive-panel > div:first-child svg {
-  color: var(--color-info);
+  color: var(--color-primary);
   grid-row: span 2;
 }
 
 .memory-drive-panel strong {
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
 }
 
 .memory-drive-panel span {
@@ -4309,16 +4306,16 @@ textarea {
 
 .memory-drive-meta span {
   background: var(--color-surface);
-  border: 1px solid var(--color-info);
+  border: 1px solid var(--color-primary);
   border-radius: 999px;
-  color: var(--color-info);
+  color: var(--color-primary);
   font-size: var(--text-meta);
   font-weight: 700;
   padding: 6px 9px;
 }
 
 .memory-upload-box {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   display: grid;
@@ -4327,7 +4324,7 @@ textarea {
 }
 
 .memory-upload-box svg {
-  color: var(--color-moss);
+  color: var(--color-primary);
 }
 
 .memory-file-drop {
@@ -4347,7 +4344,7 @@ textarea {
 }
 
 .memory-file-drop span {
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
   font-size: var(--text-body-lg);
   font-weight: 700;
 }
@@ -4361,7 +4358,7 @@ textarea {
 
 .memory-album-head {
   align-items: center;
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   display: flex;
@@ -4411,7 +4408,7 @@ textarea {
 }
 
 .memory-asset.selected::after {
-  border-color: var(--color-moss` (마크) / `--tint-pending` (강조));
+  border-color: var(--color-primary` (마크) / `--tint-primary` (강조));
 }
 
 .memory-asset-visual {
@@ -4439,23 +4436,23 @@ textarea {
 }
 
 .memory-asset.green .memory-asset-visual {
-  background: linear-gradient(135deg, var(--color-moss), var(--color-moss));
+  background: var(--color-primary);
 }
 
 .memory-asset.blue .memory-asset-visual {
-  background: linear-gradient(135deg, var(--color-info), var(--color-info));
+  background: var(--color-primary);
 }
 
 .memory-asset.coral .memory-asset-visual {
-  background: linear-gradient(135deg, var(--color-clay), var(--tint-clay));
+  background: var(--color-primary);
 }
 
 .memory-asset.amber .memory-asset-visual {
-  background: linear-gradient(135deg, var(--color-pending), var(--tint-pending));
+  background: var(--color-primary);
 }
 
 .memory-asset-visual span {
-  background: rgba(23, 53, 47, 0.68);
+  background: var(--surface-dark);
   border: 1px solid rgba(255, 255, 255, 0.22);
   border-radius: 999px;
   color: var(--color-surface);
@@ -4483,19 +4480,19 @@ textarea {
 }
 
 .memory-post.green .memory-post-media {
-  background: linear-gradient(135deg, var(--color-moss), var(--color-moss));
+  background: var(--color-primary);
 }
 
 .memory-post.blue .memory-post-media {
-  background: linear-gradient(135deg, var(--color-info), var(--color-info));
+  background: var(--color-primary);
 }
 
 .memory-post.coral .memory-post-media {
-  background: linear-gradient(135deg, var(--color-clay), var(--tint-clay));
+  background: var(--color-primary);
 }
 
 .memory-post.amber .memory-post-media {
-  background: linear-gradient(135deg, var(--color-pending), var(--tint-pending));
+  background: var(--color-primary);
 }
 
 .memory-post-media img,
@@ -4520,7 +4517,7 @@ textarea {
 
 .memory-asset-profile > span {
   align-items: center;
-  background: var(--color-moss-strong);
+  background: var(--color-primary-strong);
   border-radius: var(--radius);
   color: var(--color-surface);
   display: flex;
@@ -4561,10 +4558,10 @@ textarea {
 
 .memory-emoji-actions button {
   align-items: center;
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-sunken);
   border-radius: 999px;
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
   display: inline-flex;
   font-size: var(--text-body);
   font-weight: 600;
@@ -4574,22 +4571,25 @@ textarea {
 }
 
 .memory-emoji-actions button:hover {
-  background: var(--tint-moss);
-  border-color: var(--color-moss);
+  background: var(--tint-primary);
+  border-color: var(--color-primary);
 }
 
 .memory-asset-actions button,
 .memory-asset-actions a {
   align-items: center;
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: 999px;
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
   display: inline-flex;
   gap: 6px;
   font-size: var(--text-meta);
-  min-height: 32px;
-  padding: 0 10px;
+  /* 32px 은 데스크톱 기준은 넘지만 모바일 최소 클릭 타깃 36px 에 못 미친다.
+     폭에 따라 나누지 않고 큰 쪽으로 통일한다 — 같은 버튼이 화면 폭에 따라
+     달라질 이유가 없다. */
+  min-height: 36px;
+  padding: 0 var(--space-3);
   text-decoration: none;
 }
 
@@ -4608,14 +4608,14 @@ textarea {
 }
 
 .memory-asset-comments p {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border-radius: var(--radius);
   line-height: 1.5;
   padding: 9px 10px;
 }
 
 .memory-empty {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px dashed var(--color-sunken);
   border-radius: var(--radius);
   grid-column: 1 / -1;
@@ -4628,7 +4628,7 @@ textarea {
   background: var(--color-surface);
   border: 1px solid var(--color-sunken);
   border-radius: 999px;
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
   display: inline-flex;
   gap: 6px;
   min-height: 38px;
@@ -4636,7 +4636,7 @@ textarea {
 }
 
 .memory-reactions svg {
-  color: var(--color-clay);
+  color: var(--color-primary);
 }
 
 .memory-comments {
@@ -4649,7 +4649,7 @@ textarea {
 }
 
 .memory-comment-input svg {
-  color: var(--color-moss);
+  color: var(--color-primary);
   flex: 0 0 auto;
 }
 
@@ -4658,7 +4658,7 @@ textarea {
 }
 
 .memory-comments p {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   color: var(--color-ink);
@@ -4679,7 +4679,7 @@ textarea {
 
 .memory-gallery-strip div {
   align-items: center;
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
   display: flex;
   gap: var(--space-2);
   white-space: nowrap;
@@ -4707,7 +4707,7 @@ textarea {
 }
 
 .report-grid div {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   color: var(--color-muted);
@@ -4718,7 +4718,7 @@ textarea {
 }
 
 .report-grid strong {
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
   font-size: var(--text-display);
 }
 
@@ -4732,9 +4732,7 @@ textarea {
    색만으로 뜻을 나르지 않는 편이 읽기에도 낫다. */
 .metrics-hero {
   align-items: center;
-  background:
-    linear-gradient(120deg, rgba(23, 53, 47, 0.96), rgba(37, 82, 72, 0.94)),
-    linear-gradient(150deg, rgba(216, 240, 106, 0.28), transparent 42%);
+  background: var(--surface-dark);
   border-radius: var(--radius);
   color: var(--color-surface);
   display: grid;
@@ -4752,7 +4750,7 @@ textarea {
 }
 
 .metrics-hero p:last-child {
-  color: var(--tint-moss);
+  color: var(--tint-primary);
   line-height: 1.55;
   margin-top: 10px;
 }
@@ -4767,11 +4765,11 @@ textarea {
 }
 
 .calendar-sync-card svg {
-  color: var(--color-pending);
+  color: var(--color-primary);
 }
 
 .calendar-sync-card span {
-  color: var(--tint-moss);
+  color: var(--tint-primary);
   font-size: var(--text-body);
   line-height: 1.45;
 }
@@ -4786,12 +4784,12 @@ textarea {
 }
 
 .metrics-access-card svg {
-  color: var(--color-pending);
+  color: var(--color-primary);
 }
 
 .metrics-access-card span,
 .metrics-access-card small {
-  color: var(--tint-moss);
+  color: var(--tint-primary);
   font-size: var(--text-body);
   line-height: 1.45;
 }
@@ -4818,24 +4816,24 @@ textarea {
 }
 
 .metrics-permission-strip div.active {
-  border-color: var(--color-moss);
+  border-color: var(--color-primary);
   box-shadow: inset 0 0 0 2px rgba(106, 170, 137, 0.12);
 }
 
 .metrics-screen.part-leader-mode .metrics-permission-strip div.active:nth-child(2),
 .metrics-screen.team-leader-mode .metrics-permission-strip div.active:nth-child(3) {
-  background: var(--tint-moss);
-  border-color: var(--color-moss);
+  background: var(--tint-primary);
+  border-color: var(--color-primary);
 }
 
 .metrics-permission-strip div.locked {
-  background: var(--tint-clay);
+  background: var(--tint-neutral);
   border-style: dashed;
   color: var(--color-muted);
 }
 
 .metrics-permission-strip svg {
-  color: var(--color-moss);
+  color: var(--color-primary);
 }
 
 .metrics-permission-strip div.locked svg {
@@ -4843,7 +4841,7 @@ textarea {
 }
 
 .metrics-permission-strip strong {
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
 }
 
 .metrics-permission-strip span {
@@ -4869,7 +4867,7 @@ textarea {
 }
 
 .metrics-visibility-banner strong {
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
 }
 
 .metrics-visibility-banner span {
@@ -4879,13 +4877,13 @@ textarea {
 }
 
 .metrics-visibility-banner .calendar-sync-card {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border-color: var(--color-border);
   grid-template-columns: auto minmax(0, 1fr);
 }
 
 .metrics-visibility-banner .calendar-sync-card svg {
-  color: var(--color-moss);
+  color: var(--color-primary);
   grid-row: span 2;
 }
 
@@ -4911,21 +4909,21 @@ textarea {
 }
 
 .metrics-summary svg {
-  color: var(--color-moss);
+  color: var(--color-primary);
 }
 
 .metrics-summary strong {
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
   font-size: var(--text-display);
 }
 
 .metrics-screen.team-leader-mode .metrics-summary div,
 .metrics-leader-console div {
-  border-color: var(--color-info);
+  border-color: var(--color-primary);
 }
 
 .metrics-screen.part-leader-mode .metrics-summary div {
-  border-color: var(--color-moss);
+  border-color: var(--color-primary);
 }
 
 .metrics-leader-console {
@@ -4935,8 +4933,8 @@ textarea {
 }
 
 .metrics-leader-console div {
-  background: var(--tint-info);
-  border: 1px solid var(--tint-info);
+  background: var(--tint-primary);
+  border: 1px solid var(--tint-primary);
   border-radius: var(--radius);
   display: grid;
   gap: 7px;
@@ -4945,11 +4943,11 @@ textarea {
 }
 
 .metrics-leader-console svg {
-  color: var(--color-info);
+  color: var(--color-primary);
 }
 
 .metrics-leader-console strong {
-  color: var(--color-info);
+  color: var(--color-primary);
 }
 
 .metrics-leader-console span {
@@ -4962,7 +4960,7 @@ textarea {
   align-items: center;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-left: 5px solid var(--color-moss);
+  border-left: 5px solid var(--color-primary);
   border-radius: var(--radius);
   display: grid;
   gap: 14px;
@@ -4977,12 +4975,12 @@ textarea {
 }
 
 .metrics-calendar-panel > div:first-child svg {
-  color: var(--color-moss);
+  color: var(--color-primary);
   grid-row: span 2;
 }
 
 .metrics-calendar-panel strong {
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
 }
 
 .metrics-calendar-panel span {
@@ -4998,6 +4996,32 @@ textarea {
   justify-content: flex-end;
 }
 
+/* 이 버튼들에는 클래스가 없어 UA 기본 스타일(높이 25px)로 그려지고 있었다.
+   모바일 최소 클릭 타깃 36px 에 못 미친다. 보조 버튼 문법에 맞춘다. */
+.calendar-sync-actions button {
+  align-items: center;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  color: var(--color-ink);
+  display: inline-flex;
+  font-size: var(--text-meta);
+  font-weight: 500;
+  gap: var(--space-2);
+  min-height: 36px;
+  padding: 0 var(--space-3);
+}
+
+.calendar-sync-actions button:hover:not(:disabled) {
+  background: var(--color-page);
+  border-color: var(--color-border-strong);
+}
+
+.calendar-sync-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
 .calendar-event-summary {
   display: flex;
   flex-wrap: wrap;
@@ -5006,10 +5030,10 @@ textarea {
 }
 
 .calendar-event-summary span {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: 999px;
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
   font-weight: 700;
   padding: 7px 10px;
 }
@@ -5038,7 +5062,7 @@ textarea {
 
 .metrics-part-list button {
   align-items: center;
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   color: var(--color-ink);
@@ -5051,8 +5075,8 @@ textarea {
 }
 
 .metrics-part-list button.selected {
-  background: var(--tint-moss);
-  border-color: var(--color-moss);
+  background: var(--tint-primary);
+  border-color: var(--color-primary);
 }
 
 .metrics-part-list div {
@@ -5079,18 +5103,18 @@ textarea {
 }
 
 .metrics-part-list small.leader-visible {
-  background: var(--tint-moss);
-  color: var(--color-moss-strong);
+  background: var(--tint-primary);
+  color: var(--color-primary-strong);
 }
 
 .metrics-part-list small.public-visible {
-  background: var(--tint-clay);
-  color: var(--color-clay);
+  background: var(--tint-neutral);
+  color: var(--color-primary);
 }
 
 .metrics-part-list em {
   align-items: center;
-  background: var(--color-moss-strong);
+  background: var(--color-primary-strong);
   border-radius: var(--radius);
   color: var(--color-surface);
   display: flex;
@@ -5127,19 +5151,19 @@ textarea {
 }
 
 .leader-scope-badge {
-  background: var(--tint-moss);
-  color: var(--color-moss-strong);
+  background: var(--tint-primary);
+  color: var(--color-primary-strong);
 }
 
 .public-scope-badge {
-  background: var(--tint-clay);
-  color: var(--color-clay);
+  background: var(--tint-neutral);
+  color: var(--color-primary);
 }
 
 .reward-badge {
-  background: var(--tint-pending);
+  background: var(--tint-primary);
   border-radius: 999px;
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
   font-size: var(--text-meta);
   font-weight: 700;
   padding: 7px 11px;
@@ -5152,7 +5176,7 @@ textarea {
 }
 
 .metrics-score-grid div {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   color: var(--color-muted);
@@ -5165,25 +5189,25 @@ textarea {
 .metrics-screen.public-member-mode .metrics-score-grid div:nth-child(3),
 .metrics-public-note,
 .metrics-locked-panel {
-  background: var(--tint-clay);
+  background: var(--tint-neutral);
 }
 
 .metrics-screen.part-leader-mode .leader-only-card {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
 }
 
 .metrics-screen.team-leader-mode .leader-only-card {
-  background: var(--tint-info);
-  border-color: var(--color-info);
+  background: var(--tint-primary);
+  border-color: var(--color-primary);
 }
 
 .metrics-score-grid strong {
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
   font-size: var(--text-display);
 }
 
 .meeting-health-card {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   display: grid;
@@ -5193,12 +5217,12 @@ textarea {
 }
 
 .leader-only-card {
-  border-color: var(--color-moss);
+  border-color: var(--color-primary);
 }
 
 .metrics-public-note {
   align-items: start;
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px dashed var(--color-sunken);
   border-radius: var(--radius);
   display: grid;
@@ -5208,7 +5232,7 @@ textarea {
 }
 
 .metrics-public-note svg {
-  color: var(--color-moss);
+  color: var(--color-primary);
 }
 
 .metrics-public-note div {
@@ -5217,7 +5241,7 @@ textarea {
 }
 
 .metrics-public-note strong {
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
 }
 
 .metrics-public-note span,
@@ -5233,7 +5257,7 @@ textarea {
 }
 
 .meeting-health-card svg {
-  color: var(--color-moss);
+  color: var(--color-primary);
 }
 
 .meeting-health-card span {
@@ -5256,7 +5280,7 @@ textarea {
 }
 
 .meeting-volume-total strong {
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
   font-size: var(--text-heading);
 }
 
@@ -5273,7 +5297,7 @@ textarea {
 }
 
 .meeting-budget-bar > span {
-  background: var(--color-moss);
+  background: var(--color-primary);
   display: block;
   height: 100%;
 }
@@ -5297,7 +5321,7 @@ textarea {
 }
 
 .meeting-volume-split dd {
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
   font-size: var(--text-body-lg);
   font-weight: 700;
   margin: 0;
@@ -5312,7 +5336,7 @@ textarea {
 
 .color-stack span.green,
 .tone-list span.green {
-  background: var(--color-moss);
+  background: var(--color-primary);
 }
 
 /* 12px 흰 글씨를 얹는 칩이다. 아바타용 #e35d4f/#bc7a12 를 그대로 쓰면
@@ -5324,12 +5348,12 @@ textarea {
 
 .color-stack span.blue,
 .tone-list span.blue {
-  background: var(--color-info);
+  background: var(--color-primary);
 }
 
 .color-stack span.yellow,
 .tone-list span.yellow {
-  background: var(--color-clay);
+  background: var(--color-primary);
 }
 
 .tone-list {
@@ -5347,7 +5371,7 @@ textarea {
 }
 
 .profile-color-panel p strong {
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
 }
 
 .calendar-event-list {
@@ -5356,7 +5380,7 @@ textarea {
 }
 
 .calendar-event-list > div:not(.panel-header) {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   display: grid;
@@ -5366,15 +5390,15 @@ textarea {
 }
 
 .calendar-event-list > div.long-meeting {
-  background: var(--tint-clay);
-  border-color: var(--color-clay);
+  background: var(--tint-neutral);
+  border-color: var(--color-primary);
 }
 
 .calendar-event-list > div:not(.panel-header) span {
   align-self: start;
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border-radius: 999px;
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
   font-size: var(--text-meta);
   font-weight: 700;
   justify-self: start;
@@ -5382,12 +5406,12 @@ textarea {
 }
 
 .calendar-event-list > div.long-meeting span {
-  background: var(--tint-pending);
-  color: var(--color-clay);
+  background: var(--tint-primary);
+  color: var(--color-primary);
 }
 
 .calendar-event-list > div:not(.panel-header) strong {
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
 }
 
 .calendar-event-list > div:not(.panel-header) small {
@@ -5397,7 +5421,7 @@ textarea {
 }
 
 .calendar-event-list p {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px dashed var(--color-sunken);
   border-radius: var(--radius);
   color: var(--color-muted);
@@ -5407,14 +5431,14 @@ textarea {
 }
 
 .insight-list p {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   padding: var(--space-3);
 }
 
 .weight-controls label {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   display: grid;
@@ -5429,7 +5453,7 @@ textarea {
 }
 
 .weight-controls strong {
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
   font-size: var(--text-body);
   text-align: right;
 }
@@ -5455,7 +5479,7 @@ textarea {
 }
 
 .account-summary svg {
-  color: var(--color-moss);
+  color: var(--color-primary);
 }
 
 .account-summary span {
@@ -5496,14 +5520,14 @@ textarea {
 }
 
 .connectioner-toggle input {
-  accent-color: var(--color-moss);
+  accent-color: var(--color-primary);
   cursor: pointer;
   height: 16px;
   width: 16px;
 }
 
 .connectioner-toggle.on {
-  color: var(--color-moss);
+  color: var(--color-primary);
 }
 
 .account-table-head {
@@ -5515,7 +5539,7 @@ textarea {
 
 .account-row {
   align-items: center;
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   padding: var(--space-3);
@@ -5552,9 +5576,9 @@ textarea {
 
 .part-static {
   align-items: center;
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border-radius: var(--radius);
-  color: var(--color-moss);
+  color: var(--color-primary);
   display: flex;
   font-weight: 600;
   min-height: 42px;
@@ -5603,9 +5627,7 @@ textarea {
 
   .login-page {
     align-items: start;
-    background:
-      linear-gradient(180deg, rgba(23, 53, 47, 0.98), rgba(29, 70, 62, 0.94) 50%, var(--tint-pending) 50%),
-      var(--color-moss-strong);
+  background: var(--surface-dark);
     gap: var(--space-8);
     padding: 28px;
   }
@@ -6044,7 +6066,7 @@ textarea {
 
 .can-tabs .selected {
   background: var(--color-surface);
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
   box-shadow: 0 4px 12px rgba(42, 58, 52, 0.1);
 }
 
@@ -6094,18 +6116,18 @@ textarea {
 }
 
 .can-step.active {
-  border-color: var(--color-moss-strong);
-  box-shadow: 0 10px 26px rgba(23, 53, 47, 0.14);
+  border-color: var(--color-primary-strong);
+  box-shadow: var(--shadow-float);
 }
 
 .can-step.active span {
-  background: var(--color-moss-strong);
-  color: var(--tint-pending);
+  background: var(--color-primary-strong);
+  color: var(--tint-primary);
 }
 
 .can-step.done span {
-  background: var(--tint-pending);
-  color: var(--color-moss-strong);
+  background: var(--tint-success);
+  color: var(--color-success);
 }
 
 .can-hint {
@@ -6116,7 +6138,7 @@ textarea {
 
 /* 단계 전환 안내 — 의견 데이터와 섞이지 않게 스테이지 하단에 두는 플로우 노트 */
 .can-flow-note {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px dashed var(--color-sunken);
   border-radius: var(--radius);
   color: var(--color-muted);
@@ -6127,7 +6149,7 @@ textarea {
 }
 
 .can-meta {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px dashed var(--color-sunken);
   border-radius: var(--radius);
   color: var(--color-ink);
@@ -6153,8 +6175,8 @@ textarea {
 }
 
 .can-part-picker .selected {
-  background: var(--color-moss-strong);
-  border-color: var(--color-moss-strong);
+  background: var(--color-primary-strong);
+  border-color: var(--color-primary-strong);
   color: var(--color-surface);
 }
 
@@ -6169,7 +6191,7 @@ textarea {
   background: var(--color-surface);
   border: 1px solid var(--color-sunken);
   border-radius: var(--radius);
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
   display: inline-flex;
   font-weight: 700;
   gap: var(--space-2);
@@ -6186,7 +6208,7 @@ textarea {
 
 .can-count-chip {
   align-items: center;
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   display: flex;
@@ -6211,7 +6233,7 @@ textarea {
 }
 
 .can-part-column {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   display: grid;
@@ -6230,9 +6252,9 @@ textarea {
 
 .can-part-column h3 span {
   align-items: center;
-  background: var(--color-moss-strong);
+  background: var(--color-primary-strong);
   border-radius: 999px;
-  color: var(--color-pending);
+  color: var(--color-primary);
   display: inline-flex;
   font-size: var(--text-meta);
   height: 22px;
@@ -6253,7 +6275,7 @@ textarea {
 }
 
 .can-step-group-title {
-  color: var(--color-moss);
+  color: var(--color-primary);
   font-size: var(--text-micro);
   font-weight: 600;
   margin: 2px 0 0;
@@ -6287,9 +6309,9 @@ textarea {
 }
 
 .can-badge {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border-radius: 999px;
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
   font-size: var(--text-micro);
   font-weight: 600;
   padding: 3px 9px;
@@ -6326,16 +6348,16 @@ textarea {
 }
 
 .can-select-item.picked {
-  border-color: var(--color-moss-strong);
-  box-shadow: 0 8px 20px rgba(23, 53, 47, 0.12);
+  border-color: var(--color-primary-strong);
+  box-shadow: var(--shadow-float);
 }
 
 .can-check {
   align-items: center;
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-sunken);
   border-radius: 6px;
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
   display: flex;
   flex: none;
   font-weight: 600;
@@ -6345,8 +6367,8 @@ textarea {
 }
 
 .can-select-item.picked .can-check {
-  background: var(--tint-pending);
-  border-color: var(--color-moss-strong);
+  background: var(--tint-primary);
+  border-color: var(--color-primary-strong);
 }
 
 .can-select-body {
@@ -6374,9 +6396,9 @@ textarea {
 
 .can-confirmed-tag {
   align-items: center;
-  background: var(--tint-pending);
+  background: var(--tint-success);
   border-radius: 999px;
-  color: var(--color-moss-strong);
+  color: var(--color-success);
   display: inline-flex;
   font-size: var(--text-meta);
   font-weight: 600;
@@ -6395,7 +6417,7 @@ textarea {
 }
 
 .can-waiting svg {
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
 }
 
 .can-waiting strong {
@@ -6410,7 +6432,7 @@ textarea {
 
 .can-topic-preview {
   align-items: center;
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: 999px;
   display: inline-flex;
@@ -6466,8 +6488,8 @@ textarea {
 }
 
 .can-session-card:hover {
-  border-color: var(--color-moss-strong);
-  box-shadow: 0 16px 40px rgba(23, 53, 47, 0.16);
+  border-color: var(--color-primary-strong);
+  box-shadow: var(--shadow-float);
 }
 
 .can-session-top {
@@ -6483,7 +6505,7 @@ textarea {
 }
 
 .can-stage-badge {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border-radius: 999px;
   color: var(--color-ink);
   font-size: var(--text-micro);
@@ -6493,8 +6515,8 @@ textarea {
 }
 
 .can-stage-badge.done {
-  background: var(--color-moss-strong);
-  color: var(--tint-pending);
+  background: var(--color-success);
+  color: var(--tint-success);
 }
 
 .can-session-meta {
@@ -6518,7 +6540,7 @@ textarea {
   background: var(--color-surface);
   border: 1px solid var(--color-sunken);
   border-radius: var(--radius);
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
   display: inline-flex;
   font-weight: 700;
   gap: var(--space-1);
@@ -6548,7 +6570,7 @@ textarea {
 }
 
 .form-panel input:disabled {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   color: var(--color-muted);
   cursor: not-allowed;
 }
@@ -6594,8 +6616,8 @@ textarea {
 }
 
 .can-step-picker .selected {
-  background: var(--color-moss-strong);
-  border-color: var(--color-moss-strong);
+  background: var(--color-primary-strong);
+  border-color: var(--color-primary-strong);
   color: var(--color-surface);
 }
 
@@ -6622,10 +6644,10 @@ textarea {
 
 .can-readonly-bar {
   align-items: center;
-  background: var(--tint-clay);
-  border: 1px solid var(--color-clay);
+  background: var(--tint-neutral);
+  border: 1px solid var(--color-primary);
   border-radius: var(--radius);
-  color: var(--color-clay);
+  color: var(--color-primary);
   display: flex;
   flex-wrap: wrap;
   font-size: var(--text-body);
@@ -6684,17 +6706,17 @@ textarea {
 }
 
 .quick-login-row button {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-sunken);
   border-radius: var(--radius);
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
   font-weight: 700;
   min-height: 40px;
   padding: 0 var(--space-3);
 }
 
 .quick-login-row button:hover {
-  border-color: var(--color-moss-strong);
+  border-color: var(--color-primary-strong);
 }
 
 .can-template {
@@ -6705,9 +6727,9 @@ textarea {
 }
 
 .can-template-title {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border-bottom: 1px solid var(--color-sunken);
-  color: var(--color-info);
+  color: var(--color-primary);
   font-weight: 600;
   padding: 10px 14px;
 }
@@ -6731,8 +6753,8 @@ textarea {
 
 .can-template-head th,
 .can-template-steps th {
-  background: var(--tint-moss);
-  color: var(--color-moss-strong);
+  background: var(--tint-primary);
+  color: var(--color-primary-strong);
   font-weight: 700;
   white-space: nowrap;
 }
@@ -6781,10 +6803,10 @@ textarea {
 }
 
 .can-followup-done {
-  background: var(--tint-moss);
-  border: 1px solid var(--color-moss);
+  background: var(--tint-success);
+  border: 1px solid var(--color-success);
   border-radius: var(--radius);
-  color: var(--color-moss);
+  color: var(--color-success);
   font-size: var(--text-body);
   font-weight: 700;
   padding: var(--space-3) 14px;
@@ -6798,7 +6820,7 @@ textarea {
 
 .can-followup-row {
   align-items: center;
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   display: flex;
@@ -6851,7 +6873,7 @@ textarea {
 
 .can-followup-resultrow {
   align-items: center;
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   display: flex;
@@ -6878,13 +6900,13 @@ textarea {
 }
 
 .can-route-badge.agenda {
-  background: var(--tint-info);
-  color: var(--color-info);
+  background: var(--tint-primary);
+  color: var(--color-primary);
 }
 
 .can-route-badge.action {
-  background: var(--tint-moss);
-  color: var(--color-moss-strong);
+  background: var(--tint-primary);
+  color: var(--color-primary-strong);
 }
 
 .can-route-badge.skip {
@@ -6922,7 +6944,7 @@ textarea {
 }
 
 .tea-topic-item {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: 10px;
   display: grid;
@@ -6980,18 +7002,18 @@ textarea {
 }
 
 .tea-status-badge.제안 {
-  background: var(--tint-info);
-  color: var(--color-info);
+  background: var(--tint-primary);
+  color: var(--color-primary);
 }
 
 .tea-status-badge.채택 {
-  background: var(--tint-moss);
-  color: var(--color-moss-strong);
+  background: var(--tint-primary);
+  color: var(--color-primary-strong);
 }
 
 .tea-status-badge.완료 {
-  background: var(--tint-moss);
-  color: var(--color-moss);
+  background: var(--tint-success);
+  color: var(--color-success);
 }
 
 .tea-status-badge.보류 {
@@ -7026,7 +7048,7 @@ textarea {
 }
 
 .tea-group-card {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: 10px;
   display: grid;
@@ -7036,7 +7058,7 @@ textarea {
 
 .tea-group-card h4 {
   align-items: baseline;
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
   display: flex;
   gap: 6px;
   justify-content: space-between;
@@ -7088,8 +7110,8 @@ textarea {
 
 .tea-announce-confirm {
   align-items: center;
-  background: var(--tint-info);
-  border: 1px solid var(--tint-info);
+  background: var(--tint-primary);
+  border: 1px solid var(--tint-primary);
   border-radius: var(--radius);
   display: flex;
   flex-wrap: wrap;
@@ -7098,15 +7120,15 @@ textarea {
 }
 
 .tea-announce-confirm > span {
-  color: var(--color-info);
+  color: var(--color-primary);
   font-size: var(--text-body);
   font-weight: 700;
 }
 
 .tea-announce {
-  background: var(--color-moss-strong);
+  background: var(--color-primary-strong);
   border-radius: 10px;
-  color: var(--tint-moss);
+  color: var(--tint-primary);
   font-family: 'SFMono-Regular', ui-monospace, Menlo, Consolas, monospace;
   font-size: 12.5px;
   line-height: 1.65;
@@ -7118,7 +7140,7 @@ textarea {
 }
 
 .tea-copy-notice {
-  color: var(--color-moss);
+  color: var(--color-primary);
   font-size: var(--text-meta);
   font-weight: 700;
   margin: 0;
@@ -7186,13 +7208,13 @@ button.notif-row {
 }
 
 .notif-row.unread {
-  background: var(--tint-info);
-  border-color: var(--color-info);
-  border-left: 3px solid var(--color-info);
+  background: var(--tint-primary);
+  border-color: var(--color-primary);
+  border-left: 3px solid var(--color-primary);
 }
 
 .notif-row.unread .notif-body strong {
-  color: var(--color-info);
+  color: var(--color-primary);
   font-weight: 700;
 }
 
@@ -7210,28 +7232,28 @@ button.notif-row {
 }
 
 .notif-kind.issue {
-  background: var(--tint-info);
-  color: var(--color-info);
+  background: var(--tint-primary);
+  color: var(--color-primary);
 }
 .notif-kind.agenda {
-  background: var(--tint-info);
-  color: var(--color-info);
+  background: var(--tint-primary);
+  color: var(--color-primary);
 }
 .notif-kind.deadline {
-  background: var(--tint-clay);
-  color: var(--color-clay);
+  background: var(--tint-neutral);
+  color: var(--color-primary);
 }
 .notif-kind.action {
-  background: var(--tint-moss);
-  color: var(--color-moss-strong);
+  background: var(--tint-primary);
+  color: var(--color-primary-strong);
 }
 .notif-kind.tea {
-  background: var(--tint-pending);
-  color: var(--color-info);
+  background: var(--tint-primary);
+  color: var(--color-primary);
 }
 .notif-kind.message {
-  background: var(--tint-moss);
-  color: var(--color-moss);
+  background: var(--tint-primary);
+  color: var(--color-primary);
 }
 
 .notif-body {
@@ -7260,7 +7282,7 @@ button.notif-row {
 
 .notif-dot {
   align-self: center;
-  background: var(--color-info);
+  background: var(--color-primary);
   border-radius: 999px;
   flex: none;
   height: 8px;
@@ -7271,7 +7293,7 @@ button.notif-row {
 /* ===== 유머게시판 ===== */
 .humor-hero {
   align-items: center;
-  background: linear-gradient(120deg, var(--color-moss-strong), var(--color-moss));
+  background: var(--surface-dark);
   border-radius: 12px;
   color: var(--color-surface);
   display: flex;
@@ -7298,7 +7320,7 @@ button.notif-row {
 .humor-hero .eyebrow,
 .memory-hero .eyebrow,
 .metrics-hero .eyebrow {
-  color: var(--tint-pending);
+  color: var(--tint-primary);
 }
 
 .humor-hero-badge {
@@ -7314,7 +7336,7 @@ button.notif-row {
 }
 
 .humor-hero-badge svg {
-  color: var(--tint-pending);
+  color: var(--tint-primary);
 }
 
 .humor-hero-badge strong {
@@ -7333,8 +7355,8 @@ button.notif-row {
 }
 
 .humor-ranker {
-  background: linear-gradient(160deg, var(--tint-clay), var(--color-surface));
-  border: 1px solid var(--color-clay);
+  background: var(--color-surface);
+  border: 1px solid var(--color-primary);
   border-radius: 10px;
   display: grid;
   gap: var(--space-2);
@@ -7342,13 +7364,13 @@ button.notif-row {
 }
 
 .humor-ranker.empty {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border-color: var(--color-page);
 }
 
 .humor-ranker-crown {
   align-items: center;
-  color: var(--color-clay);
+  color: var(--color-primary);
   display: flex;
   font-size: var(--text-body);
   font-weight: 600;
@@ -7455,8 +7477,8 @@ button.notif-row {
 }
 
 .humor-sort button.active {
-  background: var(--color-moss-strong);
-  border-color: var(--color-moss-strong);
+  background: var(--color-primary-strong);
+  border-color: var(--color-primary-strong);
   color: var(--color-surface);
 }
 
@@ -7481,7 +7503,7 @@ button.notif-row {
 }
 
 .humor-back:hover {
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
 }
 
 /* 목록 = 가벼운 행(미디어는 아이콘만, 실제 로드는 상세에서) */
@@ -7607,7 +7629,7 @@ button.notif-row {
 
 .humor-icon-btn:hover {
   background: var(--tint-danger);
-  color: var(--color-clay);
+  color: var(--color-primary);
 }
 
 .humor-owner-actions {
@@ -7632,9 +7654,9 @@ button.notif-row {
 }
 
 .humor-owner-btn.edit:hover {
-  background: var(--tint-moss);
-  border-color: var(--color-moss);
-  color: var(--color-moss);
+  background: var(--tint-primary);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
 }
 
 .humor-owner-btn.delete {
@@ -7644,8 +7666,8 @@ button.notif-row {
 
 .humor-owner-btn.delete:hover {
   background: var(--tint-danger);
-  border-color: var(--color-clay);
-  color: var(--color-clay);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
 }
 
 .humor-edit {
@@ -7714,10 +7736,10 @@ button.notif-row {
 .humor-card-link {
   align-items: center;
   align-self: flex-start;
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-page);
   border-radius: var(--radius);
-  color: var(--color-moss);
+  color: var(--color-primary);
   display: inline-flex;
   font-size: var(--text-body);
   font-weight: 600;
@@ -7727,7 +7749,7 @@ button.notif-row {
 }
 
 .humor-card-link:hover {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
 }
 
 .humor-media-hint {
@@ -7746,7 +7768,7 @@ button.notif-row {
 
 .humor-like {
   align-items: center;
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-page);
   border-radius: 999px;
   color: var(--color-ink);
@@ -7759,9 +7781,9 @@ button.notif-row {
 }
 
 .humor-like.active {
-  background: var(--tint-clay);
-  border-color: var(--color-clay);
-  color: var(--color-clay);
+  background: var(--tint-neutral);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
 }
 
 .humor-comments {
@@ -7838,7 +7860,7 @@ button.notif-row {
   키보드 사용자는 지금 어디에 있는지 알 방법이 없었다(WCAG 2.4.7).
 */
 :where(button, a, input, select, textarea, [tabindex]):focus-visible {
-  outline: 2px solid var(--color-moss);
+  outline: 2px solid var(--color-primary);
   outline-offset: 2px;
   border-radius: var(--radius);
 }
@@ -7856,9 +7878,9 @@ button.notif-row {
 
 /* 안건화 직전, 팀원에게 실제로 공개될 문장을 확인하는 블록 */
 .agenda-publish-preview {
-  background: var(--tint-moss);
-  border: 1px solid var(--color-moss);
-  border-left: 3px solid var(--color-moss);
+  background: var(--tint-primary);
+  border: 1px solid var(--color-primary);
+  border-left: 3px solid var(--color-primary);
   border-radius: 10px;
   display: grid;
   gap: var(--space-2);
@@ -7866,7 +7888,7 @@ button.notif-row {
 }
 
 .agenda-publish-preview strong {
-  color: var(--color-moss);
+  color: var(--color-primary);
   font-size: var(--text-meta);
   letter-spacing: 0.02em;
 }
@@ -7890,8 +7912,8 @@ button.notif-row {
 /* 투표·마감 확정 전 확인 */
 .vote-confirm,
 .agenda-close-box {
-  border: 1px solid var(--color-clay);
-  background: var(--tint-clay);
+  border: 1px solid var(--color-primary);
+  background: var(--tint-neutral);
   border-radius: 10px;
   display: grid;
   gap: 10px;
@@ -7917,8 +7939,8 @@ button.notif-row {
 }
 
 .vote-actions button.selected {
-  border-color: var(--color-moss);
-  box-shadow: inset 0 0 0 1px var(--color-moss);
+  border-color: var(--color-primary);
+  box-shadow: inset 0 0 0 1px var(--color-primary);
 }
 
 .field-note {
@@ -7986,14 +8008,15 @@ button.notif-row {
 }
 
 .primary-button:hover:not(:disabled) {
-  background: var(--color-moss-strong);
+  background: var(--color-ink);
+  border-color: var(--color-ink);
 }
 
 .secondary-button:hover:not(:disabled),
 .filter:hover:not(:disabled),
 .icon-button:hover:not(:disabled),
 .ghost-button:hover:not(:disabled) {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border-color: var(--color-border-strong);
 }
 
@@ -8005,8 +8028,8 @@ button.notif-row {
 }
 
 .vote-actions button:hover:not(:disabled) {
-  background: var(--tint-moss);
-  border-color: var(--color-moss);
+  background: var(--tint-primary);
+  border-color: var(--color-primary);
 }
 
 /* 눌림 피드백. 되돌릴 수 없는 버튼일수록 "눌렸다"가 보여야 한다. */
@@ -8109,7 +8132,7 @@ button.notif-row {
 }
 
 .waiting-badge.overdue {
-  background: var(--tint-clay);
+  background: var(--tint-neutral);
   color: var(--color-danger);
 }
 
@@ -8119,8 +8142,8 @@ button.notif-row {
 
 /* ===== 보류·종료 사유 ===== */
 .status-reason-editor {
-  border: 1px solid var(--color-clay);
-  background: var(--tint-clay);
+  border: 1px solid var(--color-primary);
+  background: var(--tint-neutral);
   border-radius: var(--radius);
   display: grid;
   gap: var(--space-2);
@@ -8133,8 +8156,8 @@ button.notif-row {
 }
 
 .submission-reason {
-  border-left: 3px solid var(--color-moss);
-  background: var(--tint-moss);
+  border-left: 3px solid var(--color-primary);
+  background: var(--tint-primary);
   border-radius: 0 var(--radius) var(--radius) 0;
   padding: var(--space-2) var(--space-3);
 }
@@ -8142,7 +8165,7 @@ button.notif-row {
 /* ===== 파트 지표 익명 임계값 ===== */
 .metrics-suppressed {
   align-items: flex-start;
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px dashed var(--color-border);
   border-radius: var(--radius);
   color: var(--color-muted);
@@ -8158,7 +8181,7 @@ button.notif-row {
 }
 
 .metrics-suppressed svg {
-  color: var(--color-moss);
+  color: var(--color-primary);
   flex: none;
 }
 
@@ -8183,18 +8206,18 @@ button.notif-row {
 }
 
 .review-gate.checking {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   color: var(--color-muted);
 }
 
 .review-gate.clear {
-  background: var(--tint-moss);
-  color: var(--color-moss);
+  background: var(--tint-primary);
+  color: var(--color-primary);
 }
 
 .review-gate.unavailable {
-  background: var(--tint-clay);
-  border-color: var(--color-clay);
+  background: var(--tint-neutral);
+  border-color: var(--color-primary);
 }
 
 .review-gate.unavailable div {
@@ -8234,7 +8257,7 @@ button.notif-row {
 }
 
 .review-kind {
-  background: var(--tint-clay);
+  background: var(--tint-neutral);
   border-radius: 999px;
   color: var(--color-danger);
   font-size: var(--text-meta);
@@ -8253,8 +8276,8 @@ button.notif-row {
 }
 
 .review-rewritten {
-  background: var(--tint-moss);
-  border-left: 3px solid var(--color-moss);
+  background: var(--tint-primary);
+  border-left: 3px solid var(--color-primary);
   border-radius: 0 var(--radius) var(--radius) 0;
   padding: var(--space-2) var(--space-3);
   white-space: pre-wrap;
@@ -8422,8 +8445,9 @@ button.notif-row {
   max-width: 40ch;
 }
 
-/* 버튼 3단. primary = 주 액션(이끼 채움), secondary = 보조(가라앉은 면),
-   ghost = 이동·취소처럼 화면을 떠나는 동작(면 없음). */
+/* 버튼 3단(design.md 5.1). primary = 주 액션(검정 채움),
+   secondary = 보조(흰 면 + 테두리), ghost = 이동·취소처럼 화면을 떠나는 동작(면 없음).
+   파랑은 버튼이 아니라 링크성 액션에만 쓴다 — .btn-link. */
 .btn-primary,
 .btn-secondary,
 .btn-ghost {
@@ -8443,12 +8467,27 @@ button.notif-row {
 }
 
 .btn-primary {
-  background: var(--color-moss);
-  color: var(--color-surface);
+  background: var(--color-cta);
+  color: var(--color-cta-ink);
+  font-weight: 600;
 }
 
 .btn-primary:hover {
-  background: var(--color-moss-strong);
+  background: var(--color-ink);
+}
+
+/* 링크성 · 보조 액션. 면 없이 파랑 글자만 쓴다(design.md 5.1 Link/Accent). */
+.btn-link {
+  background: none;
+  border: 0;
+  color: var(--color-primary);
+  font-size: var(--text-body);
+  font-weight: 600;
+  padding: 0;
+}
+
+.btn-link:hover {
+  text-decoration: underline;
 }
 
 .btn-ghost {
@@ -8462,17 +8501,20 @@ button.notif-row {
 }
 
 .btn-secondary {
-  background: var(--color-sunken);
-  border: 1px solid transparent;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius);
   color: var(--color-ink);
   font-size: var(--text-body);
   font-weight: 500;
   padding: 9px var(--space-4);
-  transition: border-color var(--ease-ui);
+  transition:
+    background-color var(--ease-ui),
+    border-color var(--ease-ui);
 }
 
 .btn-secondary:hover {
+  background: var(--color-page);
   border-color: var(--color-border-strong);
 }
 
@@ -8498,9 +8540,9 @@ button.notif-row {
 
 /* 강조 어절. 문장 전체를 굵게 하면 어디가 중요한지 사라진다. */
 .culture-mark {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border-radius: var(--radius-sm);
-  color: var(--tint-moss-ink);
+  color: var(--tint-primary-ink);
   padding: 1px var(--space-2);
 }
 
@@ -8526,10 +8568,10 @@ button.notif-row {
   margin-left: -9px;
 }
 
-.culture-avatar.a { background: var(--tint-moss); color: var(--tint-moss-ink); }
-.culture-avatar.b { background: var(--tint-clay); color: var(--tint-clay-ink); }
-.culture-avatar.c { background: var(--tint-pending); color: var(--tint-pending-ink); }
-.culture-avatar.d { background: var(--tint-info); color: var(--tint-info-ink); }
+.culture-avatar.a { background: var(--tint-primary); color: var(--tint-primary-ink); }
+.culture-avatar.b { background: var(--tint-neutral); color: var(--tint-neutral-ink); }
+.culture-avatar.c { background: var(--tint-primary); color: var(--tint-primary-ink); }
+.culture-avatar.d { background: var(--tint-primary); color: var(--tint-primary-ink); }
 .culture-avatar.more { background: var(--color-sunken); color: var(--color-muted); font-size: var(--text-micro); }
 
 .culture-panel {
@@ -8729,8 +8771,8 @@ button.notif-row {
 }
 
 .overview-bar.is-active {
-  background: var(--tint-moss);
-  border-color: var(--color-moss);
+  background: var(--tint-primary);
+  border-color: var(--color-primary);
 }
 
 .overview-bar-label {
@@ -8742,7 +8784,7 @@ button.notif-row {
 }
 
 .overview-bar-track {
-  background: var(--color-sunken);
+  background: var(--tint-primary);
   border-radius: var(--radius-full);
   display: block;
   height: 6px;
@@ -8750,7 +8792,7 @@ button.notif-row {
 }
 
 .overview-bar-track > span {
-  background: var(--color-moss);
+  background: var(--color-primary);
   display: block;
   height: 100%;
 }
@@ -8814,23 +8856,23 @@ button.notif-row {
 }
 
 .poster.moss {
-  background: var(--tint-moss);
-  color: var(--tint-moss-ink);
+  background: var(--tint-primary);
+  color: var(--tint-primary-ink);
 }
 
 .poster.clay {
-  background: var(--tint-clay);
-  color: var(--tint-clay-ink);
+  background: var(--tint-neutral);
+  color: var(--tint-neutral-ink);
 }
 
 .poster.info {
-  background: var(--tint-info);
-  color: var(--tint-info-ink);
+  background: var(--tint-primary);
+  color: var(--tint-primary-ink);
 }
 
 .poster.pending {
-  background: var(--tint-pending);
-  color: var(--tint-pending-ink);
+  background: var(--tint-primary);
+  color: var(--tint-primary-ink);
 }
 
 /* 모티프는 배경 장식이다. 글자를 이기면 안 되므로 흐리게 둔다.
@@ -8917,12 +8959,12 @@ button.notif-row {
 }
 
 .poster-badge.moss {
-  background: var(--color-moss);
+  background: var(--color-primary);
   color: var(--color-surface);
 }
 
 .poster-badge.clay {
-  background: var(--color-clay);
+  background: var(--color-primary);
   color: var(--color-surface);
 }
 
@@ -9007,9 +9049,9 @@ button.notif-row {
 
 /* '필수'는 색이 아니라 글자로도 알려야 색각 이상 사용자에게 전달된다. */
 .field-label em {
-  background: var(--tint-clay);
+  background: var(--tint-neutral);
   border-radius: var(--radius-full);
-  color: var(--tint-clay-ink);
+  color: var(--tint-neutral-ink);
   font-size: var(--text-micro);
   font-style: normal;
   padding: 1px 7px;
@@ -9056,8 +9098,8 @@ button.notif-row {
 }
 
 .chip.selected {
-  background: var(--color-moss);
-  border-color: var(--color-moss);
+  background: var(--color-primary);
+  border-color: var(--color-primary);
   color: var(--color-surface);
 }
 
@@ -9091,7 +9133,7 @@ button.notif-row {
   align-items: center;
   background: none;
   border: 0;
-  color: var(--color-moss);
+  color: var(--color-primary);
   display: flex;
   font-size: var(--text-body);
   gap: var(--space-2);
@@ -9215,7 +9257,7 @@ button.notif-row {
 }
 
 .gathering-facts dd em {
-  color: var(--color-moss);
+  color: var(--color-primary);
   font-style: normal;
   font-weight: 500;
 }
@@ -9232,9 +9274,9 @@ button.notif-row {
 
 /* 주최자에게만 보이는 판단 근거. 경고가 아니라 "접어도 된다"는 허락이다. */
 .gathering-warn {
-  background: var(--tint-pending);
+  background: var(--tint-primary);
   border-radius: var(--radius);
-  color: var(--tint-pending-ink);
+  color: var(--tint-primary-ink);
   font-size: var(--text-body);
   line-height: var(--leading-normal);
   padding: var(--space-3);
@@ -9259,13 +9301,13 @@ button.notif-row {
 }
 
 .seat-badge.confirmed {
-  background: var(--tint-moss);
-  color: var(--tint-moss-ink);
+  background: var(--tint-success);
+  color: var(--tint-success-ink);
 }
 
 .seat-badge.waiting {
-  background: var(--tint-pending);
-  color: var(--tint-pending-ink);
+  background: var(--tint-primary);
+  color: var(--tint-primary-ink);
 }
 
 .seat-badge.closed {
@@ -9305,9 +9347,9 @@ button.notif-row {
 
 .roster-list li {
   align-items: center;
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border-radius: var(--radius-full);
-  color: var(--tint-moss-ink);
+  color: var(--tint-primary-ink);
   display: flex;
   font-size: var(--text-meta);
   gap: var(--space-2);
@@ -9336,10 +9378,10 @@ button.notif-row {
 
 .home-gathering-row {
   align-items: center;
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
-  color: var(--tint-moss-ink);
+  color: var(--tint-primary-ink);
   display: flex;
   gap: var(--space-3);
   min-height: 54px;
@@ -9376,9 +9418,9 @@ button.notif-row {
 
 /* 대기는 확정과 구분돼야 한다 — 그 시간을 비워둘지 판단이 갈린다. */
 .home-gathering-wait {
-  background: var(--tint-pending);
+  background: var(--tint-primary);
   border-radius: var(--radius-full);
-  color: var(--tint-pending-ink);
+  color: var(--tint-primary-ink);
   flex-shrink: 0;
   font-size: var(--text-micro);
   font-style: normal;
@@ -9425,9 +9467,9 @@ button.notif-row {
 /* 남은 시간은 주의를 끌되 실패는 아니다 — 팀 규칙대로 clay 를 쓴다.
    danger 는 부결·삭제처럼 되돌릴 수 없는 것에만 남겨둔다. */
 .market-time-chip {
-  background: var(--tint-clay);
+  background: var(--tint-neutral);
   border-radius: var(--radius-full);
-  color: var(--tint-clay-ink);
+  color: var(--tint-neutral-ink);
   font-size: var(--text-micro);
   font-weight: 500;
   margin-left: auto;
@@ -9471,7 +9513,7 @@ button.notif-row {
 
 .market-hall-head {
   align-items: center;
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
   display: flex;
   font-size: var(--text-body-lg);
   font-weight: 600;
@@ -9536,8 +9578,8 @@ button.notif-row {
 }
 
 .market-rank li:first-child .market-rank-no {
-  background: var(--tint-moss);
-  color: var(--tint-moss-ink);
+  background: var(--tint-primary);
+  color: var(--tint-primary-ink);
 }
 
 /* --- 좁은 폭 ----------------------------------------------------

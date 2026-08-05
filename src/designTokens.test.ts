@@ -13,7 +13,8 @@ const outsideRoot = (css.slice(0, rootStart) + css.slice(rootEnd)).replace(/\/\*
 
 // 래칫. 태스크가 진행될수록 낮춘다. 절대 올리지 않는다.
 const MAX_HARDCODED_HEX = 0;
-const MAX_HARDCODED_RGBA = 95;
+// 95 → 48. 딥그린 그라디언트 40개를 평평한 --surface-dark 한 톤으로 바꾸면서 줄었다.
+const MAX_HARDCODED_RGBA = 48;
 const MAX_DANGLING_VAR = 0;
 
 function relativeLuminance(hex: string): number {
@@ -37,14 +38,16 @@ function token(name: string): string {
 }
 
 const SURFACES = ['--color-surface', '--color-page', '--color-sunken'];
+// design.md 1 "강조는 딱 한 번" — 브랜드 색조는 파랑 하나이고 초록·빨강은 상태에만
+// 쓴다. clay·pending 은 이 원칙에서 설 자리가 없어 없앴다.
 const FOREGROUNDS = [
   '--color-ink',
   '--color-muted',
-  '--color-moss',
-  '--color-clay',
+  '--color-primary',
+  '--color-primary-strong',
+  '--color-cta',
+  '--color-success',
   '--color-danger',
-  '--color-pending',
-  '--color-info',
 ];
 
 describe('디자인 토큰 대비', () => {
@@ -56,11 +59,11 @@ describe('디자인 토큰 대비', () => {
   });
 
   it.each([
-    ['--tint-moss-ink', '--tint-moss'],
-    ['--tint-clay-ink', '--tint-clay'],
+    ['--tint-primary-ink', '--tint-primary'],
+    ['--tint-success-ink', '--tint-success'],
     ['--tint-danger-ink', '--tint-danger'],
-    ['--tint-pending-ink', '--tint-pending'],
-    ['--tint-info-ink', '--tint-info'],
+    ['--tint-neutral-ink', '--tint-neutral'],
+    ['--tint-avatar-ink', '--tint-avatar'],
   ])('%s / %s 배지 짝은 AAA(7:1) 이상이다', (ink, bg) => {
     expect(contrast(token(ink), token(bg))).toBeGreaterThanOrEqual(7);
   });
