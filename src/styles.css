@@ -8788,11 +8788,16 @@ button.notif-row {
   color: var(--tint-pending-ink);
 }
 
-/* 모티프는 배경 장식이다. 글자를 이기면 안 되므로 위로 올려 흐리게 둔다. */
+/* 모티프는 배경 장식이다. 글자를 이기면 안 되므로 위로 올려 흐리게 둔다.
+   크기를 틀에 비례시킨다 — JSX 의 size={64} 를 그대로 두면 3열로 좁아져
+   포스터가 214px→138px 로 줄어도 아이콘만 안 줄어 글자를 49px 밟는다.
+   퍼센트로 두면 열 수를 바꿔도 이 관계가 저절로 유지된다. */
 .poster-motif {
+  height: auto;
   opacity: 0.45;
   position: absolute;
-  top: 22%;
+  top: 15%;
+  width: 30%;
 }
 
 .poster-photo {
@@ -8871,10 +8876,13 @@ button.notif-row {
 }
 
 /* --- 피드 격자 --------------------------------------------------- */
+/* 인스타 프로필 격자와 같은 3열 고정. auto-fill 로 두면 폭에 따라 3~5열을
+   오가서 "쌓아 보는" 리듬이 화면마다 달라진다. 열 수를 고정해야 스크롤할 때
+   눈이 같은 자리를 짚는다. */
 .poster-grid {
   display: grid;
   gap: var(--space-4);
-  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .poster-cell {
@@ -9324,13 +9332,23 @@ button.notif-row {
    오류 없이 조용히 무시된다. */
 @media (max-width: 720px) {
   .poster-grid {
-    /* 190px 최소폭이면 390px 화면에서 2열이 되어 글자가 뭉갠다. */
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: var(--space-3);
   }
 
+  .poster-text {
+    padding: var(--space-2);
+  }
+
   .poster-text strong {
-    font-size: var(--text-body);
+    font-size: var(--text-meta);
+  }
+
+  /* 3열이면 캡션이 110px 폭에서 통째로 잘려 뜻을 못 나른다. 게다가 같은 내용을
+     포스터 아래 .poster-meta 가 이미 말하고 있다. 읽히지도 않는 글이 자리만
+     차지해 제목을 아이콘 쪽으로 밀어올리므로 뺀다. 상세로 들어가면 다 보인다. */
+  .poster-text span {
+    display: none;
   }
 
   .gathering-toolbar {
