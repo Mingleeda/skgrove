@@ -77,15 +77,36 @@ export function mountDrawScene({ canvas, build }: MountOptions): (() => void) | 
 
   // 레티나에서 계단 현상을 없애되 2배까지만 — 3배 화면에서 픽셀 수가 9배가 되면 저사양 기기가 버벅인다.
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
   const scene = new THREE.Scene();
+  /* 멀리 있는 조각을 배경색으로 녹인다. 스토리 뷰어 배경이 어두워 같은 색으로 두면
+     '뒤쪽' 이 실제로 뒤로 물러나 보인다 — 깊이가 생기는 가장 싼 방법이다. */
+  scene.fog = new THREE.Fog(0x14161a, 7, 16);
+
   const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
   camera.position.set(0, 0, 9);
 
-  scene.add(new THREE.AmbientLight(0xffffff, 1.6));
-  const key = new THREE.DirectionalLight(0xffffff, 1.1);
-  key.position.set(3, 5, 6);
+  /* 빛을 셋으로 나눈다. 하나만 쓰면 정면만 밝고 옆면이 새까매져 입체가 아니라
+     오려 붙인 종이처럼 보인다. 채움광과 뒷광이 윤곽을 살린다. */
+  scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+
+  const key = new THREE.DirectionalLight(0xffffff, 2.2);
+  key.position.set(4, 6, 7);
+  key.castShadow = true;
+  key.shadow.mapSize.set(1024, 1024);
+  key.shadow.camera.near = 1;
+  key.shadow.camera.far = 24;
   scene.add(key);
+
+  const fill = new THREE.DirectionalLight(0x9fc4ff, 0.7);
+  fill.position.set(-5, -1, 4);
+  scene.add(fill);
+
+  const rim = new THREE.DirectionalLight(0xffffff, 0.9);
+  rim.position.set(0, 2, -6);
+  scene.add(rim);
 
   const owned: Array<{ dispose: () => void }> = [];
   const track = <T extends THREE.BufferGeometry | THREE.Material | THREE.Texture>(item: T) => {
