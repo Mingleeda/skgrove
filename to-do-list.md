@@ -26,8 +26,12 @@ npm install && npm run dev
 
 ## 현재 상태
 
-- 브랜치 `dev` (= `feature/ui-redesign`), `origin/dev` 대비 **39커밋 앞섬. 아직 push 안 함**
-- `npm test` **195/195**, `npm run build` 성공
+- 브랜치 `dev` — **`origin/dev`에 push 완료**. 다른 PC에서 `git pull` 하면 된다.
+- 중간에 올라온 SKSOOP-152·153(캔미팅 DB 영속화, 파트 열 정렬)을 머지했다.
+  `styles.css`의 `.can-part-columns` 한 곳만 충돌했고, **상대의 기능(파트 개수만큼
+  등분)에 이쪽 토큰(`var(--space-3)`)을 얹어** 해결했다. 브라우저에서 3파트 → 3열,
+  빈 칸 없음을 확인했다.
+- `npm test` **195/195**, `npm run build`, `tsc --noEmit` 모두 통과
 - 두 역할 × 두 폭(1280px / 390px) 접근성 결함 **0**
 - 하드코딩 색상값 **0** / 정의 없는 `var()` **0**
 
