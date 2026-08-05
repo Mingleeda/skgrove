@@ -3053,11 +3053,16 @@ textarea {
   box-shadow: var(--shadow-float);
 }
 
+/*
+  좌우 2단을 걷어냈다. 참여자 32명을 360px 칸에 1인 1행으로 넣으면 세로로
+  1,800px 이 되어 스스로 스크롤을 갖게 되는데, 정작 오른쪽 작업판은
+  684px 중 420px 만 쓰고 있었다. 참여자가 가로를 다 쓰고 조건·결과는 아래로 내린다.
+*/
 .connect-layout {
   align-items: start;
   display: grid;
   gap: 18px;
-  grid-template-columns: 360px minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .participant-panel,
@@ -3068,6 +3073,37 @@ textarea {
 .coffee-winner-card {
   border-radius: var(--radius);
   display: grid;
+}
+
+/*
+  2단을 걷어내 작업판이 가로를 다 쓰게 되자, 스토리 뷰어(420px 고정)가 1062px
+  한가운데 홀로 놓여 양옆 642px 이 비었다. 스토리는 폰 모양이라 늘릴 수 없으니
+  조건 패널을 그 옆에 세운다 — 고를 것과 결과를 한눈에 같이 본다.
+  결과 목록·공유 패널은 폭이 필요하므로 두 열을 다 쓰게 둔다.
+*/
+/*
+  grid 가 아니라 flex 로 두는 이유: 그리드는 자리가 모자라도 열을 스스로 접지 않는다.
+  2열로 못박았더니 819px 창에서 조건 패널이 197px 로 짓눌렸다. flex-wrap 은
+  한 줄에 못 들어가면 다음 줄로 내려 보내므로, 조건이 340px 아래로 눌리는 일이 없다.
+*/
+.connect-workbench {
+  align-items: flex-start;
+  display: flex;
+  flex-wrap: wrap;
+}
+
+/* 결과 목록·공유 패널은 폭이 필요하다. 기본은 한 줄을 통째로 쓴다. */
+.connect-workbench > * {
+  flex: 1 1 100%;
+}
+
+.connect-workbench > .connect-control-panel {
+  flex: 1 1 340px;
+}
+
+/* 스토리는 폰 모양이라 늘리지 않는다. 자리가 없으면 조건 아래로 내려간다. */
+.connect-workbench > .ig-story-view {
+  flex: 0 1 420px;
 }
 
 .participant-panel {
@@ -3133,15 +3169,19 @@ textarea {
   outline: revert;
 }
 
+/* 가로를 다 쓰게 되면서 한 줄에 여러 명을 세운다. 동료 성향 목록과 같은 방식으로
+   열 수는 남는 자리가 정한다. 최소 190px 은 아바타(38px)와 이름·세대 두 줄,
+   선택 표시(22px)가 잘리지 않고 들어가는 폭이다. */
 .participant-list {
   display: grid;
   gap: var(--space-2);
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
 }
 
+/* 자체 스크롤은 목록이 360px 짜리 옆칸이던 시절의 장치다. 이제 가로를 다 써서
+   32명이 몇 줄에 들어가므로, 페이지 스크롤 안에 또 스크롤을 두면 오히려 갇힌다. */
 .part-group-list,
 .coffee-chip-grid {
-  max-height: min(640px, calc(100vh - 220px));
-  overflow: auto;
   padding-right: 3px;
 }
 
