@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
 const css = readFileSync(new URL('./styles.css', import.meta.url), 'utf8');
@@ -108,6 +108,44 @@ describe('토큰 경유율', () => {
       '없음';
 
     expect(total, `정의 없이 참조된 토큰: ${detail}`).toBeLessThanOrEqual(MAX_DANGLING_VAR);
+  });
+});
+
+/*
+  styles.css 만 검사하면 컴포넌트의 인라인 style 이 빠진다. 실제로
+  AgendaBoard 가 `var(--color-${tone})` 로 --color-moss 를 참조하고 있었는데,
+  토큰을 없앤 뒤에도 어떤 테스트도 울리지 않았다. 상태 점이 투명하게
+  그려지고 있었고 화면을 눈으로 봐야만 알 수 있었다.
+*/
+describe('컴포넌트의 토큰 참조', () => {
+  const srcDir = new URL('./', import.meta.url);
+  const files = readdirSync(srcDir, { recursive: true, encoding: 'utf8' }).filter(
+    (name) => name.endsWith('.tsx') || (name.endsWith('.ts') && !name.endsWith('.test.ts')),
+  );
+
+  it('정의되지 않은 커스텀 프로퍼티를 var()로 참조하지 않는다', () => {
+    const defined = new Set(
+      Array.from(rootBlock.matchAll(/--([a-zA-Z0-9-]+):/g)).map((m) => m[1]),
+    );
+
+    const dangling: string[] = [];
+    for (const name of files) {
+      const code = readFileSync(new URL(name, srcDir), 'utf8');
+      for (const match of code.matchAll(/var\(\s*--([a-zA-Z0-9-]+)/g)) {
+        // 템플릿 리터럴로 조립한 이름(`--color-${tone}`)은 정적으로 못 푼다.
+        // 접두사까지만 잘라 두고, 그 접두사로 시작하는 토큰이 하나도 없으면 잡는다.
+        const token = match[1];
+        const isPrefix = code.slice(match.index ?? 0).startsWith(`var(--${token}\${`);
+        if (isPrefix) {
+          const hit = [...defined].some((d) => d.startsWith(token));
+          if (!hit) dangling.push(`${name}: --${token}* (조립형)`);
+          continue;
+        }
+        if (!defined.has(token)) dangling.push(`${name}: --${token}`);
+      }
+    }
+
+    expect(dangling, `정의 없이 참조된 토큰: ${dangling.join(', ') || '없음'}`).toEqual([]);
   });
 });
 

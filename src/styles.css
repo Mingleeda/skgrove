@@ -9442,8 +9442,20 @@ button.notif-row {
   line-height: var(--leading-tight);
 }
 
-.ig-post-status.late {
+.ig-post-status.late,
+.ig-post-status.fail {
   color: var(--color-danger);
+}
+
+/* 통과만 초록이다. 초록은 브랜드에서 빠지고 "통과·완료" 상태에만 남았다. */
+.ig-post-status.pass {
+  color: var(--color-success);
+}
+
+.ig-poll-meta {
+  color: var(--color-muted);
+  font-size: var(--text-micro);
+  font-variant-numeric: tabular-nums;
 }
 
 /* 스토리 투표 스티커. 막대가 배경으로 깔리고 글자가 그 위에 얹힌다. */
