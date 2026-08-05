@@ -40,13 +40,20 @@ export default async function handler(request: Request): Promise<Response> {
       }),
     });
     const data = (await tokenResponse.json().catch(() => null)) as
-      | { access_token?: string; error_description?: string; error?: string }
+      | { access_token?: string; expires_in?: number; error_description?: string; error?: string }
       | null;
     if (!tokenResponse.ok || !data?.access_token) {
       const reason = data?.error_description || data?.error || 'token exchange failed';
       return html(callbackPage(settings.appOrigin, { error: reason }));
     }
-    return html(callbackPage(settings.appOrigin, { accessToken: data.access_token }));
+    // expires_in 을 함께 넘긴다. 이게 없으면 프론트가 토큰을 언제 버려야 할지 몰라
+    // 조회할 때마다 동의 팝업을 다시 띄우게 된다. 구글은 보통 3600(초)을 준다.
+    return html(
+      callbackPage(settings.appOrigin, {
+        accessToken: data.access_token,
+        expiresIn: Number(data.expires_in) || 0,
+      }),
+    );
   } catch (cause) {
     return html(callbackPage(settings.appOrigin, { error: String(cause) }));
   }

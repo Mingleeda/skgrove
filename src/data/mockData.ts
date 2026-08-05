@@ -372,6 +372,7 @@ export const initialTeaSessions: TeaSession[] = [
     desc: '실무에 붙여 쓴 프롬프트·자동화 사례를 데모와 함께 공유합니다.',
     status: '채택',
     memo: '',
+    heldAt: '2026-08-12',
   },
   {
     id: 'TEA-02',
@@ -382,6 +383,8 @@ export const initialTeaSessions: TeaSession[] = [
     desc: '리스본·포르투 소도시 위주의 사진과 팁.',
     status: '제안',
     memo: '',
+    // 제안 단계라 아직 날짜가 없다. 채택될 때 정해진다.
+    heldAt: '',
   },
   {
     id: 'TEA-03',
@@ -392,6 +395,7 @@ export const initialTeaSessions: TeaSession[] = [
     desc: '',
     status: '제안',
     memo: '',
+    heldAt: '',
   },
   {
     id: 'TEA-04',
@@ -402,6 +406,7 @@ export const initialTeaSessions: TeaSession[] = [
     desc: '지난 분기 도입 결과와 남은 과제.',
     status: '완료',
     memo: '반응이 좋아 다음 회차에 실습 세션으로 이어가기로 함. 파트별 러너 1명씩 지정.',
+    heldAt: '2026-07-15',
   },
   {
     id: 'TEA-05',
@@ -412,6 +417,7 @@ export const initialTeaSessions: TeaSession[] = [
     desc: '',
     status: '보류',
     memo: '',
+    heldAt: '',
   },
 ];
 

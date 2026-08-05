@@ -148,7 +148,7 @@ describe('슬랙 채널 라우팅', () => {
 describe('티미팅 제안 알림', () => {
   const session: TeaSession = {
     id: 'TEA-9', title: 'LLM 활용 사례', type: '기술세미나', presenter: '김승현',
-    part: 'ITS혁신파트', desc: '', status: '제안', memo: '',
+    part: 'ITS혁신파트', desc: '', status: '제안', memo: '', heldAt: '',
   };
   it('리더 수만큼, kind=tea, meetings 화면으로', () => {
     const leaders = leadersFor(accounts, '리더 전체');

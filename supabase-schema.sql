@@ -497,8 +497,11 @@ create table if not exists public.tea_sessions (
   part text not null,
   description text not null default '',
   status text not null default '제안',
-  memo text not null default ''
+  memo text not null default '',
+  held_at text not null default ''
 );
+-- 이미 만들어진 테이블에도 컬럼을 붙인다. 제안 단계 세션은 빈 값으로 남는다.
+alter table public.tea_sessions add column if not exists held_at text not null default '';
 alter table public.tea_sessions enable row level security;
 drop policy if exists "Allow prototype tea sessions all" on public.tea_sessions;
 create policy "Allow prototype tea sessions all" on public.tea_sessions for all using (true) with check (true);

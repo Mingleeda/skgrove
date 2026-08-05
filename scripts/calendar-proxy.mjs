@@ -160,7 +160,8 @@ export function handleCalendar(req, res) {
           sendHtml(callbackPage({ error: String(reason) }));
           return;
         }
-        sendHtml(callbackPage({ accessToken: data.access_token }));
+        // expires_in 을 함께 넘긴다 — 프론트가 토큰을 언제 버릴지 알아야 매번 팝업을 안 띄운다.
+        sendHtml(callbackPage({ accessToken: data.access_token, expiresIn: Number(data.expires_in) || 0 }));
       })
       .catch((cause) => {
         console.error('[calendar] token error:', cause);

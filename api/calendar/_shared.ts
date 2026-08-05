@@ -84,7 +84,7 @@ export function normalizeEvents(items: GoogleEvent[]): unknown[] {
 }
 
 /** 토큰을 opener 로 넘기고 닫히는 콜백 페이지. postMessage 대상 오리진을 명시한다. */
-export function callbackPage(appOrigin: string, payload: Record<string, string>): string {
+export function callbackPage(appOrigin: string, payload: Record<string, string | number>): string {
   const json = JSON.stringify({ type: 'skgrove:calendar', ...payload });
   return `<!doctype html><meta charset="utf-8"><title>SK Grove</title>
 <body style="font:14px/1.6 system-ui;padding:24px;color:#1d2522">
