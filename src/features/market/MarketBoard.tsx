@@ -22,7 +22,6 @@ import {
   isSettled,
   leadingBid,
   minNextBid,
-  monthOf,
   myBid,
   rankBigSpenders,
   rankBuyers,
@@ -317,17 +316,54 @@ export function MarketBoard({
     );
   }
 
-  const month = monthOf(now);
   const boards = [
-    { key: 'seller', title: '판매왕', rows: rankSellers(items, bids, month, now), unit: '건' },
-    { key: 'giver', title: '나눔왕', rows: rankGivers(items, bids, month, now), unit: '건' },
-    { key: 'buyer', title: '구매왕', rows: rankBuyers(items, bids, month, now), unit: '건' },
-    { key: 'spender', title: '큰손', rows: rankBigSpenders(items, bids, month, now), unit: '원' },
+    { key: 'seller', title: '판매왕', rows: rankSellers(items, bids, now), unit: '건' },
+    { key: 'giver', title: '나눔왕', rows: rankGivers(items, bids, now), unit: '건' },
+    { key: 'buyer', title: '구매왕', rows: rankBuyers(items, bids, now), unit: '건' },
+    { key: 'spender', title: '큰손', rows: rankBigSpenders(items, bids, now), unit: '원' },
   ];
   const hasRanking = boards.some((board) => board.rows.length > 0);
 
   return (
     <section className="screen">
+      {/*
+        실적을 맨 위에 둔다. 유~머게시판의 명예의 전당과 같은 자리다 —
+        아래에 두면 포스터 격자를 다 지나야 나와 아무도 보지 않는다.
+        다만 순위표는 한 줄 띠로 유지한다. 유~머처럼 시상대를 세우면
+        물건을 보러 온 사람이 매번 그만큼을 지나쳐야 한다.
+        아무 거래도 성사되지 않았으면 빈 표를 보여주지 않는다.
+      */}
+      {hasRanking && (
+        <section className="panel market-hall">
+          <div className="market-hall-head">
+            <Trophy size={18} />
+            <strong>벼룩숲 명예의 전당</strong>
+          </div>
+          <div className="market-rank-grid">
+            {boards.map((board) => (
+              <div className="market-rank" key={board.key}>
+                <h3>{board.title}</h3>
+                {board.rows.length === 0 ? (
+                  <p className="field-note">아직 없음</p>
+                ) : (
+                  <ol>
+                    {board.rows.map((row, index) => (
+                      <li key={row.name}>
+                        <span className="market-rank-no">{index + 1}</span>
+                        {row.name}
+                        <em>
+                          {board.unit === '원' ? formatPrice(row.count) : `${row.count}${board.unit}`}
+                        </em>
+                      </li>
+                    ))}
+                  </ol>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       <div className="gathering-toolbar">
         <div className="toolbar">
           {FILTERS.map((item) => (
@@ -369,38 +405,6 @@ export function MarketBoard({
             );
           })}
         </div>
-      )}
-
-      {/* 이번 달 실적. 아무 거래도 성사되지 않았으면 빈 표를 보여주지 않는다. */}
-      {hasRanking && (
-        <section className="panel market-hall">
-          <div className="market-hall-head">
-            <Trophy size={18} />
-            <strong>이번 달 벼룩숲</strong>
-          </div>
-          <div className="market-rank-grid">
-            {boards.map((board) => (
-              <div className="market-rank" key={board.key}>
-                <h3>{board.title}</h3>
-                {board.rows.length === 0 ? (
-                  <p className="field-note">아직 없음</p>
-                ) : (
-                  <ol>
-                    {board.rows.map((row, index) => (
-                      <li key={row.name}>
-                        <span className="market-rank-no">{index + 1}</span>
-                        {row.name}
-                        <em>
-                          {board.unit === '원' ? formatPrice(row.count) : `${row.count}${board.unit}`}
-                        </em>
-                      </li>
-                    ))}
-                  </ol>
-                )}
-              </div>
-            ))}
-          </div>
-        </section>
       )}
     </section>
   );

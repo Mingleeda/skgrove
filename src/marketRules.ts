@@ -164,14 +164,11 @@ export function formatPrice(amount: number) {
   return `${amount.toLocaleString('ko-KR')}원`;
 }
 
-/* ===== 랭킹 — 유~머게시판과 같은 월별 집계 ===== */
+/* ===== 랭킹 — 시작부터 지금까지 누적 =====
+   유~머게시판은 달마다 끊지만 여기는 끊지 않는다. 거래는 글보다 훨씬 드물게
+   일어나서, 달로 끊으면 매달 1일마다 순위표가 비어 아무 말도 하지 못한다. */
 
 export type MarketRanker = { name: string; count: number };
-
-/** 'YYYY-MM-DD...' → 'YYYY-MM'. humorRules.monthOf 와 같은 규칙. */
-export function monthOf(stamp: string) {
-  return stamp.slice(0, 7);
-}
 
 function rank(counts: Map<string, number>): MarketRanker[] {
   return [...counts]
@@ -181,42 +178,40 @@ function rank(counts: Map<string, number>): MarketRanker[] {
     .slice(0, 3);
 }
 
-/** 그 달에 거래가 성사된 건만 센다. 올려두기만 한 것은 실적이 아니다. */
-function closedInMonth(items: MarketItem[], bids: MarketBid[], month: string, now: string) {
-  return items.filter(
-    (item) => monthOf(item.closeAt) === month && deriveStatus(item, bids, now) === '거래완료',
-  );
+/** 거래가 성사된 건만 센다. 올려두기만 한 것이나 유찰은 실적이 아니다. */
+function closedDeals(items: MarketItem[], bids: MarketBid[], now: string) {
+  return items.filter((item) => deriveStatus(item, bids, now) === '거래완료');
 }
 
-export function rankSellers(items: MarketItem[], bids: MarketBid[], month: string, now: string) {
+export function rankSellers(items: MarketItem[], bids: MarketBid[], now: string) {
   const counts = new Map<string, number>();
-  closedInMonth(items, bids, month, now)
+  closedDeals(items, bids, now)
     .filter((item) => item.kind === 'auction')
     .forEach((item) => counts.set(item.seller, (counts.get(item.seller) ?? 0) + 1));
   return rank(counts);
 }
 
-export function rankGivers(items: MarketItem[], bids: MarketBid[], month: string, now: string) {
+export function rankGivers(items: MarketItem[], bids: MarketBid[], now: string) {
   const counts = new Map<string, number>();
-  closedInMonth(items, bids, month, now)
+  closedDeals(items, bids, now)
     .filter((item) => item.kind === 'giveaway')
     .forEach((item) => counts.set(item.seller, (counts.get(item.seller) ?? 0) + 1));
   return rank(counts);
 }
 
-export function rankBuyers(items: MarketItem[], bids: MarketBid[], month: string, now: string) {
+export function rankBuyers(items: MarketItem[], bids: MarketBid[], now: string) {
   const counts = new Map<string, number>();
-  closedInMonth(items, bids, month, now).forEach((item) => {
+  closedDeals(items, bids, now).forEach((item) => {
     const won = leadingBid(item, bids);
     if (won) counts.set(won.name, (counts.get(won.name) ?? 0) + 1);
   });
   return rank(counts);
 }
 
-/** 큰손 — 그 달에 가장 많이 쓴 사람. 건수가 아니라 금액이라 별도로 센다. */
-export function rankBigSpenders(items: MarketItem[], bids: MarketBid[], month: string, now: string) {
+/** 큰손 — 지금까지 가장 많이 쓴 사람. 건수가 아니라 금액이라 별도로 센다. */
+export function rankBigSpenders(items: MarketItem[], bids: MarketBid[], now: string) {
   const totals = new Map<string, number>();
-  closedInMonth(items, bids, month, now)
+  closedDeals(items, bids, now)
     .filter((item) => item.kind === 'auction')
     .forEach((item) => {
       const won = leadingBid(item, bids);

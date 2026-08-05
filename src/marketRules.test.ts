@@ -216,7 +216,6 @@ describe('timeLeft', () => {
 });
 
 describe('랭킹', () => {
-  const month = '2026-08';
   const later = '2026-08-31T23:59'; // 아래 물건이 전부 마감된 뒤 시점
 
   const sold = (id: string, seller: string, buyer: string, amount: number): MarketItem =>
@@ -239,33 +238,40 @@ describe('랭킹', () => {
   ];
 
   it('판매왕은 성사된 경매만 센다', () => {
-    expect(rankSellers(items, bids, month, later)[0]).toEqual({ name: '김수정', count: 2 });
+    expect(rankSellers(items, bids, later)[0]).toEqual({ name: '김수정', count: 2 });
   });
 
   it('나눔왕은 나눔만 센다', () => {
-    const top = rankGivers(items, bids, month, later);
+    const top = rankGivers(items, bids, later);
     expect(top[0]).toEqual({ name: '심상준', count: 2 });
     expect(top.some((item) => item.name === '김수정')).toBe(false);
   });
 
   it('구매왕은 낙찰받은 사람을 센다', () => {
-    expect(rankBuyers(items, bids, month, later)[0]).toEqual({ name: '이관국', count: 2 });
+    expect(rankBuyers(items, bids, later)[0]).toEqual({ name: '이관국', count: 2 });
   });
 
   it('큰손은 건수가 아니라 금액을 센다', () => {
-    expect(rankBigSpenders(items, bids, month, later)[0]).toEqual({ name: '이관국', count: 150000 });
+    expect(rankBigSpenders(items, bids, later)[0]).toEqual({ name: '이관국', count: 150000 });
   });
 
   // 올려두기만 하고 아무도 안 가져간 것은 실적이 아니다.
   it('유찰은 어느 랭킹에도 들어가지 않는다', () => {
     const unsold = [auction({ id: 'U', seller: '최근화', closeAt: '2026-08-10T18:00' })];
-    expect(rankSellers(unsold, [], month, later)).toEqual([]);
-    expect(rankBuyers(unsold, [], month, later)).toEqual([]);
+    expect(rankSellers(unsold, [], later)).toEqual([]);
+    expect(rankBuyers(unsold, [], later)).toEqual([]);
+  });
+
+  // 달로 끊으면 매달 1일마다 순위표가 비어 아무 말도 못 한다. 누적으로 센다.
+  it('지난 달에 끝난 거래도 계속 센다', () => {
+    const old = [auction({ id: 'OLD', seller: '윤희성', closeAt: '2026-03-02T18:00' })];
+    const oldBids = [bid({ id: 'oldb', itemId: 'OLD', name: '김금', amount: 20000 })];
+    expect(rankSellers(old, oldBids, later)[0]).toEqual({ name: '윤희성', count: 1 });
   });
 
   it('아직 진행 중인 거래는 세지 않는다', () => {
     const open = [auction({ id: 'O', seller: '최근화', closeAt: '2026-08-20T18:00' })];
     const openBids = [bid({ id: 'ob', itemId: 'O', name: '이관국', amount: 10000 })];
-    expect(rankSellers(open, openBids, month, NOW)).toEqual([]);
+    expect(rankSellers(open, openBids, NOW)).toEqual([]);
   });
 });

@@ -627,3 +627,36 @@ create table if not exists public.market_bids (
 alter table public.market_bids enable row level security;
 drop policy if exists "Allow prototype market bids all" on public.market_bids;
 create policy "Allow prototype market bids all" on public.market_bids for all using (true) with check (true);
+
+-- 물건 사진 버킷. 없으면 첨부가 저장되지 않고 새로고침 때 사진이 사라진다
+-- (업로드 실패 시 화면에는 임시 objectURL 로만 남기 때문이다).
+insert into storage.buckets (id, name, public)
+values ('market-images', 'market-images', true)
+on conflict (id) do update set
+  public = excluded.public;
+
+drop policy if exists "Allow prototype market image reads" on storage.objects;
+drop policy if exists "Allow prototype market image writes" on storage.objects;
+drop policy if exists "Allow prototype market image updates" on storage.objects;
+drop policy if exists "Allow prototype market image deletes" on storage.objects;
+
+create policy "Allow prototype market image reads"
+  on storage.objects
+  for select
+  using (bucket_id = 'market-images');
+
+create policy "Allow prototype market image writes"
+  on storage.objects
+  for insert
+  with check (bucket_id = 'market-images');
+
+create policy "Allow prototype market image updates"
+  on storage.objects
+  for update
+  using (bucket_id = 'market-images')
+  with check (bucket_id = 'market-images');
+
+create policy "Allow prototype market image deletes"
+  on storage.objects
+  for delete
+  using (bucket_id = 'market-images');
