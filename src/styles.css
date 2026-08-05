@@ -11406,6 +11406,14 @@ button.notif-row {
   gap: var(--space-2);
 }
 
+/* 성사된 거래가 아직 없을 때. 판을 숨기지 않고 첫 거래를 유도한다. */
+.market-hall-empty {
+  color: var(--color-muted);
+  line-height: 1.5;
+  padding: var(--space-2) 0;
+  text-align: center;
+}
+
 .market-rank-grid {
   display: grid;
   gap: var(--space-4);

@@ -369,14 +369,15 @@ export function MarketBoard({
         아래에 두면 포스터 격자를 다 지나야 나와 아무도 보지 않는다.
         다만 순위표는 한 줄 띠로 유지한다. 유~머처럼 시상대를 세우면
         물건을 보러 온 사람이 매번 그만큼을 지나쳐야 한다.
-        아무 거래도 성사되지 않았으면 빈 표를 보여주지 않는다.
+        판은 항상 띄운다 — 통째로 숨기면 기능이 사라진 것처럼 보인다.
+        성사된 거래가 하나도 없으면 4칸 '아직 없음' 대신 안내 한 줄로 대신한다.
       */}
-      {hasRanking && (
-        <section className="panel market-hall">
-          <div className="market-hall-head">
-            <Trophy size={18} />
-            <strong>벼룩숲 명예의 전당</strong>
-          </div>
+      <section className="panel market-hall">
+        <div className="market-hall-head">
+          <Trophy size={18} />
+          <strong>벼룩숲 명예의 전당</strong>
+        </div>
+        {hasRanking ? (
           <div className="market-rank-grid">
             {boards.map((board) => (
               <div className="market-rank" key={board.key}>
@@ -399,8 +400,12 @@ export function MarketBoard({
               </div>
             ))}
           </div>
-        </section>
-      )}
+        ) : (
+          <p className="market-hall-empty">
+            아직 성사된 거래가 없어요. 첫 거래의 주인공이 되어보세요 — 판매왕 · 나눔왕 · 구매왕 · 큰손이 여기 오릅니다.
+          </p>
+        )}
+      </section>
 
       <div className="gathering-toolbar">
         <div className="toolbar">
