@@ -9,6 +9,8 @@ import type {
   HumorPost,
   Issue,
   ManagedAccount,
+  MarketBid,
+  MarketItem,
   TeaSession,
 } from './types';
 
@@ -24,8 +26,8 @@ export type SlackChannel = 'team' | 'connector';
 export function slackChannelForKind(kind: AppNotification['kind']): SlackChannel | null {
   if (kind === 'agenda' || kind === 'deadline') return 'team'; // 공지성 → 팀 전체
   if (kind === 'tea' || kind === 'issue') return 'connector'; // 제안·접수 → 커넥셔너
-  // action, message, gathering → 인앱만.
-  // 승계·취소는 특정 개인에게만 뜻이 있는 소식이라 팀 채널에 뿌리면 소음이 된다.
+  // action, message, gathering, market → 인앱만.
+  // 승계·취소·상회 입찰은 특정 개인에게만 뜻이 있는 소식이라 팀 채널에 뿌리면 소음이 된다.
   return null;
 }
 
@@ -233,6 +235,81 @@ export function gatheringCanceledDrafts(gathering: Gathering, names: string[], n
       section: 'gatherings',
       sourceId: gathering.id,
       dedupeKey: dedupeKey('gathering', `${gathering.id}#canceled`, name),
+      createdAt: now,
+      read: false,
+    }));
+}
+
+/*
+  상회 입찰. 내가 부른 값을 누가 넘겼다는 것은 "다시 부를 기회"를 주는 알림이라
+  즉시 닿아야 뜻이 있다. 마감 뒤에 알면 아무것도 할 수 없다.
+  낙찰자 본인에게는 보내지 않는다 — 방금 자기가 부른 값이다.
+*/
+export function marketOutbidDrafts(item: MarketItem, outbid: MarketBid[], now: string): NotificationDraft[] {
+  return outbid.map((bid): NotificationDraft => ({
+    kind: 'market',
+    recipientName: bid.name,
+    fromName: '시스템',
+    title: `누가 더 불렀어요 · ${item.title}`,
+    body: '지금 다시 부르면 아직 가져갈 수 있어요.',
+    section: 'market',
+    sourceId: item.id,
+    // 같은 물건에서 여러 번 밀릴 수 있으므로 밀린 시점까지 키에 넣는다.
+    // 물건 id 만 쓰면 두 번째 상회부터 조용히 사라진다.
+    dedupeKey: dedupeKey('market', `${item.id}#outbid#${now}`, bid.name),
+    createdAt: now,
+    read: false,
+  }));
+}
+
+/**
+ * 낙찰·나눔 확정. 돈과 물건이 오가는 약속이라 놓치면 그대로 파토가 된다.
+ * 판매자에게도 같이 알린다 — 누구와 언제 만날지 정해야 하는 쪽은 둘 다다.
+ */
+export function marketWonDrafts(item: MarketItem, buyerName: string, now: string): NotificationDraft[] {
+  const where = item.place.trim();
+  const isGift = item.kind === 'giveaway';
+  return [
+    {
+      kind: 'market' as const,
+      recipientName: buyerName,
+      fromName: '시스템',
+      title: `${isGift ? '나눔받았어요' : '낙찰됐어요'} · ${item.title}`,
+      body: `${item.seller}님과 ${where || '거래 장소'}에서 만나 주고받으세요.`,
+      section: 'market' as const,
+      sourceId: item.id,
+      dedupeKey: dedupeKey('market', `${item.id}#won`, buyerName),
+      createdAt: now,
+      read: false,
+    },
+    {
+      kind: 'market' as const,
+      recipientName: item.seller,
+      fromName: '시스템',
+      title: `${isGift ? '나눔 상대가 정해졌어요' : '거래가 성사됐어요'} · ${item.title}`,
+      body: `${buyerName}님이 가져갑니다. ${where || '거래 장소'}에서 만나세요.`,
+      section: 'market' as const,
+      sourceId: item.id,
+      dedupeKey: dedupeKey('market', `${item.id}#sold`, item.seller),
+      createdAt: now,
+      read: false,
+    },
+  ];
+}
+
+/** 판매자가 거래를 내렸다. 부른 사람들은 그 돈을 묶어두고 기다렸을 수 있다. */
+export function marketCanceledDrafts(item: MarketItem, names: string[], now: string): NotificationDraft[] {
+  return names
+    .filter((name) => name !== item.seller)
+    .map((name): NotificationDraft => ({
+      kind: 'market',
+      recipientName: name,
+      fromName: '시스템',
+      title: `거래가 내려갔어요 · ${item.title}`,
+      body: `${item.seller}님이 거래를 취소했어요.`,
+      section: 'market',
+      sourceId: item.id,
+      dedupeKey: dedupeKey('market', `${item.id}#canceled`, name),
       createdAt: now,
       read: false,
     }));

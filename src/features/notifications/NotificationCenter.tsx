@@ -1,6 +1,19 @@
 import { useState } from 'react';
 import type { ElementType } from 'react';
-import { Bell, BellOff, Clock, Coffee, FileCheck2, Inbox, Laugh, Mail, MessageSquare, Vote, Zap } from 'lucide-react';
+import {
+  Bell,
+  BellOff,
+  Clock,
+  Coffee,
+  FileCheck2,
+  Inbox,
+  Laugh,
+  Mail,
+  MessageSquare,
+  Store,
+  Vote,
+  Zap,
+} from 'lucide-react';
 import { EmptyState } from '../../components/EmptyState';
 import { PanelHeader } from '../../components/PanelHeader';
 import type { AppNotification, CurrentUser, ManagedAccount, NotificationKind, Section } from '../../types';
@@ -24,6 +37,7 @@ const KIND_LABEL: Record<NotificationKind, string> = {
   humor: '유머',
   message: '메시지',
   gathering: '모임',
+  market: '벼룩숲',
 };
 
 const KIND_ICON: Record<NotificationKind, ElementType> = {
@@ -35,6 +49,7 @@ const KIND_ICON: Record<NotificationKind, ElementType> = {
   humor: Laugh,
   message: MessageSquare,
   gathering: Zap,
+  market: Store,
 };
 
 export function NotificationCenter({

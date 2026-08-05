@@ -585,3 +585,45 @@ create index if not exists gathering_signups_gathering_idx on public.gathering_s
 alter table public.gathering_signups enable row level security;
 drop policy if exists "Allow prototype gathering signups all" on public.gathering_signups;
 create policy "Allow prototype gathering signups all" on public.gathering_signups for all using (true) with check (true);
+
+-- ===== 벼룩숲 (팀 내 중고거래) =====
+-- 모임·번개와 같은 구조다. 물건 하나 + 입찰 별도 행.
+-- 상태(거래중/거래완료/유찰)는 저장하지 않고 close_at 과 입찰에서 파생시킨다 —
+-- 저장하면 마감 시각이 지났는데 거래중으로 남는 어긋남이 반드시 생긴다.
+create table if not exists public.market_items (
+  id text primary key,
+  kind text not null default 'auction',   -- auction(경매) | giveaway(나눔)
+  title text not null default '',
+  description text not null default '',
+  start_price integer not null default 0, -- 나눔이면 0
+  min_step integer not null default 0,    -- 최소 인상폭. 없으면 1원씩 올리는 눈치싸움이 된다
+  close_at text not null default '',
+  extended_to text,                       -- 막판 입찰로 밀린 마감. 원래 약속은 close_at 에 남긴다
+  place text not null default '',
+  image_url text,                         -- 첨부 사진. 없으면 poster 를 쓴다
+  poster jsonb,                           -- 사진이 없을 때 만드는 문구·색·아이콘
+  seller text not null default '',
+  created_at text not null default '',
+  canceled boolean not null default false,
+  -- 거래 완료는 양쪽이 각각 누른다. 앱이 결제를 다루지 않아 누가 잘못했는지
+  -- 판정할 수 없으므로 한쪽 말만으로 완료로 바꾸지 않는다.
+  seller_done boolean not null default false,
+  buyer_done boolean not null default false
+);
+alter table public.market_items enable row level security;
+drop policy if exists "Allow prototype market items all" on public.market_items;
+create policy "Allow prototype market items all" on public.market_items for all using (true) with check (true);
+
+-- 입찰은 별도 행이다. 물건 안에 배열로 넣으면 두 사람이 같은 순간에 부를 때
+-- 나중 쓰기가 앞 쓰기를 지워 한 건이 조용히 사라진다.
+-- created_at 은 동액일 때의 승자와 나눔 선착순을 가르는 유일한 근거라 반드시 값이 있어야 한다.
+create table if not exists public.market_bids (
+  id text primary key,
+  item_id text not null,
+  name text not null,
+  amount integer not null default 0,      -- 나눔이면 0
+  created_at text not null default ''
+);
+alter table public.market_bids enable row level security;
+drop policy if exists "Allow prototype market bids all" on public.market_bids;
+create policy "Allow prototype market bids all" on public.market_bids for all using (true) with check (true);
