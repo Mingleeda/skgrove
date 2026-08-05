@@ -1685,13 +1685,35 @@ textarea {
   font-size: var(--text-display);
 }
 
+/* 다시 좌우 2단으로 돌아왔다. 예전에 되돌린 이유는 작업판이 584px 에 갇힌 채
+   안건 탭 1179px 을 752px 상자에 넣어 페이지 스크롤 안에 또 스크롤이 생겼기
+   때문이다. 그때는 두 열을 1fr 1fr 로 나눴다. 이번에는 목록을 360px 로
+   못박아 작업판이 남는 폭을 전부 가져간다 — 1280px 창에서 880px 이라
+   그때 문제가 됐던 폭보다 넓다. */
 .leader-layout {
-  /* 목록과 상세가 화면 단위로 나뉘므로 한 열이면 된다. 좌우 분할이던 때는
-     작업판이 584px 에 갇힌 채 안건 탭 1179px 을 752px 상자에 넣어
-     페이지 스크롤 안에 또 스크롤이 생겼다. */
+  align-items: start;
   display: grid;
   gap: var(--space-5);
-  grid-template-columns: minmax(0, 1fr);
+  /* 목록을 360px 로 못박으면 1101px 창에서 작업판이 370px 만 남는다 —
+     예전에 문제가 됐던 584px 보다 좁다. 폭에 따라 목록이 먼저 줄고,
+     대신 280px 아래로는 안 내려가게 잡는다(접수 제목이 세 줄로 접힌다). */
+  grid-template-columns: clamp(280px, 30%, 380px) minmax(0, 1fr);
+}
+
+/* 목록은 자체 스크롤을 갖고 작업판은 페이지 스크롤을 쓴다. 둘 다 페이지
+   스크롤에 맡기면 긴 목록 때문에 작업판이 화면 밖으로 밀린다. */
+.leader-inbox-list {
+  max-height: calc(100vh - var(--space-12));
+  overflow-y: auto;
+  position: sticky;
+  top: var(--space-4);
+}
+
+/* 2단에서는 뒤로가기가 필요 없다 — 목록이 늘 옆에 있다.
+   .btn-ghost 가 파일 뒤쪽에서 display:inline-flex 를 주므로 같은 특이도로
+   쓰면 순서에서 진다. 부모를 붙여 (0,2,0) 으로 올린다. */
+.leader-workbench .leader-back {
+  display: none;
 }
 
 /* 열을 명시하지 않으면 암시 트랙이 max-content 로 잡혀, 안의 필터 툴바가
@@ -5573,7 +5595,9 @@ textarea {
     grid-template-columns: 88px minmax(0, 1fr);
   }
 
-  .brand div:last-child,
+  /* 사이드바가 아이콘만 남을 때 워드마크 글자를 감춘다. .sidebar 범위를
+     안 주면 로그인 카드 안의 로고까지 같이 사라진다(실제로 사라졌다). */
+  .sidebar .brand div:last-child,
   .nav-item span,
   .nav-group-title,
   .nav-lock,
@@ -5609,7 +5633,6 @@ textarea {
   }
 
   .login-page {
-    align-items: start;
     padding: var(--space-6) var(--space-4);
   }
 
@@ -5634,6 +5657,32 @@ textarea {
   /* 390px 에서 4열이면 칸이 78px 이라 글자가 3~4 자씩 끊긴다. 2열까지만 간다. */
   .my-profile-notes {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* 좁은 폭에서는 2단이 뜻이 없다. 고른 것이 있으면 작업판만, 없으면
+     목록만 보여준다 — 예전의 화면 교체 방식과 같은 동작이다.
+     요약·지연 알림은 목록의 머리말이라 상세만 볼 때는 같이 감춘다. */
+  .leader-screen:has(.leader-layout.has-selection) .leader-summary,
+  .leader-screen:has(.leader-layout.has-selection) .action-overdue-notice {
+    display: none;
+  }
+
+  .leader-layout.has-selection .leader-inbox-list {
+    display: none;
+  }
+
+  .leader-layout:not(.has-selection) .leader-workbench {
+    display: none;
+  }
+
+  .leader-inbox-list {
+    max-height: none;
+    overflow-y: visible;
+    position: static;
+  }
+
+  .leader-workbench .leader-back {
+    display: inline-flex;
   }
 
   .leader-layout {
