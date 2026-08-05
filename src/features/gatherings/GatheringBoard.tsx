@@ -17,7 +17,6 @@ import {
   canJoinWaitlist,
   confirmedCount,
   deriveStatus,
-  formatDay,
   formatWhen,
   mySeat,
   sortGatherings,
@@ -278,10 +277,9 @@ export function GatheringBoard({
             return (
               <button className="poster-cell" key={item.id} onClick={() => openDetail(item.id)} type="button">
                 <PosterFrame badge={status} badgeTone={STATUS_TONE[status]} gathering={item} />
+                {/* 날짜·정원 같은 상세는 눌러서 본다(인스타 격자와 같은 이유).
+                    남은 자리만 남긴다 — 지금 들어갈 수 있는지가 누를지 말지를 가른다. */}
                 <div className="poster-meta">
-                  <span className="poster-meta-when">
-                    {status === '모집중' ? timeUntil(item.startAt, now) : formatDay(item.startAt)}
-                  </span>
                   <span className="poster-meta-seats">
                     {item.capacity === null
                       ? `${confirmedCount(item, signups)}명 참여`

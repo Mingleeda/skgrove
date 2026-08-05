@@ -3,7 +3,6 @@ import {
   belowMinimum,
   canJoinWaitlist,
   deriveStatus,
-  formatDay,
   formatWhen,
   isFull,
   mySeat,
@@ -178,14 +177,6 @@ describe('사람이 읽는 시각', () => {
 
   it('망가진 값이 와도 앱을 깨뜨리지 않고 원문을 돌려준다', () => {
     expect(formatWhen('언젠가')).toBe('언젠가');
-  });
-
-  it('끝난 모임은 날짜만 쓴다', () => {
-    // 예전엔 formatWhen 을 slice(0, 11) 로 잘라 "8월 5일(수) 오후"처럼 시각이 매달렸다.
-    // 한국어 날짜는 자릿수가 들쭉날쭉해 문자열을 자르면 안 된다.
-    expect(formatDay('2026-08-05T19:00')).toBe('8월 5일(수)');
-    expect(formatDay('2026-12-25T09:00')).toBe('12월 25일(금)');
-    expect(formatDay('언젠가')).toBe('언젠가');
   });
 
   it('번개는 날짜보다 남은 시간이 잘 읽힌다', () => {

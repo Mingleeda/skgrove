@@ -119,18 +119,6 @@ export function formatWhen(startAt: string) {
   return `${date.getMonth() + 1}월 ${date.getDate()}일(${WEEKDAYS[date.getDay()]}) ${meridiem} ${hour12}:${minute}`;
 }
 
-/*
-  날짜만. 끝난 모임은 몇 시였는지가 중요하지 않다.
-  이전에는 formatWhen 을 slice(0, 11) 로 잘라 썼는데, 한국어 날짜는 자릿수가
-  들쭉날쭉해서 "8월 5일(수) 오후" 처럼 시각이 매달린 채 끊겼다.
-  문자열을 자르는 대신 필요한 만큼만 만든다.
-*/
-export function formatDay(startAt: string) {
-  const date = new Date(startAt);
-  if (Number.isNaN(date.getTime())) return startAt;
-  return `${date.getMonth() + 1}월 ${date.getDate()}일(${WEEKDAYS[date.getDay()]})`;
-}
-
 /** 시작까지 남은 시간을 사람 말로. 번개는 "3시간 뒤"가 날짜보다 훨씬 잘 읽힌다. */
 export function timeUntil(startAt: string, now: string) {
   const diff = Date.parse(startAt) - Date.parse(now);
