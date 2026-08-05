@@ -10,6 +10,7 @@ import {
   FileText,
   ListChecks,
   Plus,
+  Radio,
   Send,
   Share2,
   Sparkles,
@@ -273,23 +274,34 @@ export function Meetings({
                   </button>
                 )}
               </div>
-              <div className="can-session-list">
+              {/*
+                인스타 '예정된 라이브' 문법. 캔미팅은 시각이 정해져 있고 그 자리에
+                모여야 하는 일이라 라이브와 성질이 같다. 아직 안 끝난 것은 링을
+                칠하고, 끝난 것은 회색으로 둔다 — 스토리에서 본 것과 안 본 것을
+                가르는 방식과 같다.
+              */}
+              <div className="ig-lives">
                 {sessions.length === 0 && <p className="can-empty">아직 진행된 캔미팅이 없습니다.</p>}
                 {sessions.map((item) => {
                   const { total: count, picked } = opinionCountBySession.get(item.id) ?? { total: 0, picked: 0 };
                   const done = item.stage === 'summary' && item.resultSummary.trim().length > 0;
                   return (
-                    <button className="can-session-card" key={item.id} onClick={() => onSelectSession(item.id)}>
-                      <div className="can-session-top">
-                        <span className="can-badge">{item.teamName || '팀 미정'}</span>
-                        <span className={`can-stage-badge ${done ? 'done' : ''}`}>{stageLabelOf(item)}</span>
-                      </div>
-                      <h3>{item.topic || '(제목 미정)'}</h3>
-                      <div className="can-session-meta">
-                        <span>{item.heldAt ? item.heldAt.replace('T', ' ') : '일시 미정'}</span>
-                        <span>의견 {count}</span>
-                        <span>선정 {picked}</span>
-                      </div>
+                    <button className="ig-live" key={item.id} onClick={() => onSelectSession(item.id)} type="button">
+                      <span className={done ? 'ig-ring seen' : 'ig-ring'}>
+                        <span className="ig-thumb">
+                          <Radio size={22} strokeWidth={1.6} />
+                        </span>
+                      </span>
+                      <span className="ig-live-body">
+                        <b>{item.topic || '(제목 미정)'}</b>
+                        <span>
+                          {item.teamName || '팀 미정'} · {item.heldAt ? item.heldAt.replace('T', ' ') : '일시 미정'}
+                        </span>
+                        <em>
+                          의견 {count} · 선정 {picked}
+                        </em>
+                      </span>
+                      <span className={done ? 'ig-live-badge done' : 'ig-live-badge'}>{stageLabelOf(item)}</span>
                     </button>
                   );
                 })}
