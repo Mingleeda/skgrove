@@ -8,6 +8,7 @@ import {
   Hourglass,
   MapPin,
   Package,
+  Pencil,
   Plus,
   Trophy,
 } from 'lucide-react';
@@ -16,6 +17,7 @@ import {
   bidBlockedReason,
   bidCount,
   bidsFor,
+  canEditMarketItem,
   currentPrice,
   isOpen,
   deriveStatus,
@@ -46,12 +48,13 @@ type MarketBoardProps = {
   /** 등록 직후 배경에서 썸네일을 그리는 중인 물건. 격자에 '그리는 중' 을 띄운다(모임과 동일). */
   imagePendingIds: string[];
   onCreate: (draft: MarketDraft) => void;
+  onUpdate: (item: MarketItem, draft: MarketDraft) => void;
   onBid: (item: MarketItem, amount: number) => void;
   onCancelItem: (item: MarketItem) => void;
   onMarkDone: (item: MarketItem) => void;
 };
 
-type BoardView = 'feed' | 'create' | 'detail';
+type BoardView = 'feed' | 'create' | 'edit' | 'detail';
 type Filter = '거래중' | '나눔' | '내가 올린 것' | '전체';
 
 const FILTERS: Filter[] = ['거래중', '나눔', '내가 올린 것', '전체'];
@@ -77,6 +80,7 @@ export function MarketBoard({
   now,
   imagePendingIds,
   onCreate,
+  onUpdate,
   onBid,
   onCancelItem,
   onMarkDone,
@@ -118,6 +122,23 @@ export function MarketBoard({
     return (
       <section className="screen">
         <MarketForm onCancel={() => setView('feed')} onSubmit={create} />
+      </section>
+    );
+  }
+
+  // 수정은 입찰 0건일 때만 상세에서 열린다. 저장 후 상세로 돌아간다.
+  if (view === 'edit' && selected) {
+    const target = selected;
+    return (
+      <section className="screen">
+        <MarketForm
+          initial={target}
+          onCancel={() => setView('detail')}
+          onSubmit={(draft) => {
+            onUpdate(target, draft);
+            setView('detail');
+          }}
+        />
       </section>
     );
   }
@@ -243,6 +264,18 @@ export function MarketBoard({
                     입찰하기
                   </button>
                 </div>
+              )}
+
+              {/*
+                수정은 아직 아무도 입찰하지 않았을 때만 연다. 입찰이 붙으면 그 사람은
+                이 조건(가격·마감·물건)을 믿고 건 것이라, 몰래 바꾸면 입찰 취소 불가
+                원칙과 어긋난다. 바꿔야 하면 '거래 내리기'(입찰자에게 알림)로 무른다.
+              */}
+              {canEditMarketItem(selected, bids, now, currentUser.name) && (
+                <button className="btn-ghost" onClick={() => setView('edit')} type="button">
+                  <Pencil size={16} />
+                  수정
+                </button>
               )}
 
               {isSeller && !selected.canceled && status === '거래중' && (

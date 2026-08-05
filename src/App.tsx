@@ -100,6 +100,7 @@ import {
 import { splitRoster } from './gatheringRules';
 import {
   bidBlockedReason,
+  canEditMarketItem,
   deriveStatus as deriveMarketStatus,
   extendedCloseFor,
   leadingBid,
@@ -1102,6 +1103,29 @@ export function App() {
   };
 
   /*
+    물건 수정. 아직 아무도 입찰하지 않았을 때만 허용한다 — 입찰이 붙으면 그 사람은
+    가격·마감·물건을 믿고 건 것이라, 몰래 바꾸면 입찰 취소 불가 원칙과 어긋난다.
+    화면(수정 버튼)에서도 막지만, 저장 직전에 규칙으로 한 번 더 확인한다.
+    이미지는 새 사진을 넣었을 때만 교체하고, 사진이 없던 물건은 바뀐 값으로 로컬
+    포스터를 다시 만든다. 크레파스 AI 재생성은 하지 않는다 — 새로 그리려면 재등록한다.
+  */
+  const updateMarketItem = async (item: MarketItem, draft: MarketDraft) => {
+    if (!currentUser) return;
+    // 화면(수정 버튼)에서도 막지만 저장 직전 같은 규칙으로 재확인한다.
+    if (!canEditMarketItem(item, marketBids, nowStamp(), currentUser.name)) return;
+
+    const { imageFile, ...rest } = draft;
+    let next: MarketItem = { ...item, ...rest };
+    if (imageFile) {
+      const { imageUrl } = await uploadMarketImage(item.id, imageFile);
+      next = { ...next, imageUrl, poster: undefined };
+    } else if (!item.imageUrl) {
+      next = { ...next, poster: localItemPoster(next) };
+    }
+    patchMarketItem(item.id, next);
+  };
+
+  /*
     입찰은 배열 통째로 저장하지 않고 한 건만 insert 한다. 두 사람이 같은 순간에
     부를 때 나중 쓰기가 앞 쓰기를 지우면 한 건이 조용히 사라지는데, 경매에서
     그건 "분명 넣었는데 없다"가 되어 신뢰를 가장 크게 깬다.
@@ -1359,6 +1383,7 @@ export function App() {
           onBid={(item, amount) => void placeMarketBid(item, amount)}
           onCancelItem={cancelMarketItem}
           onCreate={(draft) => void createMarketItem(draft)}
+          onUpdate={(item, draft) => void updateMarketItem(item, draft)}
           onMarkDone={markMarketDone}
         />
       )}

@@ -12,6 +12,8 @@ export type MarketDraft = Pick<
 type MarketFormProps = {
   onSubmit: (draft: MarketDraft) => void;
   onCancel: () => void;
+  /** 있으면 수정 모드 — 기존 값으로 채워 시작한다. 입찰 0건일 때만 호출부가 연다. */
+  initial?: MarketItem;
 };
 
 /** 'YYYY-MM-DDTHH:mm' 로컬 시각. datetime-local 이 그대로 받는 형식이다. */
@@ -43,18 +45,19 @@ function suggestStep(startPrice: number) {
   return Math.max(1000, raw);
 }
 
-export function MarketForm({ onSubmit, onCancel }: MarketFormProps) {
-  const [kind, setKind] = useState<MarketKind>('auction');
+export function MarketForm({ onSubmit, onCancel, initial }: MarketFormProps) {
+  const isEdit = Boolean(initial);
+  const [kind, setKind] = useState<MarketKind>(initial?.kind ?? 'auction');
   const isAuction = kind === 'auction';
 
-  const [title, setTitle] = useState('');
-  const [desc, setDesc] = useState('');
-  const [place, setPlace] = useState('');
-  const [closeAt, setCloseAt] = useState(inDays(3, 18));
-  const [startPrice, setStartPrice] = useState('');
-  // 사용자가 직접 고치기 전까지는 시작가를 따라 움직인다.
-  const [stepTouched, setStepTouched] = useState(false);
-  const [minStep, setMinStep] = useState('');
+  const [title, setTitle] = useState(initial?.title ?? '');
+  const [desc, setDesc] = useState(initial?.desc ?? '');
+  const [place, setPlace] = useState(initial?.place ?? '');
+  const [closeAt, setCloseAt] = useState(initial?.closeAt || inDays(3, 18));
+  const [startPrice, setStartPrice] = useState(initial?.startPrice ? String(initial.startPrice) : '');
+  // 수정 모드에서 인상폭이 이미 있으면 '사용자가 정한 값'으로 보고 시작가를 따라 움직이지 않는다.
+  const [stepTouched, setStepTouched] = useState(Boolean(initial?.minStep));
+  const [minStep, setMinStep] = useState(initial?.minStep ? String(initial.minStep) : '');
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [error, setError] = useState('');
 
@@ -112,7 +115,7 @@ export function MarketForm({ onSubmit, onCancel }: MarketFormProps) {
 
   return (
     <section className="panel form-panel">
-      <PanelHeader icon={isAuction ? Gavel : Gift} title="물건 내놓기" />
+      <PanelHeader icon={isAuction ? Gavel : Gift} title={isEdit ? '물건 수정' : '물건 내놓기'} />
 
       <div className="choice-row">
         <button
@@ -248,7 +251,11 @@ export function MarketForm({ onSubmit, onCancel }: MarketFormProps) {
             <input accept="image/*" onChange={pickImage} type="file" />
             <ImagePlus size={22} />
             <strong>사진 넣기</strong>
-            <small>넣지 않으면 입력한 내용으로 포스터를 만들어 드려요.</small>
+            <small>
+              {isEdit && initial?.imageUrl
+                ? '지금 이미지를 그대로 둡니다. 새 사진을 넣으면 교체됩니다.'
+                : '넣지 않으면 입력한 내용으로 포스터를 만들어 드려요.'}
+            </small>
           </label>
         )}
       </div>
@@ -260,7 +267,7 @@ export function MarketForm({ onSubmit, onCancel }: MarketFormProps) {
           취소
         </button>
         <button className="primary-button" onClick={submit} type="button">
-          {isAuction ? '경매 시작' : '나눔 올리기'}
+          {isEdit ? '저장' : isAuction ? '경매 시작' : '나눔 올리기'}
         </button>
       </div>
     </section>

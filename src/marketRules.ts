@@ -102,6 +102,18 @@ export function isOpen(item: MarketItem, bids: MarketBid[], now: string) {
 }
 
 /*
+  물건을 수정할 수 있는가. 본인 물건이고, 아직 거래중이며, 아무도 입찰하지 않았을 때만.
+  입찰이 붙으면 그 사람은 가격·마감·물건을 믿고 건 것이라, 몰래 바꾸면 '입찰 취소 불가'
+  원칙과 어긋난다(대칭). 그 뒤엔 취소(→입찰자 알림)로만 조건을 바꾼다.
+  수정 버튼 노출과 저장 가드가 같은 규칙을 봐야 해서 한곳에 둔다.
+*/
+export function canEditMarketItem(item: MarketItem, bids: MarketBid[], now: string, userName: string) {
+  if (item.seller !== userName) return false;
+  if (deriveStatus(item, bids, now) !== '거래중') return false;
+  return bidCount(item, bids) === 0;
+}
+
+/*
   이 사람이 지금 입찰할 수 있는가. 막는 이유를 문자열로 돌려준다 —
   버튼을 흐리게만 두면 사용자는 고장으로 읽는다(팀 카피 원칙).
   null 이면 입찰 가능.
