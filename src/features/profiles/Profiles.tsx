@@ -441,41 +441,79 @@ export function Profiles({ mode, currentUser, onProfilesChange }: ProfilesProps)
         같은 사람을 같은 항목으로 한 번 더 그린다. 본인일 때는 띄우지 않는다.
       */}
       {mode === 'directory' && selectedProfile && selectedProfile.name !== myProfile?.name && (
-        <section className="panel profile-detail">
-          <div className="profile-detail-head">
+        <section className="panel ig-person">
+          {/*
+            인스타 프로필 헤더 문법. 아바타는 원, 이름은 굵지 않고, 그 아래
+            해시태그 칩이 붙는다. 칩은 장식이 아니라 이동 경로다 — 누르면
+            같은 성향을 가진 동료만 모아 보여준다. 인스타의 해시태그와 같다.
+          */}
+          <header className="ig-person-head">
             <div className={`avatar ${selectedProfile.color}`}>{selectedProfile.name.slice(0, 1)}</div>
-            <div>
-              <span>{selectedProfile.part}</span>
-              <h2>{selectedProfile.name}</h2>
-              <strong>{selectedProfile.englishName} · {selectedProfile.character}</strong>
+            <div className="ig-person-info">
+              <div className="ig-person-line">
+                <h2>{selectedProfile.englishName}</h2>
+                <button className="ig-btn-soft" onClick={() => setSelectedName('')} type="button">
+                  닫기
+                </button>
+              </div>
+              <p className="ig-person-name">
+                <b>{selectedProfile.name}</b>
+                {selectedProfile.part} · {selectedProfile.character}
+              </p>
+              {(() => {
+                /*
+                  저장된 값은 "초안과 맥락을 함께 보면 협업이 쉬워집니다." 같은
+                  문장이다. 그대로 해시태그로 쓰면 칩이 아니라 문단이 된다.
+                  선택지에 있는 값만 짧은 label 로 칩을 만들고, 시드 기본값처럼
+                  선택지에 없는 값은 칩을 만들지 않고 아래 사실 목록으로 내린다.
+                  칩이 하나도 없다고 정보를 지우면 안 된다.
+                */
+                const axes = [
+                  { value: selectedProfile.role, choices: roleChoices, hint: '역할' },
+                  { value: selectedProfile.trait, choices: traitChoices, hint: '성향' },
+                  { value: selectedProfile.collaboration, choices: collaborationChoices, hint: '협업' },
+                  { value: selectedProfile.feedback, choices: feedbackChoices, hint: '피드백' },
+                ].map((item) => ({
+                  ...item,
+                  label: item.choices.find((choice) => choice.value === item.value)?.label ?? null,
+                }));
+                const tagged = axes.filter((item) => item.label !== null);
+
+                return (
+                  <>
+                    {tagged.length > 0 && (
+                      <div className="ig-person-tags">
+                        {tagged.map((tag) => (
+                          <button
+                            className={searchTerm === tag.value ? 'ig-tag on' : 'ig-tag'}
+                            key={tag.hint}
+                            onClick={() => setSearchTerm(searchTerm === tag.value ? '' : tag.value)}
+                            title={`${tag.hint} · 같은 성향인 동료 모아 보기`}
+                            type="button"
+                          >
+                            #{tag.label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    <dl className="ig-person-facts">
+                      {axes.map((axis) => (
+                        <div key={axis.hint}>
+                          <dt>{axis.hint}</dt>
+                          <dd>{axis.value}</dd>
+                        </div>
+                      ))}
+                    </dl>
+                  </>
+                );
+              })()}
             </div>
-          </div>
-          <div className="profile-detail-grid">
-            <div>
-              <BriefcaseBusiness size={20} />
-              <span>역할</span>
-              <strong>{selectedProfile.role}</strong>
-            </div>
-            <div>
-              <Sparkles size={20} />
-              <span>성향</span>
-              <strong>{selectedProfile.trait}</strong>
-            </div>
-            <div>
-              <MessageCircle size={20} />
-              <span>협업 선호</span>
-              <strong>{selectedProfile.collaboration}</strong>
-            </div>
-            <div>
-              <BadgeCheck size={20} />
-              <span>피드백 선호</span>
-              <strong>{selectedProfile.feedback}</strong>
-            </div>
-          </div>
-          <div className="profile-guide">
-            <strong>동료 이해 가이드</strong>
-            <p>{selectedProfile.guide}</p>
-          </div>
+          </header>
+
+          <p className="ig-person-bio">
+            <b>동료 이해 가이드</b>
+            {selectedProfile.guide}
+          </p>
         </section>
       )}
     </section>

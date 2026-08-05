@@ -63,8 +63,8 @@ export function AppShell({
             <HeartHandshake size={24} />
           </div>
           <div>
-            <strong>SK Grove</strong>
-            <span>Team Culture Hub</span>
+            <strong>Connectioner</strong>
+            <span>팀을 잇는 곳</span>
           </div>
         </div>
 

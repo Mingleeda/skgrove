@@ -16,6 +16,7 @@ import {
   bidCount,
   bidsFor,
   currentPrice,
+  isOpen,
   deriveStatus,
   effectiveCloseAt,
   formatPrice,
@@ -392,16 +393,32 @@ export function MarketBoard({
         />
       ) : (
         /*
-          모임·번개와 같은 포스터 격자. 목록은 "무엇이 있나"를 훑는 곳이라
-          가격·남은시간·입찰 현황은 전부 상세로 미룬다.
+          인스타 쇼핑 격자. 사진 위 가격 태그가 인스타 쇼핑의 상품 태그와
+          같은 자리다 — 이 화면에서 가장 먼저 알고 싶은 것이 값이라
+          상세까지 미루지 않는다. 남은 시간은 스토리처럼 "사라지는 것"이라
+          같이 얹고, 마감된 것은 가라앉힌다.
         */
-        <div className="poster-grid">
+        <div className="poster-grid ig-shop">
           {visible.map((item) => {
-            const badge = gridBadge(item, deriveStatus(item, bids, now));
+            const status = deriveStatus(item, bids, now);
+            const badge = gridBadge(item, status);
+            const open = isOpen(item, bids, now);
+            const count = bidCount(item, bids);
+            const left = timeLeft(item, now);
             return (
-              <button className="poster-cell" key={item.id} onClick={() => openDetail(item.id)} type="button">
-                <ItemPoster badge={badge.text} badgeTone={badge.tone} item={item} />
-              </button>
+              <figure className={open ? 'ig-shop-cell' : 'ig-shop-cell closed'} key={item.id}>
+                <button className="poster-cell" onClick={() => openDetail(item.id)} type="button">
+                  <ItemPoster badge={badge.text} badgeTone={badge.tone} item={item} />
+                  <span className="ig-price-tag">{formatPrice(currentPrice(item, bids))}</span>
+                </button>
+                <figcaption className="ig-shop-meta">
+                  <strong>{item.title}</strong>
+                  <span>
+                    {item.kind === 'auction' ? `입찰 ${count}` : '바로 나눔'}
+                    {open && left ? ` · ${left}` : ''}
+                  </span>
+                </figcaption>
+              </figure>
             );
           })}
         </div>

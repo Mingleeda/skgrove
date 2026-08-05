@@ -63,7 +63,6 @@ export function LeaderInbox({ issues, today, onIssueUpdate, onPromoteToAgenda }:
     액션·안건화를 끝낸 뒤 다음 건으로 간다 — 목록을 곁에 두고 빠르게
     오가는 작업이 아니다. 안건함과 같은 전환 방식으로 맞춘다.
   */
-  const [view, setView] = useState<'list' | 'detail'>('list');
   const [selectedIssueId, setSelectedIssueId] = useState('');
   const [activeAction, setActiveAction] = useState<LeaderAction>('reply');
   const [draft, setDraft] = useState('');
@@ -87,7 +86,6 @@ export function LeaderInbox({ issues, today, onIssueUpdate, onPromoteToAgenda }:
 
   const chooseIssue = (issue: Issue) => {
     setSelectedIssueId(issue.id);
-    setView('detail');
     setDraft('');
     setAgendaDrafts((current) => ({ ...current, [issue.id]: current[issue.id] ?? makeAgendaDraft(issue) }));
   };
@@ -173,7 +171,6 @@ export function LeaderInbox({ issues, today, onIssueUpdate, onPromoteToAgenda }:
 
   return (
     <section className="screen leader-screen">
-      {view === 'list' && (
       <div className="leader-summary">
         <div>
           <MessageSquareText size={22} />
@@ -196,9 +193,8 @@ export function LeaderInbox({ issues, today, onIssueUpdate, onPromoteToAgenda }:
           <strong>{oldestWaiting === null ? '없음' : `${oldestWaiting}일`}</strong>
         </div>
       </div>
-      )}
 
-      {view === 'list' && overdueCount > 0 && (
+      {overdueCount > 0 && (
         <div className="notice-line action-overdue-notice">
           <AlarmClock size={18} />
           {RESPONSE_DUE_DAYS}일이 넘도록 응답이 없는 접수가 {overdueCount}건 있습니다. 대나무숲은 첫 몇 건의 응답 속도가
@@ -206,8 +202,18 @@ export function LeaderInbox({ issues, today, onIssueUpdate, onPromoteToAgenda }:
         </div>
       )}
 
-      <div className="leader-layout">
-        {view === 'list' ? (
+      {/*
+        목록과 작업면을 번갈아 보여주던 것을 좌우 2단으로 바꿨다. 처리하는
+        내내 다음 건이 몇 개 남았는지 보이고, 한 건을 끝낼 때마다 목록으로
+        돌아갔다가 다시 들어오지 않아도 된다.
+
+        다만 대화 어휘(아바타 · 말풍선)는 쓰지 않는다. 익명 접수를 '대화'로
+        그리면 리더가 상대를 사람으로 특정하려는 유인이 생긴다. 이 화면은
+        사람 대 사람이 아니라 건별 처리다 — 접수 카드를 그대로 둔다.
+
+        좁은 폭에서는 예전처럼 한 번에 하나만 보여준다(아래 CSS).
+      */}
+      <div className={selectedIssue ? 'leader-layout has-selection' : 'leader-layout'}>
         <section className="leader-inbox-list">
           <div className="toolbar leader-toolbar">
             {primaryFilters.map((item) => (
@@ -296,11 +302,13 @@ export function LeaderInbox({ issues, today, onIssueUpdate, onPromoteToAgenda }:
             ))}
           </div>
         </section>
-        ) : (
+
         <aside className="panel leader-workbench">
           {selectedIssue ? (
             <>
-              <button className="btn-ghost leader-back" onClick={() => setView('list')} type="button">
+              {/* 2단에서는 숨긴다(CSS). 좁은 폭에서만 쓰이며, 선택을 지워야
+                  목록이 다시 보인다 — 레이아웃이 selectedIssue 로 정해지기 때문이다. */}
+              <button className="btn-ghost leader-back" onClick={() => setSelectedIssueId('')} type="button">
                 <ArrowLeft size={16} />
                 접수 목록으로
               </button>
@@ -556,12 +564,11 @@ export function LeaderInbox({ issues, today, onIssueUpdate, onPromoteToAgenda }:
             </>
           ) : (
             <div className="empty-panel">
-              <strong>선택할 접수 건이 없습니다.</strong>
-              <span>필터를 전체로 바꾸거나 새 의견이 접수되면 여기에서 처리할 수 있어요.</span>
+              <strong>왼쪽에서 접수 건을 고르세요.</strong>
+              <span>고른 건의 답변 · 안건화 · 1on1 제안을 여기에서 처리합니다.</span>
             </div>
           )}
         </aside>
-        )}
       </div>
     </section>
   );

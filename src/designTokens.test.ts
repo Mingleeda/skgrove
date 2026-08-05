@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
 const css = readFileSync(new URL('./styles.css', import.meta.url), 'utf8');
@@ -13,7 +13,8 @@ const outsideRoot = (css.slice(0, rootStart) + css.slice(rootEnd)).replace(/\/\*
 
 // 래칫. 태스크가 진행될수록 낮춘다. 절대 올리지 않는다.
 const MAX_HARDCODED_HEX = 0;
-const MAX_HARDCODED_RGBA = 95;
+// 95 → 48. 딥그린 그라디언트 40개를 평평한 --surface-dark 한 톤으로 바꾸면서 줄었다.
+const MAX_HARDCODED_RGBA = 48;
 const MAX_DANGLING_VAR = 0;
 
 function relativeLuminance(hex: string): number {
@@ -37,14 +38,16 @@ function token(name: string): string {
 }
 
 const SURFACES = ['--color-surface', '--color-page', '--color-sunken'];
+// design.md 1 "강조는 딱 한 번" — 브랜드 색조는 파랑 하나이고 초록·빨강은 상태에만
+// 쓴다. clay·pending 은 이 원칙에서 설 자리가 없어 없앴다.
 const FOREGROUNDS = [
   '--color-ink',
   '--color-muted',
-  '--color-moss',
-  '--color-clay',
+  '--color-primary',
+  '--color-primary-strong',
+  '--color-cta',
+  '--color-success',
   '--color-danger',
-  '--color-pending',
-  '--color-info',
 ];
 
 describe('디자인 토큰 대비', () => {
@@ -56,11 +59,11 @@ describe('디자인 토큰 대비', () => {
   });
 
   it.each([
-    ['--tint-moss-ink', '--tint-moss'],
-    ['--tint-clay-ink', '--tint-clay'],
+    ['--tint-primary-ink', '--tint-primary'],
+    ['--tint-success-ink', '--tint-success'],
     ['--tint-danger-ink', '--tint-danger'],
-    ['--tint-pending-ink', '--tint-pending'],
-    ['--tint-info-ink', '--tint-info'],
+    ['--tint-neutral-ink', '--tint-neutral'],
+    ['--tint-avatar-ink', '--tint-avatar'],
   ])('%s / %s 배지 짝은 AAA(7:1) 이상이다', (ink, bg) => {
     expect(contrast(token(ink), token(bg))).toBeGreaterThanOrEqual(7);
   });
@@ -75,6 +78,20 @@ describe('토큰 경유율', () => {
   it('하드코딩 rgb/rgba 는 상한을 넘지 않는다', () => {
     const found = outsideRoot.match(/rgba?\(/g) ?? [];
     expect(found.length).toBeLessThanOrEqual(MAX_HARDCODED_RGBA);
+  });
+
+  /*
+    경계선 토큰을 글자색으로 쓰면 대비가 무너진다. --color-border-strong 은
+    흰 면에서 1.69:1 이라 글자로는 읽히지 않는데, 회색이 필요할 때 손에 잡히는
+    이름이라 계속 끌려 들어왔다(유~머게시판·레일 푸터·사진 편집기에서 각각
+    한 번씩 발견했다). 값이 아니라 쓰임으로 막는다.
+  */
+  it('경계선 토큰을 글자색으로 쓰지 않는다', () => {
+    // border-color: 도 'color:' 로 끝나므로 선언 앞을 고정한다.
+    const misuse = [...outsideRoot.matchAll(/(?<![a-z-])color:\s*var\(--color-border[a-z-]*\)/g)].map(
+      (m) => m[0],
+    );
+    expect(misuse, `글자색에 쓰인 경계선 토큰: ${misuse.join(', ') || '없음'}`).toEqual([]);
   });
 
   // 생김새 기준 토큰명은 다크모드 도입 시 의미가 깨진다.
@@ -105,6 +122,44 @@ describe('토큰 경유율', () => {
       '없음';
 
     expect(total, `정의 없이 참조된 토큰: ${detail}`).toBeLessThanOrEqual(MAX_DANGLING_VAR);
+  });
+});
+
+/*
+  styles.css 만 검사하면 컴포넌트의 인라인 style 이 빠진다. 실제로
+  AgendaBoard 가 `var(--color-${tone})` 로 --color-moss 를 참조하고 있었는데,
+  토큰을 없앤 뒤에도 어떤 테스트도 울리지 않았다. 상태 점이 투명하게
+  그려지고 있었고 화면을 눈으로 봐야만 알 수 있었다.
+*/
+describe('컴포넌트의 토큰 참조', () => {
+  const srcDir = new URL('./', import.meta.url);
+  const files = readdirSync(srcDir, { recursive: true, encoding: 'utf8' }).filter(
+    (name) => name.endsWith('.tsx') || (name.endsWith('.ts') && !name.endsWith('.test.ts')),
+  );
+
+  it('정의되지 않은 커스텀 프로퍼티를 var()로 참조하지 않는다', () => {
+    const defined = new Set(
+      Array.from(rootBlock.matchAll(/--([a-zA-Z0-9-]+):/g)).map((m) => m[1]),
+    );
+
+    const dangling: string[] = [];
+    for (const name of files) {
+      const code = readFileSync(new URL(name, srcDir), 'utf8');
+      for (const match of code.matchAll(/var\(\s*--([a-zA-Z0-9-]+)/g)) {
+        // 템플릿 리터럴로 조립한 이름(`--color-${tone}`)은 정적으로 못 푼다.
+        // 접두사까지만 잘라 두고, 그 접두사로 시작하는 토큰이 하나도 없으면 잡는다.
+        const token = match[1];
+        const isPrefix = code.slice(match.index ?? 0).startsWith(`var(--${token}\${`);
+        if (isPrefix) {
+          const hit = [...defined].some((d) => d.startsWith(token));
+          if (!hit) dangling.push(`${name}: --${token}* (조립형)`);
+          continue;
+        }
+        if (!defined.has(token)) dangling.push(`${name}: --${token}`);
+      }
+    }
+
+    expect(dangling, `정의 없이 참조된 토큰: ${dangling.join(', ') || '없음'}`).toEqual([]);
   });
 });
 

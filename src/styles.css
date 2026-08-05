@@ -5,54 +5,83 @@
   여기 있는 것을 쓴다.
 */
 :root {
-  /* 표면 — 모래빛 3단. 사이드바는 딥그린이 아니라 page 로 내려앉는다. */
-  --color-page: #f6f4ef;
-  --color-surface: #fffdf9;
-  --color-sunken: #efece4;
+  /* 표면 — 인스타그램은 면을 색으로 나누지 않고 1px 헤어라인으로만 나눈다.
+     페이지와 카드가 같은 흰색이고, 가라앉은 면은 hover·입력에만 쓴다.
+     이렇게 해야 화면에서 색을 가진 것이 사진(일러스트) 하나로 남는다. */
+  --color-page: #ffffff;
+  --color-surface: #ffffff;
+  --color-sunken: #fafafa;
 
-  /* 글자 — 위계는 색이 아니라 명도로 만든다. */
-  --color-ink: #1f2420;
-  --color-muted: #5a5f56;
+  /* 글자 — 인스타는 순검정을 안 쓴다. #262626 이 본문, 회색이 메타. */
+  --color-ink: #262626;
+  /* 인스타의 회색은 #737373 인데 --color-sunken 위에서 4.27:1 로 AA 미달이다.
+     designTokens.test.ts 가 세 표면 모두에서 4.5:1 을 강제하므로 한 단계 내렸다. */
+  --color-muted: #616161;
 
-  /* 역할색 — 전부 세 표면에서 AA 통과. designTokens.test.ts 가 강제한다. */
-  --color-moss: #4f7350;
-  --color-moss-strong: #3c5a3d;
-  --color-clay: #96502f;
-  --color-danger: #a33a3a;
-  --color-pending: #77642f;
-  /* 기존 #2f74c0 은 sunken 위에서 4.06:1 로 미달이었다. */
-  --color-info: #39628f;
+  /* 역할색 — 인스타 UI 에는 색이 파랑 하나뿐이다. 초록·빨강은 상태에만 쓴다.
+     인스타의 파랑 #0095f6 은 흰 글자를 얹으면 3.17:1 로 AA 를 크게 밑돈다.
+     같은 계열에서 흰 글자와 회색 면(#efefef) 양쪽에서 4.5:1 을 넘는 값으로 내렸다. */
+  --color-primary: #006bb8;
+  --color-primary-strong: #00376b;
+  --color-primary-soft: #b2dffc;
+  /* 인스타의 주요 버튼은 검정이 아니라 파랑이다. 검정 버튼은 이 문법에 없다. */
+  --color-cta: #0073c9;
+  --color-cta-ink: #ffffff;
+  --color-success: #047857;
+  --color-danger: #b91c1c;
+  /* 좋아요 하트 전용. 인스타에서 색이 들어가는 아이콘은 이것 하나뿐이다.
+     글자가 아니라 아이콘이라 3:1 기준을 쓴다. */
+  --color-heart: #ed4956;
+  /* 보조 버튼의 회색 면. 위에 얹는 글자는 --color-ink 라 대비가 13:1 이다. */
+  --color-btn-soft: #efefef;
+  --color-btn-soft-press: #dbdbdb;
 
-  /* 틴트 — 배지 배경과 짝 글자색. */
-  --tint-moss: #e8efe6;
-  --tint-moss-ink: #2f4a30;
-  --tint-clay: #f5e9e1;
-  --tint-clay-ink: #5c3018;
-  --tint-danger: #f6e5e5;
-  --tint-danger-ink: #6b2020;
-  --tint-pending: #f2eddc;
-  --tint-pending-ink: #4a3d15;
-  --tint-info: #e4ecf4;
-  --tint-info-ink: #1f3f5e;
+  /* 틴트 — 배지 배경과 짝 글자색. 인스타는 틴트 배지를 거의 안 쓰지만
+     이 앱에는 상태(통과·부결·대기)가 있어 남긴다. 짝으로만 쓴다. */
+  --tint-primary: #e8f4fd;
+  --tint-primary-ink: #00376b;
+  --tint-success: #ecfdf5;
+  --tint-success-ink: #065f46;
+  --tint-danger: #fdecea;
+  --tint-danger-ink: #991b1b;
+  --tint-neutral: #efefef;
+  --tint-neutral-ink: #262626;
+  /* 아바타는 사진이 들어갈 자리다. 사진이 없을 때만 회색 면에 이니셜. */
+  --tint-avatar: #efefef;
+  --tint-avatar-ink: #262626;
 
-  --color-border: #e2ddd1;
-  --color-border-strong: #cfc8b8;
+  /* 어두운 면. 인스타 다크모드가 순검정이라 여기도 순검정을 쓴다. */
+  --surface-dark: #000000;
 
-  /* 라운드 — 기존에는 8px 단일값이라 배지와 패널이 같은 곡률을 썼다. */
-  --radius-sm: 6px;
-  --radius: 10px;
-  --radius-lg: 14px;
+  /* 스토리 링. 인스타 전체에서 그라디언트가 쓰이는 유일한 자리라
+     "아직 안 본 것"이라는 뜻이 강하게 전달된다. 다른 어디에도 쓰지 않는다. */
+  --ring-a: #f9ce34;
+  --ring-b: #ee2a7b;
+  --ring-c: #6228d7;
+
+  /* 경계선 — 인스타의 면 분리는 전부 이 한 값이다. */
+  --color-border: #dbdbdb;
+  --color-border-strong: #c7c7c7;
+  --color-border-danger: #f5b5b5;
+
+  /* 라운드 — 인스타는 거의 안 굴린다. 미디어 4, 버튼·입력 8, 큰 면 12.
+     사진이 주인공인 화면에서 큰 라운드는 이미지를 깎아먹는다. */
+  --radius-sm: 4px;
+  --radius: 8px;
+  --radius-lg: 12px;
   --radius-full: 999px;
 
-  /* 그림자 — 떠 있는 것에만. 나머지 분리는 경계선으로 한다. */
-  --shadow-float: 0 8px 24px rgba(31, 36, 32, 0.1);
+  /* 그림자 — 인스타 피드에는 그림자가 없다. 면 분리는 전부 헤어라인이다.
+     그림자는 정말로 떠 있는 것(모달·팝오버)에만 남긴다. */
+  --shadow-card: none;
+  --shadow-float: 0 4px 12px rgba(0, 0, 0, 0.15);
 
   /* 사진 위 글자용 어둠. 첨부 사진은 밝기를 알 수 없으므로 글자를 얹으려면
      스크림이 필요하다. 하드코딩하지 않고 토큰으로 두는 이유는 두 가지다 —
      포스터가 늘어도 어둠의 세기가 한 곳에서만 바뀌고, styles.css 본문의
      rgba 개수를 늘리지 않는다(designTokens.test.ts 가 상한을 지킨다). */
-  --scrim-strong: rgba(20, 24, 21, 0.72);
-  --scrim-none: rgba(20, 24, 21, 0);
+  --scrim-strong: rgba(0, 0, 0, 0.62);
+  --scrim-none: rgba(0, 0, 0, 0);
 
   /* 어두운 면(내 프로필 카드) 위의 구분선. 흰 계열 반투명이라야 배경 그라디언트가
      비쳐 보인다. 토큰으로 두면 styles.css 본문의 rgba 개수를 늘리지 않는다. */
@@ -82,16 +111,18 @@
     BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
-  /* 타이포 스케일. 예전에는 서로 다른 크기가 21종, line-height 가 19종이었다.
-     13px 와 14px, 1.5 와 1.55 는 눈으로 구분되지 않으면서 리듬만 깬다.
-     7단계로 줄이고 각 단계에 행간을 붙여 둔다. */
-  --text-micro: 11px;
-  --text-meta: 12px;
-  --text-body: 13px;
-  --text-body-lg: 15px;
+  /* 타이포 스케일. 7단계를 유지하되 design.md 3 의 치수로 올렸다.
+     이전 값(본문 13px, 메타 12px)은 영문 어드민 규격이라 한국어 UI 에서
+     작았다. 가이드의 Body 14 / Meta 13 / Caption 12 에 맞춘다.
+     display 28 = 페이지 타이틀, title 20 = 카드 제목, heading 24 는
+     그 사이를 잇는 화면 제목이다. */
+  --text-micro: 12px;
+  --text-meta: 13px;
+  --text-body: 14px;
+  --text-body-lg: 16px;
   --text-title: 18px;
-  --text-heading: 22px;
-  --text-display: 28px;
+  --text-heading: 20px;
+  --text-display: 24px;
 
   --leading-tight: 1.35;
   --leading-normal: 1.5;
@@ -155,7 +186,9 @@ button {
    (자체 스크롤이 없으면 낮은 창에서 마지막 항목 '계정 관리'가 잘린다.) */
 .sidebar {
   align-self: start;
-  background: var(--color-page);
+  /* 사이드바는 흰 면이고 본문이 회색 면이다(design.md 5.7). 예전에는 반대라
+     내비게이션이 콘텐츠보다 뒤로 물러나 보였다. */
+  background: var(--color-surface);
   border-right: 1px solid var(--color-border);
   color: var(--color-ink);
   display: flex;
@@ -177,7 +210,7 @@ button {
 
 .brand-mark {
   align-items: center;
-  background: var(--color-moss);
+  background: var(--color-primary);
   border-radius: var(--radius);
   color: var(--color-surface);
   display: flex;
@@ -220,10 +253,19 @@ button {
   text-align: left;
 }
 
-.nav-item:hover,
+/* 인스타는 선택된 메뉴를 칠하지 않는다. 글자를 굵게 하고 아이콘 획을 두껍게 할 뿐이다.
+   면을 칠하면 사이드바가 콘텐츠보다 시끄러워진다. */
+.nav-item:hover {
+  background: var(--color-sunken);
+}
+
 .nav-item.active {
-  background: var(--tint-moss);
-  color: var(--tint-moss-ink);
+  color: var(--color-ink);
+  font-weight: 700;
+}
+
+.nav-item.active svg {
+  stroke-width: 2.4;
 }
 
 .nav-item:disabled {
@@ -269,10 +311,7 @@ button {
 }
 
 .main {
-  background:
-    linear-gradient(120deg, color-mix(in srgb, var(--tint-pending) 45%, transparent), transparent 32%),
-    linear-gradient(150deg, color-mix(in srgb, var(--tint-clay) 30%, transparent), transparent 38%),
-    var(--color-surface);
+  background: var(--color-page);
   min-width: 0;
   padding: 28px;
 }
@@ -368,7 +407,7 @@ h1 {
   width: 15px;
   height: 15px;
   border-radius: 999px;
-  background: var(--color-moss);
+  background: var(--color-primary);
   color: var(--color-surface);
   display: flex;
   align-items: center;
@@ -422,7 +461,7 @@ h1 {
 }
 
 .photo-editor-preview span {
-  color: var(--color-border-strong);
+  color: var(--color-muted);
   font-size: var(--text-meta);
 }
 
@@ -455,16 +494,24 @@ h1 {
   width: 42px;
 }
 
+/* 주요 실행 버튼은 검정이다(design.md 1.3 · 5.1). 파랑을 버튼까지 쓰면
+   링크 · 선택 항목 · 진행바와 같은 색이 되어 "누를 것"이 구분되지 않는다. */
 .primary-button {
-  background: var(--color-moss-strong);
-  border: 1px solid var(--color-moss-strong);
-  color: var(--color-surface);
+  background: var(--color-cta);
+  border: 1px solid var(--color-cta);
+  color: var(--color-cta-ink);
+  font-weight: 600;
 }
 
 .secondary-button {
-  background: var(--color-surface);
-  border: 1px solid var(--color-sunken);
-  color: var(--color-moss-strong);
+  background: var(--color-btn-soft);
+  border: 1px solid transparent;
+  color: var(--color-ink);
+  font-weight: 600;
+}
+
+.secondary-button:hover:not(:disabled) {
+  background: var(--color-btn-soft-press);
 }
 
 .secondary-button:disabled {
@@ -481,75 +528,67 @@ h1 {
   gap: 18px;
 }
 
+/* 소개면을 없애고 카드 하나만 남겼다. 인스타 로그인도 화면 가운데 카드
+   하나뿐이다 — 첫 화면에서 읽을 것이 많으면 로그인이 늦어진다.
+   첫 화면이 어두운 면이면 로그인 뒤 흰 앱과 다른 제품처럼 보이므로
+   화이트 베이스를 여기서부터 지킨다(design.md 1.1). */
 .login-page {
   align-items: center;
-  background:
-    linear-gradient(90deg, rgba(23, 53, 47, 0.98), rgba(29, 70, 62, 0.94) 52%, var(--tint-pending) 52%),
-    var(--color-moss-strong);
-  color: var(--color-surface);
+  background: var(--color-page);
+  color: var(--color-ink);
   display: grid;
-  gap: 64px;
-  grid-template-columns: minmax(420px, 0.9fr) minmax(480px, 560px);
+  justify-items: center;
   min-height: 100vh;
-  overflow: hidden;
-  padding: var(--space-12) 64px;
+  padding: var(--space-12) var(--space-5);
 }
 
-.login-intro {
-  display: grid;
-  gap: 34px;
-  max-width: 620px;
-}
-
-/*
-  .brand span 은 사이드바와 로그인 화면이 함께 쓰는 클래스다. 셸 반전으로
-  muted(어두운 글자) 기준이 되면서 아직 딥그린인 로그인 패널에서 2.02:1 이 됐다.
-  로그인 화면 자체를 리디자인하기 전까지 이 화면의 대비를 되돌려 둔다.
-*/
+/* 로그인 면이 밝아져 사이드바와 같은 muted 기준을 쓸 수 있게 됐다.
+   예전의 딥그린 배경용 오버라이드는 필요 없다. */
 .login-brand span {
-  color: var(--color-page);
+  color: var(--color-muted);
 }
 
-.login-intro h1 {
-  font-size: var(--text-display);
-  line-height: 1.16;
-  max-width: 600px;
+/* 로고가 카드 안으로 들어왔다. 이름과 입력칸이 한 덩어리로 읽혀야
+   "여기서 시작한다"가 분명해진다. 아래 제목과 붙지 않도록 선으로 끊는다. */
+.login-panel .login-brand {
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: var(--space-4);
 }
 
-.login-intro p {
-  color: var(--tint-moss);
-  line-height: 1.65;
-  margin-top: 14px;
-  max-width: 520px;
+.login-panel .login-brand .brand-mark {
+  cursor: pointer;
 }
 
-.login-assurance {
-  align-items: center;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  border-radius: var(--radius);
-  color: var(--tint-moss);
-  display: flex;
-  gap: 10px;
-  min-height: 54px;
-  padding: 0 14px;
-  width: fit-content;
-}
-
+/* 익명 보장 문구는 안심시키는 말이라 경고 색을 쓰지 않는다.
+   파랑 틴트 짝으로 조용히 둔다. */
+/* justify-items:center 아래에서는 카드가 내용 폭으로 줄어든다. 인스타 로그인
+   카드가 350px 안팎이라 그 근처로 폭을 못박는다 — 입력칸이 짧으면 사내메일
+   전체가 한눈에 안 들어온다. */
 .login-panel {
   background: var(--color-surface);
-  border: 1px solid var(--color-page);
-  border-radius: var(--radius);
-  box-shadow: 0 24px 60px rgba(23, 53, 47, 0.16);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
   color: var(--color-ink);
   display: grid;
   gap: 18px;
   justify-self: center;
-  max-width: 560px;
+  max-width: 400px;
   padding: var(--space-8);
   position: relative;
   width: 100%;
   z-index: 1;
+}
+
+/* 제출은 남는 폭을 다 갖고, 모드 전환은 글자만큼만 갖는다.
+   같은 폭으로 두면 둘이 같은 일을 하는 것처럼 보인다. */
+.login-actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.login-actions .primary-button {
+  flex: 1;
 }
 
 .login-panel h2 {
@@ -567,48 +606,20 @@ h1 {
 }
 
 .form-success {
-  background: var(--tint-moss);
-  border: 1px solid var(--color-moss);
+  background: var(--tint-success);
+  border: 1px solid var(--color-success);
   border-radius: var(--radius);
-  color: var(--tint-moss-ink);
+  color: var(--tint-success-ink);
   font-size: var(--text-body);
   font-weight: 700;
   padding: 10px var(--space-3);
 }
 
-.auth-tabs {
-  background: var(--color-page);
-  border: 1px solid var(--color-sunken);
-  border-radius: var(--radius);
-  display: grid;
-  gap: var(--space-1);
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  padding: var(--space-1);
-}
-
-.auth-tabs button {
-  align-items: center;
-  background: transparent;
-  border: 0;
-  border-radius: var(--radius);
-  color: var(--color-ink);
-  display: inline-flex;
-  gap: 7px;
-  justify-content: center;
-  min-height: 38px;
-}
-
-.auth-tabs .selected {
-  background: var(--color-surface);
-  color: var(--color-moss-strong);
-  font-weight: 600;
-}
-
 .role-note {
-  background: var(--tint-info);
-  border: 1px solid var(--color-info);
+  background: var(--tint-primary);
+  border: 1px solid var(--color-primary);
   border-radius: var(--radius);
-  color: var(--tint-info-ink);
+  color: var(--tint-primary-ink);
   display: grid;
   gap: 5px;
   padding: var(--space-3);
@@ -621,9 +632,7 @@ h1 {
 
 .hero-panel {
   align-items: center;
-  background:
-    linear-gradient(120deg, var(--color-moss-strong), var(--color-moss)),
-    radial-gradient(circle at 80% 20%, color-mix(in srgb, var(--tint-pending) 60%, transparent), transparent 36%);
+  background: var(--surface-dark);
   border-radius: var(--radius);
   color: var(--color-surface);
   display: grid;
@@ -641,9 +650,7 @@ h1 {
 
 .home-hero {
   align-items: center;
-  background:
-    linear-gradient(120deg, rgba(23, 53, 47, 0.96), rgba(37, 82, 72, 0.94)),
-    linear-gradient(150deg, rgba(216, 240, 106, 0.28), transparent 42%);
+  background: var(--surface-dark);
   border-radius: var(--radius-lg);
   color: var(--color-surface);
   display: grid;
@@ -662,7 +669,7 @@ h1 {
 }
 
 .hero-copy {
-  color: var(--tint-moss);
+  color: var(--tint-primary);
   line-height: 1.6;
   margin-top: var(--space-3);
   max-width: 680px;
@@ -694,7 +701,7 @@ h1 {
 }
 
 .home-signal-label {
-  color: var(--tint-moss);
+  color: var(--tint-primary);
   font-size: var(--text-meta);
   font-weight: 700;
 }
@@ -711,7 +718,7 @@ h1 {
   align-items: center;
   background: rgba(255, 255, 255, 0.12);
   border-radius: var(--radius);
-  color: var(--tint-moss);
+  color: var(--tint-primary);
   display: flex;
   font-size: var(--text-body);
   min-height: 38px;
@@ -719,7 +726,7 @@ h1 {
 }
 
 .home-signal li:not(:last-child)::after {
-  color: var(--tint-moss);
+  color: var(--tint-primary);
   content: '↓';
   font-size: var(--text-meta);
   margin-left: auto;
@@ -756,10 +763,12 @@ h1 {
 .agenda-card,
 .profile-card,
 .memory-card {
-  background: rgba(255, 255, 255, 0.86);
+  /* 반투명 흰색이었다. 회색 페이지 위에서 카드가 살짝 회색으로 물들어
+     "흰 카드로 띄운다"(design.md 1.1)가 성립하지 않았다. 불투명 흰색으로 둔다. */
+  background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-float);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
 }
 
 .stat-card {
@@ -776,19 +785,19 @@ h1 {
 }
 
 .stat-card.mint svg {
-  color: var(--color-moss);
+  color: var(--color-primary);
 }
 
 .stat-card.violet svg {
-  color: var(--color-info);
+  color: var(--color-primary);
 }
 
 .stat-card.blue svg {
-  color: var(--color-info);
+  color: var(--color-primary);
 }
 
 .stat-card.amber svg {
-  color: var(--color-pending);
+  color: var(--color-primary);
 }
 
 .two-column {
@@ -831,9 +840,9 @@ h1 {
 /* 패널을 열기 전에 알아야 하는 한 마디. 제목 옆이 아니라 줄 끝에 두어
    제목을 밀어내지 않는다. */
 .panel-header-note {
-  background: var(--tint-clay);
+  background: var(--tint-neutral);
   border-radius: var(--radius-full);
-  color: var(--tint-clay-ink);
+  color: var(--tint-neutral-ink);
   font-size: var(--text-micro);
   font-weight: 500;
   margin-left: auto;
@@ -850,7 +859,7 @@ h1 {
 .action-row,
 .score-row {
   align-items: center;
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   display: flex;
@@ -892,7 +901,7 @@ h1 {
 .quick-card-list button,
 .compact-profile-list button,
 .summary-strip button {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   color: var(--color-ink);
@@ -968,19 +977,19 @@ h1 {
   AA(4.5:1) 미달이었다.
 */
 .tiny-avatar.green {
-  background: var(--color-moss);
+  background: var(--color-primary);
 }
 
 .tiny-avatar.red {
-  background: var(--color-clay);
+  background: var(--color-primary);
 }
 
 .tiny-avatar.blue {
-  background: var(--color-info);
+  background: var(--color-primary);
 }
 
 .tiny-avatar.yellow {
-  background: var(--color-pending);
+  background: var(--color-primary);
 }
 
 .culture-summary {
@@ -1003,7 +1012,7 @@ h1 {
 }
 
 .summary-strip strong {
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
   font-size: var(--text-heading);
 }
 
@@ -1019,7 +1028,7 @@ h1 {
 }
 
 .summary-link span {
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
   font-weight: 700;
   grid-column: 1;
 }
@@ -1045,7 +1054,7 @@ h1 {
 /* 상태값("진행중")이 줄어들 수 있게 두면 제목이 긴 행에서 "진행/중"으로 쪼개진다.
    남는 폭은 제목이 가져가고 상태는 한 줄로 고정한다. */
 .action-row em {
-  color: var(--color-moss);
+  color: var(--color-primary);
   flex-shrink: 0;
   font-size: var(--text-meta);
   font-style: normal;
@@ -1057,19 +1066,19 @@ h1 {
    주의이고, danger 는 부결·삭제처럼 되돌릴 수 없는 것에 남겨둔다.
    (0,2,0) 이라 위의 .action-row (0,1,0) 을 순서와 무관하게 이긴다. */
 .action-row.overdue {
-  background: var(--tint-clay);
-  border-color: var(--color-clay);
+  background: var(--tint-neutral);
+  border-color: var(--color-primary);
 }
 
 /* 색만으로 지연을 알리면 색각 이상 사용자에게 전달되지 않는다.
    "6일 지남" 문구가 같은 정보를 글로도 나른다. */
 .action-row.overdue span {
-  color: var(--tint-clay-ink);
+  color: var(--tint-neutral-ink);
   font-weight: 500;
 }
 
 .action-row.overdue em {
-  color: var(--tint-clay-ink);
+  color: var(--tint-neutral-ink);
 }
 
 .form-screen {
@@ -1115,13 +1124,13 @@ h1 {
 
 .intake-stepper button.active {
   background: var(--color-surface);
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
   font-weight: 600;
 }
 
 .intake-stepper span {
   align-items: center;
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border-radius: 999px;
   display: flex;
   font-size: var(--text-meta);
@@ -1131,7 +1140,7 @@ h1 {
 }
 
 .intake-stepper .active span {
-  background: var(--color-moss-strong);
+  background: var(--color-primary-strong);
   color: var(--color-surface);
 }
 
@@ -1143,7 +1152,7 @@ h1 {
 }
 
 .choice-card {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   color: var(--color-ink);
@@ -1155,12 +1164,12 @@ h1 {
 }
 
 .choice-card.selected {
-  background: var(--tint-moss);
-  border-color: var(--color-moss);
+  background: var(--tint-primary);
+  border-color: var(--color-primary);
 }
 
 .choice-card svg {
-  color: var(--color-moss);
+  color: var(--color-primary);
 }
 
 .choice-card span,
@@ -1215,15 +1224,15 @@ h1 {
 .review-flag.anon,
 .review-flag.closed {
   background: var(--color-page);
-  border-color: var(--color-moss);
-  color: var(--color-moss-strong);
+  border-color: var(--color-primary);
+  color: var(--color-primary-strong);
 }
 
 .review-flag.named,
 .review-flag.open {
-  background: var(--tint-clay);
-  border-color: var(--color-clay);
-  color: var(--color-clay);
+  background: var(--tint-neutral);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
 }
 
 .review-section {
@@ -1304,7 +1313,7 @@ h1 {
 /* 접수 직전 안내. 빨강(ReviewGate)·노랑(notice-line)·회색(field-note)이
    연달아 쌓여 서로를 무력화했다. 막는 역할은 ReviewGate만 맡고 여기는 조용히 둔다. */
 .submit-notes {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   color: var(--color-muted);
@@ -1314,7 +1323,7 @@ h1 {
 }
 
 .submit-notes > svg {
-  color: var(--color-moss);
+  color: var(--color-primary);
   flex-shrink: 0;
   margin-top: 2px;
 }
@@ -1337,10 +1346,10 @@ h1 {
 
 .notice-line {
   align-items: center;
-  background: var(--tint-clay);
-  border: 1px solid var(--color-clay);
+  background: var(--tint-neutral);
+  border: 1px solid var(--color-primary);
   border-radius: var(--radius);
-  color: var(--tint-clay-ink);
+  color: var(--tint-neutral-ink);
   display: flex;
   gap: 10px;
   min-height: 48px;
@@ -1353,7 +1362,7 @@ h1 {
 }
 
 .complete-panel > svg {
-  color: var(--color-moss);
+  color: var(--color-success);
 }
 
 .complete-panel h2 {
@@ -1366,8 +1375,8 @@ h1 {
 }
 
 .anonymous-receipt {
-  background: var(--tint-clay);
-  border: 1px solid var(--color-clay);
+  background: var(--tint-neutral);
+  border: 1px solid var(--color-primary);
   border-radius: var(--radius);
   display: grid;
   gap: var(--space-1);
@@ -1375,7 +1384,7 @@ h1 {
 }
 
 .anonymous-receipt strong {
-  color: var(--color-clay);
+  color: var(--color-primary);
   font-size: var(--text-body);
 }
 
@@ -1387,7 +1396,7 @@ h1 {
 }
 
 .anonymous-receipt small {
-  color: var(--color-clay);
+  color: var(--color-primary);
   font-size: var(--text-meta);
   line-height: 1.45;
 }
@@ -1400,7 +1409,7 @@ h1 {
 
 .privacy-list div,
 .submission-list > div:not(.empty-state) {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   display: grid;
@@ -1495,8 +1504,8 @@ h1 {
 
 .submission-withdraw {
   align-items: center;
-  background: var(--tint-clay);
-  border: 1px solid var(--color-clay);
+  background: var(--tint-neutral);
+  border: 1px solid var(--color-primary);
   border-radius: var(--radius);
   display: flex;
   gap: 10px;
@@ -1505,7 +1514,7 @@ h1 {
 }
 
 .submission-withdraw span {
-  color: var(--color-clay);
+  color: var(--color-primary);
   font-size: var(--text-body);
   line-height: 1.45;
 }
@@ -1528,7 +1537,7 @@ h1 {
 }
 
 .anonymous-result {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   padding: var(--space-3);
@@ -1547,11 +1556,26 @@ select,
 textarea {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius);
   color: var(--color-ink);
   min-height: 42px;
   padding: 10px var(--space-3);
   width: 100%;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--color-muted);
+}
+
+/* 포커스 링은 절대 지우지 않는다(design.md 7). 테두리를 투명하게 만들고
+   ring 을 그 자리에 얹어야 링이 테두리 위에 겹쳐 두 겹으로 보이지 않는다. */
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  border-color: transparent;
+  outline: none;
+  box-shadow: 0 0 0 2px var(--color-primary);
 }
 
 textarea {
@@ -1579,7 +1603,7 @@ textarea {
 .segmented .selected,
 .filter.active {
   background: var(--color-surface);
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
 }
 
 .privacy-visual {
@@ -1601,15 +1625,15 @@ textarea {
 }
 
 .privacy-node.hidden {
-  background: var(--color-info);
+  background: var(--color-primary);
 }
 
 .privacy-node.visible {
-  background: var(--color-moss-strong);
+  background: var(--color-primary-strong);
 }
 
 .privacy-node.action {
-  background: var(--color-clay);
+  background: var(--color-primary);
 }
 
 .privacy-line {
@@ -1649,7 +1673,7 @@ textarea {
 }
 
 .leader-summary svg {
-  color: var(--color-moss);
+  color: var(--color-primary);
 }
 
 .leader-summary span {
@@ -1661,13 +1685,35 @@ textarea {
   font-size: var(--text-display);
 }
 
+/* 다시 좌우 2단으로 돌아왔다. 예전에 되돌린 이유는 작업판이 584px 에 갇힌 채
+   안건 탭 1179px 을 752px 상자에 넣어 페이지 스크롤 안에 또 스크롤이 생겼기
+   때문이다. 그때는 두 열을 1fr 1fr 로 나눴다. 이번에는 목록을 360px 로
+   못박아 작업판이 남는 폭을 전부 가져간다 — 1280px 창에서 880px 이라
+   그때 문제가 됐던 폭보다 넓다. */
 .leader-layout {
-  /* 목록과 상세가 화면 단위로 나뉘므로 한 열이면 된다. 좌우 분할이던 때는
-     작업판이 584px 에 갇힌 채 안건 탭 1179px 을 752px 상자에 넣어
-     페이지 스크롤 안에 또 스크롤이 생겼다. */
+  align-items: start;
   display: grid;
   gap: var(--space-5);
-  grid-template-columns: minmax(0, 1fr);
+  /* 목록을 360px 로 못박으면 1101px 창에서 작업판이 370px 만 남는다 —
+     예전에 문제가 됐던 584px 보다 좁다. 폭에 따라 목록이 먼저 줄고,
+     대신 280px 아래로는 안 내려가게 잡는다(접수 제목이 세 줄로 접힌다). */
+  grid-template-columns: clamp(280px, 30%, 380px) minmax(0, 1fr);
+}
+
+/* 목록은 자체 스크롤을 갖고 작업판은 페이지 스크롤을 쓴다. 둘 다 페이지
+   스크롤에 맡기면 긴 목록 때문에 작업판이 화면 밖으로 밀린다. */
+.leader-inbox-list {
+  max-height: calc(100vh - var(--space-12));
+  overflow-y: auto;
+  position: sticky;
+  top: var(--space-4);
+}
+
+/* 2단에서는 뒤로가기가 필요 없다 — 목록이 늘 옆에 있다.
+   .btn-ghost 가 파일 뒤쪽에서 display:inline-flex 를 주므로 같은 특이도로
+   쓰면 순서에서 진다. 부모를 붙여 (0,2,0) 으로 올린다. */
+.leader-workbench .leader-back {
+  display: none;
 }
 
 /* 열을 명시하지 않으면 암시 트랙이 max-content 로 잡혀, 안의 필터 툴바가
@@ -1695,8 +1741,8 @@ textarea {
 }
 
 .issue-card.selected {
-  border-color: var(--color-moss);
-  box-shadow: 0 16px 42px rgba(47, 111, 98, 0.16);
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-float);
 }
 
 .issue-select {
@@ -1743,15 +1789,15 @@ textarea {
 }
 
 .priority.보통 {
-  background: var(--tint-pending);
-  color: var(--tint-pending-ink);
+  background: var(--tint-primary);
+  color: var(--tint-primary-ink);
 }
 
 .priority.낮음,
 .status-pill {
   align-items: center;
-  background: var(--tint-moss);
-  color: var(--tint-moss-ink);
+  background: var(--tint-primary);
+  color: var(--tint-primary-ink);
   display: inline-flex;
   gap: var(--space-1);
 }
@@ -1759,18 +1805,18 @@ textarea {
 /* 배지 짝 글자색을 쓰던 자리에 역할색을 쓰면 대비가 떨어진다.
    틴트 위에서는 --tint-*-ink 를 쓴다(AAA 7:1 이상, 가드 테스트가 강제). */
 .status-pill.action-진행중 {
-  background: var(--tint-info);
-  color: var(--tint-info-ink);
+  background: var(--tint-primary);
+  color: var(--tint-primary-ink);
 }
 
 .status-pill.action-완료 {
-  background: var(--tint-moss);
-  color: var(--tint-moss-ink);
+  background: var(--tint-success);
+  color: var(--tint-success-ink);
 }
 
 .status-pill.action-재검토 {
-  background: var(--tint-clay);
-  color: var(--tint-clay-ink);
+  background: var(--tint-neutral);
+  color: var(--tint-neutral-ink);
 }
 
 .issue-flags {
@@ -1789,7 +1835,7 @@ textarea {
 }
 
 .author-card {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   display: grid;
@@ -1799,7 +1845,7 @@ textarea {
 }
 
 .author-card strong {
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
   font-size: var(--text-body);
 }
 
@@ -1906,12 +1952,12 @@ textarea {
 
 .leader-action-tabs .selected {
   background: var(--color-surface);
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
   font-weight: 600;
 }
 
 .leader-history {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   padding: 14px;
@@ -1955,17 +2001,18 @@ textarea {
 
 /*
   Task 7의 .work-row-dot과 역할이 같다. 클래스는 합치지 않되(호출처가 많다)
-  상태 → 색 대응은 같은 표를 따른다: 통과=moss, 부결=danger, 투표중=pending.
-  기존 값(각각 info/moss/clay 계열)은 화면마다 다른 임의 배정이었다.
+  상태 → 색 대응은 같은 표를 따른다(design.md 9.3):
+  통과=success, 부결=danger, 투표중=primary.
+  초록은 브랜드에서 빠지고 "통과·완료" 상태에만 남았다.
 */
 .status-dot.투표중 {
-  background: var(--tint-pending);
-  color: var(--tint-pending-ink);
+  background: var(--tint-primary);
+  color: var(--tint-primary-ink);
 }
 
 .status-dot.통과 {
-  background: var(--tint-moss);
-  color: var(--tint-moss-ink);
+  background: var(--tint-success);
+  color: var(--tint-success-ink);
 }
 
 .status-dot.부결 {
@@ -1973,9 +2020,11 @@ textarea {
   color: var(--tint-danger-ink);
 }
 
+/* 진행바 트랙은 페이지색이 아니라 파랑 틴트다(design.md 5.5). 카드 위에
+   얹히는 요소라 페이지색을 쓰면 카드와 같은 흰 면 위에서 사라진다. */
 .vote-bar,
 .score-track {
-  background: var(--color-page);
+  background: var(--tint-primary);
   border-radius: 999px;
   height: 10px;
   overflow: hidden;
@@ -1983,7 +2032,7 @@ textarea {
 
 .vote-bar span,
 .score-track span {
-  background: var(--color-moss);
+  background: var(--color-primary);
   display: block;
   height: 100%;
 }
@@ -2003,10 +2052,10 @@ textarea {
 
 .passed-box {
   align-items: center;
-  background: var(--tint-info);
-  border: 1px solid var(--color-info);
+  background: var(--tint-success);
+  border: 1px solid var(--color-success);
   border-radius: var(--radius);
-  color: var(--tint-info-ink);
+  color: var(--tint-success-ink);
   display: flex;
   gap: var(--space-2);
   min-height: 42px;
@@ -2099,7 +2148,7 @@ textarea {
 }
 
 .agenda-detail-body {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   color: var(--color-ink);
@@ -2120,7 +2169,7 @@ textarea {
 
 .agenda-deadline {
   align-items: center;
-  color: var(--color-clay);
+  color: var(--color-primary);
   display: flex;
   font-size: var(--text-body);
   font-weight: 700;
@@ -2128,7 +2177,7 @@ textarea {
 }
 
 .issue-body-box {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   display: grid;
@@ -2154,10 +2203,10 @@ textarea {
 
 .privacy-promotion-note {
   align-items: center;
-  background: var(--tint-moss);
-  border: 1px solid var(--color-moss);
+  background: var(--tint-primary);
+  border: 1px solid var(--color-primary);
   border-radius: var(--radius);
-  color: var(--tint-moss-ink);
+  color: var(--tint-primary-ink);
   display: flex;
   font-size: var(--text-body);
   font-weight: 600;
@@ -2184,16 +2233,16 @@ textarea {
 }
 
 .action-form-source {
-  background: var(--tint-info);
-  border: 1px solid var(--tint-info);
+  background: var(--tint-primary);
+  border: 1px solid var(--tint-primary);
   border-radius: var(--radius);
-  color: var(--color-info);
+  color: var(--color-primary);
   font-weight: 700;
   padding: var(--space-3);
 }
 
 .action-form-source span {
-  color: var(--color-info);
+  color: var(--color-primary);
   font-weight: 600;
 }
 
@@ -2204,7 +2253,7 @@ textarea {
 
 .action-draft-row {
   align-items: end;
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   display: grid;
@@ -2261,7 +2310,7 @@ textarea {
 
 .action-note {
   align-items: start;
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   color: var(--color-ink);
@@ -2273,9 +2322,9 @@ textarea {
 }
 
 .action-note.review {
-  background: var(--tint-clay);
-  border-color: var(--color-clay);
-  color: var(--color-clay);
+  background: var(--tint-neutral);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
 }
 
 .action-assign-row {
@@ -2299,16 +2348,22 @@ textarea {
   min-height: 90px;
 }
 
+/* 목표일이 지났다는 알림은 "지남" 상태다(design.md 5.3). 파랑 안내가 아니라
+   경고 짝을 쓴다 — 아래 카드의 빨간 테두리와 같은 사실을 가리키는데
+   배너만 파랑이면 둘이 다른 일로 읽힌다. */
 .action-overdue-notice {
+  background: var(--tint-danger);
+  border-color: var(--color-border-danger);
+  color: var(--tint-danger-ink);
   margin-bottom: var(--space-4);
 }
 
 .voted-box {
   align-items: center;
-  background: var(--tint-moss);
-  border: 1px solid var(--color-moss);
+  background: var(--tint-primary);
+  border: 1px solid var(--color-primary);
   border-radius: var(--radius);
-  color: var(--color-moss);
+  color: var(--color-primary);
   display: flex;
   font-size: var(--text-body);
   gap: var(--space-2);
@@ -2327,7 +2382,7 @@ textarea {
 
 .step {
   align-items: center;
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   display: flex;
@@ -2338,7 +2393,7 @@ textarea {
 
 .step span {
   align-items: center;
-  background: var(--color-moss-strong);
+  background: var(--color-primary-strong);
   border-radius: var(--radius);
   color: var(--color-surface);
   display: flex;
@@ -2352,9 +2407,9 @@ textarea {
 }
 
 .category-cloud button {
-  background: var(--tint-clay);
-  border: 1px solid var(--color-clay);
-  color: var(--color-clay);
+  background: var(--tint-neutral);
+  border: 1px solid var(--color-primary);
+  color: var(--color-primary);
 }
 
 .profile-grid {
@@ -2369,9 +2424,7 @@ textarea {
 }
 
 .my-profile-card {
-  background:
-    linear-gradient(120deg, rgba(23, 53, 47, 0.96), rgba(40, 77, 69, 0.94)),
-    var(--color-moss-strong);
+  background: var(--surface-dark);
   border-radius: var(--radius);
   color: var(--color-surface);
   display: grid;
@@ -2385,27 +2438,19 @@ textarea {
 }
 
 .my-profile-card.green {
-  background:
-    linear-gradient(120deg, rgba(23, 53, 47, 0.96), rgba(47, 111, 98, 0.92)),
-    var(--color-moss-strong);
+  background: var(--surface-dark);
 }
 
 .my-profile-card.red {
-  background:
-    linear-gradient(120deg, rgba(23, 53, 47, 0.96), rgba(170, 70, 63, 0.92)),
-    var(--color-moss-strong);
+  background: var(--surface-dark);
 }
 
 .my-profile-card.blue {
-  background:
-    linear-gradient(120deg, rgba(23, 53, 47, 0.96), rgba(47, 97, 155, 0.92)),
-    var(--color-moss-strong);
+  background: var(--surface-dark);
 }
 
 .my-profile-card.yellow {
-  background:
-    linear-gradient(120deg, rgba(23, 53, 47, 0.96), rgba(150, 107, 39, 0.92)),
-    var(--color-moss-strong);
+  background: var(--surface-dark);
 }
 
 .my-profile-main,
@@ -2434,7 +2479,7 @@ textarea {
 .my-profile-card .profile-detail-head span,
 .my-profile-card .my-profile-id span,
 .my-profile-card p {
-  color: var(--tint-moss);
+  color: var(--tint-primary);
 }
 
 .my-profile-card .profile-detail-head h2,
@@ -2452,7 +2497,7 @@ textarea {
   background: rgba(255, 255, 255, 0.13);
   border: 1px solid rgba(255, 255, 255, 0.22);
   border-radius: 999px;
-  color: var(--tint-moss);
+  color: var(--tint-primary);
   display: inline-flex;
   font-size: var(--text-body);
   font-weight: 700;
@@ -2509,7 +2554,7 @@ textarea {
 }
 
 .my-profile-notes span {
-  color: var(--tint-moss);
+  color: var(--tint-primary);
   font-size: var(--text-meta);
   font-weight: 600;
 }
@@ -2531,10 +2576,10 @@ textarea {
 }
 
 .age-mood-pill {
-  background: rgba(216, 240, 106, 0.18);
-  border: 1px solid rgba(216, 240, 106, 0.42);
+  background: var(--tint-primary);
+  border: 1px solid var(--color-border);
   border-radius: 999px;
-  color: var(--tint-pending);
+  color: var(--tint-primary-ink);
   font-size: var(--text-meta);
   font-weight: 700;
   min-height: 30px;
@@ -2563,7 +2608,7 @@ textarea {
 }
 
 .profile-private-fields {
-  background: var(--tint-pending);
+  background: var(--tint-primary);
   border: 1px dashed var(--color-sunken);
   border-radius: var(--radius);
   display: grid;
@@ -2577,7 +2622,7 @@ textarea {
 }
 
 .profile-private-fields strong {
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
 }
 
 .profile-private-fields span {
@@ -2608,7 +2653,7 @@ textarea {
 }
 
 .survey-choice-grid button {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   color: var(--color-ink);
@@ -2620,9 +2665,9 @@ textarea {
 }
 
 .survey-choice-grid button.selected {
-  background: var(--tint-moss);
-  border-color: var(--color-moss);
-  box-shadow: inset 0 0 0 1px var(--color-moss);
+  background: var(--tint-primary);
+  border-color: var(--color-primary);
+  box-shadow: inset 0 0 0 1px var(--color-primary);
 }
 
 .survey-choice-grid span {
@@ -2668,48 +2713,22 @@ textarea {
   margin: 3px 0;
 }
 
+/* 아바타는 사람을 가리키는 표시라 상태 배지와 다른 짝을 쓴다(design.md 5.6).
+   예전에는 green/red/blue/yellow 네 변형이 있었는데, 색이 사람에 대해
+   말해주는 것이 없으면서 "강조는 딱 한 번" 원칙만 깼다. 변형을 없애고
+   하나로 합친다 — 사람은 이니셜로 구분한다. */
 .avatar {
   align-items: center;
-  border-radius: var(--radius);
-  color: var(--color-surface);
+  background: var(--tint-avatar);
+  /* 인스타 아바타는 사각형이 아니라 원이다. 사람과 콘텐츠를 모양으로 가른다. */
+  border-radius: 50%;
+  color: var(--tint-avatar-ink);
   display: flex;
   font-size: var(--text-heading);
   font-weight: 700;
   height: 64px;
   justify-content: center;
   width: 64px;
-}
-
-.profile-card.green .avatar {
-  background: var(--color-moss);
-}
-
-.profile-card.red .avatar {
-  background: var(--color-clay);
-}
-
-.profile-card.blue .avatar {
-  background: var(--color-info);
-}
-
-.profile-card.yellow .avatar {
-  background: var(--color-pending);
-}
-
-.avatar.green {
-  background: var(--color-moss);
-}
-
-.avatar.red {
-  background: var(--color-clay);
-}
-
-.avatar.blue {
-  background: var(--color-info);
-}
-
-.avatar.yellow {
-  background: var(--color-pending);
 }
 
 .profile-card strong {
@@ -2734,7 +2753,7 @@ textarea {
 .profile-list-grid button,
 .profile-detail-grid div,
 .profile-guide {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
 }
@@ -2756,7 +2775,7 @@ textarea {
 
 .profile-qa-list svg,
 .profile-detail-grid svg {
-  color: var(--color-moss);
+  color: var(--color-primary);
 }
 
 .profile-directory,
@@ -2800,7 +2819,7 @@ textarea {
 
 .profile-result-summary {
   align-items: center;
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   display: flex;
@@ -2810,7 +2829,7 @@ textarea {
 }
 
 .profile-result-summary strong {
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
   white-space: nowrap;
 }
 
@@ -2826,7 +2845,7 @@ textarea {
 }
 
 .profile-part-section {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   display: grid;
@@ -2842,9 +2861,9 @@ textarea {
 }
 
 .profile-part-head span {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border-radius: 999px;
-  color: var(--color-moss);
+  color: var(--color-primary);
   font-size: var(--text-meta);
   font-weight: 700;
   padding: 5px var(--space-2);
@@ -2866,8 +2885,8 @@ textarea {
 }
 
 .profile-list-grid button.selected {
-  background: var(--tint-moss);
-  border-color: var(--color-moss);
+  background: var(--tint-primary);
+  border-color: var(--color-primary);
 }
 
 .profile-list-grid div {
@@ -2934,7 +2953,7 @@ textarea {
 }
 
 .connect-mode-tabs {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-page);
   border-radius: var(--radius);
   display: grid;
@@ -2958,8 +2977,8 @@ textarea {
 
 .connect-mode-tabs button.selected {
   background: var(--color-surface);
-  color: var(--color-moss-strong);
-  box-shadow: 0 10px 24px rgba(23, 53, 47, 0.1);
+  color: var(--color-primary-strong);
+  box-shadow: var(--shadow-float);
 }
 
 .connect-layout {
@@ -2980,7 +2999,7 @@ textarea {
 }
 
 .participant-panel {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   gap: var(--space-3);
   max-height: calc(100vh - 56px);
@@ -3072,29 +3091,29 @@ textarea {
 }
 
 .coffee-chip-grid button.selected {
-  background: var(--color-moss-strong);
-  border-color: var(--color-moss-strong);
+  background: var(--color-primary-strong);
+  border-color: var(--color-primary-strong);
   color: var(--color-surface);
 }
 
 .coffee-chip-grid button.selected.green {
-  background: var(--color-moss);
-  border-color: var(--color-moss);
+  background: var(--color-primary);
+  border-color: var(--color-primary);
 }
 
 .coffee-chip-grid button.selected.red {
-  background: var(--color-clay);
-  border-color: var(--color-clay);
+  background: var(--color-primary);
+  border-color: var(--color-primary);
 }
 
 .coffee-chip-grid button.selected.blue {
-  background: var(--color-info);
-  border-color: var(--color-info);
+  background: var(--color-primary);
+  border-color: var(--color-primary);
 }
 
 .coffee-chip-grid button.selected.yellow {
-  background: var(--color-pending);
-  border-color: var(--color-pending);
+  background: var(--color-primary);
+  border-color: var(--color-primary);
 }
 
 .part-group-list {
@@ -3143,30 +3162,30 @@ textarea {
 }
 
 .participant-list.compact button {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   grid-template-columns: 34px minmax(0, 1fr) 20px;
   min-height: 56px;
   padding: var(--space-2);
 }
 
 .participant-list button.selected {
-  background: var(--tint-moss);
-  border-color: var(--color-moss);
+  background: var(--tint-primary);
+  border-color: var(--color-primary);
 }
 
 .participant-list button.selected.red {
   background: var(--tint-danger);
-  border-color: var(--color-clay);
+  border-color: var(--color-primary);
 }
 
 .participant-list button.selected.blue {
-  background: var(--tint-info);
-  border-color: var(--color-info);
+  background: var(--tint-primary);
+  border-color: var(--color-primary);
 }
 
 .participant-list button.selected.yellow {
-  background: var(--tint-clay);
-  border-color: var(--color-pending);
+  background: var(--tint-neutral);
+  border-color: var(--color-primary);
 }
 
 .participant-list button > div,
@@ -3200,10 +3219,10 @@ textarea {
 }
 
 .connect-summary-strip span {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
-  color: var(--color-moss);
+  color: var(--color-primary);
   font-weight: 700;
   min-height: 40px;
   padding: 10px var(--space-3);
@@ -3212,10 +3231,7 @@ textarea {
 
 .draw-stage {
   align-items: center;
-  background:
-    linear-gradient(135deg, rgba(216, 240, 106, 0.22), transparent 36%),
-    linear-gradient(145deg, rgba(234, 91, 79, 0.1), transparent 42%),
-    var(--color-moss-strong);
+  background: var(--surface-dark);
   color: var(--color-surface);
   gap: 14px;
   min-height: 170px;
@@ -3226,10 +3242,7 @@ textarea {
 }
 
 .draw-stage.coffee {
-  background:
-    linear-gradient(135deg, rgba(255, 214, 138, 0.22), transparent 40%),
-    linear-gradient(145deg, rgba(47, 116, 192, 0.18), transparent 42%),
-    var(--color-moss-strong);
+  background: var(--surface-dark);
 }
 
 .draw-stage strong {
@@ -3248,7 +3261,7 @@ textarea {
 
 .draw-orbit span {
   animation: float-token 2.8s ease-in-out infinite;
-  background: var(--color-pending);
+  background: var(--color-primary);
   border-radius: var(--radius);
   display: block;
   height: 34px;
@@ -3270,14 +3283,14 @@ textarea {
 
 .draw-orbit span:nth-child(3) {
   animation-delay: 0.24s;
-  background: var(--color-clay);
+  background: var(--color-primary);
   left: 112px;
   top: 32px;
 }
 
 .draw-orbit span:nth-child(4) {
   animation-delay: 0.36s;
-  background: var(--color-info);
+  background: var(--color-primary);
   left: 166px;
   top: 12px;
 }
@@ -3306,7 +3319,7 @@ textarea {
 }
 
 .team-result-head strong {
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
   font-size: var(--text-title);
 }
 
@@ -3317,7 +3330,7 @@ textarea {
 
 .team-member-list > div {
   align-items: center;
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   display: grid;
@@ -3333,10 +3346,7 @@ textarea {
 
 .coffee-draw-stage {
   align-items: center;
-  background:
-    linear-gradient(135deg, rgba(255, 217, 117, 0.28), transparent 40%),
-    linear-gradient(145deg, rgba(47, 116, 192, 0.22), transparent 44%),
-    var(--color-moss-strong);
+  background: var(--surface-dark);
   border-radius: var(--radius);
   color: var(--color-surface);
   display: grid;
@@ -3365,10 +3375,7 @@ textarea {
 }
 
 .coffee-draw-stage.finished {
-  background:
-    linear-gradient(135deg, rgba(216, 240, 106, 0.34), transparent 44%),
-    linear-gradient(145deg, rgba(234, 91, 79, 0.22), transparent 44%),
-    var(--color-moss-strong);
+  background: var(--surface-dark);
 }
 
 .coffee-cup-track {
@@ -3387,7 +3394,7 @@ textarea {
   background: var(--color-surface);
   border: 4px solid rgba(255, 255, 255, 0.34);
   border-radius: var(--radius) 8px 18px 18px;
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
   display: flex;
   height: 76px;
   justify-content: center;
@@ -3395,8 +3402,8 @@ textarea {
 }
 
 .coffee-cup.main {
-  background: var(--tint-pending);
-  color: var(--color-moss-strong);
+  background: var(--tint-primary);
+  color: var(--color-primary-strong);
   height: 88px;
 }
 
@@ -3428,7 +3435,7 @@ textarea {
   background: rgba(255, 255, 255, 0.16);
   border: 1px solid rgba(255, 255, 255, 0.24);
   border-radius: 999px;
-  color: var(--tint-moss);
+  color: var(--tint-primary);
   font-size: var(--text-meta);
   font-weight: 700;
   padding: 6px 10px;
@@ -3442,7 +3449,7 @@ textarea {
 .coffee-draw-copy em {
   background: rgba(255, 255, 255, 0.94);
   border-radius: var(--radius);
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
   font-size: var(--text-display);
   font-style: normal;
   font-weight: 700;
@@ -3461,7 +3468,7 @@ textarea {
 }
 
 .coffee-confetti span {
-  background: var(--color-pending);
+  background: var(--color-primary);
   border-radius: 3px;
   display: block;
   height: 18px;
@@ -3482,19 +3489,19 @@ textarea {
 }
 
 .coffee-confetti span:nth-child(3) {
-  background: var(--color-clay);
+  background: var(--color-primary);
   right: 30%;
   top: 16%;
 }
 
 .coffee-confetti span:nth-child(4) {
-  background: var(--color-info);
+  background: var(--color-primary);
   right: 14%;
   top: 26%;
 }
 
 .coffee-confetti span:nth-child(5) {
-  background: var(--color-pending);
+  background: var(--color-primary);
   bottom: 18%;
   left: 20%;
 }
@@ -3542,22 +3549,22 @@ textarea {
 
 .coffee-winner-card.green svg,
 .coffee-winner-card.green strong {
-  color: var(--color-moss);
+  color: var(--color-primary);
 }
 
 .coffee-winner-card.red svg,
 .coffee-winner-card.red strong {
-  color: var(--color-clay);
+  color: var(--color-primary);
 }
 
 .coffee-winner-card.blue svg,
 .coffee-winner-card.blue strong {
-  color: var(--color-info);
+  color: var(--color-primary);
 }
 
 .coffee-winner-card.yellow svg,
 .coffee-winner-card.yellow strong {
-  color: var(--color-pending);
+  color: var(--color-primary);
 }
 
 .coffee-winner-card span {
@@ -3607,7 +3614,7 @@ textarea {
 }
 
 .share-panel pre {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   color: var(--color-ink);
@@ -3634,10 +3641,7 @@ textarea {
 }
 
 .share-hero-slide {
-  background:
-    linear-gradient(120deg, rgba(216, 240, 106, 0.28), transparent 36%),
-    linear-gradient(150deg, rgba(126, 179, 238, 0.24), transparent 42%),
-    var(--color-moss-strong);
+  background: var(--surface-dark);
   color: var(--color-surface);
   gap: var(--space-2);
   min-height: 170px;
@@ -3646,7 +3650,7 @@ textarea {
 
 .share-hero-slide span,
 .coffee-share-slide span {
-  color: var(--tint-pending);
+  color: var(--tint-primary);
   font-size: var(--text-meta);
   font-weight: 700;
   letter-spacing: 0;
@@ -3660,7 +3664,7 @@ textarea {
 
 .share-hero-slide p,
 .coffee-share-slide p {
-  color: var(--tint-moss);
+  color: var(--tint-primary);
   line-height: 1.55;
   max-width: 720px;
 }
@@ -3672,7 +3676,7 @@ textarea {
 }
 
 .share-team-slide {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-page);
   gap: 14px;
   min-height: 340px;
@@ -3699,13 +3703,13 @@ textarea {
 }
 
 .share-team-slide-head strong {
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
   font-size: var(--text-heading);
   line-height: 1.22;
 }
 
 .share-team-slide-head em {
-  background: var(--color-moss-strong);
+  background: var(--color-primary-strong);
   border-radius: 999px;
   color: var(--color-surface);
   font-size: var(--text-meta);
@@ -3733,8 +3737,8 @@ textarea {
 }
 
 .share-member-cloud span.green {
-  border-color: var(--color-moss);
-  color: var(--color-moss);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
 }
 
 .share-member-cloud span.red {
@@ -3743,13 +3747,13 @@ textarea {
 }
 
 .share-member-cloud span.blue {
-  border-color: var(--color-info);
-  color: var(--color-info);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
 }
 
 .share-member-cloud span.yellow {
-  border-color: var(--color-clay);
-  color: var(--color-clay);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
 }
 
 .team-insight-grid {
@@ -3780,7 +3784,7 @@ textarea {
 
 .profile-signal-list span {
   background: var(--color-surface);
-  border-left: 4px solid var(--color-moss);
+  border-left: 4px solid var(--color-primary);
   border-radius: var(--radius);
   color: var(--color-ink);
   font-size: var(--text-body);
@@ -3796,10 +3800,7 @@ textarea {
 
 .coffee-share-slide {
   align-items: center;
-  background:
-    linear-gradient(135deg, rgba(255, 217, 117, 0.26), transparent 42%),
-    linear-gradient(145deg, rgba(126, 179, 238, 0.24), transparent 44%),
-    var(--color-moss-strong);
+  background: var(--surface-dark);
   color: var(--color-surface);
   gap: var(--space-2);
   justify-items: center;
@@ -3809,34 +3810,26 @@ textarea {
 }
 
 .coffee-share-slide.green {
-  background:
-    linear-gradient(135deg, rgba(216, 240, 106, 0.3), transparent 42%),
-    var(--color-moss);
+  background: var(--surface-dark);
 }
 
 .coffee-share-slide.red {
-  background:
-    linear-gradient(135deg, rgba(255, 217, 117, 0.28), transparent 42%),
-    var(--color-danger);
+  background: var(--color-danger);
 }
 
 .coffee-share-slide.blue {
-  background:
-    linear-gradient(135deg, rgba(216, 240, 106, 0.24), transparent 42%),
-    var(--color-info);
+  background: var(--surface-dark);
 }
 
 .coffee-share-slide.yellow {
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.28), transparent 42%),
-    var(--color-clay);
+  background: var(--color-primary);
 }
 
 .share-notice {
-  background: var(--tint-moss);
-  border: 1px solid var(--color-moss);
+  background: var(--tint-primary);
+  border: 1px solid var(--color-primary);
   border-radius: var(--radius);
-  color: var(--color-moss);
+  color: var(--color-primary);
   font-weight: 700;
   margin: 0;
   padding: 10px var(--space-3);
@@ -3848,7 +3841,7 @@ textarea {
 }
 
 .saved-result-list > p {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px dashed var(--color-sunken);
   border-radius: var(--radius);
   color: var(--color-muted);
@@ -3858,7 +3851,7 @@ textarea {
 
 .saved-result-list article {
   align-items: center;
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   display: grid;
@@ -3985,7 +3978,7 @@ textarea {
 
 .match-card {
   align-items: center;
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   display: flex;
@@ -4000,9 +3993,7 @@ textarea {
 
 .memory-hero {
   align-items: center;
-  background:
-    linear-gradient(120deg, rgba(23, 53, 47, 0.96), rgba(44, 83, 74, 0.94)),
-    linear-gradient(150deg, rgba(241, 211, 144, 0.3), transparent 38%);
+  background: var(--surface-dark);
   border-radius: var(--radius);
   color: var(--color-surface);
   display: grid;
@@ -4019,7 +4010,7 @@ textarea {
 }
 
 .memory-hero p:last-child {
-  color: var(--tint-moss);
+  color: var(--tint-primary);
   line-height: 1.55;
   margin-top: 10px;
 }
@@ -4033,17 +4024,19 @@ textarea {
   padding: var(--space-4);
 }
 
+/* 어두운 히어로 위에서는 액센트가 밝은 쪽이어야 한다. --color-primary(#2563eb)를
+   그대로 쓰면 잉크 면 위에서 2.42:1 로 읽히지 않는다. 밝은 짝을 쓴다. */
 .memory-dday-board svg {
-  color: var(--color-pending);
+  color: var(--color-primary-soft);
 }
 
 .memory-dday-board span,
 .memory-dday-board small {
-  color: var(--tint-moss);
+  color: var(--tint-primary);
 }
 
 .memory-dday-board strong {
-  color: var(--color-pending);
+  color: var(--color-primary-soft);
   font-size: var(--text-display);
 }
 
@@ -4090,7 +4083,7 @@ textarea {
 }
 
 .memory-calendar-notice {
-  color: var(--color-moss);
+  color: var(--color-primary);
   font-weight: 600;
 }
 
@@ -4109,7 +4102,7 @@ textarea {
 }
 
 .memory-calendar button {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   color: var(--color-ink);
@@ -4123,16 +4116,16 @@ textarea {
 /* 월 달력 칸에 행사 제목을 넣을 자리는 없다. 표시만 남기고 이름은 바로 아래
    행사 목록과 툴팁이 맡는다. */
 .memory-day-dot {
-  background: var(--color-moss);
+  background: var(--color-primary);
   border-radius: 999px;
   height: 6px;
   width: 6px;
 }
 
 .memory-calendar button.selected {
-  background: var(--tint-moss);
-  border-color: var(--color-moss);
-  box-shadow: inset 0 0 0 1px var(--color-moss);
+  background: var(--tint-primary);
+  border-color: var(--color-primary);
+  box-shadow: inset 0 0 0 1px var(--color-primary);
 }
 
 .memory-calendar button > span {
@@ -4148,7 +4141,7 @@ textarea {
 
 .memory-calendar small {
   align-self: end;
-  background: var(--color-moss-strong);
+  background: var(--color-primary-strong);
   border-radius: 999px;
   color: var(--color-surface);
   font-size: var(--text-micro);
@@ -4189,12 +4182,12 @@ textarea {
 }
 
 .memory-event-card.selected {
-  border-color: var(--color-moss);
+  border-color: var(--color-primary);
 }
 
 .memory-event-card > span {
   align-items: center;
-  background: var(--color-moss-strong);
+  background: var(--color-primary-strong);
   border-radius: var(--radius);
   color: var(--color-surface);
   display: flex;
@@ -4257,14 +4250,14 @@ textarea {
 }
 
 .memory-tags span {
-  background: var(--tint-clay);
-  color: var(--color-clay);
+  background: var(--tint-neutral);
+  color: var(--color-primary);
 }
 
 .memory-drive-panel {
-  background: var(--tint-info);
-  border: 1px solid var(--color-info);
-  border-left: 5px solid var(--color-info);
+  background: var(--tint-primary);
+  border: 1px solid var(--color-primary);
+  border-left: 5px solid var(--color-primary);
   border-radius: var(--radius);
   display: grid;
   gap: var(--space-3);
@@ -4278,12 +4271,12 @@ textarea {
 }
 
 .memory-drive-panel > div:first-child svg {
-  color: var(--color-info);
+  color: var(--color-primary);
   grid-row: span 2;
 }
 
 .memory-drive-panel strong {
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
 }
 
 .memory-drive-panel span {
@@ -4309,16 +4302,16 @@ textarea {
 
 .memory-drive-meta span {
   background: var(--color-surface);
-  border: 1px solid var(--color-info);
+  border: 1px solid var(--color-primary);
   border-radius: 999px;
-  color: var(--color-info);
+  color: var(--color-primary);
   font-size: var(--text-meta);
   font-weight: 700;
   padding: 6px 9px;
 }
 
 .memory-upload-box {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   display: grid;
@@ -4327,7 +4320,7 @@ textarea {
 }
 
 .memory-upload-box svg {
-  color: var(--color-moss);
+  color: var(--color-primary);
 }
 
 .memory-file-drop {
@@ -4347,7 +4340,7 @@ textarea {
 }
 
 .memory-file-drop span {
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
   font-size: var(--text-body-lg);
   font-weight: 700;
 }
@@ -4361,7 +4354,7 @@ textarea {
 
 .memory-album-head {
   align-items: center;
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   display: flex;
@@ -4411,7 +4404,7 @@ textarea {
 }
 
 .memory-asset.selected::after {
-  border-color: var(--color-moss` (마크) / `--tint-pending` (강조));
+  border-color: var(--color-primary` (마크) / `--tint-primary` (강조));
 }
 
 .memory-asset-visual {
@@ -4439,23 +4432,23 @@ textarea {
 }
 
 .memory-asset.green .memory-asset-visual {
-  background: linear-gradient(135deg, var(--color-moss), var(--color-moss));
+  background: var(--color-primary);
 }
 
 .memory-asset.blue .memory-asset-visual {
-  background: linear-gradient(135deg, var(--color-info), var(--color-info));
+  background: var(--color-primary);
 }
 
 .memory-asset.coral .memory-asset-visual {
-  background: linear-gradient(135deg, var(--color-clay), var(--tint-clay));
+  background: var(--color-primary);
 }
 
 .memory-asset.amber .memory-asset-visual {
-  background: linear-gradient(135deg, var(--color-pending), var(--tint-pending));
+  background: var(--color-primary);
 }
 
 .memory-asset-visual span {
-  background: rgba(23, 53, 47, 0.68);
+  background: var(--surface-dark);
   border: 1px solid rgba(255, 255, 255, 0.22);
   border-radius: 999px;
   color: var(--color-surface);
@@ -4483,19 +4476,19 @@ textarea {
 }
 
 .memory-post.green .memory-post-media {
-  background: linear-gradient(135deg, var(--color-moss), var(--color-moss));
+  background: var(--color-primary);
 }
 
 .memory-post.blue .memory-post-media {
-  background: linear-gradient(135deg, var(--color-info), var(--color-info));
+  background: var(--color-primary);
 }
 
 .memory-post.coral .memory-post-media {
-  background: linear-gradient(135deg, var(--color-clay), var(--tint-clay));
+  background: var(--color-primary);
 }
 
 .memory-post.amber .memory-post-media {
-  background: linear-gradient(135deg, var(--color-pending), var(--tint-pending));
+  background: var(--color-primary);
 }
 
 .memory-post-media img,
@@ -4520,7 +4513,7 @@ textarea {
 
 .memory-asset-profile > span {
   align-items: center;
-  background: var(--color-moss-strong);
+  background: var(--color-primary-strong);
   border-radius: var(--radius);
   color: var(--color-surface);
   display: flex;
@@ -4561,10 +4554,10 @@ textarea {
 
 .memory-emoji-actions button {
   align-items: center;
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-sunken);
   border-radius: 999px;
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
   display: inline-flex;
   font-size: var(--text-body);
   font-weight: 600;
@@ -4574,22 +4567,25 @@ textarea {
 }
 
 .memory-emoji-actions button:hover {
-  background: var(--tint-moss);
-  border-color: var(--color-moss);
+  background: var(--tint-primary);
+  border-color: var(--color-primary);
 }
 
 .memory-asset-actions button,
 .memory-asset-actions a {
   align-items: center;
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: 999px;
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
   display: inline-flex;
   gap: 6px;
   font-size: var(--text-meta);
-  min-height: 32px;
-  padding: 0 10px;
+  /* 32px 은 데스크톱 기준은 넘지만 모바일 최소 클릭 타깃 36px 에 못 미친다.
+     폭에 따라 나누지 않고 큰 쪽으로 통일한다 — 같은 버튼이 화면 폭에 따라
+     달라질 이유가 없다. */
+  min-height: 36px;
+  padding: 0 var(--space-3);
   text-decoration: none;
 }
 
@@ -4608,14 +4604,14 @@ textarea {
 }
 
 .memory-asset-comments p {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border-radius: var(--radius);
   line-height: 1.5;
   padding: 9px 10px;
 }
 
 .memory-empty {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px dashed var(--color-sunken);
   border-radius: var(--radius);
   grid-column: 1 / -1;
@@ -4628,7 +4624,7 @@ textarea {
   background: var(--color-surface);
   border: 1px solid var(--color-sunken);
   border-radius: 999px;
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
   display: inline-flex;
   gap: 6px;
   min-height: 38px;
@@ -4636,7 +4632,7 @@ textarea {
 }
 
 .memory-reactions svg {
-  color: var(--color-clay);
+  color: var(--color-primary);
 }
 
 .memory-comments {
@@ -4649,7 +4645,7 @@ textarea {
 }
 
 .memory-comment-input svg {
-  color: var(--color-moss);
+  color: var(--color-primary);
   flex: 0 0 auto;
 }
 
@@ -4658,7 +4654,7 @@ textarea {
 }
 
 .memory-comments p {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   color: var(--color-ink);
@@ -4679,7 +4675,7 @@ textarea {
 
 .memory-gallery-strip div {
   align-items: center;
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
   display: flex;
   gap: var(--space-2);
   white-space: nowrap;
@@ -4707,7 +4703,7 @@ textarea {
 }
 
 .report-grid div {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   color: var(--color-muted);
@@ -4718,7 +4714,7 @@ textarea {
 }
 
 .report-grid strong {
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
   font-size: var(--text-display);
 }
 
@@ -4732,9 +4728,7 @@ textarea {
    색만으로 뜻을 나르지 않는 편이 읽기에도 낫다. */
 .metrics-hero {
   align-items: center;
-  background:
-    linear-gradient(120deg, rgba(23, 53, 47, 0.96), rgba(37, 82, 72, 0.94)),
-    linear-gradient(150deg, rgba(216, 240, 106, 0.28), transparent 42%);
+  background: var(--surface-dark);
   border-radius: var(--radius);
   color: var(--color-surface);
   display: grid;
@@ -4752,7 +4746,7 @@ textarea {
 }
 
 .metrics-hero p:last-child {
-  color: var(--tint-moss);
+  color: var(--tint-primary);
   line-height: 1.55;
   margin-top: 10px;
 }
@@ -4767,11 +4761,11 @@ textarea {
 }
 
 .calendar-sync-card svg {
-  color: var(--color-pending);
+  color: var(--color-primary);
 }
 
 .calendar-sync-card span {
-  color: var(--tint-moss);
+  color: var(--tint-primary);
   font-size: var(--text-body);
   line-height: 1.45;
 }
@@ -4786,12 +4780,12 @@ textarea {
 }
 
 .metrics-access-card svg {
-  color: var(--color-pending);
+  color: var(--color-primary);
 }
 
 .metrics-access-card span,
 .metrics-access-card small {
-  color: var(--tint-moss);
+  color: var(--tint-primary);
   font-size: var(--text-body);
   line-height: 1.45;
 }
@@ -4818,24 +4812,24 @@ textarea {
 }
 
 .metrics-permission-strip div.active {
-  border-color: var(--color-moss);
+  border-color: var(--color-primary);
   box-shadow: inset 0 0 0 2px rgba(106, 170, 137, 0.12);
 }
 
 .metrics-screen.part-leader-mode .metrics-permission-strip div.active:nth-child(2),
 .metrics-screen.team-leader-mode .metrics-permission-strip div.active:nth-child(3) {
-  background: var(--tint-moss);
-  border-color: var(--color-moss);
+  background: var(--tint-primary);
+  border-color: var(--color-primary);
 }
 
 .metrics-permission-strip div.locked {
-  background: var(--tint-clay);
+  background: var(--tint-neutral);
   border-style: dashed;
   color: var(--color-muted);
 }
 
 .metrics-permission-strip svg {
-  color: var(--color-moss);
+  color: var(--color-primary);
 }
 
 .metrics-permission-strip div.locked svg {
@@ -4843,7 +4837,7 @@ textarea {
 }
 
 .metrics-permission-strip strong {
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
 }
 
 .metrics-permission-strip span {
@@ -4869,7 +4863,7 @@ textarea {
 }
 
 .metrics-visibility-banner strong {
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
 }
 
 .metrics-visibility-banner span {
@@ -4879,13 +4873,13 @@ textarea {
 }
 
 .metrics-visibility-banner .calendar-sync-card {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border-color: var(--color-border);
   grid-template-columns: auto minmax(0, 1fr);
 }
 
 .metrics-visibility-banner .calendar-sync-card svg {
-  color: var(--color-moss);
+  color: var(--color-primary);
   grid-row: span 2;
 }
 
@@ -4911,21 +4905,21 @@ textarea {
 }
 
 .metrics-summary svg {
-  color: var(--color-moss);
+  color: var(--color-primary);
 }
 
 .metrics-summary strong {
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
   font-size: var(--text-display);
 }
 
 .metrics-screen.team-leader-mode .metrics-summary div,
 .metrics-leader-console div {
-  border-color: var(--color-info);
+  border-color: var(--color-primary);
 }
 
 .metrics-screen.part-leader-mode .metrics-summary div {
-  border-color: var(--color-moss);
+  border-color: var(--color-primary);
 }
 
 .metrics-leader-console {
@@ -4935,8 +4929,8 @@ textarea {
 }
 
 .metrics-leader-console div {
-  background: var(--tint-info);
-  border: 1px solid var(--tint-info);
+  background: var(--tint-primary);
+  border: 1px solid var(--tint-primary);
   border-radius: var(--radius);
   display: grid;
   gap: 7px;
@@ -4945,11 +4939,11 @@ textarea {
 }
 
 .metrics-leader-console svg {
-  color: var(--color-info);
+  color: var(--color-primary);
 }
 
 .metrics-leader-console strong {
-  color: var(--color-info);
+  color: var(--color-primary);
 }
 
 .metrics-leader-console span {
@@ -4963,7 +4957,7 @@ textarea {
 .metrics-calendar-panel {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-left: 5px solid var(--color-moss);
+  border-left: 5px solid var(--color-primary);
   border-radius: var(--radius);
   display: grid;
   gap: 14px;
@@ -4986,12 +4980,12 @@ textarea {
 }
 
 .metrics-calendar-panel > div:first-child svg {
-  color: var(--color-moss);
+  color: var(--color-primary);
   grid-row: span 2;
 }
 
 .metrics-calendar-panel strong {
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
 }
 
 .metrics-calendar-panel span {
@@ -5015,10 +5009,10 @@ textarea {
 }
 
 .calendar-event-summary span {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: 999px;
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
   font-weight: 700;
   padding: 7px 10px;
 }
@@ -5047,7 +5041,7 @@ textarea {
 
 .metrics-part-list button {
   align-items: center;
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   color: var(--color-ink);
@@ -5060,8 +5054,8 @@ textarea {
 }
 
 .metrics-part-list button.selected {
-  background: var(--tint-moss);
-  border-color: var(--color-moss);
+  background: var(--tint-primary);
+  border-color: var(--color-primary);
 }
 
 .metrics-part-list div {
@@ -5088,18 +5082,18 @@ textarea {
 }
 
 .metrics-part-list small.leader-visible {
-  background: var(--tint-moss);
-  color: var(--color-moss-strong);
+  background: var(--tint-primary);
+  color: var(--color-primary-strong);
 }
 
 .metrics-part-list small.public-visible {
-  background: var(--tint-clay);
-  color: var(--color-clay);
+  background: var(--tint-neutral);
+  color: var(--color-primary);
 }
 
 .metrics-part-list em {
   align-items: center;
-  background: var(--color-moss-strong);
+  background: var(--color-primary-strong);
   border-radius: var(--radius);
   color: var(--color-surface);
   display: flex;
@@ -5136,19 +5130,19 @@ textarea {
 }
 
 .leader-scope-badge {
-  background: var(--tint-moss);
-  color: var(--color-moss-strong);
+  background: var(--tint-primary);
+  color: var(--color-primary-strong);
 }
 
 .public-scope-badge {
-  background: var(--tint-clay);
-  color: var(--color-clay);
+  background: var(--tint-neutral);
+  color: var(--color-primary);
 }
 
 .reward-badge {
-  background: var(--tint-pending);
+  background: var(--tint-primary);
   border-radius: 999px;
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
   font-size: var(--text-meta);
   font-weight: 700;
   padding: 7px 11px;
@@ -5161,7 +5155,7 @@ textarea {
 }
 
 .metrics-score-grid div {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   color: var(--color-muted);
@@ -5174,25 +5168,25 @@ textarea {
 .metrics-screen.public-member-mode .metrics-score-grid div:nth-child(3),
 .metrics-public-note,
 .metrics-locked-panel {
-  background: var(--tint-clay);
+  background: var(--tint-neutral);
 }
 
 .metrics-screen.part-leader-mode .leader-only-card {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
 }
 
 .metrics-screen.team-leader-mode .leader-only-card {
-  background: var(--tint-info);
-  border-color: var(--color-info);
+  background: var(--tint-primary);
+  border-color: var(--color-primary);
 }
 
 .metrics-score-grid strong {
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
   font-size: var(--text-display);
 }
 
 .meeting-health-card {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   display: grid;
@@ -5202,12 +5196,12 @@ textarea {
 }
 
 .leader-only-card {
-  border-color: var(--color-moss);
+  border-color: var(--color-primary);
 }
 
 .metrics-public-note {
   align-items: start;
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px dashed var(--color-sunken);
   border-radius: var(--radius);
   display: grid;
@@ -5217,7 +5211,7 @@ textarea {
 }
 
 .metrics-public-note svg {
-  color: var(--color-moss);
+  color: var(--color-primary);
 }
 
 .metrics-public-note div {
@@ -5226,7 +5220,7 @@ textarea {
 }
 
 .metrics-public-note strong {
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
 }
 
 .metrics-public-note span,
@@ -5242,7 +5236,7 @@ textarea {
 }
 
 .meeting-health-card svg {
-  color: var(--color-moss);
+  color: var(--color-primary);
 }
 
 .meeting-health-card span {
@@ -5257,12 +5251,12 @@ textarea {
 }
 
 .metrics-calendar-panel > div:first-child svg {
-  color: var(--color-moss);
+  color: var(--color-primary);
   grid-row: span 2;
 }
 
 .metrics-calendar-panel strong {
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
 }
 
 .metrics-calendar-panel span {
@@ -5278,6 +5272,32 @@ textarea {
   justify-content: flex-end;
 }
 
+/* 이 버튼들에는 클래스가 없어 UA 기본 스타일(높이 25px)로 그려지고 있었다.
+   모바일 최소 클릭 타깃 36px 에 못 미친다. 보조 버튼 문법에 맞춘다. */
+.calendar-sync-actions button {
+  align-items: center;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  color: var(--color-ink);
+  display: inline-flex;
+  font-size: var(--text-meta);
+  font-weight: 500;
+  gap: var(--space-2);
+  min-height: 36px;
+  padding: 0 var(--space-3);
+}
+
+.calendar-sync-actions button:hover:not(:disabled) {
+  background: var(--color-page);
+  border-color: var(--color-border-strong);
+}
+
+.calendar-sync-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
 .calendar-event-summary {
   display: flex;
   flex-wrap: wrap;
@@ -5286,10 +5306,10 @@ textarea {
 }
 
 .calendar-event-summary span {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: 999px;
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
   font-weight: 700;
   padding: 7px 10px;
 }
@@ -5318,7 +5338,7 @@ textarea {
 
 .metrics-part-list button {
   align-items: center;
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   color: var(--color-ink);
@@ -5331,8 +5351,8 @@ textarea {
 }
 
 .metrics-part-list button.selected {
-  background: var(--tint-moss);
-  border-color: var(--color-moss);
+  background: var(--tint-primary);
+  border-color: var(--color-primary);
 }
 
 .metrics-part-list div {
@@ -5359,18 +5379,18 @@ textarea {
 }
 
 .metrics-part-list small.leader-visible {
-  background: var(--tint-moss);
-  color: var(--color-moss-strong);
+  background: var(--tint-primary);
+  color: var(--color-primary-strong);
 }
 
 .metrics-part-list small.public-visible {
-  background: var(--tint-clay);
-  color: var(--color-clay);
+  background: var(--tint-neutral);
+  color: var(--color-primary);
 }
 
 .metrics-part-list em {
   align-items: center;
-  background: var(--color-moss-strong);
+  background: var(--color-primary-strong);
   border-radius: var(--radius);
   color: var(--color-surface);
   display: flex;
@@ -5407,19 +5427,19 @@ textarea {
 }
 
 .leader-scope-badge {
-  background: var(--tint-moss);
-  color: var(--color-moss-strong);
+  background: var(--tint-primary);
+  color: var(--color-primary-strong);
 }
 
 .public-scope-badge {
-  background: var(--tint-clay);
-  color: var(--color-clay);
+  background: var(--tint-neutral);
+  color: var(--color-primary);
 }
 
 .reward-badge {
-  background: var(--tint-pending);
+  background: var(--tint-primary);
   border-radius: 999px;
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
   font-size: var(--text-meta);
   font-weight: 700;
   padding: 7px 11px;
@@ -5432,7 +5452,7 @@ textarea {
 }
 
 .metrics-score-grid div {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   color: var(--color-muted);
@@ -5445,25 +5465,25 @@ textarea {
 .metrics-screen.public-member-mode .metrics-score-grid div:nth-child(3),
 .metrics-public-note,
 .metrics-locked-panel {
-  background: var(--tint-clay);
+  background: var(--tint-neutral);
 }
 
 .metrics-screen.part-leader-mode .leader-only-card {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
 }
 
 .metrics-screen.team-leader-mode .leader-only-card {
-  background: var(--tint-info);
-  border-color: var(--color-info);
+  background: var(--tint-primary);
+  border-color: var(--color-primary);
 }
 
 .metrics-score-grid strong {
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
   font-size: var(--text-display);
 }
 
 .meeting-health-card {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   display: grid;
@@ -5473,12 +5493,12 @@ textarea {
 }
 
 .leader-only-card {
-  border-color: var(--color-moss);
+  border-color: var(--color-primary);
 }
 
 .metrics-public-note {
   align-items: start;
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px dashed var(--color-sunken);
   border-radius: var(--radius);
   display: grid;
@@ -5488,7 +5508,7 @@ textarea {
 }
 
 .metrics-public-note svg {
-  color: var(--color-moss);
+  color: var(--color-primary);
 }
 
 .metrics-public-note div {
@@ -5497,7 +5517,7 @@ textarea {
 }
 
 .metrics-public-note strong {
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
 }
 
 .metrics-public-note span,
@@ -5513,7 +5533,7 @@ textarea {
 }
 
 .meeting-health-card svg {
-  color: var(--color-moss);
+  color: var(--color-primary);
 }
 
 .meeting-health-card span {
@@ -5536,7 +5556,7 @@ textarea {
 }
 
 .meeting-volume-total strong {
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
   font-size: var(--text-heading);
 }
 
@@ -5553,7 +5573,7 @@ textarea {
 }
 
 .meeting-budget-bar > span {
-  background: var(--color-moss);
+  background: var(--color-primary);
   display: block;
   height: 100%;
 }
@@ -5577,7 +5597,7 @@ textarea {
 }
 
 .meeting-volume-split dd {
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
   font-size: var(--text-body-lg);
   font-weight: 700;
   margin: 0;
@@ -5592,7 +5612,7 @@ textarea {
 
 .color-stack span.green,
 .tone-list span.green {
-  background: var(--color-moss);
+  background: var(--color-primary);
 }
 
 /* 12px 흰 글씨를 얹는 칩이다. 아바타용 #e35d4f/#bc7a12 를 그대로 쓰면
@@ -5604,12 +5624,12 @@ textarea {
 
 .color-stack span.blue,
 .tone-list span.blue {
-  background: var(--color-info);
+  background: var(--color-primary);
 }
 
 .color-stack span.yellow,
 .tone-list span.yellow {
-  background: var(--color-clay);
+  background: var(--color-primary);
 }
 
 .tone-list {
@@ -5627,7 +5647,7 @@ textarea {
 }
 
 .profile-color-panel p strong {
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
 }
 
 .calendar-event-list {
@@ -5636,7 +5656,7 @@ textarea {
 }
 
 .calendar-event-list > div:not(.panel-header) {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   display: grid;
@@ -5646,15 +5666,15 @@ textarea {
 }
 
 .calendar-event-list > div.long-meeting {
-  background: var(--tint-clay);
-  border-color: var(--color-clay);
+  background: var(--tint-neutral);
+  border-color: var(--color-primary);
 }
 
 .calendar-event-list > div:not(.panel-header) span {
   align-self: start;
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border-radius: 999px;
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
   font-size: var(--text-meta);
   font-weight: 700;
   justify-self: start;
@@ -5662,12 +5682,12 @@ textarea {
 }
 
 .calendar-event-list > div.long-meeting span {
-  background: var(--tint-pending);
-  color: var(--color-clay);
+  background: var(--tint-primary);
+  color: var(--color-primary);
 }
 
 .calendar-event-list > div:not(.panel-header) strong {
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
 }
 
 .calendar-event-list > div:not(.panel-header) small {
@@ -5677,7 +5697,7 @@ textarea {
 }
 
 .calendar-event-list p {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px dashed var(--color-sunken);
   border-radius: var(--radius);
   color: var(--color-muted);
@@ -5687,14 +5707,14 @@ textarea {
 }
 
 .insight-list p {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   padding: var(--space-3);
 }
 
 .weight-controls label {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   display: grid;
@@ -5709,7 +5729,7 @@ textarea {
 }
 
 .weight-controls strong {
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
   font-size: var(--text-body);
   text-align: right;
 }
@@ -5735,7 +5755,7 @@ textarea {
 }
 
 .account-summary svg {
-  color: var(--color-moss);
+  color: var(--color-primary);
 }
 
 .account-summary span {
@@ -5747,9 +5767,16 @@ textarea {
   font-size: var(--text-display);
 }
 
+/* 열 다섯 개의 최소 폭 합이 794px 이라 1116px 창에서도 사이드바를 빼면 넘친다.
+   페이지 전체가 가로로 밀리는 대신 표만 스크롤하게 가둔다. */
 .account-table {
   display: grid;
   gap: var(--space-2);
+  overflow-x: auto;
+}
+
+.account-table > * {
+  min-width: 794px;
 }
 
 .account-table-head,
@@ -5776,14 +5803,14 @@ textarea {
 }
 
 .connectioner-toggle input {
-  accent-color: var(--color-moss);
+  accent-color: var(--color-primary);
   cursor: pointer;
   height: 16px;
   width: 16px;
 }
 
 .connectioner-toggle.on {
-  color: var(--color-moss);
+  color: var(--color-primary);
 }
 
 .account-table-head {
@@ -5793,9 +5820,11 @@ textarea {
   padding: 0 var(--space-3);
 }
 
+/* 행마다 면을 칠하면 목록 전체가 시끄러워진다. 인스타는 목록을 칠하지 않고
+   헤어라인으로만 나눈다. 배경은 흰 면 그대로 둔다. */
 .account-row {
   align-items: center;
-  background: var(--tint-moss);
+  background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   padding: var(--space-3);
@@ -5832,9 +5861,9 @@ textarea {
 
 .part-static {
   align-items: center;
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border-radius: var(--radius);
-  color: var(--color-moss);
+  color: var(--color-primary);
   display: flex;
   font-weight: 600;
   min-height: 42px;
@@ -5846,7 +5875,9 @@ textarea {
     grid-template-columns: 88px minmax(0, 1fr);
   }
 
-  .brand div:last-child,
+  /* 사이드바가 아이콘만 남을 때 워드마크 글자를 감춘다. .sidebar 범위를
+     안 주면 로그인 카드 안의 로고까지 같이 사라진다(실제로 사라졌다). */
+  .sidebar .brand div:last-child,
   .nav-item span,
   .nav-group-title,
   .nav-lock,
@@ -5882,17 +5913,9 @@ textarea {
   }
 
   .login-page {
-    align-items: start;
-    background:
-      linear-gradient(180deg, rgba(23, 53, 47, 0.98), rgba(29, 70, 62, 0.94) 50%, var(--tint-pending) 50%),
-      var(--color-moss-strong);
-    gap: var(--space-8);
-    padding: 28px;
+    padding: var(--space-6) var(--space-4);
   }
 
-  .login-intro h1 {
-    font-size: var(--text-display);
-  }
 
   .signal-map {
     justify-content: flex-start;
@@ -5914,6 +5937,45 @@ textarea {
   /* 390px 에서 4열이면 칸이 78px 이라 글자가 3~4 자씩 끊긴다. 2열까지만 간다. */
   .my-profile-notes {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* 레일은 남는 가로가 있을 때만 뜻이 있다. 좁아지면 피드 아래로 내린다.
+     이 미디어쿼리는 파일에서 .ig-home 기본 규칙보다 앞에 있다. 같은 특이도로
+     쓰면 순서로 져서 조용히 무시된다 — 부모를 붙여 (0,2,0) 으로 올린다. */
+  .screen.ig-home {
+    grid-template-columns: minmax(0, 620px);
+  }
+
+  .ig-home .ig-rail {
+    grid-column: 1;
+    grid-row: auto;
+    position: static;
+  }
+
+  /* 좁은 폭에서는 2단이 뜻이 없다. 고른 것이 있으면 작업판만, 없으면
+     목록만 보여준다 — 예전의 화면 교체 방식과 같은 동작이다.
+     요약·지연 알림은 목록의 머리말이라 상세만 볼 때는 같이 감춘다. */
+  .leader-screen:has(.leader-layout.has-selection) .leader-summary,
+  .leader-screen:has(.leader-layout.has-selection) .action-overdue-notice {
+    display: none;
+  }
+
+  .leader-layout.has-selection .leader-inbox-list {
+    display: none;
+  }
+
+  .leader-layout:not(.has-selection) .leader-workbench {
+    display: none;
+  }
+
+  .leader-inbox-list {
+    max-height: none;
+    overflow-y: visible;
+    position: static;
+  }
+
+  .leader-workbench .leader-back {
+    display: inline-flex;
   }
 
   .leader-layout {
@@ -6118,18 +6180,10 @@ textarea {
   }
 
   .login-page {
-    display: grid;
-    min-height: 100vh;
-    padding: var(--space-5);
+    padding: var(--space-5) var(--space-4);
   }
 
-  .login-intro h1 {
-    font-size: var(--text-display);
-  }
 
-  .login-assurance {
-    width: 100%;
-  }
 
   .login-panel {
     padding: 22px;
@@ -6324,7 +6378,7 @@ textarea {
 
 .can-tabs .selected {
   background: var(--color-surface);
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
   box-shadow: 0 4px 12px rgba(42, 58, 52, 0.1);
 }
 
@@ -6374,18 +6428,18 @@ textarea {
 }
 
 .can-step.active {
-  border-color: var(--color-moss-strong);
-  box-shadow: 0 10px 26px rgba(23, 53, 47, 0.14);
+  border-color: var(--color-primary-strong);
+  box-shadow: var(--shadow-float);
 }
 
 .can-step.active span {
-  background: var(--color-moss-strong);
-  color: var(--tint-pending);
+  background: var(--color-primary-strong);
+  color: var(--tint-primary);
 }
 
 .can-step.done span {
-  background: var(--tint-pending);
-  color: var(--color-moss-strong);
+  background: var(--tint-success);
+  color: var(--color-success);
 }
 
 .can-hint {
@@ -6396,7 +6450,7 @@ textarea {
 
 /* 단계 전환 안내 — 의견 데이터와 섞이지 않게 스테이지 하단에 두는 플로우 노트 */
 .can-flow-note {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px dashed var(--color-sunken);
   border-radius: var(--radius);
   color: var(--color-muted);
@@ -6407,7 +6461,7 @@ textarea {
 }
 
 .can-meta {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px dashed var(--color-sunken);
   border-radius: var(--radius);
   color: var(--color-ink);
@@ -6433,8 +6487,8 @@ textarea {
 }
 
 .can-part-picker .selected {
-  background: var(--color-moss-strong);
-  border-color: var(--color-moss-strong);
+  background: var(--color-primary-strong);
+  border-color: var(--color-primary-strong);
   color: var(--color-surface);
 }
 
@@ -6449,7 +6503,7 @@ textarea {
   background: var(--color-surface);
   border: 1px solid var(--color-sunken);
   border-radius: var(--radius);
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
   display: inline-flex;
   font-weight: 700;
   gap: var(--space-2);
@@ -6466,7 +6520,7 @@ textarea {
 
 .can-count-chip {
   align-items: center;
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   display: flex;
@@ -6491,7 +6545,7 @@ textarea {
 }
 
 .can-part-column {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   display: grid;
@@ -6510,9 +6564,9 @@ textarea {
 
 .can-part-column h3 span {
   align-items: center;
-  background: var(--color-moss-strong);
+  background: var(--color-primary-strong);
   border-radius: 999px;
-  color: var(--color-pending);
+  color: var(--color-primary);
   display: inline-flex;
   font-size: var(--text-meta);
   height: 22px;
@@ -6533,7 +6587,7 @@ textarea {
 }
 
 .can-step-group-title {
-  color: var(--color-moss);
+  color: var(--color-primary);
   font-size: var(--text-micro);
   font-weight: 600;
   margin: 2px 0 0;
@@ -6567,9 +6621,9 @@ textarea {
 }
 
 .can-badge {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border-radius: 999px;
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
   font-size: var(--text-micro);
   font-weight: 600;
   padding: 3px 9px;
@@ -6606,16 +6660,16 @@ textarea {
 }
 
 .can-select-item.picked {
-  border-color: var(--color-moss-strong);
-  box-shadow: 0 8px 20px rgba(23, 53, 47, 0.12);
+  border-color: var(--color-primary-strong);
+  box-shadow: var(--shadow-float);
 }
 
 .can-check {
   align-items: center;
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-sunken);
   border-radius: 6px;
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
   display: flex;
   flex: none;
   font-weight: 600;
@@ -6625,8 +6679,8 @@ textarea {
 }
 
 .can-select-item.picked .can-check {
-  background: var(--tint-pending);
-  border-color: var(--color-moss-strong);
+  background: var(--tint-primary);
+  border-color: var(--color-primary-strong);
 }
 
 .can-select-body {
@@ -6654,9 +6708,9 @@ textarea {
 
 .can-confirmed-tag {
   align-items: center;
-  background: var(--tint-pending);
+  background: var(--tint-success);
   border-radius: 999px;
-  color: var(--color-moss-strong);
+  color: var(--color-success);
   display: inline-flex;
   font-size: var(--text-meta);
   font-weight: 600;
@@ -6675,7 +6729,7 @@ textarea {
 }
 
 .can-waiting svg {
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
 }
 
 .can-waiting strong {
@@ -6690,7 +6744,7 @@ textarea {
 
 .can-topic-preview {
   align-items: center;
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: 999px;
   display: inline-flex;
@@ -6746,8 +6800,8 @@ textarea {
 }
 
 .can-session-card:hover {
-  border-color: var(--color-moss-strong);
-  box-shadow: 0 16px 40px rgba(23, 53, 47, 0.16);
+  border-color: var(--color-primary-strong);
+  box-shadow: var(--shadow-float);
 }
 
 .can-session-top {
@@ -6763,7 +6817,7 @@ textarea {
 }
 
 .can-stage-badge {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border-radius: 999px;
   color: var(--color-ink);
   font-size: var(--text-micro);
@@ -6773,8 +6827,8 @@ textarea {
 }
 
 .can-stage-badge.done {
-  background: var(--color-moss-strong);
-  color: var(--tint-pending);
+  background: var(--color-success);
+  color: var(--tint-success);
 }
 
 .can-session-meta {
@@ -6798,7 +6852,7 @@ textarea {
   background: var(--color-surface);
   border: 1px solid var(--color-sunken);
   border-radius: var(--radius);
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
   display: inline-flex;
   font-weight: 700;
   gap: var(--space-1);
@@ -6828,7 +6882,7 @@ textarea {
 }
 
 .form-panel input:disabled {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   color: var(--color-muted);
   cursor: not-allowed;
 }
@@ -6874,8 +6928,8 @@ textarea {
 }
 
 .can-step-picker .selected {
-  background: var(--color-moss-strong);
-  border-color: var(--color-moss-strong);
+  background: var(--color-primary-strong);
+  border-color: var(--color-primary-strong);
   color: var(--color-surface);
 }
 
@@ -6902,10 +6956,10 @@ textarea {
 
 .can-readonly-bar {
   align-items: center;
-  background: var(--tint-clay);
-  border: 1px solid var(--color-clay);
+  background: var(--tint-neutral);
+  border: 1px solid var(--color-primary);
   border-radius: var(--radius);
-  color: var(--color-clay);
+  color: var(--color-primary);
   display: flex;
   flex-wrap: wrap;
   font-size: var(--text-body);
@@ -6964,17 +7018,17 @@ textarea {
 }
 
 .quick-login-row button {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-sunken);
   border-radius: var(--radius);
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
   font-weight: 700;
   min-height: 40px;
   padding: 0 var(--space-3);
 }
 
 .quick-login-row button:hover {
-  border-color: var(--color-moss-strong);
+  border-color: var(--color-primary-strong);
 }
 
 .can-template {
@@ -6985,9 +7039,9 @@ textarea {
 }
 
 .can-template-title {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border-bottom: 1px solid var(--color-sunken);
-  color: var(--color-info);
+  color: var(--color-primary);
   font-weight: 600;
   padding: 10px 14px;
 }
@@ -7011,8 +7065,8 @@ textarea {
 
 .can-template-head th,
 .can-template-steps th {
-  background: var(--tint-moss);
-  color: var(--color-moss-strong);
+  background: var(--tint-primary);
+  color: var(--color-primary-strong);
   font-weight: 700;
   white-space: nowrap;
 }
@@ -7061,10 +7115,10 @@ textarea {
 }
 
 .can-followup-done {
-  background: var(--tint-moss);
-  border: 1px solid var(--color-moss);
+  background: var(--tint-success);
+  border: 1px solid var(--color-success);
   border-radius: var(--radius);
-  color: var(--color-moss);
+  color: var(--color-success);
   font-size: var(--text-body);
   font-weight: 700;
   padding: var(--space-3) 14px;
@@ -7078,7 +7132,7 @@ textarea {
 
 .can-followup-row {
   align-items: center;
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   display: flex;
@@ -7131,7 +7185,7 @@ textarea {
 
 .can-followup-resultrow {
   align-items: center;
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   display: flex;
@@ -7158,13 +7212,13 @@ textarea {
 }
 
 .can-route-badge.agenda {
-  background: var(--tint-info);
-  color: var(--color-info);
+  background: var(--tint-primary);
+  color: var(--color-primary);
 }
 
 .can-route-badge.action {
-  background: var(--tint-moss);
-  color: var(--color-moss-strong);
+  background: var(--tint-primary);
+  color: var(--color-primary-strong);
 }
 
 .can-route-badge.skip {
@@ -7202,7 +7256,7 @@ textarea {
 }
 
 .tea-topic-item {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: 10px;
   display: grid;
@@ -7260,18 +7314,18 @@ textarea {
 }
 
 .tea-status-badge.제안 {
-  background: var(--tint-info);
-  color: var(--color-info);
+  background: var(--tint-primary);
+  color: var(--color-primary);
 }
 
 .tea-status-badge.채택 {
-  background: var(--tint-moss);
-  color: var(--color-moss-strong);
+  background: var(--tint-primary);
+  color: var(--color-primary-strong);
 }
 
 .tea-status-badge.완료 {
-  background: var(--tint-moss);
-  color: var(--color-moss);
+  background: var(--tint-success);
+  color: var(--color-success);
 }
 
 .tea-status-badge.보류 {
@@ -7306,7 +7360,7 @@ textarea {
 }
 
 .tea-group-card {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: 10px;
   display: grid;
@@ -7316,7 +7370,7 @@ textarea {
 
 .tea-group-card h4 {
   align-items: baseline;
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
   display: flex;
   gap: 6px;
   justify-content: space-between;
@@ -7368,8 +7422,8 @@ textarea {
 
 .tea-announce-confirm {
   align-items: center;
-  background: var(--tint-info);
-  border: 1px solid var(--tint-info);
+  background: var(--tint-primary);
+  border: 1px solid var(--tint-primary);
   border-radius: var(--radius);
   display: flex;
   flex-wrap: wrap;
@@ -7378,15 +7432,15 @@ textarea {
 }
 
 .tea-announce-confirm > span {
-  color: var(--color-info);
+  color: var(--color-primary);
   font-size: var(--text-body);
   font-weight: 700;
 }
 
 .tea-announce {
-  background: var(--color-moss-strong);
+  background: var(--color-primary-strong);
   border-radius: 10px;
-  color: var(--tint-moss);
+  color: var(--tint-primary);
   font-family: 'SFMono-Regular', ui-monospace, Menlo, Consolas, monospace;
   font-size: 12.5px;
   line-height: 1.65;
@@ -7398,7 +7452,7 @@ textarea {
 }
 
 .tea-copy-notice {
-  color: var(--color-moss);
+  color: var(--color-primary);
   font-size: var(--text-meta);
   font-weight: 700;
   margin: 0;
@@ -7466,13 +7520,13 @@ button.notif-row {
 }
 
 .notif-row.unread {
-  background: var(--tint-info);
-  border-color: var(--color-info);
-  border-left: 3px solid var(--color-info);
+  background: var(--tint-primary);
+  border-color: var(--color-primary);
+  border-left: 3px solid var(--color-primary);
 }
 
 .notif-row.unread .notif-body strong {
-  color: var(--color-info);
+  color: var(--color-primary);
   font-weight: 700;
 }
 
@@ -7490,28 +7544,28 @@ button.notif-row {
 }
 
 .notif-kind.issue {
-  background: var(--tint-info);
-  color: var(--color-info);
+  background: var(--tint-primary);
+  color: var(--color-primary);
 }
 .notif-kind.agenda {
-  background: var(--tint-info);
-  color: var(--color-info);
+  background: var(--tint-primary);
+  color: var(--color-primary);
 }
 .notif-kind.deadline {
-  background: var(--tint-clay);
-  color: var(--color-clay);
+  background: var(--tint-neutral);
+  color: var(--color-primary);
 }
 .notif-kind.action {
-  background: var(--tint-moss);
-  color: var(--color-moss-strong);
+  background: var(--tint-primary);
+  color: var(--color-primary-strong);
 }
 .notif-kind.tea {
-  background: var(--tint-pending);
-  color: var(--color-info);
+  background: var(--tint-primary);
+  color: var(--color-primary);
 }
 .notif-kind.message {
-  background: var(--tint-moss);
-  color: var(--color-moss);
+  background: var(--tint-primary);
+  color: var(--color-primary);
 }
 
 .notif-body {
@@ -7540,7 +7594,7 @@ button.notif-row {
 
 .notif-dot {
   align-self: center;
-  background: var(--color-info);
+  background: var(--color-primary);
   border-radius: 999px;
   flex: none;
   height: 8px;
@@ -7551,7 +7605,7 @@ button.notif-row {
 /* ===== 유머게시판 ===== */
 .humor-hero {
   align-items: center;
-  background: linear-gradient(120deg, var(--color-moss-strong), var(--color-moss));
+  background: var(--surface-dark);
   border-radius: 12px;
   color: var(--color-surface);
   display: flex;
@@ -7573,12 +7627,11 @@ button.notif-row {
 
 /* .eyebrow 기본색은 muted(var(--color-muted))다. 어두운 히어로 위에 얹히면 배경과 거의 붙어
    안 읽힌다. .humor-hero만 개별로 덮고 있던 것을 어두운 배경 전체로 넓힌다. */
-.login-intro .eyebrow,
 .home-hero .eyebrow,
 .humor-hero .eyebrow,
 .memory-hero .eyebrow,
 .metrics-hero .eyebrow {
-  color: var(--tint-pending);
+  color: var(--tint-primary);
 }
 
 .humor-hero-badge {
@@ -7594,7 +7647,7 @@ button.notif-row {
 }
 
 .humor-hero-badge svg {
-  color: var(--tint-pending);
+  color: var(--tint-primary);
 }
 
 .humor-hero-badge strong {
@@ -7613,8 +7666,8 @@ button.notif-row {
 }
 
 .humor-ranker {
-  background: linear-gradient(160deg, var(--tint-clay), var(--color-surface));
-  border: 1px solid var(--color-clay);
+  background: var(--color-surface);
+  border: 1px solid var(--color-primary);
   border-radius: 10px;
   display: grid;
   gap: var(--space-2);
@@ -7622,13 +7675,13 @@ button.notif-row {
 }
 
 .humor-ranker.empty {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border-color: var(--color-page);
 }
 
 .humor-ranker-crown {
   align-items: center;
-  color: var(--color-clay);
+  color: var(--color-primary);
   display: flex;
   font-size: var(--text-body);
   font-weight: 600;
@@ -7735,8 +7788,8 @@ button.notif-row {
 }
 
 .humor-sort button.active {
-  background: var(--color-moss-strong);
-  border-color: var(--color-moss-strong);
+  background: var(--color-primary-strong);
+  border-color: var(--color-primary-strong);
   color: var(--color-surface);
 }
 
@@ -7761,7 +7814,7 @@ button.notif-row {
 }
 
 .humor-back:hover {
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
 }
 
 /* 목록 = 가벼운 행(미디어는 아이콘만, 실제 로드는 상세에서) */
@@ -7845,10 +7898,11 @@ button.notif-row {
 }
 
 .humor-card {
-  background: rgba(255, 255, 255, 0.9);
+  /* 반투명 흰색 + 그림자였다. 인스타에는 둘 다 없다 — 면은 헤어라인으로만 나눈다. */
+  background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: 10px;
-  box-shadow: 0 12px 30px rgba(42, 58, 52, 0.07);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
   display: grid;
   gap: var(--space-3);
   padding: 18px;
@@ -7879,7 +7933,7 @@ button.notif-row {
   background: transparent;
   border: none;
   border-radius: 6px;
-  color: var(--color-border-strong);
+  color: var(--color-muted);
   cursor: pointer;
   display: flex;
   padding: 5px;
@@ -7887,7 +7941,7 @@ button.notif-row {
 
 .humor-icon-btn:hover {
   background: var(--tint-danger);
-  color: var(--color-clay);
+  color: var(--color-primary);
 }
 
 .humor-owner-actions {
@@ -7912,9 +7966,9 @@ button.notif-row {
 }
 
 .humor-owner-btn.edit:hover {
-  background: var(--tint-moss);
-  border-color: var(--color-moss);
-  color: var(--color-moss);
+  background: var(--tint-primary);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
 }
 
 .humor-owner-btn.delete {
@@ -7924,8 +7978,8 @@ button.notif-row {
 
 .humor-owner-btn.delete:hover {
   background: var(--tint-danger);
-  border-color: var(--color-clay);
-  color: var(--color-clay);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
 }
 
 .humor-edit {
@@ -7994,10 +8048,10 @@ button.notif-row {
 .humor-card-link {
   align-items: center;
   align-self: flex-start;
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-page);
   border-radius: var(--radius);
-  color: var(--color-moss);
+  color: var(--color-primary);
   display: inline-flex;
   font-size: var(--text-body);
   font-weight: 600;
@@ -8007,7 +8061,7 @@ button.notif-row {
 }
 
 .humor-card-link:hover {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
 }
 
 .humor-media-hint {
@@ -8026,7 +8080,7 @@ button.notif-row {
 
 .humor-like {
   align-items: center;
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-page);
   border-radius: 999px;
   color: var(--color-ink);
@@ -8039,9 +8093,9 @@ button.notif-row {
 }
 
 .humor-like.active {
-  background: var(--tint-clay);
-  border-color: var(--color-clay);
-  color: var(--color-clay);
+  background: var(--tint-neutral);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
 }
 
 .humor-comments {
@@ -8077,12 +8131,14 @@ button.notif-row {
 }
 
 .humor-comment-body small {
-  color: var(--color-border-strong);
+  color: var(--color-muted);
   font-size: var(--text-micro);
 }
 
+/* 경계선 색을 글자에 쓰고 있었다. 흰 면 위에서 1.69:1 로 읽히지 않는다.
+   경계선과 글자는 쓰임이 달라 같은 값을 나눠 쓰면 안 된다. */
 .humor-comment-empty {
-  color: var(--color-border-strong);
+  color: var(--color-muted);
   font-size: var(--text-body);
 }
 
@@ -8118,7 +8174,7 @@ button.notif-row {
   키보드 사용자는 지금 어디에 있는지 알 방법이 없었다(WCAG 2.4.7).
 */
 :where(button, a, input, select, textarea, [tabindex]):focus-visible {
-  outline: 2px solid var(--color-moss);
+  outline: 2px solid var(--color-primary);
   outline-offset: 2px;
   border-radius: var(--radius);
 }
@@ -8136,9 +8192,9 @@ button.notif-row {
 
 /* 안건화 직전, 팀원에게 실제로 공개될 문장을 확인하는 블록 */
 .agenda-publish-preview {
-  background: var(--tint-moss);
-  border: 1px solid var(--color-moss);
-  border-left: 3px solid var(--color-moss);
+  background: var(--tint-primary);
+  border: 1px solid var(--color-primary);
+  border-left: 3px solid var(--color-primary);
   border-radius: 10px;
   display: grid;
   gap: var(--space-2);
@@ -8146,7 +8202,7 @@ button.notif-row {
 }
 
 .agenda-publish-preview strong {
-  color: var(--color-moss);
+  color: var(--color-primary);
   font-size: var(--text-meta);
   letter-spacing: 0.02em;
 }
@@ -8170,8 +8226,8 @@ button.notif-row {
 /* 투표·마감 확정 전 확인 */
 .vote-confirm,
 .agenda-close-box {
-  border: 1px solid var(--color-clay);
-  background: var(--tint-clay);
+  border: 1px solid var(--color-primary);
+  background: var(--tint-neutral);
   border-radius: 10px;
   display: grid;
   gap: 10px;
@@ -8197,8 +8253,8 @@ button.notif-row {
 }
 
 .vote-actions button.selected {
-  border-color: var(--color-moss);
-  box-shadow: inset 0 0 0 1px var(--color-moss);
+  border-color: var(--color-primary);
+  box-shadow: inset 0 0 0 1px var(--color-primary);
 }
 
 .field-note {
@@ -8266,14 +8322,15 @@ button.notif-row {
 }
 
 .primary-button:hover:not(:disabled) {
-  background: var(--color-moss-strong);
+  background: var(--color-primary-strong);
+  border-color: var(--color-primary-strong);
 }
 
 .secondary-button:hover:not(:disabled),
 .filter:hover:not(:disabled),
 .icon-button:hover:not(:disabled),
 .ghost-button:hover:not(:disabled) {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border-color: var(--color-border-strong);
 }
 
@@ -8285,8 +8342,8 @@ button.notif-row {
 }
 
 .vote-actions button:hover:not(:disabled) {
-  background: var(--tint-moss);
-  border-color: var(--color-moss);
+  background: var(--tint-primary);
+  border-color: var(--color-primary);
 }
 
 /* 눌림 피드백. 되돌릴 수 없는 버튼일수록 "눌렸다"가 보여야 한다. */
@@ -8389,7 +8446,7 @@ button.notif-row {
 }
 
 .waiting-badge.overdue {
-  background: var(--tint-clay);
+  background: var(--tint-neutral);
   color: var(--color-danger);
 }
 
@@ -8399,8 +8456,8 @@ button.notif-row {
 
 /* ===== 보류·종료 사유 ===== */
 .status-reason-editor {
-  border: 1px solid var(--color-clay);
-  background: var(--tint-clay);
+  border: 1px solid var(--color-primary);
+  background: var(--tint-neutral);
   border-radius: var(--radius);
   display: grid;
   gap: var(--space-2);
@@ -8413,8 +8470,8 @@ button.notif-row {
 }
 
 .submission-reason {
-  border-left: 3px solid var(--color-moss);
-  background: var(--tint-moss);
+  border-left: 3px solid var(--color-primary);
+  background: var(--tint-primary);
   border-radius: 0 var(--radius) var(--radius) 0;
   padding: var(--space-2) var(--space-3);
 }
@@ -8422,7 +8479,7 @@ button.notif-row {
 /* ===== 파트 지표 익명 임계값 ===== */
 .metrics-suppressed {
   align-items: flex-start;
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px dashed var(--color-border);
   border-radius: var(--radius);
   color: var(--color-muted);
@@ -8438,7 +8495,7 @@ button.notif-row {
 }
 
 .metrics-suppressed svg {
-  color: var(--color-moss);
+  color: var(--color-primary);
   flex: none;
 }
 
@@ -8463,18 +8520,18 @@ button.notif-row {
 }
 
 .review-gate.checking {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   color: var(--color-muted);
 }
 
 .review-gate.clear {
-  background: var(--tint-moss);
-  color: var(--color-moss);
+  background: var(--tint-primary);
+  color: var(--color-primary);
 }
 
 .review-gate.unavailable {
-  background: var(--tint-clay);
-  border-color: var(--color-clay);
+  background: var(--tint-neutral);
+  border-color: var(--color-primary);
 }
 
 .review-gate.unavailable div {
@@ -8514,7 +8571,7 @@ button.notif-row {
 }
 
 .review-kind {
-  background: var(--tint-clay);
+  background: var(--tint-neutral);
   border-radius: 999px;
   color: var(--color-danger);
   font-size: var(--text-meta);
@@ -8533,8 +8590,8 @@ button.notif-row {
 }
 
 .review-rewritten {
-  background: var(--tint-moss);
-  border-left: 3px solid var(--color-moss);
+  background: var(--tint-primary);
+  border-left: 3px solid var(--color-primary);
   border-radius: 0 var(--radius) var(--radius) 0;
   padding: var(--space-2) var(--space-3);
   white-space: pre-wrap;
@@ -8702,8 +8759,9 @@ button.notif-row {
   max-width: 40ch;
 }
 
-/* 버튼 3단. primary = 주 액션(이끼 채움), secondary = 보조(가라앉은 면),
-   ghost = 이동·취소처럼 화면을 떠나는 동작(면 없음). */
+/* 버튼 3단(design.md 5.1). primary = 주 액션(검정 채움),
+   secondary = 보조(흰 면 + 테두리), ghost = 이동·취소처럼 화면을 떠나는 동작(면 없음).
+   파랑은 버튼이 아니라 링크성 액션에만 쓴다 — .btn-link. */
 .btn-primary,
 .btn-secondary,
 .btn-ghost {
@@ -8723,12 +8781,27 @@ button.notif-row {
 }
 
 .btn-primary {
-  background: var(--color-moss);
-  color: var(--color-surface);
+  background: var(--color-cta);
+  color: var(--color-cta-ink);
+  font-weight: 600;
 }
 
 .btn-primary:hover {
-  background: var(--color-moss-strong);
+  background: var(--color-primary-strong);
+}
+
+/* 링크성 · 보조 액션. 면 없이 파랑 글자만 쓴다(design.md 5.1 Link/Accent). */
+.btn-link {
+  background: none;
+  border: 0;
+  color: var(--color-primary);
+  font-size: var(--text-body);
+  font-weight: 600;
+  padding: 0;
+}
+
+.btn-link:hover {
+  text-decoration: underline;
 }
 
 .btn-ghost {
@@ -8742,18 +8815,18 @@ button.notif-row {
 }
 
 .btn-secondary {
-  background: var(--color-sunken);
+  background: var(--color-btn-soft);
   border: 1px solid transparent;
   border-radius: var(--radius);
   color: var(--color-ink);
   font-size: var(--text-body);
-  font-weight: 500;
+  font-weight: 600;
   padding: 9px var(--space-4);
-  transition: border-color var(--ease-ui);
+  transition: background-color var(--ease-ui);
 }
 
 .btn-secondary:hover {
-  border-color: var(--color-border-strong);
+  background: var(--color-btn-soft-press);
 }
 
 /* ===== 문화면 문법 — 하나를 읽거나 쓰는 화면 =====
@@ -8778,9 +8851,9 @@ button.notif-row {
 
 /* 강조 어절. 문장 전체를 굵게 하면 어디가 중요한지 사라진다. */
 .culture-mark {
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border-radius: var(--radius-sm);
-  color: var(--tint-moss-ink);
+  color: var(--tint-primary-ink);
   padding: 1px var(--space-2);
 }
 
@@ -8806,10 +8879,10 @@ button.notif-row {
   margin-left: -9px;
 }
 
-.culture-avatar.a { background: var(--tint-moss); color: var(--tint-moss-ink); }
-.culture-avatar.b { background: var(--tint-clay); color: var(--tint-clay-ink); }
-.culture-avatar.c { background: var(--tint-pending); color: var(--tint-pending-ink); }
-.culture-avatar.d { background: var(--tint-info); color: var(--tint-info-ink); }
+.culture-avatar.a { background: var(--tint-primary); color: var(--tint-primary-ink); }
+.culture-avatar.b { background: var(--tint-neutral); color: var(--tint-neutral-ink); }
+.culture-avatar.c { background: var(--tint-primary); color: var(--tint-primary-ink); }
+.culture-avatar.d { background: var(--tint-primary); color: var(--tint-primary-ink); }
 .culture-avatar.more { background: var(--color-sunken); color: var(--color-muted); font-size: var(--text-micro); }
 
 .culture-panel {
@@ -9009,8 +9082,8 @@ button.notif-row {
 }
 
 .overview-bar.is-active {
-  background: var(--tint-moss);
-  border-color: var(--color-moss);
+  background: var(--tint-primary);
+  border-color: var(--color-primary);
 }
 
 .overview-bar-label {
@@ -9022,7 +9095,7 @@ button.notif-row {
 }
 
 .overview-bar-track {
-  background: var(--color-sunken);
+  background: var(--tint-primary);
   border-radius: var(--radius-full);
   display: block;
   height: 6px;
@@ -9030,7 +9103,7 @@ button.notif-row {
 }
 
 .overview-bar-track > span {
-  background: var(--color-moss);
+  background: var(--color-primary);
   display: block;
   height: 100%;
 }
@@ -9094,23 +9167,23 @@ button.notif-row {
 }
 
 .poster.moss {
-  background: var(--tint-moss);
-  color: var(--tint-moss-ink);
+  background: var(--tint-primary);
+  color: var(--tint-primary-ink);
 }
 
 .poster.clay {
-  background: var(--tint-clay);
-  color: var(--tint-clay-ink);
+  background: var(--tint-neutral);
+  color: var(--tint-neutral-ink);
 }
 
 .poster.info {
-  background: var(--tint-info);
-  color: var(--tint-info-ink);
+  background: var(--tint-primary);
+  color: var(--tint-primary-ink);
 }
 
 .poster.pending {
-  background: var(--tint-pending);
-  color: var(--tint-pending-ink);
+  background: var(--tint-primary);
+  color: var(--tint-primary-ink);
 }
 
 /* 모티프는 배경 장식이다. 글자를 이기면 안 되므로 흐리게 둔다.
@@ -9197,12 +9270,12 @@ button.notif-row {
 }
 
 .poster-badge.moss {
-  background: var(--color-moss);
+  background: var(--color-primary);
   color: var(--color-surface);
 }
 
 .poster-badge.clay {
-  background: var(--color-clay);
+  background: var(--color-primary);
   color: var(--color-surface);
 }
 
@@ -9215,10 +9288,1520 @@ button.notif-row {
 /* 인스타 프로필 격자와 같은 3열 고정. auto-fill 로 두면 폭에 따라 3~5열을
    오가서 "쌓아 보는" 리듬이 화면마다 달라진다. 열 수를 고정해야 스크롤할 때
    눈이 같은 자리를 짚는다. */
+/* 인스타 프로필 격자는 간격이 3px 다. 거의 붙여야 이미지가 UI 를 만든다.
+   3열 고정은 그대로 — 열 수가 변하면 스크롤할 때 눈이 짚는 자리가 달라진다. */
 .poster-grid {
   display: grid;
-  gap: var(--space-4);
+  gap: 3px;
   grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+/* ===== 인스타 스토리 뷰어 (커피뽑기 · 조뽑기) =====
+   뽑기는 한 번 보고 끝나는 순간이라 스토리가 정확한 그릇이다.
+   스토리와 다른 점은 자동으로 넘어가지 않는 것뿐이다 — 뽑기 결과는
+   사라지면 안 된다. */
+
+.ig-story-view {
+  background: var(--surface-dark);
+  border-radius: var(--radius-lg);
+  color: var(--color-surface);
+  display: grid;
+  gap: var(--space-2);
+  grid-template-rows: auto auto minmax(0, 1fr);
+  margin: 0 auto;
+  max-width: 420px;
+  overflow: hidden;
+  padding: var(--space-3) var(--space-3) 0;
+  width: 100%;
+}
+
+.ig-story-bars {
+  display: flex;
+  gap: 3px;
+}
+
+.ig-story-bars i {
+  background: var(--divider-on-dark);
+  border-radius: 2px;
+  flex: 1;
+  height: 3px;
+}
+
+.ig-story-bars i.on {
+  background: var(--color-surface);
+}
+
+.ig-story-head {
+  align-items: center;
+  display: flex;
+  font-size: var(--text-micro);
+  gap: var(--space-2);
+}
+
+.ig-story-head .ig-ava {
+  background: var(--divider-on-dark);
+  color: var(--color-surface);
+}
+
+.ig-story-head b {
+  font-weight: 600;
+}
+
+/* 두 번째 span 은 시각이다. 흰 글자를 흐리게 하지 않고 색으로 낮춘다 —
+   opacity 는 배경에 곱해져 면마다 다른 값이 된다. */
+.ig-story-head > span:last-child {
+  color: var(--color-primary-soft);
+}
+
+/* 안에 들어가는 무대는 이미 어두운 면이라 배경을 다시 칠하지 않는다. */
+.ig-story-view .draw-stage,
+.ig-story-view .coffee-draw-stage {
+  background: none;
+  border-radius: 0;
+  margin: 0;
+}
+
+/* ===== 인스타 라이브 문법 (캔미팅 · 티미팅) =====
+   캔미팅은 시각이 정해져 있고 그 자리에 모여야 하는 일이라 라이브와 성질이
+   같다. 아직 안 끝난 것은 링을 칠하고 끝난 것은 회색으로 둔다 —
+   스토리에서 본 것과 안 본 것을 가르는 방식과 같다. */
+
+.ig-lives {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.ig-live {
+  align-items: center;
+  background: none;
+  border: 0;
+  border-radius: var(--radius);
+  display: flex;
+  gap: var(--space-4);
+  padding: var(--space-3);
+  text-align: left;
+  width: 100%;
+}
+
+.ig-live:hover {
+  background: var(--color-sunken);
+}
+
+.ig-live .ig-ring {
+  height: 56px;
+  width: 56px;
+}
+
+.ig-live-body {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.ig-live-body b {
+  font-size: var(--text-body-lg);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ig-live-body span {
+  color: var(--color-muted);
+  font-size: var(--text-meta);
+}
+
+.ig-live-body em {
+  color: var(--color-muted);
+  font-size: var(--text-micro);
+  font-style: normal;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 인스타의 LIVE 배지는 그라디언트지만 거기 얹히는 글자는 네 글자짜리
+   "LIVE" 하나뿐이다. 여기 들어가는 것은 "의견 공유" 같은 한국어 단계명이라
+   길이가 제각각이고, 노란 쪽 정지점 위에서 흰 글자가 4.00:1 로 떨어진다.
+   그라디언트는 스토리 링에만 남기고 배지는 단색으로 채운다. */
+.ig-live-badge {
+  background: var(--color-primary);
+  border-radius: var(--radius-sm);
+  color: var(--color-surface);
+  flex: none;
+  font-size: var(--text-micro);
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  margin-left: auto;
+  padding: 3px 9px;
+}
+
+.ig-live-badge.done {
+  background: var(--color-btn-soft);
+  color: var(--color-muted);
+}
+
+/* ===== 인스타 사람 프로필 (동료 성향) =====
+   해시태그 칩은 장식이 아니라 이동 경로다. 누르면 같은 성향의 동료만
+   모아 보여준다 — 인스타의 해시태그와 같은 성질이다. */
+
+.ig-person {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.ig-person-head {
+  align-items: center;
+  display: flex;
+  gap: var(--space-6);
+}
+
+.ig-person-head .avatar {
+  flex: none;
+  height: 96px;
+  width: 96px;
+}
+
+.ig-person-info {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.ig-person-line {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+/* 인스타 프로필의 username 은 굵지 않다. */
+.ig-person-line h2 {
+  font-size: var(--text-title);
+  font-weight: 400;
+}
+
+.ig-person-name {
+  color: var(--color-muted);
+  font-size: var(--text-body);
+}
+
+.ig-person-name b {
+  color: var(--color-ink);
+  font-weight: 600;
+  margin-right: var(--space-2);
+}
+
+.ig-person-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.ig-tag {
+  background: none;
+  border: 0;
+  color: var(--color-primary);
+  font-size: var(--text-meta);
+  font-weight: 600;
+  padding: 4px 0;
+}
+
+.ig-tag:hover {
+  text-decoration: underline;
+}
+
+/* 지금 이 태그로 걸러 보고 있다는 표시. 색만으로 알리면 어느 것이 눌린
+   상태인지 구분이 약해서 면을 준다. */
+.ig-tag.on {
+  background: var(--tint-primary);
+  border-radius: var(--radius-full);
+  color: var(--tint-primary-ink);
+  padding: 4px 10px;
+}
+
+/* 선택지에 없는 값(시드 기본값)은 칩으로 만들 수 없다. 칩이 없다고 정보를
+   지우면 안 되므로 사실 목록으로 내린다. 라벨은 좁게, 값은 남는 폭 전부. */
+.ig-person-facts {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+}
+
+.ig-person-facts > div {
+  align-items: baseline;
+  display: flex;
+  gap: var(--space-3);
+}
+
+.ig-person-facts dt {
+  color: var(--color-muted);
+  flex: none;
+  font-size: var(--text-micro);
+  font-weight: 600;
+  width: 48px;
+}
+
+.ig-person-facts dd {
+  font-size: var(--text-meta);
+  margin: 0;
+  min-width: 0;
+}
+
+.ig-person-bio {
+  font-size: var(--text-body);
+  line-height: var(--leading-normal);
+}
+
+.ig-person-bio b {
+  display: block;
+  font-weight: 600;
+}
+
+@media (max-width: 720px) {
+  .ig-person-head {
+    gap: var(--space-4);
+  }
+
+  .ig-person-head .avatar {
+    height: 72px;
+    width: 72px;
+  }
+}
+
+/* ===== 인스타 만들기 모달 (대나무숲 접수) =====
+   왼쪽이 미디어 자리, 오른쪽이 캡션과 설정. 이 앱에서 미디어에 해당하는 것은
+   본문이라 왼쪽을 본문 하나로 크게 비웠다. */
+
+.ig-create {
+  display: grid;
+  gap: 0;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  overflow: hidden;
+  padding: 0;
+}
+
+.ig-create-main {
+  border-right: 1px solid var(--color-border);
+  display: grid;
+  gap: var(--space-2);
+  grid-template-rows: auto minmax(0, 1fr);
+  padding: var(--space-5);
+}
+
+.ig-create-label {
+  align-items: center;
+  color: var(--color-muted);
+  display: flex;
+  font-size: var(--text-micro);
+  font-weight: 600;
+  gap: var(--space-2);
+}
+
+/* 본문은 이 화면의 주인공이다. 크기를 고정하지 않고 남는 높이를 다 준다. */
+.ig-create-main textarea {
+  border: 0;
+  font-size: var(--text-body-lg);
+  height: 100%;
+  line-height: var(--leading-relaxed);
+  min-height: 260px;
+  padding: 0;
+  resize: none;
+}
+
+/* 테두리 없는 칸이라 입력칸 공용 포커스 링(2px box-shadow)이 붙으면
+   칸 전체를 감싸 어색하다. 그렇다고 링을 없애면 키보드 사용자가 지금
+   어디에 있는지 알 수 없다(design.md 7). 링을 바깥 면으로 옮긴다. */
+.ig-create-main textarea:focus-visible {
+  box-shadow: none;
+  outline: none;
+}
+
+.ig-create-main:focus-within {
+  background: var(--color-sunken);
+}
+
+.ig-create-main:focus-within .ig-create-label {
+  color: var(--color-primary);
+}
+
+.ig-create-side {
+  display: grid;
+  align-content: start;
+  gap: var(--space-4);
+  padding: var(--space-5);
+}
+
+.ig-create-head {
+  align-items: center;
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  gap: var(--space-3);
+  padding-bottom: var(--space-4);
+}
+
+/* 좁은 폭 — 기본 규칙 뒤에 온다. 2단은 가로가 있을 때만 뜻이 있다. */
+@media (max-width: 720px) {
+  .ig-create {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .ig-create-main {
+    border-bottom: 1px solid var(--color-border);
+    border-right: 0;
+  }
+
+  .ig-create-main textarea {
+    min-height: 160px;
+  }
+}
+
+/* ===== 인스타 활동 목록 (알림 · 메시지) =====
+   아바타 · 한 문장 · 시간. 카드가 아니라 줄이라 열 개가 한 화면에 들어온다.
+   안읽음은 우측 점 하나로만 표시한다 — 행 전체를 칠하면 "안읽은 것이 많다"가
+   아니라 "화면이 시끄럽다"로 읽힌다. */
+
+.ig-activity {
+  display: grid;
+}
+
+.ig-act {
+  align-items: center;
+  background: none;
+  border: 0;
+  border-radius: var(--radius);
+  display: flex;
+  gap: var(--space-3);
+  min-height: 56px;
+  padding: var(--space-2) var(--space-3);
+  text-align: left;
+  width: 100%;
+}
+
+.ig-act:hover {
+  background: var(--color-sunken);
+}
+
+.ig-act-text {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+
+.ig-act-text > span {
+  font-size: var(--text-body);
+  line-height: var(--leading-normal);
+}
+
+.ig-act-text b {
+  font-weight: 600;
+  margin-right: 5px;
+}
+
+/* 시간은 문장의 끝에 붙는다. 별도 줄로 내리면 목록이 두 배로 길어진다. */
+.ig-act-text em {
+  color: var(--color-muted);
+  font-size: var(--text-micro);
+  font-style: normal;
+  margin-left: 6px;
+}
+
+.ig-act-text small {
+  color: var(--color-muted);
+  font-size: var(--text-micro);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ig-act-kind {
+  align-items: center;
+  color: var(--color-muted);
+  display: flex;
+  flex: none;
+  margin-left: auto;
+}
+
+.ig-act-dot {
+  background: var(--color-primary);
+  border-radius: var(--radius-full);
+  flex: none;
+  height: 8px;
+  width: 8px;
+}
+
+/* ===== 인스타 쇼핑 문법 (벼룩숲) =====
+   사진 위 가격 태그가 인스타 쇼핑의 상품 태그와 같은 자리다.
+   이 화면에서 가장 먼저 알고 싶은 것이 값이라 상세까지 미루지 않는다. */
+
+.ig-shop {
+  gap: var(--space-3);
+}
+
+.ig-shop-cell {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  min-width: 0;
+}
+
+.ig-shop-cell .poster-cell {
+  position: relative;
+}
+
+/* 포스터가 자기 제목을 이미 그리는데 아래 캡션이 같은 제목을 또 쓴다.
+   인스타 쇼핑은 이미지에 태그만 얹고 이름은 아래에 둔다 — 이미지 안의
+   글을 지워야 가격 태그가 겹치지 않고 사진이 온전히 보인다. */
+.ig-shop-cell .poster-text {
+  display: none;
+}
+
+/* 마감된 것은 지운 게 아니라 가라앉힌 것이다. 지난 거래도 참고가 된다. */
+.ig-shop-cell.closed {
+  opacity: 0.55;
+}
+
+.ig-price-tag {
+  background: var(--scrim-strong);
+  border-radius: var(--radius-full);
+  bottom: var(--space-2);
+  color: var(--color-surface);
+  font-size: var(--text-micro);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  left: var(--space-2);
+  padding: 3px 10px;
+  position: absolute;
+}
+
+.ig-shop-meta {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+
+.ig-shop-meta strong {
+  font-size: var(--text-meta);
+  font-weight: 600;
+  line-height: var(--leading-tight);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ig-shop-meta span {
+  color: var(--color-muted);
+  font-size: var(--text-micro);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ===== 인스타 릴스 문법 (유~머게시판) =====
+   짧고 소비가 빠른 콘텐츠라 세로 9:16 이 맞다. 미디어가 배경이 되고
+   글과 반응이 그 위에 얹힌다. 목록에서는 플레이어를 붙이지 않는다 —
+   영상 열 개가 동시에 로드되면 스크롤이 끊긴다. */
+
+.ig-reels {
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+}
+
+.ig-reel {
+  aspect-ratio: 9 / 16;
+  background: var(--surface-dark);
+  border: 0;
+  border-radius: var(--radius);
+  color: var(--color-surface);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  overflow: hidden;
+  padding: 0;
+  position: relative;
+  text-align: left;
+}
+
+.ig-reel-bg {
+  height: 100%;
+  inset: 0;
+  object-fit: cover;
+  position: absolute;
+  width: 100%;
+}
+
+/* 우측 세로 액션 스택. 인스타 릴스에서 손가락이 닿는 자리다. */
+.ig-reel-side {
+  bottom: 96px;
+  display: grid;
+  gap: var(--space-4);
+  justify-items: center;
+  position: absolute;
+  right: var(--space-2);
+}
+
+.ig-reel-side > span {
+  display: grid;
+  font-size: var(--text-micro);
+  font-weight: 600;
+  gap: 2px;
+  justify-items: center;
+}
+
+.ig-reel-side .liked {
+  color: var(--color-heart);
+}
+
+/* 사진 위에도 글이 읽혀야 한다. 첨부 이미지의 밝기를 알 수 없으므로
+   아래쪽에 어둠을 깔고 그 위에 흰 글자를 얹는다(포스터와 같은 규칙). */
+.ig-reel-text {
+  background: linear-gradient(to top, var(--scrim-strong), var(--scrim-none));
+  display: grid;
+  gap: 3px;
+  padding: var(--space-6) 44px var(--space-3) var(--space-3);
+  position: relative;
+}
+
+.ig-reel-text b {
+  align-items: center;
+  display: flex;
+  font-size: var(--text-micro);
+  font-weight: 600;
+  gap: 6px;
+}
+
+.ig-reel-text em {
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  display: -webkit-box;
+  font-size: var(--text-meta);
+  font-style: normal;
+  line-height: var(--leading-tight);
+  overflow: hidden;
+}
+
+.ig-reel-text small {
+  font-size: var(--text-micro);
+  opacity: 0.8;
+}
+
+/* ===== 인스타 프로필 문법 (팀 추억) =====
+   계정은 사람이 아니라 팀 하나다. 개인 프로필을 만들면 익명 접수의
+   전제가 흔들리므로 아바타도 통계도 팀의 것으로 둔다. */
+
+.ig-profile {
+  gap: 0;
+  margin: 0 auto;
+  max-width: 936px;
+  width: 100%;
+}
+
+.ig-prof-head {
+  align-items: center;
+  display: flex;
+  gap: var(--space-10);
+  padding: var(--space-4) var(--space-3) var(--space-8);
+}
+
+.ig-prof-ava {
+  align-items: center;
+  background: var(--tint-neutral);
+  border-radius: var(--radius-full);
+  color: var(--color-muted);
+  display: flex;
+  flex: none;
+  height: 138px;
+  justify-content: center;
+  width: 138px;
+}
+
+.ig-prof-info {
+  display: grid;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.ig-prof-line {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+/* 인스타 프로필의 username 은 굵지 않다. 굵은 것은 통계 숫자뿐이다. */
+.ig-prof-line h2 {
+  font-size: var(--text-heading);
+  font-weight: 400;
+}
+
+.ig-btn-soft {
+  background: var(--color-btn-soft);
+  border: 0;
+  border-radius: var(--radius);
+  color: var(--color-ink);
+  font-size: var(--text-body);
+  font-weight: 600;
+  min-height: 36px;
+  padding: 0 var(--space-4);
+}
+
+.ig-btn-soft:hover {
+  background: var(--color-btn-soft-press);
+}
+
+.ig-prof-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+  font-size: var(--text-body-lg);
+}
+
+.ig-prof-stats b {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.ig-prof-bio {
+  font-size: var(--text-body);
+  line-height: var(--leading-normal);
+}
+
+.ig-prof-bio b {
+  display: block;
+  font-weight: 600;
+}
+
+/* 하이라이트는 이미 지나간 것이라 링을 칠하지 않는다. 지금 보고 있는 것만 칠한다. */
+.ig-highlights {
+  border-bottom: 0;
+  justify-content: flex-start;
+  max-width: none;
+  padding: 0 var(--space-3) var(--space-6);
+}
+
+.ig-tabs {
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  gap: var(--space-12);
+  justify-content: center;
+}
+
+.ig-tabs button {
+  align-items: center;
+  background: none;
+  border: 0;
+  border-top: 1px solid transparent;
+  color: var(--color-muted);
+  display: flex;
+  font-size: var(--text-micro);
+  font-weight: 600;
+  gap: 6px;
+  letter-spacing: 0.06em;
+  margin-top: -1px;
+  padding: var(--space-4) 0;
+}
+
+.ig-tabs button.on {
+  border-top-color: var(--color-ink);
+  color: var(--color-ink);
+}
+
+.ig-grid-tab {
+  display: grid;
+  gap: var(--space-4);
+  padding-top: var(--space-4);
+}
+
+.ig-grid-note {
+  color: var(--color-muted);
+  font-size: var(--text-meta);
+  padding: 0 var(--space-3);
+}
+
+.ig-grid-note b {
+  color: var(--color-ink);
+  font-weight: 600;
+  margin-right: var(--space-2);
+}
+
+/* 인스타 프로필 격자 — 1:1 · 3열 · 3px. 열 수를 고정해야 스크롤할 때
+   눈이 같은 자리를 짚는다. 폭이 좁아져도 3열을 유지한다. */
+.ig-cells {
+  display: grid;
+  gap: 3px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.ig-cell {
+  aspect-ratio: 1;
+  background: var(--tint-neutral);
+  border: 0;
+  overflow: hidden;
+  padding: 0;
+  position: relative;
+  width: 100%;
+}
+
+.ig-cell img,
+.ig-cell video {
+  display: block;
+  height: 100%;
+  object-fit: cover;
+  width: 100%;
+}
+
+/* 지금 아래에 펼쳐진 것. 인스타에는 없는 상태지만 이 화면은 격자와 게시물을
+   같이 보여주므로 어느 칸을 보고 있는지 알려야 한다. */
+.ig-cell.on {
+  outline: 3px solid var(--color-ink);
+  outline-offset: -3px;
+}
+
+.ig-cell-blank {
+  align-items: center;
+  color: var(--color-muted);
+  display: flex;
+  height: 100%;
+  justify-content: center;
+}
+
+/* 사진 위에도 빈 회색 칸 위에도 읽혀야 한다. 흰 아이콘만 두면 밝은 칸에서
+   사라지므로 어둠을 한 겹 깔고 그 위에 얹는다(포스터 스크림과 같은 이유). */
+.ig-cell-mark {
+  align-items: center;
+  background: var(--scrim-strong);
+  border-radius: var(--radius-full);
+  color: var(--color-surface);
+  display: flex;
+  height: 26px;
+  justify-content: center;
+  position: absolute;
+  right: 8px;
+  top: 8px;
+  width: 26px;
+}
+
+/* 좁은 폭 — 반드시 위 기본 규칙 뒤에 온다. 앞에 두면 같은 특이도에서
+   순서로 져 오류 없이 조용히 무시된다(이 저장소에서 반복해서 밟은 함정).
+   인스타 모바일 프로필의 아바타는 86px 다. 138px 를 그대로 두면 390px 폭에서
+   이름과 통계가 들어갈 자리가 없어 세 줄로 접힌다. */
+@media (max-width: 720px) {
+  .ig-prof-head {
+    gap: var(--space-5);
+    padding: var(--space-3) var(--space-3) var(--space-5);
+  }
+
+  .ig-prof-ava {
+    height: 86px;
+    width: 86px;
+  }
+
+  .ig-prof-ava svg {
+    height: 30px;
+    width: 30px;
+  }
+
+  .ig-prof-line h2 {
+    font-size: var(--text-title);
+  }
+
+  .ig-prof-stats {
+    font-size: var(--text-body);
+    gap: var(--space-5);
+  }
+
+  .ig-prof-info {
+    gap: var(--space-3);
+  }
+
+  .ig-tabs {
+    gap: var(--space-10);
+  }
+}
+
+
+/* ===== 인스타 홈 =====
+   히어로 · 스탯 격자 · 2열 패널을 단일 컬럼으로 합쳤다. 인스타 홈에는
+   설명이 없다 — 스토리와 게시물뿐이다. 무엇을 하는 앱인지는 첫 방문에만
+   필요한데 히어로는 매 방문마다 그 자리를 차지했다. */
+
+/* .screen 이 grid 라 가로 정렬은 justify-items 가 한다. align-items 를 쓰면
+   세로 축에 걸려서 트레이(margin:0 auto)만 가운데로 가고 컬럼은 왼쪽에 남는다. */
+/* 인스타 홈은 피드 옆에 레일이 있다. 470px 만 쓰면 1440px 창에서 오른쪽
+   절반이 통째로 빈다. 스토리는 피드 폭에 맞추고, 레일은 그 오른쪽에 붙는다.
+   두 열의 합을 가운데로 밀어야 피드가 화면 왼쪽에 치우치지 않는다. */
+.ig-home {
+  align-content: start;
+  column-gap: var(--space-8);
+  display: grid;
+  /* 인스타 본가는 피드를 470px 로 못박아 양옆을 비운다. 이 앱은 사이드바가
+     이미 가로를 먹고 있어 같은 값을 쓰면 오른쪽이 350px 통째로 빈다.
+     피드가 남는 폭을 가져가되 620px 에서 멈춘다 — 그 이상 넓어지면
+     한 줄이 길어져 눈이 줄 끝에서 앞으로 돌아오기 힘들어진다. */
+  grid-template-columns: minmax(0, 620px) 320px;
+  justify-content: center;
+  row-gap: var(--space-5);
+}
+
+/* 홈의 게시물은 피드 폭을 다 쓴다. 470px 상한은 모임·번개처럼 사진이
+   주인공인 피드의 값이고, 여기는 글과 목록이라 넓어도 읽힌다. */
+.ig-col .ig-post,
+.ig-home .ig-tray {
+  max-width: none;
+}
+
+.ig-home .ig-tray,
+.ig-home .ig-col {
+  grid-column: 1;
+  margin: 0;
+}
+
+.ig-rail {
+  align-content: start;
+  display: grid;
+  gap: var(--space-5);
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  padding-top: var(--space-2);
+  position: sticky;
+  top: var(--space-4);
+}
+
+.ig-rail-me {
+  align-items: center;
+  display: flex;
+  gap: var(--space-3);
+}
+
+.ig-rail-me b {
+  display: block;
+  font-size: var(--text-body);
+  font-weight: 600;
+}
+
+.ig-rail-me em {
+  color: var(--color-muted);
+  display: block;
+  font-size: var(--text-meta);
+  font-style: normal;
+}
+
+.ig-rail-block {
+  display: grid;
+  gap: var(--space-1);
+}
+
+/* 레일의 소제목은 회색이다. 인스타에서 이 자리는 콘텐츠가 아니라 안내라
+   본문보다 뒤로 물러나 있어야 한다. */
+.ig-rail-head {
+  align-items: center;
+  color: var(--color-muted);
+  display: flex;
+  font-size: var(--text-meta);
+  font-weight: 600;
+  margin-bottom: var(--space-1);
+}
+
+.ig-rail-head button {
+  background: none;
+  border: 0;
+  color: var(--color-ink);
+  font-size: var(--text-micro);
+  font-weight: 600;
+  margin-left: auto;
+  padding: 2px;
+}
+
+.ig-rail-row {
+  align-items: center;
+  background: none;
+  border: 0;
+  border-radius: var(--radius);
+  display: flex;
+  gap: var(--space-3);
+  min-height: 44px;
+  padding: var(--space-2);
+  text-align: left;
+  width: 100%;
+}
+
+.ig-rail-row:hover {
+  background: var(--color-sunken);
+}
+
+.ig-rail-row > span:last-child {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+
+.ig-rail-row b {
+  font-size: var(--text-meta);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ig-rail-row em {
+  color: var(--color-muted);
+  font-size: var(--text-micro);
+  font-style: normal;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ig-ava.lg {
+  font-size: var(--text-body-lg);
+  height: 48px;
+  width: 48px;
+}
+
+/* 인스타 레일의 푸터는 아주 흐린 회색이지만, 그 값을 그대로 가져오면
+   1.69:1 이 된다(--color-border-strong 을 글자에 쓴 셈이다 — 유~머게시판에서
+   같은 실수를 이미 한 번 고쳤다). 경계선과 글자는 쓰임이 다르다. */
+.ig-rail-foot {
+  color: var(--color-muted);
+  font-size: var(--text-micro);
+  line-height: var(--leading-normal);
+}
+
+/* 홈 전용 컬럼. 470px 상한은 사진이 주인공인 피드(모임·번개)의 값이고,
+   홈은 글과 목록이라 더 넓어도 읽힌다. 620px 에서 멈추는 이유는 그 이상
+   길어지면 눈이 줄 끝에서 다음 줄 앞으로 돌아오기 힘들어지기 때문이다. */
+.ig-col {
+  display: grid;
+  gap: var(--space-5);
+  max-width: 620px;
+  width: 100%;
+}
+
+/* 히어로 대신 여기서 바로 쓰기 시작한다. */
+.ig-composer {
+  align-items: center;
+  display: flex;
+  gap: var(--space-2);
+}
+
+.ig-composer-field {
+  background: var(--color-sunken);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  color: var(--color-muted);
+  flex: 1;
+  font-size: var(--text-body);
+  min-height: 40px;
+  min-width: 0;
+  overflow: hidden;
+  padding: 0 var(--space-4);
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ig-composer-field:hover {
+  border-color: var(--color-border-strong);
+}
+
+.ig-composer-go {
+  align-items: center;
+  background: var(--color-btn-soft);
+  border: 0;
+  border-radius: var(--radius);
+  color: var(--color-ink);
+  display: flex;
+  flex: none;
+  font-size: var(--text-micro);
+  font-weight: 600;
+  gap: 5px;
+  min-height: 40px;
+  padding: 0 var(--space-3);
+}
+
+.ig-composer-go:hover {
+  background: var(--color-btn-soft-press);
+}
+
+/* 인스타 프로필의 게시물·팔로워 줄과 같은 자리. 숫자가 곧 이동 경로다. */
+.ig-stats {
+  border-bottom: 1px solid var(--color-border);
+  border-top: 1px solid var(--color-border);
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.ig-stats button {
+  background: none;
+  border: 0;
+  display: grid;
+  gap: 1px;
+  justify-items: center;
+  padding: var(--space-3) var(--space-1);
+}
+
+.ig-stats button:hover {
+  background: var(--color-sunken);
+}
+
+.ig-stats b {
+  font-size: var(--text-body-lg);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+.ig-stats span {
+  color: var(--color-muted);
+  font-size: var(--text-micro);
+}
+
+/* 사진이 없는 게시물. 인스타에는 없는 형태지만 이 앱의 안건·액션에는
+   보여줄 이미지가 없다. 대신 테두리로 게시물임을 표시한다. */
+.ig-post.plain {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  gap: 0;
+  padding: var(--space-4);
+}
+
+.ig-post.plain .ig-post-head {
+  padding: 0 0 var(--space-3);
+}
+
+.ig-headline {
+  font-size: var(--text-body-lg);
+  font-weight: 600;
+  line-height: var(--leading-tight);
+}
+
+.ig-post-status.late,
+.ig-post-status.fail {
+  color: var(--color-danger);
+}
+
+/* 통과만 초록이다. 초록은 브랜드에서 빠지고 "통과·완료" 상태에만 남았다. */
+.ig-post-status.pass {
+  color: var(--color-success);
+}
+
+.ig-poll-meta {
+  color: var(--color-muted);
+  font-size: var(--text-micro);
+  font-variant-numeric: tabular-nums;
+}
+
+/* 스토리 투표 스티커. 막대가 배경으로 깔리고 글자가 그 위에 얹힌다. */
+.ig-poll {
+  display: grid;
+  gap: 6px;
+}
+
+.ig-opt {
+  align-items: center;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  display: flex;
+  font-size: var(--text-body);
+  min-height: 40px;
+  overflow: hidden;
+  padding: 0 var(--space-3);
+  position: relative;
+}
+
+.ig-opt-bar {
+  background: var(--color-sunken);
+  bottom: 0;
+  left: 0;
+  position: absolute;
+  top: 0;
+}
+
+.ig-opt.win .ig-opt-bar {
+  background: var(--tint-primary);
+}
+
+.ig-opt b {
+  font-weight: 600;
+  position: relative;
+}
+
+.ig-opt em {
+  font-style: normal;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  margin-left: auto;
+  position: relative;
+}
+
+.ig-list {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.ig-list-row {
+  align-items: center;
+  background: none;
+  border: 0;
+  border-radius: var(--radius);
+  display: flex;
+  gap: var(--space-3);
+  min-height: 44px;
+  padding: var(--space-2);
+  text-align: left;
+  width: 100%;
+}
+
+.ig-list-row:hover {
+  background: var(--color-sunken);
+}
+
+.ig-list-row svg {
+  color: var(--color-muted);
+  flex: none;
+}
+
+.ig-list-row.late svg {
+  color: var(--color-danger);
+}
+
+.ig-list-row span {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+
+.ig-list-row b {
+  font-size: var(--text-body);
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ig-list-row em {
+  color: var(--color-muted);
+  font-size: var(--text-micro);
+  font-style: normal;
+}
+
+.ig-quiet {
+  color: var(--color-muted);
+  font-size: var(--text-body);
+  gap: var(--space-2);
+  line-height: var(--leading-normal);
+}
+
+/* 매일 같은 링크라 게시물로 만들지 않는다. 피드 아래 조용히 둔다. */
+.ig-quick {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.ig-quick button {
+  align-items: center;
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  display: flex;
+  gap: var(--space-3);
+  min-height: 56px;
+  padding: var(--space-3);
+  text-align: left;
+  width: 100%;
+}
+
+.ig-quick button:hover {
+  background: var(--color-sunken);
+}
+
+.ig-quick button svg {
+  color: var(--color-muted);
+  flex: none;
+}
+
+.ig-quick span {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+
+.ig-quick b {
+  font-size: var(--text-body);
+  font-weight: 600;
+}
+
+.ig-quick em {
+  color: var(--color-muted);
+  font-size: var(--text-micro);
+  font-style: normal;
+}
+
+/* ===== 인스타 피드 문법 =====
+   격자가 "무엇이 있나"만 보여줬다면 피드는 한 건씩 보여주는 대신
+   갈지 말지를 정하는 사실(누가 열었나 · 언제 · 몇 자리)을 함께 놓는다.
+   폭을 470px 로 고정하는 것은 인스타와 같은 이유다 — 창을 넓혀도
+   사진 크기가 변하지 않아야 스크롤 리듬이 유지된다. */
+
+.ig-tray {
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  gap: var(--space-4);
+  margin: 0 auto;
+  max-width: 470px;
+  overflow-x: auto;
+  padding-bottom: var(--space-4);
+  width: 100%;
+}
+
+.ig-story {
+  background: none;
+  border: 0;
+  display: grid;
+  flex: none;
+  gap: 6px;
+  justify-items: center;
+  padding: 0;
+  width: 68px;
+}
+
+/* 링은 conic-gradient 한 겹 + 안쪽 흰 테두리로 만든다.
+   테두리를 페이지색으로 두어야 링과 썸네일이 붙어 보이지 않는다. */
+.ig-ring {
+  align-items: center;
+  background: conic-gradient(
+    from 150deg,
+    var(--ring-a),
+    var(--ring-b) 45%,
+    var(--ring-c) 80%,
+    var(--ring-a)
+  );
+  border-radius: var(--radius-full);
+  display: flex;
+  height: 64px;
+  justify-content: center;
+  padding: 2.5px;
+  width: 64px;
+}
+
+/* '모임 열기'는 아직 아무것도 없는 자리라 링을 칠하지 않는다. */
+.ig-ring.new {
+  background: var(--color-border);
+}
+
+.ig-thumb {
+  align-items: center;
+  background: var(--tint-neutral);
+  border: 2.5px solid var(--color-page);
+  border-radius: var(--radius-full);
+  color: var(--tint-neutral-ink);
+  display: flex;
+  height: 100%;
+  justify-content: center;
+  width: 100%;
+}
+
+.ig-thumb.moss,
+.ig-thumb.info,
+.ig-thumb.pending {
+  background: var(--tint-primary);
+  color: var(--tint-primary-ink);
+}
+
+.ig-story small {
+  font-size: var(--text-micro);
+  max-width: 68px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ig-feed {
+  display: grid;
+  gap: var(--space-6);
+  justify-items: center;
+}
+
+.ig-post {
+  display: grid;
+  gap: var(--space-2);
+  max-width: 470px;
+  width: 100%;
+}
+
+.ig-post-head {
+  align-items: center;
+  display: flex;
+  gap: var(--space-3);
+  padding: var(--space-1) 0;
+}
+
+.ig-ava {
+  align-items: center;
+  background: var(--tint-avatar);
+  border-radius: var(--radius-full);
+  color: var(--tint-avatar-ink);
+  display: flex;
+  flex: none;
+  font-size: var(--text-meta);
+  font-weight: 700;
+  height: 34px;
+  justify-content: center;
+  width: 34px;
+}
+
+.ig-ava.sm {
+  font-size: var(--text-micro);
+  height: 26px;
+  width: 26px;
+}
+
+.ig-post-who {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+
+.ig-post-who b {
+  font-size: var(--text-body);
+  font-weight: 600;
+}
+
+.ig-post-who span {
+  color: var(--color-muted);
+  font-size: var(--text-micro);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 상태는 배지가 아니라 줄 끝의 한 마디로 둔다. 인스타 헤더에는 배지가 없다. */
+.ig-post-status {
+  color: var(--color-muted);
+  font-size: var(--text-micro);
+  font-weight: 600;
+  margin-left: auto;
+}
+
+.ig-post-status.moss {
+  color: var(--color-primary);
+}
+
+.ig-media {
+  background: none;
+  border: 0;
+  display: block;
+  padding: 0;
+  position: relative;
+  width: 100%;
+}
+
+.ig-media-tag {
+  background: var(--scrim-strong);
+  border-radius: var(--radius-full);
+  bottom: var(--space-3);
+  color: var(--color-surface);
+  font-size: var(--text-micro);
+  font-weight: 600;
+  left: var(--space-3);
+  padding: 3px 10px;
+  position: absolute;
+}
+
+.ig-post-body {
+  display: grid;
+  gap: var(--space-2);
+}
+
+/* 좋아요 자리. 데이터에 없는 하트 대신 실제로 있는 것 — 신청한 사람 — 을 놓는다. */
+.ig-roster {
+  align-items: center;
+  display: flex;
+  font-size: var(--text-body);
+  gap: var(--space-2);
+}
+
+.ig-roster.empty {
+  color: var(--color-muted);
+}
+
+.ig-roster b {
+  font-weight: 600;
+}
+
+.ig-stack {
+  display: flex;
+  flex: none;
+}
+
+.ig-stack .ig-ava {
+  border: 2px solid var(--color-surface);
+  margin-left: -10px;
+}
+
+.ig-stack .ig-ava:first-child {
+  margin-left: 0;
+}
+
+.ig-cap {
+  font-size: var(--text-body);
+  line-height: var(--leading-normal);
+}
+
+.ig-cap b {
+  font-weight: 600;
+  margin-right: 5px;
+}
+
+.ig-more-link {
+  background: none;
+  border: 0;
+  color: var(--color-muted);
+  font-size: var(--text-body);
+  justify-self: start;
+  padding: 0;
+}
+
+.ig-more-link:hover {
+  color: var(--color-ink);
+}
+
+/* 인스타 광고의 CTA 자리. 하트로 참여를 대신하지 않는 이유가 여기 있다 —
+   실수로 눌렀을 때 자리가 빠지면 되돌리기가 번거롭다. */
+.ig-join {
+  align-items: center;
+  background: var(--color-cta);
+  border: 0;
+  border-radius: var(--radius);
+  color: var(--color-cta-ink);
+  display: flex;
+  font-size: var(--text-body);
+  font-weight: 600;
+  gap: var(--space-2);
+  justify-content: center;
+  margin-top: var(--space-1);
+  min-height: 40px;
+  width: 100%;
+}
+
+.ig-join:hover:not(:disabled) {
+  background: var(--color-primary-strong);
+}
+
+.ig-join.done {
+  background: var(--color-btn-soft);
+  color: var(--color-ink);
+}
+
+.ig-join.done:hover {
+  background: var(--color-btn-soft-press);
+}
+
+.ig-join.closed {
+  background: var(--color-btn-soft);
+  color: var(--color-muted);
+  cursor: not-allowed;
+}
+
+.ig-ago {
+  color: var(--color-muted);
+  font-size: var(--text-micro);
 }
 
 /* 이제 포스터 하나만 감싼다. 아래 메타줄(날짜·자리)은 상세로 옮겼다.
@@ -9287,9 +10870,9 @@ button.notif-row {
 
 /* '필수'는 색이 아니라 글자로도 알려야 색각 이상 사용자에게 전달된다. */
 .field-label em {
-  background: var(--tint-clay);
+  background: var(--tint-neutral);
   border-radius: var(--radius-full);
-  color: var(--tint-clay-ink);
+  color: var(--tint-neutral-ink);
   font-size: var(--text-micro);
   font-style: normal;
   padding: 1px 7px;
@@ -9336,8 +10919,8 @@ button.notif-row {
 }
 
 .chip.selected {
-  background: var(--color-moss);
-  border-color: var(--color-moss);
+  background: var(--color-primary);
+  border-color: var(--color-primary);
   color: var(--color-surface);
 }
 
@@ -9371,7 +10954,7 @@ button.notif-row {
   align-items: center;
   background: none;
   border: 0;
-  color: var(--color-moss);
+  color: var(--color-primary);
   display: flex;
   font-size: var(--text-body);
   gap: var(--space-2);
@@ -9495,7 +11078,7 @@ button.notif-row {
 }
 
 .gathering-facts dd em {
-  color: var(--color-moss);
+  color: var(--color-primary);
   font-style: normal;
   font-weight: 500;
 }
@@ -9512,9 +11095,9 @@ button.notif-row {
 
 /* 주최자에게만 보이는 판단 근거. 경고가 아니라 "접어도 된다"는 허락이다. */
 .gathering-warn {
-  background: var(--tint-pending);
+  background: var(--tint-primary);
   border-radius: var(--radius);
-  color: var(--tint-pending-ink);
+  color: var(--tint-primary-ink);
   font-size: var(--text-body);
   line-height: var(--leading-normal);
   padding: var(--space-3);
@@ -9539,13 +11122,13 @@ button.notif-row {
 }
 
 .seat-badge.confirmed {
-  background: var(--tint-moss);
-  color: var(--tint-moss-ink);
+  background: var(--tint-success);
+  color: var(--tint-success-ink);
 }
 
 .seat-badge.waiting {
-  background: var(--tint-pending);
-  color: var(--tint-pending-ink);
+  background: var(--tint-primary);
+  color: var(--tint-primary-ink);
 }
 
 .seat-badge.closed {
@@ -9585,9 +11168,9 @@ button.notif-row {
 
 .roster-list li {
   align-items: center;
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border-radius: var(--radius-full);
-  color: var(--tint-moss-ink);
+  color: var(--tint-primary-ink);
   display: flex;
   font-size: var(--text-meta);
   gap: var(--space-2);
@@ -9616,10 +11199,10 @@ button.notif-row {
 
 .home-gathering-row {
   align-items: center;
-  background: var(--tint-moss);
+  background: var(--tint-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
-  color: var(--tint-moss-ink);
+  color: var(--tint-primary-ink);
   display: flex;
   gap: var(--space-3);
   min-height: 54px;
@@ -9656,9 +11239,9 @@ button.notif-row {
 
 /* 대기는 확정과 구분돼야 한다 — 그 시간을 비워둘지 판단이 갈린다. */
 .home-gathering-wait {
-  background: var(--tint-pending);
+  background: var(--tint-primary);
   border-radius: var(--radius-full);
-  color: var(--tint-pending-ink);
+  color: var(--tint-primary-ink);
   flex-shrink: 0;
   font-size: var(--text-micro);
   font-style: normal;
@@ -9705,9 +11288,9 @@ button.notif-row {
 /* 남은 시간은 주의를 끌되 실패는 아니다 — 팀 규칙대로 clay 를 쓴다.
    danger 는 부결·삭제처럼 되돌릴 수 없는 것에만 남겨둔다. */
 .market-time-chip {
-  background: var(--tint-clay);
+  background: var(--tint-neutral);
   border-radius: var(--radius-full);
-  color: var(--tint-clay-ink);
+  color: var(--tint-neutral-ink);
   font-size: var(--text-micro);
   font-weight: 500;
   margin-left: auto;
@@ -9751,7 +11334,7 @@ button.notif-row {
 
 .market-hall-head {
   align-items: center;
-  color: var(--color-moss-strong);
+  color: var(--color-primary-strong);
   display: flex;
   font-size: var(--text-body-lg);
   font-weight: 600;
@@ -9816,8 +11399,8 @@ button.notif-row {
 }
 
 .market-rank li:first-child .market-rank-no {
-  background: var(--tint-moss);
-  color: var(--tint-moss-ink);
+  background: var(--tint-primary);
+  color: var(--tint-primary-ink);
 }
 
 /* --- 회의 부담 (하루 회의시간) ------------------------------------- */
@@ -9848,7 +11431,7 @@ button.notif-row {
 }
 
 .meeting-load-title b {
-  color: var(--color-clay);
+  color: var(--color-primary);
   font-weight: 600;
 }
 
@@ -9868,7 +11451,7 @@ button.notif-row {
 
 /* 최대는 이 패널의 요지다. 나머지와 같은 무게로 두면 눈에 안 걸린다. */
 .meeting-load-stats > div.peak {
-  background: var(--tint-clay);
+  background: var(--tint-neutral);
 }
 
 .meeting-load-stats span {
@@ -9878,7 +11461,7 @@ button.notif-row {
 
 .meeting-load-stats > div.peak span,
 .meeting-load-stats > div.peak em {
-  color: var(--tint-clay-ink);
+  color: var(--tint-neutral-ink);
 }
 
 .meeting-load-stats strong {
@@ -9897,9 +11480,9 @@ button.notif-row {
 
 /* 평균은 사람을 설득하지 못한다. 최악의 날이 설득한다. */
 .meeting-load-peak {
-  background: var(--tint-clay);
+  background: var(--tint-neutral);
   border-radius: var(--radius);
-  color: var(--tint-clay-ink);
+  color: var(--tint-neutral-ink);
   font-size: var(--text-body);
   line-height: var(--leading-normal);
   overflow-wrap: anywhere;
@@ -9975,7 +11558,7 @@ button.notif-row {
 }
 
 .meeting-rank-bar span {
-  background: var(--color-moss);
+  background: var(--color-primary);
   display: block;
   height: 100%;
 }
@@ -10054,10 +11637,12 @@ button.notif-row {
   flex: none;
 }
 
+/* 캘린더에서 확인됨 = 대조가 끝난 상태다. 초록은 브랜드에서 빠지고
+   "통과·완료"에만 남았으므로 여기가 그 자리다. */
 .calendar-link.matched {
-  color: var(--tint-moss-ink);
+  color: var(--tint-success-ink);
 }
 
 .calendar-link.ambiguous {
-  color: var(--tint-pending-ink);
+  color: var(--tint-primary-ink);
 }

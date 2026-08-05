@@ -119,7 +119,7 @@ export function NotificationCenter({
             </button>
           </div>
         )}
-        <div className="notif-list">
+        <div className="ig-activity">
           {visibleReceived.length === 0 && (
             <EmptyState
               icon={BellOff}
@@ -131,26 +131,34 @@ export function NotificationCenter({
               }
             />
           )}
+          {/*
+            인스타 활동(Activity) 목록. 아바타 · 한 문장 · 시간 · 우측 종류 표시.
+            줄바꿈된 카드가 아니라 한 줄짜리 문장이라 열 개가 한 화면에 들어온다.
+            안읽음은 우측 파란 점 하나로만 표시한다 — 행 전체를 칠하면
+            "안읽은 것이 많다"가 아니라 "화면이 시끄럽다"로 읽힌다.
+          */}
           {visibleReceived.map((item) => {
             const Icon = KIND_ICON[item.kind];
             return (
               <button
                 key={item.id}
-                className={item.read ? 'notif-row' : 'notif-row unread'}
+                className={item.read ? 'ig-act' : 'ig-act unread'}
                 onClick={() => openNotification(item)}
+                type="button"
               >
-                <span className={`notif-kind ${item.kind}`}>
-                  <Icon size={14} />
-                  {KIND_LABEL[item.kind]}
+                <span className="ig-ava">{item.fromName.slice(0, 1)}</span>
+                <span className="ig-act-text">
+                  <span>
+                    <b>{item.fromName}</b>
+                    {item.title}
+                    <em>{item.createdAt}</em>
+                  </span>
+                  {item.body && <small>{item.body}</small>}
                 </span>
-                <span className="notif-body">
-                  <strong>{item.title}</strong>
-                  {item.body && <span>{item.body}</span>}
-                  <small>
-                    {item.fromName} · {item.createdAt}
-                  </small>
+                <span className={`ig-act-kind ${item.kind}`} title={KIND_LABEL[item.kind]}>
+                  <Icon size={16} />
                 </span>
-                {!item.read && <span className="notif-dot" aria-label="안읽음" />}
+                {!item.read && <span className="ig-act-dot" aria-label="안읽음" />}
               </button>
             );
           })}
@@ -199,17 +207,21 @@ export function NotificationCenter({
 
       <section className="panel">
         <PanelHeader icon={MessageSquare} title={`보낸 메시지 · ${sent.length}`} />
-        <div className="notif-list">
+        <div className="ig-activity">
           {sent.length === 0 && <p className="can-empty">보낸 메시지가 없습니다.</p>}
           {sent.map((item) => (
-            <div key={item.id} className="notif-row">
-              <span className="notif-kind message">
-                <MessageSquare size={14} />
-                {item.recipientName}
+            <div className="ig-act" key={item.id}>
+              <span className="ig-ava">{item.recipientName.slice(0, 1)}</span>
+              <span className="ig-act-text">
+                <span>
+                  <b>{item.recipientName}</b>
+                  님에게
+                  <em>{item.createdAt}</em>
+                </span>
+                <small>{item.body}</small>
               </span>
-              <span className="notif-body">
-                <span>{item.body}</span>
-                <small>{item.createdAt}</small>
+              <span className="ig-act-kind message">
+                <MessageSquare size={16} />
               </span>
             </div>
           ))}

@@ -1,5 +1,5 @@
 import { FormEvent, useState } from 'react';
-import { HeartHandshake, LogIn, ShieldCheck, UserPlus } from 'lucide-react';
+import { HeartHandshake, LogIn, UserPlus } from 'lucide-react';
 import { teamParts, isCompanyEmail } from '../../auth';
 import type { CurrentUser, ManagedAccount, TeamPart } from '../../types';
 
@@ -98,45 +98,35 @@ export function LoginScreen({ accounts, onLogin, onRegister }: LoginScreenProps)
 
   return (
     <main className="login-page">
-      <section className="login-intro">
+      {/*
+        제목("사내 계정으로 로그인")을 없앴다. 바로 아래 탭이 로그인/가입 중
+        무엇을 하는지 이미 말하고, 그 위 로고가 어디인지 말한다. 셋을 다 두면
+        입력칸에 닿기 전에 안내를 세 번 읽는다.
+
+        눈에 보이는 제목이 사라졌으므로 폼의 이름은 aria-label 로 남긴다 —
+        스크린리더에서 이 폼이 무엇인지 알 수 없게 두면 안 된다.
+      */}
+      <form
+        aria-label={mode === 'login' ? '사내 계정으로 로그인' : '새 계정 가입 요청'}
+        className="login-panel"
+        onSubmit={submit}
+      >
+        {/*
+          로고를 왼쪽 소개면에서 이 카드 안으로 옮겼다. 인스타 로그인도
+          워드마크가 카드 안에 있다 — 이름과 입력칸이 한 덩어리로 읽혀야
+          "여기서 시작한다"가 분명해진다. 왼쪽에 두면 헤드라인과 로고가
+          같은 위계로 경쟁했다.
+
+          로고 클릭 = 커넥셔너용 빠른 로그인(데모) 히든 토글. 일반 유저는 알기 어렵다.
+        */}
         <div className="brand login-brand">
-          {/* 로고 클릭 = 커넥셔너용 빠른 로그인(데모) 히든 토글. 일반 유저는 알기 어렵다. */}
-          <div className="brand-mark" onClick={() => setShowQuickLogin((prev) => !prev)} title="SK Grove">
+          <div className="brand-mark" onClick={() => setShowQuickLogin((prev) => !prev)} title="Connectioner">
             <HeartHandshake size={24} />
           </div>
           <div>
-            <strong>SK Grove</strong>
-            <span>Team Culture Hub</span>
+            <strong>Connectioner</strong>
+            <span>팀을 잇는 곳</span>
           </div>
-        </div>
-
-        {/*
-          기능 나열("의견 접수, 안건 투표, 리더 관리")은 바로 옆 로그인 폼과
-          중복이고, 무엇을 하는 앱인지는 위 헤드라인이 이미 말한다.
-        */}
-        <h1>편하게 말하고, 함께 정하고, 조금씩 바꿔요</h1>
-
-        <div className="login-assurance">
-          <ShieldCheck size={20} />
-          익명 의견은 작성자 정보와 분리해서 다룹니다.
-        </div>
-      </section>
-
-      <form className="login-panel" onSubmit={submit}>
-        <div>
-          <p className="eyebrow">시작하기</p>
-          <h2>{mode === 'login' ? '사내 계정으로 로그인' : '새 계정 가입 요청'}</h2>
-        </div>
-
-        <div className="auth-tabs" role="tablist" aria-label="인증 방식">
-          <button className={mode === 'login' ? 'selected' : ''} type="button" onClick={() => setMode('login')}>
-            <LogIn size={16} />
-            로그인
-          </button>
-          <button className={mode === 'signup' ? 'selected' : ''} type="button" onClick={() => setMode('signup')}>
-            <UserPlus size={16} />
-            가입
-          </button>
         </div>
 
         <label>
@@ -180,10 +170,28 @@ export function LoginScreen({ accounts, onLogin, onRegister }: LoginScreenProps)
         {error && <p className="form-error">{error}</p>}
         {notice && <p className="form-success">{notice}</p>}
 
-        <button className="primary-button wide" type="submit">
-          {mode === 'login' ? <LogIn size={18} /> : <UserPlus size={18} />}
-          {mode === 'login' ? '로그인' : '가입 요청'}
-        </button>
+        {/*
+          로그인과 가입을 한 줄에 둔다. 다만 둘은 성질이 다르다 — 왼쪽은 폼을
+          제출하고 오른쪽은 폼의 종류를 바꾼다. 같은 무게로 그리면 가입을
+          누르는 순간 신청이 들어간 줄 안다. 제출만 채운 버튼으로 둔다.
+        */}
+        <div className="login-actions">
+          <button className="primary-button" type="submit">
+            {mode === 'login' ? <LogIn size={18} /> : <UserPlus size={18} />}
+            {mode === 'login' ? '로그인' : '가입 요청'}
+          </button>
+          <button
+            className="secondary-button"
+            type="button"
+            onClick={() => {
+              setMode(mode === 'login' ? 'signup' : 'login');
+              setError('');
+              setNotice('');
+            }}
+          >
+            {mode === 'login' ? '가입' : '로그인으로'}
+          </button>
+        </div>
 
         {showQuickLogin && (quickLeader || quickMember) && (
           <div className="quick-login">

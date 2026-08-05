@@ -48,6 +48,20 @@ type PosterFrameProps = {
   badgeTone?: 'moss' | 'clay' | 'muted';
 };
 
+/*
+  스토리 트레이용 원형 썸네일. 포스터는 4:5 라 원에 넣으면 위아래가 잘려
+  무엇인지 알 수 없어진다. 모티프 아이콘 하나만 틴트 위에 올린다.
+*/
+export function PosterThumb({ gathering }: { gathering: Gathering }) {
+  const poster = gathering.poster ?? localPoster(gathering);
+  const Motif = MOTIF_ICON[poster.motif] ?? Sparkles;
+  return (
+    <span className={`ig-thumb ${poster.tone}`}>
+      <Motif aria-hidden size={24} strokeWidth={1.6} />
+    </span>
+  );
+}
+
 export function PosterFrame({ gathering, badge, badgeTone = 'moss' }: PosterFrameProps) {
   // 저장된 포스터가 없어도 빈 카드를 보여주지 않는다. 즉석에서 로컬 포스터를 만든다.
   const poster = gathering.poster ?? localPoster(gathering);

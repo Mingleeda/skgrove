@@ -136,49 +136,77 @@ export function AgendaBoard({
           action={{ label: '안건 등록', onClick: () => setView('create') }}
         />
       ) : (
-        // 카드 그리드는 1280px 에 3건만 담겼다. 행이면 같은 자리에 12건이 들어간다.
-        // 투표는 되돌릴 수 없으므로 행에서는 확정하지 않고 상세로만 보낸다.
-        <div className="work-list">
+        /*
+          인스타 스토리의 투표 스티커 문법. 막대가 배경으로 깔리고 글자가 그 위에
+          얹힌다. 이 화면에서는 결과만 보여주고 투표는 상세에서 한다 —
+          투표는 되돌릴 수 없는데 목록에는 되돌릴 화면이 없다.
+
+          행 목록보다 한 화면에 담기는 건수가 줄어든다. 대신 "몇 대 몇인지"를
+          누르지 않고 알 수 있다. 안건함에 오는 이유가 그것이라 바꿨다.
+        */
+        <div className="ig-feed">
           {visibleAgendas.map((agenda) => {
             const rate = approveRate(agenda);
             const open = isOpen(agenda);
             const remaining = daysLeft(agenda, today);
-            const tone =
-              agenda.status === '통과' ? 'moss' : agenda.status === '부결' ? 'danger' : 'pending';
+            const done = voted.has(agenda.id);
+            const statusClass =
+              agenda.status === '통과' ? 'pass' : agenda.status === '부결' ? 'fail' : 'moss';
+            const when = open
+              ? done
+                ? '투표 완료'
+                : remaining !== null && remaining <= 0
+                  ? '오늘 마감'
+                  : remaining !== null
+                    ? `${remaining}일 남음`
+                    : '투표중'
+              : agenda.createdAt;
 
             return (
-              <button
-                type="button"
-                className="work-row"
-                key={agenda.id}
-                onClick={() => openDetail(agenda.id)}
-                title={`${agenda.title} — ${agenda.category} · ${agenda.part} · ${agenda.createdAt} · ${voteTotal(agenda)}표`}
-              >
-                <span className="work-row-dot" style={{ background: `var(--color-${tone})` }} />
-                <span className="work-row-title">{agenda.title}</span>
-                <span className="work-row-sub">
-                  {agenda.category} · {voteTotal(agenda)}표
-                </span>
-                <span className="work-row-bar">
-                  <span style={{ width: `${rate}%`, background: `var(--color-${tone})` }} />
-                </span>
-                <span className="work-row-pct">{rate}%</span>
-                <span className="work-row-meta">
-                  {open
-                    ? voted.has(agenda.id)
-                      ? '투표 완료'
-                      : remaining !== null && remaining <= 0
-                        ? '오늘 마감'
-                        : remaining !== null
-                          ? `${remaining}일 남음`
-                          : '투표중'
-                    : agenda.createdAt.slice(5)}
-                </span>
-              </button>
+              <article className="ig-post plain" key={agenda.id}>
+                <header className="ig-post-head">
+                  <span className="ig-ava">
+                    <Vote size={17} />
+                  </span>
+                  <span className="ig-post-who">
+                    <b>{agenda.category}</b>
+                    <span>
+                      {agenda.source} · {agenda.part}
+                    </span>
+                  </span>
+                  <span className={`ig-post-status ${statusClass}`}>{agenda.status}</span>
+                </header>
+
+                <div className="ig-post-body">
+                  <p className="ig-headline">{agenda.title}</p>
+
+                  <div className="ig-poll">
+                    <div className={rate >= 50 ? 'ig-opt win' : 'ig-opt'}>
+                      <span className="ig-opt-bar" style={{ width: `${rate}%` }} />
+                      <b>찬성</b>
+                      <em>{rate}%</em>
+                    </div>
+                    <div className={rate < 50 ? 'ig-opt win' : 'ig-opt'}>
+                      <span className="ig-opt-bar" style={{ width: `${100 - rate}%` }} />
+                      <b>반대</b>
+                      <em>{100 - rate}%</em>
+                    </div>
+                  </div>
+
+                  <p className="ig-poll-meta">
+                    {voteTotal(agenda)}표 · {when}
+                  </p>
+
+                  <button className={done || !open ? 'ig-join done' : 'ig-join'} onClick={() => openDetail(agenda.id)} type="button">
+                    {open ? (done ? '결과 보기' : '투표하기') : '결과 보기'}
+                  </button>
+                </div>
+              </article>
             );
           })}
         </div>
       )}
+
     </section>
   );
 }
