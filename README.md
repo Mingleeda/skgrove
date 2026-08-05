@@ -27,6 +27,10 @@ npm run build
 2. SQL Editor에서 `supabase-schema.sql`을 실행한다.
 3. `.env.example`을 참고해서 `.env.local`을 만든다.
 
+> 저장소 주소가 `skax-k2h9205/skgrove` 로 바뀌었습니다. 예전에 클론했다면
+> `git remote set-url origin https://github.com/skax-k2h9205/skgrove.git` 로 한 번 맞춰주세요.
+> (안 해도 GitHub 이 리다이렉트해주지만 푸시할 때마다 경고가 뜹니다.)
+
 ```bash
 VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
