@@ -1652,12 +1652,13 @@ textarea {
   width: 72px;
 }
 
-/* leader-inbox-list 와 같은 문제. 열을 명시하지 않으면 암시 트랙이 max-content 로
-   잡혀, 카드가 531px 열을 774px 로 밀고 나가 상태 select 와 안건화 버튼이 잘렸다. */
+/* 목록이 가로를 다 쓰게 되면서 격자로 늘어놓는다. 안건함·액션과 같은 방식으로
+   열 수는 남는 자리가 정한다. 최소 280px 은 카드 안의 상태 select(128px)와
+   안건화 버튼(136px)이 한 줄에 서는 데 필요한 폭이다. */
 .issue-list {
   display: grid;
   gap: var(--space-3);
-  grid-template-columns: minmax(0, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
 }
 
 .leader-screen {
@@ -1700,30 +1701,38 @@ textarea {
    때문이다. 그때는 두 열을 1fr 1fr 로 나눴다. 이번에는 목록을 360px 로
    못박아 작업판이 남는 폭을 전부 가져간다 — 1280px 창에서 880px 이라
    그때 문제가 됐던 폭보다 넓다. */
+/*
+  좌우 2단을 걷어냈다. 작업판을 늘 띄워 두면 고른 것이 없을 때 화면 절반이
+  "왼쪽에서 접수 건을 고르세요" 만 띄운 빈 상자가 된다. 목록이 가로를 다 쓰고,
+  답변·안건화는 카드를 눌렀을 때 연다 — 좁은 폭에서 이미 쓰던 방식을 기본으로 올렸다.
+*/
 .leader-layout {
   align-items: start;
   display: grid;
   gap: var(--space-5);
-  /* 목록을 360px 로 못박으면 1101px 창에서 작업판이 370px 만 남는다 —
-     예전에 문제가 됐던 584px 보다 좁다. 폭에 따라 목록이 먼저 줄고,
-     대신 280px 아래로는 안 내려가게 잡는다(접수 제목이 세 줄로 접힌다). */
-  grid-template-columns: clamp(280px, 30%, 380px) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
 }
 
-/* 목록은 자체 스크롤을 갖고 작업판은 페이지 스크롤을 쓴다. 둘 다 페이지
-   스크롤에 맡기면 긴 목록 때문에 작업판이 화면 밖으로 밀린다. */
-.leader-inbox-list {
-  max-height: calc(100vh - var(--space-12));
-  overflow-y: auto;
-  position: sticky;
-  top: var(--space-4);
+/* 고른 것이 있으면 작업판만, 없으면 목록만. 한 번에 하나씩 본다. */
+.leader-layout.has-selection .leader-inbox-list {
+  display: none;
 }
 
-/* 2단에서는 뒤로가기가 필요 없다 — 목록이 늘 옆에 있다.
+.leader-layout:not(.has-selection) .leader-workbench {
+  display: none;
+}
+
+/* 요약·지연 알림은 목록의 머리말이다. 상세를 볼 때는 같이 감춘다. */
+.leader-screen:has(.leader-layout.has-selection) .leader-summary,
+.leader-screen:has(.leader-layout.has-selection) .action-overdue-notice {
+  display: none;
+}
+
+/* 목록이 사라진 자리에서 돌아갈 길은 이 버튼뿐이다. 늘 보여야 한다.
    .btn-ghost 가 파일 뒤쪽에서 display:inline-flex 를 주므로 같은 특이도로
    쓰면 순서에서 진다. 부모를 붙여 (0,2,0) 으로 올린다. */
 .leader-workbench .leader-back {
-  display: none;
+  display: inline-flex;
 }
 
 /* 열을 명시하지 않으면 암시 트랙이 max-content 로 잡혀, 안의 필터 툴바가
@@ -2284,11 +2293,29 @@ textarea {
   width: 42px;
 }
 
+/* 안건함과 같은 격자. 열 수는 남는 자리가 정한다 — 아래 주석 참고. */
 .action-board-list {
   display: grid;
   gap: 14px;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
 }
+
+/* 카드마다 담긴 것이 다르다 — 적용 결과나 재검토 사유가 있는 카드가 더 길다.
+   flex 로 두고 마지막 줄에 margin-top:auto 를 주면 상태 버튼이 카드 바닥에 선다.
+   grid 로는 안 된다: 자식 수가 건마다 달라 grid-template-rows 를 못 박는다. */
+.action-board-list .action-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.action-board-list .action-transitions,
+.action-board-list .action-note-editor {
+  margin-top: auto;
+}
+
+/* 최소 200px 은 눈대중이 아니다. 카드 안쪽 여백 36px 을 빼면 164px 이 남아
+   가장 안 줄어드는 input[type=date](153px) 가 들어간다. 이보다 좁혀 잡으면
+   좁은 창에서 목표일이 잘린다. */
 
 .action-card {
   display: grid;
@@ -2337,10 +2364,19 @@ textarea {
   color: var(--color-primary);
 }
 
+/*
+  담당자와 목표일은 자리가 있을 때만 나란히 둔다.
+  미디어쿼리가 아니라 auto-fit 을 쓰는 이유: 접히는 기준은 창 폭이 아니라
+  카드 폭이고, 카드 폭은 열 수에 따라 달라진다. 남는 자리를 직접 재게 둔다.
+
+  최소값 160px 은 눈대중이 아니다. input[type=date] 는 '2026. 07. 30.' 과
+  달력 아이콘 때문에 153px 아래로 줄지 않아, 그보다 좁은 칸에 넣으면 삐져나온다.
+  예전 minmax(0, 1fr) 은 폭 375px 에서 칸을 146px 로 만들어 9px 씩 잘리고 있었다.
+*/
 .action-assign-row {
   display: grid;
   gap: 10px;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
 }
 
 .action-transitions {
@@ -2793,8 +2829,29 @@ textarea {
   grid-column: 1 / -1;
 }
 
-.profile-list-grid {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+/*
+  동료 목록은 32명을 훑어보고 고르는 자리다. 2열이면 한 화면에 몇 명 안 들어와
+  스크롤로 찾게 된다. 인스타의 '팔로우 추천' 처럼 아바타·이름·소속만 담은
+  좁은 칸을 여러 개 늘어놓는다.
+
+  auto-fill 을 쓰면 창이 넓어질수록 열이 알아서 늘어난다. 사람 수는 팀마다
+  다르고 창 폭도 제각각이라, 열 수를 숫자로 박기보다 남는 자리에 맡기는 편이 맞다.
+  좁은 폭의 2열·1열은 아래 미디어쿼리(1100px·720px)가 이미 정해 둔 대로 따른다.
+*/
+/*
+  부모(.panel)를 붙여 특이도를 (0,2,0) 으로 올린다. 아래 1100px 공용 블록이
+  이 목록을 2열로 되돌리는데, 그 블록은 여러 격자가 함께 쓰는 규칙이라 손대지 않고
+  이 목록만 여기서 이겨 둔다. 새 브레이크포인트를 만들지 않는 편이
+  720·1100 두 개로 묶어 둔 이 디자인 시스템의 규칙과 맞는다.
+  좁은 창에서는 auto-fill 이 알아서 1열로 떨어지므로 따로 접을 필요도 없다.
+*/
+.panel .profile-list-grid {
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+}
+
+/* 인스타에서 사람은 늘 동그란 아바타로 나온다. 아래 상세 패널(.ig-person)도 원이라 결을 맞춘다. */
+.profile-list-grid .tiny-avatar {
+  border-radius: 50%;
 }
 
 .profile-directory-tools {
@@ -2883,12 +2940,15 @@ textarea {
   grid-template-columns: 1fr;
 }
 
+/* 세 번째 칸은 예전 마크업의 잔재다. 지금 자식은 아바타와 이름 둘뿐인데
+   minmax(130px, auto) 가 빈 칸으로 130px 를 붙잡아, 줄마다 오른쪽에
+   155px 씩 죽은 자리를 만들고 있었다. 526px 중 371px 만 쓰던 셈이다. */
 .profile-list-grid button {
   align-items: center;
   color: var(--color-ink);
   display: grid;
   gap: var(--space-3);
-  grid-template-columns: 40px minmax(0, 1fr) minmax(130px, auto);
+  grid-template-columns: 40px minmax(0, 1fr);
   min-height: 72px;
   padding: var(--space-3);
   text-align: left;
@@ -5962,39 +6022,7 @@ textarea {
     position: static;
   }
 
-  /* 좁은 폭에서는 2단이 뜻이 없다. 고른 것이 있으면 작업판만, 없으면
-     목록만 보여준다 — 예전의 화면 교체 방식과 같은 동작이다.
-     요약·지연 알림은 목록의 머리말이라 상세만 볼 때는 같이 감춘다. */
-  .leader-screen:has(.leader-layout.has-selection) .leader-summary,
-  .leader-screen:has(.leader-layout.has-selection) .action-overdue-notice {
-    display: none;
-  }
-
-  .leader-layout.has-selection .leader-inbox-list {
-    display: none;
-  }
-
-  .leader-layout:not(.has-selection) .leader-workbench {
-    display: none;
-  }
-
-  .leader-inbox-list {
-    max-height: none;
-    overflow-y: visible;
-    position: static;
-  }
-
-  .leader-workbench .leader-back {
-    display: inline-flex;
-  }
-
-  .leader-layout {
-    grid-template-columns: 1fr;
-  }
-
-  .leader-workbench {
-    position: static;
-  }
+  /* 리더 관리함의 '하나씩 보기' 는 이제 기본 규칙이라 여기서 다시 쓰지 않는다. */
 
   .connect-layout,
   .connect-control-grid,
@@ -10600,11 +10628,44 @@ button.notif-row {
   white-space: nowrap;
 }
 
+/*
+  안건은 사진이 아니라 훑어보고 고르는 목록이다. 한 줄에 하나씩 470px 로 두면
+  데스크탑에서 오른쪽 344px 가 통째로 빈다. 인스타 격자와 같은 3열로 채운다.
+  모임·이음장터·팀추억이 이미 격자라 화면 사이 결도 맞는다.
+
+  브레이크포인트를 규칙 바로 뒤에 둔다. 파일 앞쪽의 1100px 블록에 쓰면
+  같은 특이도로 순서에서 져서 조용히 무시된다.
+*/
 .ig-feed {
   display: grid;
-  gap: var(--space-6);
-  justify-items: center;
+  gap: var(--space-5);
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  justify-items: stretch;
 }
+
+/* 카드가 같은 높이로 늘어나면 남는 높이가 '행마다' 나눠 붙는다(그리드 기본 stretch).
+   그래서 제목이 한 줄인 카드만 머리글이 11px 부풀어 제목 줄이 어긋났다.
+   남는 높이는 본문 한 곳(1fr)이 받게 못박는다. */
+.ig-feed .ig-post {
+  grid-template-rows: auto 1fr;
+}
+
+/* 한 줄에 선 카드들의 높이를 맞춰 '투표하기' 가 나란히 서게 한다.
+   제목이 두 줄인 안건 때문에 버튼이 들쭉날쭉하면 격자로 보이지 않는다. */
+.ig-feed .ig-post-body {
+  align-content: start;
+  grid-template-rows: auto auto auto 1fr;
+  height: 100%;
+}
+
+.ig-feed .ig-join {
+  align-self: end;
+}
+
+/* 열 수를 창 폭으로 정하면 사이드바·패딩을 뺀 실제 자리를 못 본다.
+   auto-fit 은 남는 자리를 직접 재므로 브레이크포인트가 아예 필요 없다 —
+   이 디자인 시스템이 브레이크포인트를 720·1100 둘로 묶어 둔 뜻과도 맞는다.
+   375px 에서는 자리가 한 칸뿐이라 알아서 1열이 된다. */
 
 .ig-post {
   display: grid;
@@ -10644,6 +10705,13 @@ button.notif-row {
   display: grid;
   gap: 1px;
   min-width: 0;
+}
+
+/* 상태는 두 글자라 줄바꿈 여지가 없다. 자리가 모자라면 '통과' 가 '통/과' 로 쪼개지는데,
+   줄여야 할 것은 상태가 아니라 그 옆의 출처 문구다(이미 말줄임이 걸려 있다). */
+.ig-post-status {
+  flex: none;
+  white-space: nowrap;
 }
 
 .ig-post-who b {
