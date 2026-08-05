@@ -45,7 +45,7 @@ const action = (patch: Partial<ActionItem> = {}): ActionItem => ({
 const accounts: ManagedAccount[] = [
   account({ id: 'A', name: '이선민', role: '팀리더', part: '전체' }),
   account({ id: 'B', name: '김승현', role: '파트리더', part: 'ITS혁신파트' }),
-  account({ id: 'C', name: '김수정', role: '팀원', part: '혁신도구파트' }),
+  account({ id: 'C', name: '김수정', role: '팀원', part: 'PM혁신파트' }),
   account({ id: 'D', name: '이두민', role: '팀원', part: 'TEST혁신파트' }),
   account({ id: 'E', name: '비활성', role: '팀원', part: 'ITS혁신파트', status: '비활성' }),
 ];

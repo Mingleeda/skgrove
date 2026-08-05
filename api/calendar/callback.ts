@@ -4,9 +4,11 @@
 //   http://127.0.0.1:8787/api/calendar/callback   (로컬 통합 프록시)
 //   https://<배포주소>/api/calendar/callback       (Vercel)
 // 쿼리 파라미터를 붙이지 않는다. 쿼리가 든 리디렉션 URI 는 구글 콘솔이 거부하는 경우가 있다.
-import { TOKEN_URL, callbackPage, config } from './_shared';
+import { TOKEN_URL, callbackPage, config } from './_shared.js';
 
-export default async function handler(request: Request): Promise<Response> {
+/* 구글이 브라우저를 여기로 되돌려보내므로 GET 이다. `export default handler` 로 두면
+   Vercel 이 (req, res) 로 불러서 돌려준 Response 가 버려진다 — index.ts 와 같은 이유. */
+export async function GET(request: Request): Promise<Response> {
   const settings = config();
   const html = (body: string, status = 200) =>
     new Response(body, { status, headers: { 'Content-Type': 'text/html; charset=utf-8' } });

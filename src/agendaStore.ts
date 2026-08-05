@@ -1,4 +1,5 @@
 import { initialAgendas } from './data/mockData';
+import { normalizeTeamPart } from './auth';
 import { supabase } from './supabaseClient';
 import type { Agenda } from './types';
 
@@ -38,7 +39,9 @@ export async function loadAgendas() {
     const saved = window.localStorage.getItem(AGENDA_STORAGE_KEY);
     if (!saved) return initialAgendas;
     const parsed = JSON.parse(saved) as Agenda[];
-    return parsed.length > 0 ? parsed : initialAgendas;
+    // 로컬 캐시에도 옛 파트 이름이 남아 있다. DB 경로와 같은 정규화를 태운다.
+    const fixed = parsed.map((agenda) => ({ ...agenda, part: normalizeTeamPart(agenda.part) }));
+    return fixed.length > 0 ? fixed : initialAgendas;
   } catch {
     return initialAgendas;
   }
@@ -76,7 +79,7 @@ function agendaFromRow(row: AgendaRow): Agenda {
     description: row.description ?? '',
     category: row.category,
     source: row.source,
-    part: row.part,
+    part: normalizeTeamPart(row.part),
     author: row.author,
     authorName: row.author_name ?? '',
     approve: row.approve,

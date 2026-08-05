@@ -4,6 +4,7 @@
 // 신청은 통째로 upsert 하지 않고 한 건씩 insert/delete 한다. 선착순에서 배열을
 // 통째로 덮어쓰면 두 사람이 같은 순간에 신청할 때 나중 쓰기가 앞 쓰기를 지워
 // 한 명이 조용히 사라진다. 그 버그는 재현도 어렵고 신뢰를 가장 크게 깬다.
+import { normalizeTeamPart } from './auth';
 import { supabase } from './supabaseClient';
 import type { Gathering, GatheringCost, GatheringKind, GatheringPoster, GatheringSignup, TeamPart } from './types';
 
@@ -70,7 +71,7 @@ function gatheringFromRow(row: GatheringRow): Gathering {
     closeAt: row.close_at || row.start_at || '',
     minPeople: typeof row.min_people === 'number' && row.min_people > 0 ? row.min_people : null,
     desc: row.description ?? '',
-    part: (row.part ?? '전체') as TeamPart,
+    part: normalizeTeamPart(row.part),
     cost: (row.cost ?? '없음') as GatheringCost,
     imageUrl: row.image_url ?? undefined,
     poster: (row.poster as GatheringPoster | null) ?? undefined,
@@ -110,7 +111,8 @@ export async function loadGatherings(): Promise<Gathering[]> {
       return rows;
     }
   }
-  return readLocal<Gathering>(GATHERINGS_KEY, []);
+  // 로컬 캐시에도 옛 파트 이름이 남아 있을 수 있다.
+  return readLocal<Gathering>(GATHERINGS_KEY, []).map((item) => ({ ...item, part: normalizeTeamPart(item.part) }));
 }
 
 export async function saveGatherings(items: Gathering[]) {

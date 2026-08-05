@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { loadAccounts, makeAccountId, saveAccounts, seedAccounts } from './accountStore';
 import { loadActionItems, makeActionItemId, saveActionItems } from './actionItemStore';
 import { finalStatus, isOpen, liveStatus, settleAgendas } from './agendaRules';
@@ -69,6 +69,9 @@ import {
   ownerAccount,
   gatheringCanceledDrafts,
   gatheringPromotedDraft,
+  marketCanceledDrafts,
+  marketOutbidDrafts,
+  marketWonDrafts,
   slackChannelForKind,
   teaProposalDrafts,
   type NotificationDraft,
@@ -83,6 +86,7 @@ import {
   saveHumorPosts,
 } from './humorStore';
 import { makePoster } from './aiPoster';
+import { requestGatheringImage } from './gatheringImage';
 import {
   cacheSignups,
   deleteGatheringRecord,
@@ -94,8 +98,27 @@ import {
   uploadGatheringImage,
 } from './gatheringStore';
 import { splitRoster } from './gatheringRules';
+import {
+  bidBlockedReason,
+  deriveStatus as deriveMarketStatus,
+  extendedCloseFor,
+  leadingBid,
+  minNextBid,
+} from './marketRules';
+import {
+  cacheMarketBids,
+  deleteMarketItemRecord,
+  insertMarketBid,
+  loadMarketBids,
+  loadMarketItems,
+  saveMarketItems,
+  uploadMarketImage,
+} from './marketStore';
 import { GatheringBoard } from './features/gatherings/GatheringBoard';
+import { MarketBoard } from './features/market/MarketBoard';
+import { localItemPoster } from './features/market/ItemPoster';
 import type { GatheringDraft } from './features/gatherings/GatheringForm';
+import type { MarketDraft } from './features/market/MarketForm';
 import { loadProfiles } from './profileStore';
 import { ProfilesContext, type AvatarInfo } from './profilesContext';
 import type {
@@ -110,6 +133,8 @@ import type {
   CurrentUser,
   Gathering,
   GatheringSignup,
+  MarketBid,
+  MarketItem,
   HumorComment,
   HumorPost,
   Identity,
@@ -156,6 +181,7 @@ const SECTION_BY_HASH: Record<string, Section> = {
   '#notifications': 'notifications',
   '#humor': 'humor',
   '#gatherings': 'gatherings',
+  '#market': 'market',
 };
 
 export function App() {
@@ -179,6 +205,8 @@ export function App() {
   const [humorComments, setHumorComments] = useState<HumorComment[]>(initialHumorComments);
   const [gatherings, setGatherings] = useState<Gathering[]>([]);
   const [gatheringSignups, setGatheringSignups] = useState<GatheringSignup[]>([]);
+  const [marketItems, setMarketItems] = useState<MarketItem[]>([]);
+  const [marketBids, setMarketBids] = useState<MarketBid[]>([]);
   // 알림이 DB(있으면)에서 로드 완료됐는지. 마감 임박 체크는 이게 true여야 실행(중복 슬랙 방지).
   const [notificationsReady, setNotificationsReady] = useState(false);
   // 계정별 아바타(색·사진). Avatar가 ProfilesContext로 읽는다. 로그인 후 DB에서 로드.
@@ -287,6 +315,12 @@ export function App() {
     });
     loadHumorComments().then((loaded) => {
       if (isMounted) setHumorComments(loaded);
+    });
+    loadMarketItems().then((loaded) => {
+      if (isMounted) setMarketItems(loaded);
+    });
+    loadMarketBids().then((loaded) => {
+      if (isMounted) setMarketBids(loaded);
     });
     loadGatherings().then((loaded) => {
       if (isMounted) setGatherings(loaded);
@@ -409,6 +443,30 @@ export function App() {
     // notify는 최신 notifications 클로저를 쓰며, 이 effect는 알림 변경으로 재실행되지 않는다.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [agendas, accounts, notificationsReady]);
+
+  /*
+    낙찰 알림. 경매가 끝나는 것은 사람의 행동이 아니라 시각이 지나는 일이라,
+    아무도 "지금 낙찰됐다"를 쏘아주지 않는다. 마감 임박 알림과 같은 방식으로
+    화면이 열릴 때 기회적으로 확인한다. dedupeKey 가 중복 발송을 막으므로
+    여러 사람이 접속해도 각자 한 번씩만 받는다.
+
+    나눔은 누른 그 순간 주인이 정해지므로 여기서 다시 보지 않는다(중복 방지는
+    dedupeKey 가 하지만, 애초에 이 경로를 탈 이유가 없다).
+  */
+  useEffect(() => {
+    if (!notificationsReady) return;
+    const stamp = nowStamp();
+    const drafts: NotificationDraft[] = [];
+    marketItems.forEach((item) => {
+      if (item.kind !== 'auction') return;
+      if (deriveMarketStatus(item, marketBids, stamp) !== '거래완료') return;
+      const won = leadingBid(item, marketBids);
+      if (won) drafts.push(...marketWonDrafts(item, won.name, today()));
+    });
+    if (drafts.length > 0) notify(drafts);
+    // notify는 최신 notifications 클로저를 쓰며, 이 effect는 알림 변경으로 재실행되지 않는다.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [marketItems, marketBids, notificationsReady]);
 
   // 투표 대상 인원. 파트 한정 안건은 해당 파트 + 전체 소속(팀리더)만 센다.
   const eligibleCountFor = (part: Agenda['part']) =>
@@ -834,6 +892,23 @@ export function App() {
     void saveGatherings(next);
   };
 
+  /*
+    썸네일 생성은 10초 넘게 걸리므로, 그 사이 목록이 바뀔 수 있다(다른 모임 등록·취소).
+    등록 시점에 닫힌 변수로 잡아둔 배열에 덮어쓰면 그 사이의 변경이 조용히 사라진다.
+    그래서 최신 목록을 ref 로 따로 들고, 뒤늦게 도착한 결과는 '그 한 건만' 고친다.
+  */
+  const gatheringsRef = useRef<Gathering[]>(gatherings);
+  useEffect(() => {
+    gatheringsRef.current = gatherings;
+  }, [gatherings]);
+
+  const patchGathering = (id: string, patch: Partial<Gathering>) => {
+    const current = gatheringsRef.current;
+    // 그 사이 취소·삭제됐으면 되살리지 않는다.
+    if (!current.some((item) => item.id === id)) return;
+    persistGatherings(current.map((item) => (item.id === id ? { ...item, ...patch } : item)));
+  };
+
   const createGathering = async (draft: GatheringDraft) => {
     if (!currentUser) return;
     const id = `GAT-${Date.now().toString(36).toUpperCase()}`;
@@ -860,6 +935,21 @@ export function App() {
     }
 
     persistGatherings([enriched, ...gatherings]);
+
+    /*
+      그림은 등록을 마친 뒤 배경에서 그린다. 10초 넘게 걸리는 일을 등록 버튼에 매달면
+      '번개' 가 번개가 아니게 된다. 그동안 카드는 방금 만든 포스터를 보여주고 있으므로
+      빈 자리가 생기지도 않는다. 다 그려지면 그 자리만 조용히 사진으로 바뀐다.
+      실패하면 아무것도 하지 않는다 — 포스터가 그대로 남는 것이 정상 동작이다.
+    */
+    if (!imageFile) {
+      void (async () => {
+        const generated = await requestGatheringImage(enriched);
+        if (!generated) return;
+        const { imageUrl } = await uploadGatheringImage(id, generated);
+        patchGathering(id, { imageUrl });
+      })();
+    }
   };
 
   /*
@@ -923,6 +1013,118 @@ export function App() {
     // 아무도 신청하지 않았다면 흔적을 남길 이유가 없다.
     void deleteGatheringRecord(gathering.id);
     persistGatherings(gatherings.filter((item) => item.id !== gathering.id));
+  };
+
+  /* ===== 벼룩숲 ===== */
+
+  const persistMarketItems = (next: MarketItem[]) => {
+    setMarketItems(next);
+    void saveMarketItems(next);
+  };
+
+  const createMarketItem = async (draft: MarketDraft) => {
+    if (!currentUser) return;
+    const id = `MKT-${Date.now().toString(36).toUpperCase()}`;
+    const { imageFile, ...rest } = draft;
+
+    const base: MarketItem = {
+      ...rest,
+      id,
+      seller: currentUser.name,
+      createdAt: today(),
+      canceled: false,
+      sellerDone: false,
+      buyerDone: false,
+    };
+
+    // 사진이 있으면 그걸 쓰고, 없을 때만 포스터를 만든다. 둘 다 실패해도 등록은 되어야 한다.
+    let enriched = base;
+    if (imageFile) {
+      const { imageUrl } = await uploadMarketImage(id, imageFile);
+      enriched = { ...base, imageUrl };
+    } else {
+      enriched = { ...base, poster: localItemPoster(base) };
+    }
+
+    persistMarketItems([enriched, ...marketItems]);
+  };
+
+  /*
+    입찰은 배열 통째로 저장하지 않고 한 건만 insert 한다. 두 사람이 같은 순간에
+    부를 때 나중 쓰기가 앞 쓰기를 지우면 한 건이 조용히 사라지는데, 경매에서
+    그건 "분명 넣었는데 없다"가 되어 신뢰를 가장 크게 깬다.
+    DB 쓰기가 실패하면 화면에도 반영하지 않는다.
+  */
+  const placeMarketBid = async (item: MarketItem, amount: number) => {
+    if (!currentUser) return;
+    const now = nowStamp();
+    // 화면이 오래 열려 있었을 수 있다. 저장 직전에 규칙으로 한 번 더 막는다.
+    if (bidBlockedReason(item, marketBids, now, currentUser.name)) return;
+    if (item.kind === 'auction' && amount < minNextBid(item, marketBids)) return;
+
+    const bid: MarketBid = {
+      id: `BID-${Date.now().toString(36).toUpperCase()}`,
+      itemId: item.id,
+      name: currentUser.name,
+      amount: item.kind === 'giveaway' ? 0 : amount,
+      createdAt: new Date().toISOString(),
+    };
+
+    const ok = await insertMarketBid(bid);
+    if (!ok) return;
+
+    const nextBids = [...marketBids, bid];
+    setMarketBids(nextBids);
+    cacheMarketBids(nextBids);
+
+    // 막판 입찰이면 마감을 민다. 마지막 순간에 낚아채고 끝나는 일을 막는다.
+    const pushed = item.kind === 'auction' ? extendedCloseFor(item, now) : null;
+    if (pushed) {
+      persistMarketItems(
+        marketItems.map((entry) => (entry.id === item.id ? { ...entry, extendedTo: pushed } : entry)),
+      );
+    }
+
+    // 밀려난 사람에게만 알린다. 다시 부를 기회를 주는 알림이라 즉시 닿아야 뜻이 있다.
+    if (item.kind === 'auction') {
+      const before = leadingBid(item, marketBids);
+      if (before && before.name !== currentUser.name) {
+        notify(marketOutbidDrafts(item, [before], today()));
+      }
+    } else {
+      // 나눔은 그 자리에서 주인이 정해진다. 마감을 기다릴 이유가 없다.
+      notify(marketWonDrafts(item, currentUser.name, today()));
+    }
+  };
+
+  const cancelMarketItem = (item: MarketItem) => {
+    const bidders = marketBids.filter((bid) => bid.itemId === item.id).map((bid) => bid.name);
+    if (bidders.length > 0) {
+      notify(marketCanceledDrafts(item, [...new Set(bidders)], today()));
+      // 부른 사람이 있는 거래를 지우면 그 기록까지 사라진다. 지우지 않고 취소로 남긴다.
+      persistMarketItems(marketItems.map((entry) => (entry.id === item.id ? { ...entry, canceled: true } : entry)));
+      return;
+    }
+    void deleteMarketItemRecord(item.id);
+    persistMarketItems(marketItems.filter((entry) => entry.id !== item.id));
+  };
+
+  /* 거래 완료는 양쪽이 각각 누른다. 앱은 결제를 다루지 않아 누가 잘못했는지
+     판정할 수 없으므로, 한쪽 말만 듣고 완료로 바꾸지 않는다. */
+  const markMarketDone = (item: MarketItem) => {
+    if (!currentUser) return;
+    const isSeller = item.seller === currentUser.name;
+    const won = leadingBid(item, marketBids);
+    const isBuyer = won?.name === currentUser.name;
+    if (!isSeller && !isBuyer) return;
+
+    persistMarketItems(
+      marketItems.map((entry) =>
+        entry.id === item.id
+          ? { ...entry, sellerDone: entry.sellerDone || isSeller, buyerDone: entry.buyerDone || isBuyer }
+          : entry,
+      ),
+    );
   };
 
   const registerAccount = (account: Omit<ManagedAccount, 'id' | 'joinedAt' | 'status'>) => {
@@ -1091,6 +1293,18 @@ export function App() {
           onJoin={(gathering) => void joinGathering(gathering)}
           onLeave={(gathering) => void leaveGathering(gathering)}
           onCancelGathering={cancelGathering}
+        />
+      )}
+      {active === 'market' && (
+        <MarketBoard
+          bids={marketBids}
+          currentUser={currentUser}
+          items={marketItems}
+          now={nowStamp()}
+          onBid={(item, amount) => void placeMarketBid(item, amount)}
+          onCancelItem={cancelMarketItem}
+          onCreate={(draft) => void createMarketItem(draft)}
+          onMarkDone={markMarketDone}
         />
       )}
       {active === 'notifications' && (

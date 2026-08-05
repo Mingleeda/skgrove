@@ -1,5 +1,9 @@
 // 구글 캘린더 프록시 공용 코드. 파일명이 _ 로 시작하면 Vercel 이 라우트로 만들지 않는다.
 //
+// 이 파일을 가져다 쓸 때는 './_shared.js' 처럼 확장자를 붙여야 한다. 배포된 함수는
+// Node ESM 으로 도는데, ESM 은 상대 경로에 확장자를 요구한다. 확장자를 빼면
+// 로컬 타입검사·빌드는 통과하고 배포 후 첫 호출에서 MODULE_NOT_FOUND 로 죽는다.
+//
 // 서버 환경변수(비밀은 서버에만):
 //   GOOGLE_CLIENT_ID        : OAuth 클라이언트 ID
 //   GOOGLE_CLIENT_SECRET    : OAuth 클라이언트 시크릿
@@ -13,7 +17,14 @@
 export const SCOPE = 'https://www.googleapis.com/auth/calendar.readonly';
 export const AUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth';
 export const TOKEN_URL = 'https://oauth2.googleapis.com/token';
-export const EVENTS_URL = 'https://www.googleapis.com/calendar/v3/calendars/primary/events';
+/*
+  읽을 캘린더. 'primary' 는 접속한 계정 본인의 캘린더라, 전용 계정이 팀 캘린더에
+  초대만 받은 경우 엉뚱하게 빈 캘린더를 읽는다(실제로 그 상황이었다).
+  GOOGLE_CALENDAR_ID 를 주면 그 캘린더를, 없으면 예전처럼 primary 를 읽는다.
+*/
+export function eventsUrl(calendarId: string): string {
+  return `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events`;
+}
 
 export type GoogleEvent = {
   id?: string;
@@ -43,7 +54,9 @@ export function config() {
   const redirectUri = env('GOOGLE_REDIRECT_URI');
   const appOrigin = env('CALENDAR_ALLOWED_ORIGIN');
   if (!clientId || !clientSecret || !redirectUri || !appOrigin) return null;
-  return { clientId, clientSecret, redirectUri, appOrigin };
+  // 캘린더 ID 는 선택이다. 없으면 접속 계정의 기본 캘린더를 읽는다.
+  const calendarId = env('GOOGLE_CALENDAR_ID') || 'primary';
+  return { clientId, clientSecret, redirectUri, appOrigin, calendarId };
 }
 
 // 토큰이 오가는 경로다. '*' 로 열지 않고 설정된 오리진만 허용한다.

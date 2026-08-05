@@ -13,13 +13,14 @@ export type Section =
   | 'metrics'
   | 'accounts'
   | 'notifications'
-  | 'humor';
+  | 'humor'
+  | 'market';
 
 export type Identity = '익명' | '실명';
 export type Urgency = '낮음' | '보통' | '높음';
 export type AgendaStatus = '투표중' | '통과' | '부결';
 export type UserRole = '팀원' | '파트리더' | '팀리더';
-export type TeamPart = '전체' | 'TEST혁신파트' | 'ITS혁신파트' | '혁신도구파트';
+export type TeamPart = '전체' | 'TEST혁신파트' | 'ITS혁신파트' | 'PM혁신파트';
 export type AccountStatus = '승인 대기' | '활성' | '비활성';
 export type IssueStatus = '접수' | '검토중' | '답변완료' | '1on1 제안' | '액션아이템' | '안건화' | '보류' | '회수' | '종료';
 
@@ -330,7 +331,10 @@ export type NotificationKind =
   | 'message'
   // 번개/공모: 대기 승계와 모임 취소. 둘 다 "내 계획이 바뀌는" 일이라
   // 앱을 다시 열어보기 전에 알아야 한다.
-  | 'gathering';
+  | 'gathering'
+  // 벼룩숲: 상회 입찰과 낙찰. 상회는 다시 부를 기회를 주는 알림이고,
+  // 낙찰은 돈과 물건이 오가는 약속이라 놓치면 파토가 된다.
+  | 'market';
 
 export type AppNotification = {
   id: string;
@@ -416,4 +420,51 @@ export type GatheringSignup = {
   gatheringId: string;
   name: string; // 신청자 실명
   createdAt: string; // ISO. 선착순 순서의 유일한 근거
+};
+
+// ===== 벼룩숲 (팀 내 중고거래) =====
+// 모임·번개와 같은 철학으로 만든다. 모델은 하나고 kind 로만 가른다 — 등록·목록·상세·
+// 마감이 전부 같은데 타입을 쪼개면 규칙이 두 벌이 되고 한쪽만 고치는 버그가 생긴다.
+//   auction  = 경매: 마감 시각에 최고가를 부른 사람이 가져간다.
+//   giveaway = 나눔: 선착순. 먼저 누른 사람이 가져간다.
+//
+// 포스터 틀(GatheringPoster)은 모임과 공유한다. 이름에 Gathering 접두어가 붙어 있는 것은
+// 모임에서 먼저 생겼기 때문이고, 지금 이름을 바꾸면 진행 중인 작업과 충돌한다.
+export type MarketKind = 'auction' | 'giveaway';
+
+// 상태는 저장하지 않고 시각과 입찰에서 파생시킨다(marketRules.deriveStatus).
+// 저장하면 "마감 시각이 지났는데 거래중으로 남은" 어긋남이 반드시 생긴다.
+export type MarketStatus = '거래중' | '거래완료' | '유찰' | '취소';
+
+export type MarketItem = {
+  id: string;
+  kind: MarketKind;
+  title: string;
+  desc: string;
+  startPrice: number; // 나눔이면 0
+  minStep: number; // 최소 인상폭. 없으면 1원씩 올리는 눈치싸움이 된다. 나눔이면 0
+  closeAt: string; // 'YYYY-MM-DDTHH:mm' 로컬 시각
+  // 마감 3분 안에 들어온 입찰로 밀린 시각. 막판에 낚아채고 끝나는 것을 막는다.
+  // closeAt 을 직접 고치지 않는 이유는 원래 약속한 마감을 남겨두기 위해서다.
+  extendedTo?: string;
+  place: string; // 거래 장소
+  imageUrl?: string;
+  poster?: GatheringPoster; // 사진이 없을 때만 채워진다
+  seller: string; // 판매자 실명 — 거래라 익명일 수 없다
+  createdAt: string; // 'YYYY-MM-DD'
+  canceled: boolean;
+  // 거래 완료는 양쪽이 각각 누른다. 앱이 결제를 다루지 않으므로 누가 잘못했는지
+  // 판정할 수 없다. 한쪽 말만 듣고 상태를 정하지 않는다.
+  sellerDone: boolean;
+  buyerDone: boolean;
+};
+
+// 입찰도 별도 레코드다. 물건 안에 배열로 넣으면 두 사람이 같은 순간에 입찰할 때
+// 나중 쓰기가 앞 쓰기를 지운다. 나눔도 이 표를 쓴다(금액 0, 가장 이른 사람이 가져감).
+export type MarketBid = {
+  id: string;
+  itemId: string;
+  name: string; // 입찰자 실명
+  amount: number; // 나눔이면 0
+  createdAt: string; // ISO. 동액일 때와 선착순의 순서 근거
 };
