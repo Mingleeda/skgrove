@@ -9000,6 +9000,241 @@ button.notif-row {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+/* ===== 인스타 프로필 문법 (팀 추억) =====
+   계정은 사람이 아니라 팀 하나다. 개인 프로필을 만들면 익명 접수의
+   전제가 흔들리므로 아바타도 통계도 팀의 것으로 둔다. */
+
+.ig-profile {
+  gap: 0;
+  margin: 0 auto;
+  max-width: 936px;
+  width: 100%;
+}
+
+.ig-prof-head {
+  align-items: center;
+  display: flex;
+  gap: var(--space-10);
+  padding: var(--space-4) var(--space-3) var(--space-8);
+}
+
+.ig-prof-ava {
+  align-items: center;
+  background: var(--tint-neutral);
+  border-radius: var(--radius-full);
+  color: var(--color-muted);
+  display: flex;
+  flex: none;
+  height: 138px;
+  justify-content: center;
+  width: 138px;
+}
+
+.ig-prof-info {
+  display: grid;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.ig-prof-line {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+/* 인스타 프로필의 username 은 굵지 않다. 굵은 것은 통계 숫자뿐이다. */
+.ig-prof-line h2 {
+  font-size: var(--text-heading);
+  font-weight: 400;
+}
+
+.ig-btn-soft {
+  background: var(--color-btn-soft);
+  border: 0;
+  border-radius: var(--radius);
+  color: var(--color-ink);
+  font-size: var(--text-body);
+  font-weight: 600;
+  min-height: 36px;
+  padding: 0 var(--space-4);
+}
+
+.ig-btn-soft:hover {
+  background: var(--color-btn-soft-press);
+}
+
+.ig-prof-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+  font-size: var(--text-body-lg);
+}
+
+.ig-prof-stats b {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.ig-prof-bio {
+  font-size: var(--text-body);
+  line-height: var(--leading-normal);
+}
+
+.ig-prof-bio b {
+  display: block;
+  font-weight: 600;
+}
+
+/* 하이라이트는 이미 지나간 것이라 링을 칠하지 않는다. 지금 보고 있는 것만 칠한다. */
+.ig-highlights {
+  border-bottom: 0;
+  justify-content: flex-start;
+  max-width: none;
+  padding: 0 var(--space-3) var(--space-6);
+}
+
+.ig-tabs {
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  gap: var(--space-12);
+  justify-content: center;
+}
+
+.ig-tabs button {
+  align-items: center;
+  background: none;
+  border: 0;
+  border-top: 1px solid transparent;
+  color: var(--color-muted);
+  display: flex;
+  font-size: var(--text-micro);
+  font-weight: 600;
+  gap: 6px;
+  letter-spacing: 0.06em;
+  margin-top: -1px;
+  padding: var(--space-4) 0;
+}
+
+.ig-tabs button.on {
+  border-top-color: var(--color-ink);
+  color: var(--color-ink);
+}
+
+.ig-grid-tab {
+  display: grid;
+  gap: var(--space-4);
+  padding-top: var(--space-4);
+}
+
+.ig-grid-note {
+  color: var(--color-muted);
+  font-size: var(--text-meta);
+  padding: 0 var(--space-3);
+}
+
+.ig-grid-note b {
+  color: var(--color-ink);
+  font-weight: 600;
+  margin-right: var(--space-2);
+}
+
+/* 인스타 프로필 격자 — 1:1 · 3열 · 3px. 열 수를 고정해야 스크롤할 때
+   눈이 같은 자리를 짚는다. 폭이 좁아져도 3열을 유지한다. */
+.ig-cells {
+  display: grid;
+  gap: 3px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.ig-cell {
+  aspect-ratio: 1;
+  background: var(--tint-neutral);
+  border: 0;
+  overflow: hidden;
+  padding: 0;
+  position: relative;
+  width: 100%;
+}
+
+.ig-cell img,
+.ig-cell video {
+  display: block;
+  height: 100%;
+  object-fit: cover;
+  width: 100%;
+}
+
+/* 지금 아래에 펼쳐진 것. 인스타에는 없는 상태지만 이 화면은 격자와 게시물을
+   같이 보여주므로 어느 칸을 보고 있는지 알려야 한다. */
+.ig-cell.on {
+  outline: 3px solid var(--color-ink);
+  outline-offset: -3px;
+}
+
+.ig-cell-blank {
+  align-items: center;
+  color: var(--color-muted);
+  display: flex;
+  height: 100%;
+  justify-content: center;
+}
+
+/* 사진 위에도 빈 회색 칸 위에도 읽혀야 한다. 흰 아이콘만 두면 밝은 칸에서
+   사라지므로 어둠을 한 겹 깔고 그 위에 얹는다(포스터 스크림과 같은 이유). */
+.ig-cell-mark {
+  align-items: center;
+  background: var(--scrim-strong);
+  border-radius: var(--radius-full);
+  color: var(--color-surface);
+  display: flex;
+  height: 26px;
+  justify-content: center;
+  position: absolute;
+  right: 8px;
+  top: 8px;
+  width: 26px;
+}
+
+/* 좁은 폭 — 반드시 위 기본 규칙 뒤에 온다. 앞에 두면 같은 특이도에서
+   순서로 져 오류 없이 조용히 무시된다(이 저장소에서 반복해서 밟은 함정).
+   인스타 모바일 프로필의 아바타는 86px 다. 138px 를 그대로 두면 390px 폭에서
+   이름과 통계가 들어갈 자리가 없어 세 줄로 접힌다. */
+@media (max-width: 720px) {
+  .ig-prof-head {
+    gap: var(--space-5);
+    padding: var(--space-3) var(--space-3) var(--space-5);
+  }
+
+  .ig-prof-ava {
+    height: 86px;
+    width: 86px;
+  }
+
+  .ig-prof-ava svg {
+    height: 30px;
+    width: 30px;
+  }
+
+  .ig-prof-line h2 {
+    font-size: var(--text-title);
+  }
+
+  .ig-prof-stats {
+    font-size: var(--text-body);
+    gap: var(--space-5);
+  }
+
+  .ig-prof-info {
+    gap: var(--space-3);
+  }
+
+  .ig-tabs {
+    gap: var(--space-10);
+  }
+}
+
+
 /* ===== 인스타 홈 =====
    히어로 · 스탯 격자 · 2열 패널을 단일 컬럼으로 합쳤다. 인스타 홈에는
    설명이 없다 — 스토리와 게시물뿐이다. 무엇을 하는 앱인지는 첫 방문에만

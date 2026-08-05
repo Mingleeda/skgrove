@@ -5,6 +5,7 @@ import {
   ExternalLink,
   Film,
   FolderOpen,
+  Grid3x3,
   ImagePlus,
   MessageCircle,
   PartyPopper,
@@ -275,8 +276,17 @@ export function Memory({ currentUser }: MemoryProps) {
   const [selectedId, setSelectedId] = useState(initialMemories[0].id);
   const [selectedAssetId, setSelectedAssetId] = useState(initialMemories[0].assets[0]?.id ?? 0);
   const [assetCommentDrafts, setAssetCommentDrafts] = useState<Record<number, string>>({});
+  // 인스타 프로필의 탭. 기본은 격자다 — 이 화면에 오는 이유가 사진을 보는 것이라
+  // 캘린더(행사 만들기)는 필요할 때 들어가는 두 번째 탭으로 내렸다.
+  const [tab, setTab] = useState<'grid' | 'calendar'>('grid');
   const [calendarBusy, setCalendarBusy] = useState(false);
   const [calendarNotice, setCalendarNotice] = useState('');
+
+  // 프로필 통계. 인스타의 게시물·팔로워 자리라 팀 전체를 세야 뜻이 맞는다.
+  const totalAssets = memories.reduce((sum, memory) => sum + memory.assets.length, 0);
+  const contributorCount = new Set(
+    memories.flatMap((memory) => memory.assets.map((asset) => asset.uploader)),
+  ).size;
 
   const selectedMemory = memories.find((memory) => memory.id === selectedId) ?? memories[0];
   const selectedAsset = selectedMemory.assets.find((asset) => asset.id === selectedAssetId) ?? selectedMemory.assets[0];
@@ -505,24 +515,207 @@ export function Memory({ currentUser }: MemoryProps) {
   };
 
   return (
-    <section className="screen memory-screen">
-      <div className="memory-hero">
-        <div>
-          <p className="eyebrow">TEAM MEMORY CLOUD</p>
-          <h2>행사별로 사진, 영상, 반응을 한 곳에 모아요.</h2>
-          <p>캘린더에서 팀 행사를 고르면 함께 업로드한 기록과 댓글이 바로 이어져요.</p>
+    <section className="screen ig-profile">
+      {/*
+        인스타 프로필 헤더. 이 앱의 계정은 사람이 아니라 팀 하나라
+        아바타도 팀이고 통계도 팀의 것이다. 개인 계정을 만들면
+        익명 접수의 전제가 흔들린다.
+      */}
+      <header className="ig-prof-head">
+        <span className="ig-prof-ava">
+          <PartyPopper size={38} strokeWidth={1.4} />
+        </span>
+        <div className="ig-prof-info">
+          <div className="ig-prof-line">
+            <h2>team_memory</h2>
+            <button className="ig-btn-soft" type="button" onClick={() => setTab('calendar')}>
+              행사 만들기
+            </button>
+          </div>
+          <div className="ig-prof-stats">
+            <span>
+              행사 <b>{memories.length}</b>
+            </span>
+            <span>
+              기록 <b>{totalAssets}</b>
+            </span>
+            <span>
+              함께한 사람 <b>{contributorCount}</b>
+            </span>
+          </div>
+          <p className="ig-prof-bio">
+            <b>팀 추억</b>
+            행사별로 사진 · 영상 · 반응을 한 곳에 모아요.
+          </p>
         </div>
-        <div className="memory-dday-board">
-          <Clock3 size={22} />
-          <span>다가오는 행사</span>
-          <strong>{upcomingMemories[0] ? getDday(upcomingMemories[0].date) : '없음'}</strong>
-          <small>{upcomingMemories[0]?.title ?? '새 팀 행사를 등록해보세요'}</small>
-        </div>
+      </header>
+
+      {/* 하이라이트. 인스타에서 하이라이트는 지나간 스토리를 묶어두는 자리라
+          지난 행사와 성질이 같다. 링을 칠하지 않는 이유도 같다 — 이미 본 것이다. */}
+      <div className="ig-tray ig-highlights">
+        {memories.map((memory) => (
+          <button
+            className="ig-story"
+            key={memory.id}
+            onClick={() => {
+              setSelectedId(memory.id);
+              setSelectedAssetId(memory.assets[0]?.id ?? 0);
+              setTab('grid');
+            }}
+            type="button"
+          >
+            <span className={memory.id === selectedMemory.id ? 'ig-ring' : 'ig-ring seen'}>
+              <span className="ig-thumb">
+                <CalendarDays size={22} strokeWidth={1.6} />
+              </span>
+            </span>
+            <small>{memory.title}</small>
+          </button>
+        ))}
       </div>
 
-      <div className="memory-layout">
-        <div className="memory-main">
-          <section className="panel memory-calendar-panel">
+      <div className="ig-tabs">
+        <button
+          className={tab === 'grid' ? 'on' : ''}
+          onClick={() => setTab('grid')}
+          type="button"
+        >
+          <Grid3x3 size={12} />
+          게시물
+        </button>
+        <button
+          className={tab === 'calendar' ? 'on' : ''}
+          onClick={() => setTab('calendar')}
+          type="button"
+        >
+          <CalendarDays size={12} />
+          캘린더
+        </button>
+      </div>
+
+      {tab === 'grid' ? (
+        <div className="ig-grid-tab">
+          <p className="ig-grid-note">
+            <b>{selectedMemory.title}</b>
+            {selectedMemory.date} · {selectedMemory.place} · 담당 {selectedMemory.host}
+          </p>
+
+          {/* 인스타 프로필 격자. 1:1 · 3열 · 3px 간격. 셀을 누르면 아래 게시물이 바뀐다. */}
+          <div className="ig-cells">
+            {selectedMemory.assets.map((asset) => (
+              <button
+                className={asset.id === selectedAsset?.id ? 'ig-cell on' : 'ig-cell'}
+                key={asset.id}
+                onClick={() => setSelectedAssetId(asset.id)}
+                type="button"
+              >
+                {asset.previewUrl ? (
+                  asset.type === 'photo' ? (
+                    <img alt="" src={asset.previewUrl} />
+                  ) : (
+                    <video muted src={asset.previewUrl} />
+                  )
+                ) : (
+                  <span className="ig-cell-blank">
+                    {asset.type === 'photo' ? <ImagePlus size={26} /> : <Film size={26} />}
+                  </span>
+                )}
+                {asset.type === 'video' && (
+                  <i className="ig-cell-mark" aria-hidden="true">
+                    <Film size={15} />
+                  </i>
+                )}
+              </button>
+            ))}
+          </div>
+
+          {selectedMemory.assets.length === 0 && (
+            <div className="memory-empty">첫 사진이나 영상을 올려보세요.</div>
+          )}
+
+          <div className="memory-upload-box">
+            <div>
+              <UploadCloud size={20} />
+              <strong>내 사진첩에서 여러 개 올리기</strong>
+            </div>
+            <label className="memory-file-drop">
+              <input accept="image/*,video/*" multiple type="file" onChange={uploadAssets} />
+              <span>사진/동영상 선택</span>
+              <small>여러 파일을 한 번에 선택하면 구글 드라이브처럼 앨범에 바로 쌓여요.</small>
+            </label>
+          </div>
+
+          {selectedAsset && (
+            <article className={`memory-post ${selectedAsset.tone}`}>
+              <div className="memory-post-media">
+                {selectedAsset.previewUrl ? (
+                  selectedAsset.type === 'photo' ? (
+                    <img alt="" src={selectedAsset.previewUrl} />
+                  ) : (
+                    <video controls src={selectedAsset.previewUrl} />
+                  )
+                ) : selectedAsset.type === 'photo' ? (
+                  <ImagePlus size={36} />
+                ) : (
+                  <Film size={36} />
+                )}
+              </div>
+              <div className="memory-post-side">
+                <div className="memory-asset-profile">
+                  <span>{selectedAsset.uploader.slice(0, 1)}</span>
+                  <div>
+                    <strong>{selectedAsset.uploader}</strong>
+                    <small>{selectedAsset.uploadedAt}</small>
+                  </div>
+                </div>
+                <h3>{selectedAsset.title}</h3>
+                <div className="memory-emoji-actions" aria-label="사진 반응">
+                  {emojiOptions.map((emoji) => (
+                    <button key={emoji} type="button" onClick={() => reactAsset(selectedAsset.id, emoji)}>
+                      <span>{emoji}</span>
+                      {selectedAsset.reactions[emoji]}
+                    </button>
+                  ))}
+                </div>
+                <div className="memory-asset-actions">
+                  {selectedAsset.driveViewUrl && (
+                    <a href={selectedAsset.driveViewUrl} rel="noreferrer" target="_blank">
+                      <ExternalLink size={16} />
+                      Drive 보기
+                    </a>
+                  )}
+                  <a href={selectedAsset.driveDownloadUrl ?? selectedAsset.previewUrl ?? '#'} rel="noreferrer" target="_blank">
+                    <Download size={16} />
+                    다운로드
+                  </a>
+                </div>
+                <div className="memory-asset-comments">
+                  <div className="memory-asset-comment-input">
+                    <MessageCircle size={16} />
+                    <input
+                      value={assetCommentDrafts[selectedAsset.id] ?? ''}
+                      onChange={(event) =>
+                        setAssetCommentDrafts({ ...assetCommentDrafts, [selectedAsset.id]: event.target.value })
+                      }
+                      aria-label="댓글 달기"
+                      placeholder="댓글 달기"
+                    />
+                    <button className="secondary-button" type="button" onClick={() => addAssetComment(selectedAsset.id)}>
+                      등록
+                    </button>
+                  </div>
+                  {selectedAsset.comments.map((comment) => (
+                    <p key={comment}>{comment}</p>
+                  ))}
+                </div>
+              </div>
+            </article>
+          )}
+        </div>
+      ) : (
+        <div className="memory-layout">
+          <div className="memory-main">
+            <section className="panel memory-calendar-panel">
             <div className="panel-header">
               <CalendarDays size={20} />
               <h2>행사 선택</h2>
@@ -571,8 +764,7 @@ export function Memory({ currentUser }: MemoryProps) {
               ))}
             </div>
           </section>
-
-          <section className="memory-event-list">
+            <section className="memory-event-list">
             {memories.map((memory) => (
               <button
                 className={memory.id === selectedMemory.id ? 'memory-event-card selected' : 'memory-event-card'}
@@ -591,186 +783,43 @@ export function Memory({ currentUser }: MemoryProps) {
               </button>
             ))}
           </section>
-        </div>
-
-        <aside className="memory-side">
-          <section className="panel memory-detail-panel">
-            <div className="memory-detail-head">
-              <span className="status-pill">{getDday(selectedMemory.date)}</span>
-              <h2>{selectedMemory.title}</h2>
-              <p>{selectedMemory.summary}</p>
-              <div className="memory-meta">
-                <span>{selectedMemory.date}</span>
-                <span>{selectedMemory.place}</span>
-                <span>담당 {selectedMemory.host}</span>
-              </div>
-            </div>
-
-            <div className="memory-tags">
-              {selectedMemory.tags.map((tag) => (
-                <span key={tag}>{tag}</span>
-              ))}
-            </div>
-
-            <div className="memory-drive-panel">
-              <div>
-                <FolderOpen size={20} />
-                <strong>Google Drive 공동 사진첩</strong>
-                <span>
-                  {selectedMemory.driveFolderUrl
-                    ? '행사별 Drive 폴더와 연결되어 업로드/다운로드 링크를 함께 관리해요.'
-                    : '실제 Drive OAuth 전까지 행사별 폴더 매핑과 파일 링크 구조를 먼저 확인해요.'}
-                </span>
-              </div>
-              <div className="memory-drive-actions">
-                <button className="secondary-button" type="button" onClick={connectDriveFolder}>
-                  폴더 연결
-                </button>
-                <button type="button" onClick={importDriveSamples}>
-                  Drive 샘플 가져오기
-                </button>
-                {selectedMemory.driveFolderUrl && (
-                  <a className="secondary-button" href={selectedMemory.driveFolderUrl} rel="noreferrer" target="_blank">
-                    <ExternalLink size={15} />
-                    폴더 열기
-                  </a>
-                )}
-              </div>
-              <div className="memory-drive-meta">
-                <span>{selectedMemory.driveFolderId ? 'Drive 폴더 연결됨' : 'Drive 미연결'}</span>
-                <span>{selectedMemory.assets.filter((asset) => asset.driveFileId).length}개 파일 링크</span>
-                <span>파일 반응/댓글은 앱에 저장</span>
-              </div>
-            </div>
-
-            <div className="memory-upload-box">
-              <div>
-                <UploadCloud size={20} />
-                <strong>내 사진첩에서 여러 개 올리기</strong>
-              </div>
-              <label className="memory-file-drop">
-                <input accept="image/*,video/*" multiple type="file" onChange={uploadAssets} />
-                <span>사진/동영상 선택</span>
-                <small>여러 파일을 한 번에 선택하면 구글 드라이브처럼 앨범에 바로 쌓여요.</small>
-              </label>
-            </div>
-
-            <div className="memory-album-head">
-              <div>
-                <strong>{selectedMemory.title} 사진첩</strong>
-                <span>{selectedMemory.assets.length}개 파일 · 누구나 업로드/다운로드 가능</span>
-              </div>
-              <button className="secondary-button" type="button">
-                <Download size={16} />
-                전체 다운로드
-              </button>
-            </div>
-
-            <div className="memory-assets">
-              {selectedMemory.assets.map((asset) => (
-                <button
-                  className={asset.id === selectedAsset?.id ? `memory-asset selected ${asset.tone}` : `memory-asset ${asset.tone}`}
-                  key={asset.id}
-                  onClick={() => setSelectedAssetId(asset.id)}
-                  type="button"
-                >
-                  <div className="memory-asset-visual">
-                    {asset.previewUrl ? (
-                      asset.type === 'photo' ? (
-                        <img alt="" src={asset.previewUrl} />
-                      ) : (
-                        <video muted src={asset.previewUrl} />
-                      )
-                    ) : asset.type === 'photo' ? (
-                      <ImagePlus size={28} />
-                    ) : (
-                      <Film size={28} />
-                    )}
-                    <span>{asset.type === 'photo' ? 'PHOTO' : 'VIDEO'}</span>
-                  </div>
-                </button>
-              ))}
-              {selectedMemory.assets.length === 0 && <div className="memory-empty">첫 사진이나 영상을 올려보세요.</div>}
-            </div>
-
-            {selectedAsset && (
-              <article className={`memory-post ${selectedAsset.tone}`}>
-                <div className="memory-post-media">
-                  {selectedAsset.previewUrl ? (
-                    selectedAsset.type === 'photo' ? (
-                      <img alt="" src={selectedAsset.previewUrl} />
-                    ) : (
-                      <video controls src={selectedAsset.previewUrl} />
-                    )
-                  ) : selectedAsset.type === 'photo' ? (
-                    <ImagePlus size={36} />
-                  ) : (
-                    <Film size={36} />
+          </div>
+          <aside className="memory-side">
+            <section className="panel">
+              <div className="memory-drive-panel">
+                <div>
+                  <FolderOpen size={20} />
+                  <strong>Google Drive 공동 사진첩</strong>
+                  <span>
+                    {selectedMemory.driveFolderUrl
+                      ? '행사별 Drive 폴더와 연결되어 업로드/다운로드 링크를 함께 관리해요.'
+                      : '실제 Drive OAuth 전까지 행사별 폴더 매핑과 파일 링크 구조를 먼저 확인해요.'}
+                  </span>
+                </div>
+                <div className="memory-drive-actions">
+                  <button className="secondary-button" type="button" onClick={connectDriveFolder}>
+                    폴더 연결
+                  </button>
+                  <button type="button" onClick={importDriveSamples}>
+                    Drive 샘플 가져오기
+                  </button>
+                  {selectedMemory.driveFolderUrl && (
+                    <a className="secondary-button" href={selectedMemory.driveFolderUrl} rel="noreferrer" target="_blank">
+                      <ExternalLink size={15} />
+                      폴더 열기
+                    </a>
                   )}
                 </div>
-                <div className="memory-post-side">
-                  <div className="memory-asset-profile">
-                    <span>{selectedAsset.uploader.slice(0, 1)}</span>
-                    <div>
-                      <strong>{selectedAsset.uploader}</strong>
-                      <small>{selectedAsset.uploadedAt}</small>
-                    </div>
-                  </div>
-                  <h3>{selectedAsset.title}</h3>
-                  <div className="memory-emoji-actions" aria-label="사진 반응">
-                    {emojiOptions.map((emoji) => (
-                      <button key={emoji} type="button" onClick={() => reactAsset(selectedAsset.id, emoji)}>
-                        <span>{emoji}</span>
-                        {selectedAsset.reactions[emoji]}
-                      </button>
-                    ))}
-                  </div>
-                  <div className="memory-asset-actions">
-                    {selectedAsset.driveViewUrl && (
-                      <a href={selectedAsset.driveViewUrl} rel="noreferrer" target="_blank">
-                        <ExternalLink size={16} />
-                        Drive 보기
-                      </a>
-                    )}
-                    <a href={selectedAsset.driveDownloadUrl ?? selectedAsset.previewUrl ?? '#'} rel="noreferrer" target="_blank">
-                      <Download size={16} />
-                      다운로드
-                    </a>
-                  </div>
-                  <div className="memory-asset-comments">
-                    <div className="memory-asset-comment-input">
-                      <MessageCircle size={16} />
-                      <input
-                        value={assetCommentDrafts[selectedAsset.id] ?? ''}
-                        onChange={(event) =>
-                          setAssetCommentDrafts({ ...assetCommentDrafts, [selectedAsset.id]: event.target.value })
-                        }
-                        aria-label="댓글 달기"
-                        placeholder="댓글 달기"
-                      />
-                      <button className="secondary-button" type="button" onClick={() => addAssetComment(selectedAsset.id)}>
-                        등록
-                      </button>
-                    </div>
-                    {selectedAsset.comments.map((comment) => (
-                      <p key={comment}>{comment}</p>
-                    ))}
-                  </div>
+                <div className="memory-drive-meta">
+                  <span>{selectedMemory.driveFolderId ? 'Drive 폴더 연결됨' : 'Drive 미연결'}</span>
+                  <span>{selectedMemory.assets.filter((asset) => asset.driveFileId).length}개 파일 링크</span>
+                  <span>파일 반응/댓글은 앱에 저장</span>
                 </div>
-              </article>
-            )}
-
-          </section>
-        </aside>
-      </div>
-
-      <section className="memory-gallery-strip">
-        <div>
-          <PartyPopper size={20} />
-          <strong>공동 앨범</strong>
+              </div>
+            </section>
+          </aside>
         </div>
-        <span>팀원이 올린 사진과 영상이 행사별 폴더처럼 쌓이고, 클릭한 행사에서 바로 이어서 볼 수 있어요.</span>
-      </section>
+      )}
     </section>
   );
 }
