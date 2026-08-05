@@ -9,12 +9,31 @@
 // 쿼리가 붙은 리디렉션 URI 는 구글 콘솔이 거부하는 경우가 있다.
 import { AUTH_URL, EVENTS_URL, SCOPE, config, corsHeaders, normalizeEvents, type GoogleEvent } from './_shared';
 
-export default async function handler(request: Request): Promise<Response> {
+/*
+  메서드별 이름 있는 export 여야 한다. `export default handler` 로 두면 Vercel 이
+  Express 스타일 (req, res) 로 불러서 돌려준 Response 를 아무도 받지 않고,
+  응답이 끝나지 않아 FUNCTION_INVOCATION_FAILED 로 죽는다.
+  api/ai.ts · api/notify.ts 에서 같은 원인으로 무응답이었다.
+*/
+export async function GET(request: Request): Promise<Response> {
+  return route(request);
+}
+
+export async function POST(request: Request): Promise<Response> {
+  return route(request);
+}
+
+export async function OPTIONS(): Promise<Response> {
+  const settings = config();
+  if (!settings) return Response.json({ ok: false, reason: 'disabled' });
+  return new Response(null, { status: 204, headers: corsHeaders(settings.appOrigin) });
+}
+
+async function route(request: Request): Promise<Response> {
   const settings = config();
   if (!settings) return Response.json({ ok: false, reason: 'disabled' });
 
   const cors = corsHeaders(settings.appOrigin);
-  if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors });
 
   const url = new URL(request.url);
   const action = url.searchParams.get('action');
