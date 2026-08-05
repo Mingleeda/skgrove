@@ -147,7 +147,6 @@ export function Meetings({
   });
   const [aiGroups, setAiGroups] = useState<{ label: string; points: string[] }[] | null>(null); // Step별 AI 결론(선택)
   const [aiLoading, setAiLoading] = useState(false);
-  const [aiNote, setAiNote] = useState(''); // 결과 출처 표기(AI/로컬)
   const [resultMode, setResultMode] = useState<'original' | 'ai'>('original'); // 확정할 결과물 선택
   const [pptxLoading, setPptxLoading] = useState(false); // PPT 생성 중(버튼 로딩 표시 + 중복 클릭 방지)
 
@@ -182,7 +181,6 @@ export function Meetings({
   useEffect(() => {
     setAiGroups(null);
     setAiLoading(false);
-    setAiNote('');
     setResultMode('original');
     setView(null);
     setFollowRouting({});
@@ -428,15 +426,10 @@ export function Meetings({
                   items: selectedOpinions.filter((opinion) => opinion.step === step.id),
                 }))
                 .filter((group) => group.items.length > 0);
-              // 참석자: 실명 제출자에서 자동 도출
-              const participants =
-                Array.from(
-                  new Set(
-                    sessionOpinions
-                      .filter((opinion) => opinion.author === '실명' && opinion.authorName)
-                      .map((opinion) => opinion.authorName),
-                  ),
-                ).join(', ') || '—';
+              // 참석자: 팀 전원으로 적는다. 캔미팅 의견은 익명 제출이 가능해서
+              // 참여자 이름을 낱낱이 적으면 익명으로 낸 사람이 드러난다(실명 제출자만
+              // 뽑으면 김승현 한 명처럼 반쪽만 나오기도 한다). 팀 단위로만 기재한다.
+              const participants = session.teamName ? `${session.teamName} 전원` : '팀 전원';
 
               // AI 취합 입력용(선정 의견을 Step별 문자열로).
               const rawGroups = stepGroups.map((group) => ({
@@ -504,17 +497,9 @@ export function Meetings({
                 setAiLoading(true);
                 try {
                   const result = await summarizeCanMeeting(AI_AGGREGATE_PROMPT, rawGroups);
-                  if (result.ok && result.groups?.length) {
-                    setAiGroups(result.groups);
-                    setAiNote('AI 취합 · 유사/중복 병합');
-                  } else {
-                    setAiGroups(localGroups);
-                    setAiNote(
-                      result.reason === 'disabled'
-                        ? '로컬 취합 · AI 미연동(중복 제거)'
-                        : `로컬 취합 · AI 실패(${result.reason})`,
-                    );
-                  }
+                  // AI 연동이면 그 결과를, 아니면 로컬 중복 제거로 폴백. 어느 쪽이든
+                  // 'AI요약' 탭 아래에 결과가 담긴다(출처 표기는 화면에서 걷어냈다).
+                  setAiGroups(result.ok && result.groups?.length ? result.groups : localGroups);
                 } finally {
                   setAiLoading(false);
                   setResultMode('ai'); // 요약 실행 후 AI 결과를 확정 후보로 전환(토글로 원문 복귀 가능)
@@ -937,7 +922,7 @@ export function Meetings({
                         <>
                           {!confirmed && isLive && (
                             <div className="can-ai-head">
-                              <button className="ghost-button" onClick={runAiAggregate} disabled={aiLoading}>
+                              <button className="secondary-button" onClick={runAiAggregate} disabled={aiLoading}>
                                 <Sparkles size={16} />
                                 {aiLoading ? '요약 중…' : 'AI로 결과 요약하기 (선택)'}
                               </button>
@@ -948,22 +933,20 @@ export function Meetings({
                           )}
                           {!confirmed && isLive && aiConclusionGroups && (
                             <div className="can-result-toggle">
-                              <span>확정할 결과물</span>
                               <div className="segmented">
                                 <button
                                   className={resultMode === 'original' ? 'selected' : ''}
                                   onClick={() => setResultMode('original')}
                                 >
-                                  원문 선정
+                                  원문
                                 </button>
                                 <button
                                   className={resultMode === 'ai' ? 'selected' : ''}
                                   onClick={() => setResultMode('ai')}
                                 >
-                                  AI 요약
+                                  AI요약
                                 </button>
                               </div>
-                              {aiNote && <span className="can-ai-note">{aiNote}</span>}
                             </div>
                           )}
                           {resultTemplate()}
