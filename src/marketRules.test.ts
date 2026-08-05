@@ -159,6 +159,17 @@ describe('deriveStatus', () => {
     expect(deriveStatus(auction({ canceled: true }), [bid()], NOW)).toBe('취소');
   });
 
+  it('나눔은 받는 즉시 거래완료 — 마감 전이라도 (선착순)', () => {
+    const g = giveaway(); // closeAt 은 미래
+    const taken = [bid({ itemId: 'MKT-G', name: '이수현', amount: 0 })];
+    expect(deriveStatus(g, taken, NOW)).toBe('거래완료');
+  });
+
+  it('나눔도 아무도 안 받고 마감되면 유찰', () => {
+    const g = giveaway({ closeAt: '2026-08-05T11:00' });
+    expect(deriveStatus(g, [], NOW)).toBe('유찰');
+  });
+
   it('낙찰자는 마감 뒤에만 정해진다', () => {
     const open = auction();
     expect(winner(open, [bid()], NOW)).toBeNull();
@@ -215,10 +226,16 @@ describe('bidBlockedReason', () => {
     );
   });
 
-  it('나눔은 한 명이 가져가면 닫힌다', () => {
+  it('나눔은 남이 가져가면 "이미 다른 분이 가져갔어요"', () => {
     const item = giveaway();
     const taken = [bid({ itemId: 'MKT-G', name: '심상준', amount: 0 })];
     expect(bidBlockedReason(item, taken, NOW, '이관국')).toBe('이미 다른 분이 가져갔어요.');
+  });
+
+  it('내가 받았으면 "이미 받으셨어요" (남이 가져간 것으로 오해하지 않는다)', () => {
+    const item = giveaway();
+    const mine = [bid({ itemId: 'MKT-G', name: '이관국', amount: 0 })];
+    expect(bidBlockedReason(item, mine, NOW, '이관국')).toBe('이미 받으셨어요.');
   });
 });
 

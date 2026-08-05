@@ -93,6 +93,10 @@ export function extendedCloseFor(item: MarketItem, now: string): string | null {
 */
 export function deriveStatus(item: MarketItem, bids: MarketBid[], now: string): MarketStatus {
   if (item.canceled) return '취소';
+  // 나눔은 선착순이라 먼저 받은 사람이 나오는 순간 끝난다. 마감은 아무도 안 받았을 때
+  // 유찰로 넘기는 데만 쓴다 — 경매처럼 마감까지 기다리게 하면 이미 임자가 정해졌는데도
+  // '거래중'으로 남는다.
+  if (item.kind === 'giveaway' && leadingBid(item, bids)) return '거래완료';
   if (now < effectiveCloseAt(item)) return '거래중';
   return leadingBid(item, bids) ? '거래완료' : '유찰';
 }
@@ -126,10 +130,17 @@ export function bidBlockedReason(
 ): string | null {
   const status = deriveStatus(item, bids, now);
   if (status === '취소') return '판매자가 거래를 취소했어요.';
-  if (status !== '거래중') return '마감된 거래예요.';
   if (item.seller === name) return '내가 올린 물건이에요.';
-  if (item.kind === 'giveaway' && bidsFor(item.id, bids).length > 0) return '이미 다른 분이 가져갔어요.';
-  if (item.kind === 'giveaway' && myBid(item, bids, name)) return '이미 신청했어요.';
+
+  // 나눔은 누군가 받으면 끝난다. 받은 사람이 나인지 남인지 구분해서 알린다.
+  // (예전엔 '남이 가져감' 검사가 내 신청까지 잡아, 정작 내가 받았는데도 "다른 분이
+  //  가져갔어요"가 떴다. 본인 검사가 그 뒤라 영영 닿지 않았다.)
+  if (item.kind === 'giveaway') {
+    if (myBid(item, bids, name)) return '이미 받으셨어요.';
+    if (leadingBid(item, bids)) return '이미 다른 분이 가져갔어요.';
+  }
+
+  if (status !== '거래중') return '마감된 거래예요.';
   return null;
 }
 
