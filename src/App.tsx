@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { loadAccounts, makeAccountId, saveAccounts, seedAccounts } from './accountStore';
 import { loadActionItems, makeActionItemId, saveActionItems } from './actionItemStore';
 import { finalStatus, isOpen, liveStatus, settleAgendas } from './agendaRules';
@@ -86,6 +86,7 @@ import {
   saveHumorPosts,
 } from './humorStore';
 import { makePoster } from './aiPoster';
+import { requestGatheringImage } from './gatheringImage';
 import {
   cacheSignups,
   deleteGatheringRecord,
@@ -885,6 +886,23 @@ export function App() {
     void saveGatherings(next);
   };
 
+  /*
+    썸네일 생성은 10초 넘게 걸리므로, 그 사이 목록이 바뀔 수 있다(다른 모임 등록·취소).
+    등록 시점에 닫힌 변수로 잡아둔 배열에 덮어쓰면 그 사이의 변경이 조용히 사라진다.
+    그래서 최신 목록을 ref 로 따로 들고, 뒤늦게 도착한 결과는 '그 한 건만' 고친다.
+  */
+  const gatheringsRef = useRef<Gathering[]>(gatherings);
+  useEffect(() => {
+    gatheringsRef.current = gatherings;
+  }, [gatherings]);
+
+  const patchGathering = (id: string, patch: Partial<Gathering>) => {
+    const current = gatheringsRef.current;
+    // 그 사이 취소·삭제됐으면 되살리지 않는다.
+    if (!current.some((item) => item.id === id)) return;
+    persistGatherings(current.map((item) => (item.id === id ? { ...item, ...patch } : item)));
+  };
+
   const createGathering = async (draft: GatheringDraft) => {
     if (!currentUser) return;
     const id = `GAT-${Date.now().toString(36).toUpperCase()}`;
@@ -911,6 +929,21 @@ export function App() {
     }
 
     persistGatherings([enriched, ...gatherings]);
+
+    /*
+      그림은 등록을 마친 뒤 배경에서 그린다. 10초 넘게 걸리는 일을 등록 버튼에 매달면
+      '번개' 가 번개가 아니게 된다. 그동안 카드는 방금 만든 포스터를 보여주고 있으므로
+      빈 자리가 생기지도 않는다. 다 그려지면 그 자리만 조용히 사진으로 바뀐다.
+      실패하면 아무것도 하지 않는다 — 포스터가 그대로 남는 것이 정상 동작이다.
+    */
+    if (!imageFile) {
+      void (async () => {
+        const generated = await requestGatheringImage(enriched);
+        if (!generated) return;
+        const { imageUrl } = await uploadGatheringImage(id, generated);
+        patchGathering(id, { imageUrl });
+      })();
+    }
   };
 
   /*
