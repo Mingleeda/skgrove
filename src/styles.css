@@ -9886,10 +9886,11 @@ button.notif-row {
    계정은 사람이 아니라 팀 하나다. 개인 프로필을 만들면 익명 접수의
    전제가 흔들리므로 아바타도 통계도 팀의 것으로 둔다. */
 
+/* 936px 로 가두고 가운데 정렬하던 것을 풀었다. 인스타 본가는 프로필도 피드도
+   같은 폭에 가두지만, 이 앱은 사이드바가 이미 가로를 먹고 있어 그 위에 또
+   가두면 격자가 본문 한가운데 좁게 뜬다. 모임 · 번개와 같이 본문을 다 쓴다. */
 .ig-profile {
   gap: 0;
-  margin: 0 auto;
-  max-width: 936px;
   width: 100%;
 }
 
@@ -9969,18 +9970,26 @@ button.notif-row {
 }
 
 /* 하이라이트는 이미 지나간 것이라 링을 칠하지 않는다. 지금 보고 있는 것만 칠한다. */
-.ig-highlights {
+/* 프로필 헤더를 걷어서 이 줄이 화면 첫 줄이 됐다. 왼쪽 선을 탭 · 격자와
+   맞춰야 세 줄이 한 덩어리로 읽힌다(전에는 헤더 때문에 안쪽으로 들여져 있었다). */
+/* .ig-tray 기본 규칙(margin:0 auto · max-width:470px)이 파일 뒤쪽에 있어
+   같은 특이도로는 순서에서 진다. 둘을 붙여 (0,2,0) 으로 올린다. */
+.ig-tray.ig-highlights {
   border-bottom: 0;
   justify-content: flex-start;
+  margin: 0;
   max-width: none;
-  padding: 0 var(--space-3) var(--space-6);
+  padding: 0 0 var(--space-5);
 }
 
+/* 인스타 프로필의 탭은 가운데 정렬이지만, 여기서는 위의 하이라이트와 아래의
+   격자가 모두 왼쪽에서 시작한다. 탭만 가운데 있으면 세로선이 어긋나 보인다.
+   모임 · 번개의 필터 줄과 같은 모양으로 맞춘다 — 왼쪽에 고르는 것, 오른쪽에 만들기. */
 .ig-tabs {
+  align-items: center;
   border-top: 1px solid var(--color-border);
   display: flex;
-  gap: var(--space-12);
-  justify-content: center;
+  gap: var(--space-8);
 }
 
 .ig-tabs button {
@@ -10001,6 +10010,14 @@ button.notif-row {
 .ig-tabs button.on {
   border-top-color: var(--color-ink);
   color: var(--color-ink);
+}
+
+/* 탭이 아니라 액션이다. 밑줄 표시를 받지 않도록 따로 둔다. */
+.ig-tabs .ig-tabs-action {
+  border-top: 0;
+  letter-spacing: normal;
+  margin-left: auto;
+  padding: 0 var(--space-4);
 }
 
 .ig-grid-tab {

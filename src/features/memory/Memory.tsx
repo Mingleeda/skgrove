@@ -8,7 +8,7 @@ import {
   Grid3x3,
   ImagePlus,
   MessageCircle,
-  PartyPopper,
+  Plus,
   UploadCloud,
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
@@ -282,12 +282,6 @@ export function Memory({ currentUser }: MemoryProps) {
   const [calendarBusy, setCalendarBusy] = useState(false);
   const [calendarNotice, setCalendarNotice] = useState('');
 
-  // 프로필 통계. 인스타의 게시물·팔로워 자리라 팀 전체를 세야 뜻이 맞는다.
-  const totalAssets = memories.reduce((sum, memory) => sum + memory.assets.length, 0);
-  const contributorCount = new Set(
-    memories.flatMap((memory) => memory.assets.map((asset) => asset.uploader)),
-  ).size;
-
   const selectedMemory = memories.find((memory) => memory.id === selectedId) ?? memories[0];
   const selectedAsset = selectedMemory.assets.find((asset) => asset.id === selectedAssetId) ?? selectedMemory.assets[0];
   const upcomingMemories = useMemo(
@@ -518,41 +512,13 @@ export function Memory({ currentUser }: MemoryProps) {
   return (
     <section className="screen ig-profile">
       {/*
-        인스타 프로필 헤더. 이 앱의 계정은 사람이 아니라 팀 하나라
-        아바타도 팀이고 통계도 팀의 것이다. 개인 계정을 만들면
-        익명 접수의 전제가 흔들린다.
-      */}
-      <header className="ig-prof-head">
-        <span className="ig-prof-ava">
-          <PartyPopper size={38} strokeWidth={1.4} />
-        </span>
-        <div className="ig-prof-info">
-          <div className="ig-prof-line">
-            <h2>team_memory</h2>
-            <button className="ig-btn-soft" type="button" onClick={() => setTab('calendar')}>
-              행사 만들기
-            </button>
-          </div>
-          <div className="ig-prof-stats">
-            <span>
-              행사 <b>{memories.length}</b>
-            </span>
-            <span>
-              기록 <b>{totalAssets}</b>
-            </span>
-            <span>
-              함께한 사람 <b>{contributorCount}</b>
-            </span>
-          </div>
-          <p className="ig-prof-bio">
-            <b>팀 추억</b>
-            행사별로 사진 · 영상 · 반응을 한 곳에 모아요.
-          </p>
-        </div>
-      </header>
+        프로필 헤더(아바타 · 통계 · 소개)를 걷었다. 이 화면에 오는 이유는 사진을
+        보는 것인데 헤더가 첫 화면의 절반을 차지하고 매번 같은 말을 했다.
+        모임 · 번개와 같은 틀로 맞춘다 — 위에 고르는 줄, 아래에 격자.
 
-      {/* 하이라이트. 인스타에서 하이라이트는 지나간 스토리를 묶어두는 자리라
-          지난 행사와 성질이 같다. 링을 칠하지 않는 이유도 같다 — 이미 본 것이다. */}
+        하이라이트는 남긴다. 인스타에서는 장식이지만 여기서는 행사를 고르는
+        유일한 수단이다. 지금 보고 있는 행사만 링을 칠하고 나머지는 회색으로 둔다.
+      */}
       <div className="ig-tray ig-highlights">
         {memories.map((memory) => (
           <button
@@ -575,6 +541,8 @@ export function Memory({ currentUser }: MemoryProps) {
         ))}
       </div>
 
+      {/* 헤더에 있던 '행사 만들기' 를 여기로 옮긴다. 모임 · 번개의 '모임 열기' 와
+          같은 자리라 두 화면을 오갈 때 손이 같은 곳을 찾는다. */}
       <div className="ig-tabs">
         <button
           className={tab === 'grid' ? 'on' : ''}
@@ -591,6 +559,10 @@ export function Memory({ currentUser }: MemoryProps) {
         >
           <CalendarDays size={12} />
           캘린더
+        </button>
+        <button className="primary-button ig-tabs-action" onClick={() => setTab('calendar')} type="button">
+          <Plus size={18} />
+          행사 만들기
         </button>
       </div>
 
