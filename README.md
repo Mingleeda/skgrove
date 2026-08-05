@@ -25,7 +25,7 @@ npm run build
 
 1. Supabase 프로젝트를 만든다.
 2. SQL Editor에서 `supabase-schema.sql`을 실행한다.
-3. `.env.example`을 참고해서 `.env`를 만든다.
+3. `.env.example`을 참고해서 `.env.local`을 만든다.
 
 ```bash
 VITE_SUPABASE_URL=https://your-project.supabase.co
