@@ -4958,16 +4958,25 @@ textarea {
   line-height: 1.5;
 }
 
+/* 설명문을 걷어내니 왼쪽 열이 제목만 남아 크게 비었다. 두 열로 나눌 내용이
+   더는 없으므로 한 열로 쌓는다 — 제목이 머리가 되고 숫자가 그 아래로 온다. */
 .metrics-calendar-panel {
-  align-items: center;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-left: 5px solid var(--color-moss);
   border-radius: var(--radius);
   display: grid;
   gap: 14px;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr);
   padding: var(--space-4);
+}
+
+/* 제목 줄. 아이콘과 글자를 한 줄에 둔다. */
+.metrics-calendar-panel > div:first-child {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
 }
 
 .metrics-calendar-panel > div:first-child {

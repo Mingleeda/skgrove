@@ -680,17 +680,15 @@ export function Metrics({ currentUser }: MetricsProps) {
           <div>
             <CalendarClock size={20} />
             <strong>Google Calendar 회의 분석</strong>
-            <span>
-              {calendarStatus === 'synced'
-                ? `팀 캘린더 회의가 회의 건강도와 긴 회의 감점에 반영되고 있어요.${
-                    calendarSyncedAt
-                      ? ` (${new Date(calendarSyncedAt).toLocaleString('ko-KR', { month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })} 기준)`
-                      : ''
-                  }`
-                : calendarConfigured()
-                  ? '서버가 30분마다 팀 캘린더를 읽어 회의 건강도와 긴 회의 감점에 반영합니다. 읽기만 하고 쓰지 않아요.'
+            {/* 연동이 돌고 있으면 설명하지 않는다. 아래 숫자가 이미 말한다.
+                기준 시각은 설명이 아니라 사실이라 칩 줄로 옮겼다. */}
+            {calendarStatus !== 'synced' && (
+              <span>
+                {calendarConfigured()
+                  ? '서버가 30분마다 팀 캘린더를 읽습니다. 읽기만 하고 쓰지 않아요.'
                   : '연동이 아직 설정되지 않았어요. 샘플 회의로 계산 흐름을 먼저 확인할 수 있습니다.'}
-            </span>
+              </span>
+            )}
           </div>
           {/* 서버가 30분마다 알아서 당겨온다. 사람이 누를 버튼이 없다.
               연동 전에는 계산 흐름을 볼 수 있게 샘플만 남긴다. */}
@@ -763,7 +761,20 @@ export function Metrics({ currentUser }: MetricsProps) {
           <div className="calendar-event-summary">
             <span>선택 파트 회의 {activeCalendarEvents.length}개</span>
             <span>60분 이상 {longCalendarEventCount}개</span>
-            <span>상태 {calendarStatus === 'synced' ? '동기화됨' : calendarStatus === 'connected' ? '연결됨' : '미연결'}</span>
+            {/* '상태 동기화됨'은 아무 정보가 없다. 언제 기준인지가 실제로 필요한 값이다. */}
+            {calendarSyncedAt ? (
+              <span>
+                {new Date(calendarSyncedAt).toLocaleString('ko-KR', {
+                  month: 'numeric',
+                  day: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })}{' '}
+                기준
+              </span>
+            ) : (
+              <span>미연결</span>
+            )}
           </div>
         </section>
       )}
