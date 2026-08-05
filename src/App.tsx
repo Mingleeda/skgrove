@@ -4,7 +4,7 @@ import { loadActionItems, makeActionItemId, saveActionItems } from './actionItem
 import { finalStatus, isOpen, liveStatus, settleAgendas } from './agendaRules';
 import { loadAgendas, makeAgendaId, saveAgendas } from './agendaStore';
 import { hasVoted, loadBallots, makeVoterKey, saveBallots } from './ballotStore';
-import { isLeader, isTeamLeader, teamParts } from './auth';
+import { hasLeaderRole, isLeader, isTeamLeader, teamParts } from './auth';
 import { loadCanSteps, saveCanSteps } from './canStepsStore';
 import {
   loadCanOpinions,
@@ -1192,7 +1192,8 @@ export function App() {
   };
 
   const changeSection = (section: Section) => {
-    if (section === 'leader' && currentUser && !isLeader(currentUser)) {
+    // 리더 관리함은 실제 리더 역할만. 커넥셔너 전권으로는 딥링크(#leader)로도 못 들어온다.
+    if (section === 'leader' && currentUser && !hasLeaderRole(currentUser)) {
       setActive('dashboard');
       return;
     }
@@ -1269,7 +1270,7 @@ export function App() {
           onSubmitIssue={submitIssue}
         />
       )}
-      {active === 'leader' && isLeader(currentUser) && (
+      {active === 'leader' && hasLeaderRole(currentUser) && (
         <LeaderInbox issues={issues} today={today()} onIssueUpdate={updateIssue} onPromoteToAgenda={promoteToAgenda} />
       )}
       {active === 'agenda' && !agendaForActions && (

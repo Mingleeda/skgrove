@@ -1,5 +1,35 @@
 import { describe, expect, it } from 'vitest';
-import { normalizeTeamPart, teamParts } from './auth';
+import { hasLeaderRole, isLeader, normalizeTeamPart, teamParts } from './auth';
+import type { CurrentUser, UserRole } from './types';
+
+const user = (role: UserRole, connectioner = false): CurrentUser => ({
+  name: '테스트',
+  email: 'test@sk.com',
+  role,
+  part: 'PM혁신파트',
+  connectioner,
+});
+
+/*
+  리더 관리함은 실제 사람-리더(파트리더·팀리더)에게만 열려야 한다. 커넥셔너는
+  시스템 관리자일 뿐이라, 전권이 있어도 리더에게 온 접수를 봐선 안 된다.
+  isLeader(전권 통과)와 hasLeaderRole(역할만)의 차이를 여기서 고정한다.
+*/
+describe('리더 권한 — 커넥셔너 전권과 역할의 구분', () => {
+  it('hasLeaderRole 은 파트리더·팀리더만 통과시킨다', () => {
+    expect(hasLeaderRole(user('파트리더'))).toBe(true);
+    expect(hasLeaderRole(user('팀리더'))).toBe(true);
+    expect(hasLeaderRole(user('팀원'))).toBe(false);
+  });
+
+  it('커넥셔너 팀원은 hasLeaderRole 을 통과하지 못한다 (리더 관리함 비노출)', () => {
+    expect(hasLeaderRole(user('팀원', true))).toBe(false);
+  });
+
+  it('반면 isLeader 는 커넥셔너 전권을 통과시킨다 (다른 화면용)', () => {
+    expect(isLeader(user('팀원', true))).toBe(true);
+  });
+});
 
 describe('파트 이름 정규화', () => {
   it("옛 이름 '혁신도구파트' 는 'PM혁신파트' 로 바뀐다", () => {

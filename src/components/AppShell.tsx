@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react';
 import { Bell, Camera, HeartHandshake, LogOut, MessageSquarePlus } from 'lucide-react';
-import { isLeader, isTeamLeader } from '../auth';
+import { hasLeaderRole, isTeamLeader } from '../auth';
 import { navGroups, sections } from '../navigation';
 import type { CurrentUser, Section } from '../types';
 import { Avatar } from './Avatar';
@@ -39,7 +39,8 @@ export function AppShell({
   onSectionChange,
 }: AppShellProps) {
   const currentSection = sections.find((section) => section.id === active) ?? sections[0];
-  const userCanUseLeaderMenu = isLeader(currentUser);
+  // 리더 관리함은 실제 리더 역할(파트리더·팀리더)에게만. 커넥셔너 전권은 통과시키지 않는다.
+  const userCanUseLeaderMenu = hasLeaderRole(currentUser);
   const userCanUseAccountsMenu = isTeamLeader(currentUser);
 
   const [photoOpen, setPhotoOpen] = useState(false);
