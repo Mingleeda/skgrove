@@ -317,31 +317,6 @@ export function namesFromTitle(title: string, knownNames: Iterable<string>): str
 }
 
 /**
- * 사람별 '이름이 걸린 회의' 수. 많은 순으로 돌려준다.
- * 근태와 종일 일정은 회의가 아니므로 세지 않는다.
- */
-export function countMeetingsByName(
-  events: RawCalendarEvent[],
-  accounts: ManagedAccount[],
-): Array<{ name: string; count: number }> {
-  const names = accounts.filter((a) => a.status === '활성').map((a) => a.name);
-  const tally = new Map<string, number>();
-
-  for (const event of events) {
-    if (!isMeeting(event)) continue;
-    if (isAttendanceEvent(event)) continue;
-    for (const name of namesFromTitle(event.title, names)) {
-      tally.set(name, (tally.get(name) ?? 0) + 1);
-    }
-  }
-
-  return [...tally.entries()]
-    .map(([name, count]) => ({ name, count }))
-    // 동수면 이름 순. 새로고침마다 순서가 흔들리면 순위로 안 읽힌다.
-    .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
-}
-
-/**
  * 근태 일정인가. 휴가·출장·건강검진·반차는 회의가 아니고 팀 추억도 아니다.
  *
  * 이 판정이 없으면 toMemoryEvents 가 종일 일정을 전부 행사로 만들어

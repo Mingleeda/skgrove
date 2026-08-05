@@ -8,7 +8,6 @@ import { loadBallots } from '../../ballotStore';
 import {
   calendarConfigured,
   fetchCalendarSnapshot,
-  countMeetingsByName,
   meetingLoadByPerson,
   type MeetingLoad,
   toMetricEvents,
@@ -417,7 +416,6 @@ export function Metrics({ currentUser }: MetricsProps) {
   // 언제 기준 값인지 밝히지 않으면 오래된 값을 지금 값으로 착각한다.
   const [calendarSyncedAt, setCalendarSyncedAt] = useState<string | null>(null);
   // 사람별 집계는 파트 판정과 다른 축이라 원시 일정에서 따로 센다.
-  const [meetingsByName, setMeetingsByName] = useState<Array<{ name: string; count: number }>>([]);
   // 회의 부담 — 요청한 세 지표(평균·최대·최소)와 그 값이 얼마나 믿을 만한지.
   const [meetingLoad, setMeetingLoad] = useState<ReturnType<typeof meetingLoadByPerson> | null>(null);
   const [calendarBusy, setCalendarBusy] = useState(false);
@@ -541,7 +539,6 @@ export function Metrics({ currentUser }: MetricsProps) {
       const events = toMetricEvents(snap.events, accounts);
       applyCalendarEvents('synced', events, CALENDAR_LOOKBACK_DAYS);
       setCalendarSyncedAt(snap.syncedAt ?? null);
-      setMeetingsByName(countMeetingsByName(snap.events, accounts));
       setMeetingLoad(meetingLoadByPerson(snap.events, accounts));
 
       if (events.length === 0 && manual) {
@@ -735,24 +732,25 @@ export function Metrics({ currentUser }: MetricsProps) {
               )}
             </div>
           )}
-          {meetingsByName.length > 0 && (
+          {meetingLoad && meetingLoad.loads.length > 0 && (
             <div className="meeting-rank">
-              <p className="meeting-rank-title">
-                이름이 걸린 회의
-                {/* '참석한 회의'가 아니다. 이 차이를 안 밝히면 파트 위클리에만 들어가는
-                    사람이 0 으로 보이고, 주최를 많이 하는 사람만 바빠 보인다. */}
-                <span>제목에 이름이 적힌 회의만 셉니다. 파트 위클리처럼 이름 없는 회의는 빠집니다.</span>
-              </p>
+              {/* 위 요약과 같은 기준으로 센다. 파트 위클리는 그 파트 전원에게 붙는다 —
+                  1시간짜리 파트 위클리면 파트원 각자에게 1시간이다. */}
+              <p className="meeting-rank-title">사람별 하루 평균 회의시간</p>
               <ol className="meeting-rank-list">
-                {meetingsByName.slice(0, 5).map((row, index) => (
+                {meetingLoad.loads.slice(0, 8).map((row, index) => (
                   <li key={row.name}>
                     <span className="meeting-rank-no">{index + 1}</span>
                     <strong>{row.name}</strong>
-                    {/* 1등 대비 길이로 그린다. 전체 회의 수로 나누면 막대가 다 짧아진다. */}
+                    {/* 1등 대비 길이로 그린다. 절대값으로 그리면 막대가 다 짧아진다. */}
                     <span className="meeting-rank-bar">
-                      <span style={{ width: `${Math.round((row.count / meetingsByName[0].count) * 100)}%` }} />
+                      <span
+                        style={{
+                          width: `${Math.round((row.avgPerWorkday / meetingLoad.loads[0].avgPerWorkday) * 100)}%`,
+                        }}
+                      />
                     </span>
-                    <em>{row.count}건</em>
+                    <em>{formatDuration(row.avgPerWorkday)}</em>
                   </li>
                 ))}
               </ol>

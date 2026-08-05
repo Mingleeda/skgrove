@@ -3,7 +3,6 @@ import {
   MAX_PART_MEETING_ATTENDEES,
   buildPartByEmail,
   buildPartByName,
-  countMeetingsByName,
   countWorkdays,
   meetingLoadByPerson,
   isAttendanceEvent,
@@ -399,51 +398,6 @@ describe('팀 추억은 허용 목록으로 받는다', () => {
       event({ id: 'B', title: '[육아휴직/이승주]', isAllDay: true, startsAt: '2026-08-05', endsAt: '2026-08-30' }),
     ];
     expect(toMemoryEvents(events, 1, '시스템')).toHaveLength(0);
-  });
-});
-
-describe('사람별 회의 수', () => {
-  const staff = [
-    account({ name: '심상준', part: 'ITS혁신파트' }),
-    account({ name: '윤희성', part: 'ITS혁신파트' }),
-    account({ name: '이선민', part: 'PM혁신파트' }),
-    account({ name: '퇴사자', part: 'PM혁신파트', status: '비활성' }),
-  ];
-
-  it('제목에 이름이 적힌 회의를 사람별로 센다', () => {
-    const events = [
-      event({ id: '1', title: '[심상준]CAIO Weekly' }),
-      event({ id: '2', title: '[심상준]SKHy DT추진실' }),
-      event({ id: '3', title: '[회의/윤희성,이선민] AXSE Insight 회의' }),
-    ];
-    expect(countMeetingsByName(events, staff)).toEqual([
-      { name: '심상준', count: 2 },
-      { name: '윤희성', count: 1 },
-      { name: '이선민', count: 1 },
-    ]);
-  });
-
-  it('근태와 종일 일정은 세지 않는다', () => {
-    const events = [
-      event({ id: '1', title: '[출장/심상준] 하이닉스' }),
-      event({ id: '2', title: '[휴가/심상준]', isAllDay: true, startsAt: '2026-08-05', endsAt: '2026-08-05' }),
-    ];
-    expect(countMeetingsByName(events, staff)).toEqual([]);
-  });
-
-  it('비활성 계정은 순위에 넣지 않는다', () => {
-    expect(countMeetingsByName([event({ title: '[퇴사자]주간' })], staff)).toEqual([]);
-  });
-
-  it('동수면 이름 순 — 새로고침마다 순서가 흔들리면 순위로 안 읽힌다', () => {
-    const events = [event({ id: '1', title: '[윤희성] A' }), event({ id: '2', title: '[심상준] B' })];
-    expect(countMeetingsByName(events, staff).map((r) => r.name)).toEqual(['심상준', '윤희성']);
-  });
-
-  it("이름 없는 파트 회의는 아무에게도 안 붙는다", () => {
-    // 이 값이 '참석한 회의'가 아니라 '이름이 걸린 회의'인 이유가 여기다.
-    // 파트 위클리에 매주 들어가는 사람도 여기서는 0 이다.
-    expect(countMeetingsByName([event({ title: '[ITS혁신]파트 위클리' })], staff)).toEqual([]);
   });
 });
 
