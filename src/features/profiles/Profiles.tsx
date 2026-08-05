@@ -31,11 +31,11 @@ type SurveyChoice = {
 };
 
 const colorCycle: Profile['color'][] = ['green', 'red', 'blue', 'yellow'];
-const partOptions = ['전체', 'TEST혁신파트', 'ITS혁신파트', '혁신도구파트'];
+const partOptions = ['전체', 'TEST혁신파트', 'ITS혁신파트', 'PM혁신파트'];
 
 const fallbackDraft: ProfileDraft = {
   name: '김수정',
-  part: '혁신도구파트',
+  part: 'PM혁신파트',
   role: '팀 연결 경험과 문화 지표 기획',
   englishName: 'Crystal',
   birthYear: '1996',

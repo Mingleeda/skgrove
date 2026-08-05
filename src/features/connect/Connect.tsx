@@ -41,7 +41,7 @@ type ProfileSignal = {
   weight: number;
 };
 
-const partOrder = ['TEST혁신파트', 'ITS혁신파트', '혁신도구파트'];
+const partOrder = ['TEST혁신파트', 'ITS혁신파트', 'PM혁신파트'];
 
 function getAgeMood(birthYear: string) {
   const year = Number(birthYear);

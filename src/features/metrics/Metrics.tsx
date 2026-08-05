@@ -83,7 +83,7 @@ const initialWeights: MetricWeights = {
   rewardScore: 82,
 };
 
-const partNames = ['TEST혁신파트', 'ITS혁신파트', '혁신도구파트'];
+const partNames = ['TEST혁신파트', 'ITS혁신파트', 'PM혁신파트'];
 
 
 type MetricsActivity = {
@@ -148,8 +148,8 @@ const sampleCalendarEvents: CalendarMetricEvent[] = [
   },
   {
     id: 'GCAL-003',
-    title: '혁신도구파트 원온원 블록',
-    part: '혁신도구파트',
+    title: 'PM혁신파트 원온원 블록',
+    part: 'PM혁신파트',
     type: '원온원',
     startsAt: '2026-08-05T11:00:00',
     durationMinutes: 30,
@@ -158,8 +158,8 @@ const sampleCalendarEvents: CalendarMetricEvent[] = [
   },
   {
     id: 'GCAL-004',
-    title: '혁신도구파트 티미팅 리허설',
-    part: '혁신도구파트',
+    title: 'PM혁신파트 티미팅 리허설',
+    part: 'PM혁신파트',
     type: '티미팅',
     startsAt: '2026-08-06T16:00:00',
     durationMinutes: 55,

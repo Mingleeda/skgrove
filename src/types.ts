@@ -19,7 +19,7 @@ export type Identity = '익명' | '실명';
 export type Urgency = '낮음' | '보통' | '높음';
 export type AgendaStatus = '투표중' | '통과' | '부결';
 export type UserRole = '팀원' | '파트리더' | '팀리더';
-export type TeamPart = '전체' | 'TEST혁신파트' | 'ITS혁신파트' | '혁신도구파트';
+export type TeamPart = '전체' | 'TEST혁신파트' | 'ITS혁신파트' | 'PM혁신파트';
 export type AccountStatus = '승인 대기' | '활성' | '비활성';
 export type IssueStatus = '접수' | '검토중' | '답변완료' | '1on1 제안' | '액션아이템' | '안건화' | '보류' | '회수' | '종료';
 
