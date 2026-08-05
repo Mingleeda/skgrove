@@ -7,7 +7,7 @@
 //
 // 리디렉션 URI 는 /api/calendar/callback 처럼 쿼리 없는 경로여야 한다.
 // 쿼리가 붙은 리디렉션 URI 는 구글 콘솔이 거부하는 경우가 있다.
-import { AUTH_URL, EVENTS_URL, SCOPE, config, corsHeaders, normalizeEvents, type GoogleEvent } from './_shared';
+import { AUTH_URL, EVENTS_URL, SCOPE, config, corsHeaders, normalizeEvents, type GoogleEvent } from './_shared.js';
 
 /*
   메서드별 이름 있는 export 여야 한다. `export default handler` 로 두면 Vercel 이
