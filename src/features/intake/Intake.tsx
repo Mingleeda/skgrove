@@ -284,41 +284,18 @@ export function Intake({ identity, currentUser, issues, onIdentityChange, onIssu
         )}
 
         {step === 'content' && (
-          <section className="panel intake-panel">
-            <PanelHeader icon={FileText} title="어떤 이야기인가요?" />
-            <div className="form-grid">
-              <label>
-                카테고리
-                <select value={category} onChange={(event) => setCategory(event.target.value)}>
-                  {categories.map((item) => (
-                    <option key={item}>{item}</option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                긴급도
-                <select value={urgency} onChange={(event) => setUrgency(event.target.value as Urgency)}>
-                  <option>낮음</option>
-                  <option>보통</option>
-                  <option>높음</option>
-                </select>
-              </label>
-            </div>
-            <label>
-              <span className="field-label">
-                제목
-                <span className="field-required">필수</span>
-              </span>
-              <input
-                required
-                aria-required="true"
-                value={title}
-                onChange={(event) => setTitle(event.target.value)}
-                placeholder="예: 팀 티미팅 시간을 줄이고 싶어요"
-              />
-            </label>
-            <label>
-              <span className="field-label">
+          /*
+            인스타 '새 게시물' 만들기 모달의 2단 구조. 왼쪽이 미디어 자리,
+            오른쪽이 캡션과 설정이다. 이 앱에서 미디어에 해당하는 것은 본문이라
+            왼쪽을 본문 하나로 크게 비웠다. 나머지(제목 · 분류 · 긴급도 ·
+            기대 변화)는 전부 오른쪽 레일로 옮겼다.
+
+            필드도 검증도 제출 흐름도 그대로다. 바뀐 것은 배치뿐이다 —
+            익명 접수는 이 앱의 전제라 흐름에 손대지 않는다.
+          */
+          <section className="panel ig-create">
+            <div className="ig-create-main">
+              <span className="ig-create-label">
                 내용
                 <span className="field-required">필수</span>
               </span>
@@ -329,43 +306,91 @@ export function Intake({ identity, currentUser, issues, onIdentityChange, onIssu
                 onChange={(event) => setBody(event.target.value)}
                 placeholder="예: 논의할 주제가 명확하지 않은 회의는 시간을 줄이고, 필요한 경우 안건함에서 먼저 투표하면 좋겠습니다."
               />
-            </label>
-            <label>
-              기대 변화
-              <textarea
-                value={expectedChange}
-                onChange={(event) => setExpectedChange(event.target.value)}
-                placeholder="예: 회의 전 안건을 먼저 모으고, 꼭 필요한 주제만 짧게 논의하면 좋겠습니다."
-              />
-            </label>
-            {/*
-              버튼을 흐리게만 두면 사용자는 고장으로 읽는다. 사이드바 잠금에서
-              이미 세운 원칙인데 폼에는 빠져 있었다. 무엇이 모자란지 적는다.
-            */}
-            {(!title.trim() || !body.trim()) && (
-              <p className="field-note gate-note">
-                {!title.trim() && !body.trim()
-                  ? '제목과 내용을 채우면 다음으로 넘어갈 수 있어요.'
-                  : !title.trim()
-                    ? '제목을 채우면 다음으로 넘어갈 수 있어요.'
-                    : '내용을 채우면 다음으로 넘어갈 수 있어요.'}
-              </p>
-            )}
-            <div className="form-actions">
-              <button className="secondary-button" onClick={() => setStep('scope')}>
-                이전
-              </button>
-              <button
-                className="primary-button"
-                disabled={!title.trim() || !body.trim()}
-                onClick={() => {
-                  // 내용이 바뀌었으니 이전 검토 결과를 물려받지 않는다.
-                  setReviewReady(false);
-                  setStep('review');
-                }}
-              >
-                제출 전 확인
-              </button>
+            </div>
+
+            <div className="ig-create-side">
+              <header className="ig-create-head">
+                <span className="ig-ava">{identity === '익명' ? '익' : currentUser.name.slice(0, 1)}</span>
+                <span className="ig-post-who">
+                  <b>{identity === '익명' ? '익명으로 접수' : currentUser.name}</b>
+                  <span>
+                    {target} · {visibility}
+                  </span>
+                </span>
+              </header>
+
+              <label>
+                <span className="field-label">
+                  제목
+                  <span className="field-required">필수</span>
+                </span>
+                <input
+                  required
+                  aria-required="true"
+                  value={title}
+                  onChange={(event) => setTitle(event.target.value)}
+                  placeholder="예: 팀 티미팅 시간을 줄이고 싶어요"
+                />
+              </label>
+
+              <div className="form-grid">
+                <label>
+                  카테고리
+                  <select value={category} onChange={(event) => setCategory(event.target.value)}>
+                    {categories.map((item) => (
+                      <option key={item}>{item}</option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  긴급도
+                  <select value={urgency} onChange={(event) => setUrgency(event.target.value as Urgency)}>
+                    <option>낮음</option>
+                    <option>보통</option>
+                    <option>높음</option>
+                  </select>
+                </label>
+              </div>
+
+              <label>
+                기대 변화
+                <textarea
+                  value={expectedChange}
+                  onChange={(event) => setExpectedChange(event.target.value)}
+                  placeholder="예: 회의 전 안건을 먼저 모으고, 꼭 필요한 주제만 짧게 논의하면 좋겠습니다."
+                />
+              </label>
+
+              {/*
+                버튼을 흐리게만 두면 사용자는 고장으로 읽는다. 사이드바 잠금에서
+                이미 세운 원칙인데 폼에는 빠져 있었다. 무엇이 모자란지 적는다.
+              */}
+              {(!title.trim() || !body.trim()) && (
+                <p className="field-note gate-note">
+                  {!title.trim() && !body.trim()
+                    ? '제목과 내용을 채우면 다음으로 넘어갈 수 있어요.'
+                    : !title.trim()
+                      ? '제목을 채우면 다음으로 넘어갈 수 있어요.'
+                      : '내용을 채우면 다음으로 넘어갈 수 있어요.'}
+                </p>
+              )}
+
+              <div className="form-actions">
+                <button className="secondary-button" onClick={() => setStep('scope')}>
+                  이전
+                </button>
+                <button
+                  className="primary-button"
+                  disabled={!title.trim() || !body.trim()}
+                  onClick={() => {
+                    // 내용이 바뀌었으니 이전 검토 결과를 물려받지 않는다.
+                    setReviewReady(false);
+                    setStep('review');
+                  }}
+                >
+                  제출 전 확인
+                </button>
+              </div>
             </div>
           </section>
         )}
