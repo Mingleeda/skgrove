@@ -9,6 +9,7 @@ import {
   calendarConfigured,
   connectGoogleCalendar,
   fetchCalendarEvents,
+  fetchCalendarSnapshot,
   toMetricEvents,
 } from '../../googleCalendar';
 import {
@@ -378,6 +379,8 @@ export function Metrics({ currentUser }: MetricsProps) {
   const [partMetrics, setPartMetrics] = useState<PartMetric[]>(() => buildPartMetrics(initialActivity));
   const [calendarEvents, setCalendarEvents] = useState<CalendarMetricEvent[]>([]);
   const [calendarStatus, setCalendarStatus] = useState<CalendarConnection>('disconnected');
+  // 언제 기준 값인지 밝히지 않으면 오래된 값을 지금 값으로 착각한다.
+  const [calendarSyncedAt, setCalendarSyncedAt] = useState<string | null>(null);
   const [calendarBusy, setCalendarBusy] = useState(false);
   const [calendarError, setCalendarError] = useState('');
   const [selectedPart, setSelectedPart] = useState(currentUser.part === '전체' ? partNames[0] : currentUser.part);
@@ -475,6 +478,50 @@ export function Metrics({ currentUser }: MetricsProps) {
   // 최근 90일치를 읽는다. 회의 습관을 보는 지표라 오래된 일정은 도움이 안 되고,
   // 범위를 넓힐수록 구글 응답도 무거워진다.
   const CALENDAR_LOOKBACK_DAYS = 90;
+
+  /*
+    서버가 30분마다 당겨둔 것을 읽는다. 사람이 '연결'을 누를 필요가 없다.
+    화면을 열 때 한 번 읽고, 버튼은 '지금 새로고침'으로만 남긴다.
+  */
+  const loadFromServer = async (manual = false) => {
+    if (calendarBusy) return;
+    setCalendarBusy(true);
+    if (manual) setCalendarError('');
+    try {
+      const snap = await fetchCalendarSnapshot();
+      if (!snap.ok || !snap.events) {
+        // '설정 안 됨'은 잘못이 아니다. 조용히 샘플 흐름을 유지한다.
+        if (snap.reason === 'disabled') return;
+        // 자동 로드에서는 경고를 띄우지 않는다 — 화면을 열 때마다 빨간 배너가 뜨면 소음이 된다.
+        if (manual) setCalendarError(`캘린더를 읽지 못했어요: ${snap.reason ?? '알 수 없는 오류'}`);
+        return;
+      }
+
+      // 파트 판정은 계정 정보를 가진 이 화면에서 한다. 조직 구성을 프록시로 보내지 않는다.
+      const accounts = await loadAccounts();
+      const events = toMetricEvents(snap.events, accounts);
+      applyCalendarEvents('synced', events, CALENDAR_LOOKBACK_DAYS);
+      setCalendarSyncedAt(snap.syncedAt ?? null);
+
+      if (events.length === 0 && manual) {
+        // 0건을 조용히 넘기면 "연동했는데 왜 그대로지?"가 된다. 이유를 밝힌다.
+        setCalendarError(
+          `읽어온 일정 ${snap.events.length}건 중 파트를 정할 수 있는 회의가 없었어요. ` +
+            '제목 앞에 [회의/참여자] 또는 [파트명] 을 적으면 파트별로 집계됩니다.',
+        );
+      }
+    } finally {
+      setCalendarBusy(false);
+    }
+  };
+
+  /* 화면을 열면 서버가 담아둔 값을 한 번 읽는다. 사용자 동작이 필요 없다. */
+  useEffect(() => {
+    if (!calendarConfigured()) return;
+    void loadFromServer(false);
+    // 마운트 때 한 번만. 주기 조회는 서버가 한다.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const syncGoogleCalendar = async () => {
     if (calendarBusy) return;
@@ -642,15 +689,21 @@ export function Metrics({ currentUser }: MetricsProps) {
             <strong>Google Calendar 회의 분석</strong>
             <span>
               {calendarStatus === 'synced'
-                ? '캘린더 회의가 파트지수 회의 건강도와 긴 회의 감점에 반영되고 있어요.'
+                ? `팀 캘린더 회의가 회의 건강도와 긴 회의 감점에 반영되고 있어요.${
+                    calendarSyncedAt
+                      ? ` (${new Date(calendarSyncedAt).toLocaleString('ko-KR', { month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })} 기준)`
+                      : ''
+                  }`
                 : calendarConfigured()
-                  ? '최근 90일 회의를 읽어 회의 건강도와 긴 회의 감점에 반영합니다. 캘린더를 읽기만 하고 쓰지 않아요.'
+                  ? '서버가 30분마다 팀 캘린더를 읽어 회의 건강도와 긴 회의 감점에 반영합니다. 읽기만 하고 쓰지 않아요.'
                   : '연동이 아직 설정되지 않았어요. 샘플 회의로 계산 흐름을 먼저 확인할 수 있습니다.'}
             </span>
           </div>
           <div className="calendar-sync-actions">
-            <button type="button" disabled={calendarBusy} onClick={() => void syncGoogleCalendar()}>
-              {calendarBusy ? '구글 캘린더 읽는 중…' : '구글 캘린더 연결'}
+            {/* 서버가 30분마다 당겨오므로 평소엔 누를 일이 없다. 방금 바꾼 일정을
+                바로 보고 싶을 때만 쓰는 버튼이라 '새로고침'이 맞는 이름이다. */}
+            <button type="button" disabled={calendarBusy} onClick={() => void loadFromServer(true)}>
+              {calendarBusy ? '읽는 중…' : '지금 새로고침'}
             </button>
             {/* 연동을 설정하기 전에도 계산 흐름은 볼 수 있어야 한다. */}
             {!calendarConfigured() && (

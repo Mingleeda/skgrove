@@ -71,6 +71,25 @@ export async function fetchCalendarEvents(
 
 export type CalendarConnectResult = { ok: boolean; accessToken?: string; reason?: string };
 
+/**
+ * 서버가 주기적으로 당겨둔 일정을 읽는다. 사용자 토큰이 필요 없다.
+ *
+ * '연결' 버튼을 누르는 흐름과 다른 점: 사람이 아무것도 하지 않아도 값이 있다.
+ * 서버가 갱신 토큰으로 30분마다 조회해 담아둔 것을 그대로 가져온다.
+ * syncedAt 이 있어야 "언제 기준인지"를 화면이 밝힐 수 있다 — 없으면 오래된 값을
+ * 지금 값으로 착각한다.
+ */
+export type CalendarSnapshot = {
+  ok: boolean;
+  events?: RawCalendarEvent[];
+  reason?: string;
+  syncedAt?: string | null;
+};
+
+export async function fetchCalendarSnapshot(): Promise<CalendarSnapshot> {
+  return callProxy<CalendarSnapshot>('?action=snapshot', { method: 'GET' });
+}
+
 const POPUP_TIMEOUT_MS = 120000;
 
 /**
