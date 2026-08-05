@@ -3411,10 +3411,12 @@ textarea {
   animation: spin-board 0.76s ease-in-out infinite;
 }
 
+/* 다른 목록과 같은 기준 — 한 줄에 3개까지. 2열로 못박으면 조가 6개일 때
+   525px 짜리 카드가 세 줄로 늘어진다. 조 카드는 이름 몇 줄이라 그만큼 넓을 이유가 없다. */
 .team-result-grid {
   display: grid;
   gap: var(--space-3);
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(clamp(240px, (100% - 24px) / 3, 100%), 1fr));
 }
 
 .team-result-card {
@@ -3468,6 +3470,14 @@ textarea {
   padding: var(--space-6);
   position: relative;
   text-align: center;
+}
+
+/* 3D 무대. 높이를 직접 주지 않으면 캔버스 기본값(150px)이 잡혀 납작해진다.
+   렌더러는 이 요소의 clientWidth/Height 를 보고 해상도를 정하므로 CSS 가 먼저다. */
+.draw-canvas {
+  display: block;
+  height: 190px;
+  width: 100%;
 }
 
 .coffee-draw-stage::before {
@@ -3781,10 +3791,11 @@ textarea {
   max-width: 720px;
 }
 
+/* 공유 화면의 조 슬라이드도 같은 기준. */
 .share-team-slides {
   display: grid;
   gap: var(--space-3);
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(clamp(240px, (100% - 24px) / 3, 100%), 1fr));
 }
 
 .share-team-slide {

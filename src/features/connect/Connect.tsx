@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { EmptyState } from '../../components/EmptyState';
 import { Avatar } from '../../components/Avatar';
 import { PanelHeader } from '../../components/PanelHeader';
+import { DrawCanvas } from './DrawCanvas';
 import {
   clearConnectResults,
   loadConnectResults,
@@ -606,7 +607,13 @@ export function Connect({ members }: ConnectProps) {
                   </button>
                 </section>
 
-                <DrawStage isDrawing={isDrawing} text={teamEventText} variant="teams" />
+                <DrawStage
+                  isDrawing={isDrawing}
+                  members={selectedParticipants}
+                  teams={teams}
+                  text={teamEventText}
+                  variant="teams"
+                />
 
                 <section className="team-result-grid">
                   {teams.map((team) => (
@@ -655,6 +662,7 @@ export function Connect({ members }: ConnectProps) {
                 <CoffeeDrawStage
                   buyer={coffeeBuyer}
                   isDrawing={isDrawing}
+                  members={selectedParticipants}
                   round={coffeeRound}
                   spotlight={coffeeSpotlight}
                   text={coffeeEventText}
@@ -850,16 +858,44 @@ function StoryFrame({
   );
 }
 
-function DrawStage({ isDrawing, text, variant }: { isDrawing: boolean; text: string; variant: ConnectMode }) {
+function DrawStage({
+  isDrawing,
+  members,
+  teams,
+  text,
+  variant,
+}: {
+  isDrawing: boolean;
+  members: Profile[];
+  teams: TeamGroup[];
+  text: string;
+  variant: ConnectMode;
+}) {
+  // 이름 → 조 번호. 3D 타일이 자기 조 색으로 바뀌며 아래 결과 카드와 이어진다.
+  const teamOf = useMemo(() => {
+    const map: Record<string, number> = {};
+    teams.forEach((team, index) => team.members.forEach((member) => (map[member.name] = index)));
+    return map;
+  }, [teams]);
+
   return (
     <StoryFrame label="조뽑기" step={isDrawing ? 2 : text.includes('조') ? 3 : 1} total={3}>
       <section className={isDrawing ? `draw-stage rolling ${variant}` : `draw-stage ${variant}`}>
-        <div className="draw-orbit">
-          <span />
-          <span />
-          <span />
-          <span />
-        </div>
+        <DrawCanvas
+          isDrawing={isDrawing}
+          members={members}
+          teamCount={teams.length}
+          teamOf={teams.length > 0 ? teamOf : undefined}
+          variant="teams"
+        >
+          {/* WebGL 을 못 쓰거나 모션을 줄인 환경에서 쓰는 기존 연출 */}
+          <div className="draw-orbit">
+            <span />
+            <span />
+            <span />
+            <span />
+          </div>
+        </DrawCanvas>
         <strong>{text}</strong>
       </section>
     </StoryFrame>
@@ -869,12 +905,14 @@ function DrawStage({ isDrawing, text, variant }: { isDrawing: boolean; text: str
 function CoffeeDrawStage({
   buyer,
   isDrawing,
+  members,
   round,
   spotlight,
   text,
 }: {
   buyer: Profile | null;
   isDrawing: boolean;
+  members: Profile[];
   round: number;
   spotlight: Profile | null;
   text: string;
@@ -892,17 +930,20 @@ function CoffeeDrawStage({
           <span />
           <span />
         </div>
-        <div className="coffee-cup-track" aria-hidden="true">
-          <div className="coffee-cup">
-            <Coffee size={24} />
+        <DrawCanvas isDrawing={isDrawing} members={members} variant="coffee" winner={buyer?.name}>
+          {/* WebGL 을 못 쓰거나 모션을 줄인 환경에서 쓰는 기존 연출 */}
+          <div className="coffee-cup-track" aria-hidden="true">
+            <div className="coffee-cup">
+              <Coffee size={24} />
+            </div>
+            <div className="coffee-cup main">
+              <Coffee size={28} />
+            </div>
+            <div className="coffee-cup">
+              <Coffee size={24} />
+            </div>
           </div>
-          <div className="coffee-cup main">
-            <Coffee size={28} />
-          </div>
-          <div className="coffee-cup">
-            <Coffee size={24} />
-          </div>
-        </div>
+        </DrawCanvas>
         <div className="coffee-draw-copy">
           <span>{isDrawing ? `ROUND ${Math.min(round, 9)}` : buyer ? 'RESULT' : 'READY'}</span>
           <strong>{text}</strong>
