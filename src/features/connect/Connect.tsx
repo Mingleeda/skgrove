@@ -816,17 +816,53 @@ function SharePanel({
   );
 }
 
+/*
+  뽑기는 한 번 보고 끝나는 순간이라 인스타 스토리가 정확한 그릇이다.
+  세로 카드 · 상단 진행 막대 · 위에 누가 언제 돌렸는지. 결과가 나오면
+  마지막 칸이 찬다. 스토리와 다른 점은 자동으로 넘어가지 않는 것뿐이다 —
+  뽑기 결과는 사라지면 안 된다.
+*/
+function StoryFrame({
+  step,
+  total,
+  label,
+  children,
+}: {
+  step: number;
+  total: number;
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="ig-story-view">
+      <div className="ig-story-bars" aria-hidden="true">
+        {Array.from({ length: total }, (_, index) => (
+          <i className={index < step ? 'on' : ''} key={index} />
+        ))}
+      </div>
+      <div className="ig-story-head">
+        <span className="ig-ava sm">뽑</span>
+        <b>{label}</b>
+        <span>· 방금</span>
+      </div>
+      {children}
+    </div>
+  );
+}
+
 function DrawStage({ isDrawing, text, variant }: { isDrawing: boolean; text: string; variant: ConnectMode }) {
   return (
-    <section className={isDrawing ? `draw-stage rolling ${variant}` : `draw-stage ${variant}`}>
-      <div className="draw-orbit">
-        <span />
-        <span />
-        <span />
-        <span />
-      </div>
-      <strong>{text}</strong>
-    </section>
+    <StoryFrame label="조뽑기" step={isDrawing ? 2 : text.includes('조') ? 3 : 1} total={3}>
+      <section className={isDrawing ? `draw-stage rolling ${variant}` : `draw-stage ${variant}`}>
+        <div className="draw-orbit">
+          <span />
+          <span />
+          <span />
+          <span />
+        </div>
+        <strong>{text}</strong>
+      </section>
+    </StoryFrame>
   );
 }
 
@@ -846,31 +882,33 @@ function CoffeeDrawStage({
   const displayName = spotlight?.name ?? buyer?.name ?? '???';
 
   return (
-    <section className={isDrawing ? 'coffee-draw-stage rolling' : buyer ? 'coffee-draw-stage finished' : 'coffee-draw-stage'}>
-      <div className="coffee-confetti" aria-hidden="true">
-        <span />
-        <span />
-        <span />
-        <span />
-        <span />
-        <span />
-      </div>
-      <div className="coffee-cup-track" aria-hidden="true">
-        <div className="coffee-cup">
-          <Coffee size={24} />
+    <StoryFrame label="커피뽑기" step={isDrawing ? 2 : buyer ? 3 : 1} total={3}>
+      <section className={isDrawing ? 'coffee-draw-stage rolling' : buyer ? 'coffee-draw-stage finished' : 'coffee-draw-stage'}>
+        <div className="coffee-confetti" aria-hidden="true">
+          <span />
+          <span />
+          <span />
+          <span />
+          <span />
+          <span />
         </div>
-        <div className="coffee-cup main">
-          <Coffee size={28} />
+        <div className="coffee-cup-track" aria-hidden="true">
+          <div className="coffee-cup">
+            <Coffee size={24} />
+          </div>
+          <div className="coffee-cup main">
+            <Coffee size={28} />
+          </div>
+          <div className="coffee-cup">
+            <Coffee size={24} />
+          </div>
         </div>
-        <div className="coffee-cup">
-          <Coffee size={24} />
+        <div className="coffee-draw-copy">
+          <span>{isDrawing ? `ROUND ${Math.min(round, 9)}` : buyer ? 'RESULT' : 'READY'}</span>
+          <strong>{text}</strong>
+          <em>{displayName}</em>
         </div>
-      </div>
-      <div className="coffee-draw-copy">
-        <span>{isDrawing ? `ROUND ${Math.min(round, 9)}` : buyer ? 'RESULT' : 'READY'}</span>
-        <strong>{text}</strong>
-        <em>{displayName}</em>
-      </div>
-    </section>
+      </section>
+    </StoryFrame>
   );
 }

@@ -9003,6 +9003,71 @@ button.notif-row {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+/* ===== 인스타 스토리 뷰어 (커피뽑기 · 조뽑기) =====
+   뽑기는 한 번 보고 끝나는 순간이라 스토리가 정확한 그릇이다.
+   스토리와 다른 점은 자동으로 넘어가지 않는 것뿐이다 — 뽑기 결과는
+   사라지면 안 된다. */
+
+.ig-story-view {
+  background: var(--surface-dark);
+  border-radius: var(--radius-lg);
+  color: var(--color-surface);
+  display: grid;
+  gap: var(--space-2);
+  grid-template-rows: auto auto minmax(0, 1fr);
+  margin: 0 auto;
+  max-width: 420px;
+  overflow: hidden;
+  padding: var(--space-3) var(--space-3) 0;
+  width: 100%;
+}
+
+.ig-story-bars {
+  display: flex;
+  gap: 3px;
+}
+
+.ig-story-bars i {
+  background: var(--divider-on-dark);
+  border-radius: 2px;
+  flex: 1;
+  height: 3px;
+}
+
+.ig-story-bars i.on {
+  background: var(--color-surface);
+}
+
+.ig-story-head {
+  align-items: center;
+  display: flex;
+  font-size: var(--text-micro);
+  gap: var(--space-2);
+}
+
+.ig-story-head .ig-ava {
+  background: var(--divider-on-dark);
+  color: var(--color-surface);
+}
+
+.ig-story-head b {
+  font-weight: 600;
+}
+
+/* 두 번째 span 은 시각이다. 흰 글자를 흐리게 하지 않고 색으로 낮춘다 —
+   opacity 는 배경에 곱해져 면마다 다른 값이 된다. */
+.ig-story-head > span:last-child {
+  color: var(--color-primary-soft);
+}
+
+/* 안에 들어가는 무대는 이미 어두운 면이라 배경을 다시 칠하지 않는다. */
+.ig-story-view .draw-stage,
+.ig-story-view .coffee-draw-stage {
+  background: none;
+  border-radius: 0;
+  margin: 0;
+}
+
 /* ===== 인스타 라이브 문법 (캔미팅 · 티미팅) =====
    캔미팅은 시각이 정해져 있고 그 자리에 모여야 하는 일이라 라이브와 성질이
    같다. 아직 안 끝난 것은 링을 칠하고 끝난 것은 회색으로 둔다 —
