@@ -97,16 +97,18 @@ function sessionFromRow(row: TeaSessionRow): TeaSession {
 }
 
 function sessionToRow(session: TeaSession): TeaSessionRow {
+  // 이 표의 텍스트 컬럼은 전부 not null default ''(supabase-schema.sql) 이다.
+  // 빈 값에 null 을 보내면 upsert 가 not-null 제약에 걸려 저장이 통째로 실패한다
+  // (제안은 desc·memo·held_at 이 비어 있어 특히 잘 걸린다). '' 로 보낸다.
   return {
     id: session.id,
-    title: session.title || null,
-    type: session.type || null,
-    presenter: session.presenter || null,
+    title: session.title || '',
+    type: session.type || '',
+    presenter: session.presenter || '',
     part: session.part,
-    description: session.desc || null,
+    description: session.desc || '',
     status: session.status,
-    memo: session.memo || null,
-    // held_at 은 not null 컬럼이다. 빈 값을 null 로 보내면 upsert 가 제약에 걸린다.
-    held_at: session.heldAt,
+    memo: session.memo || '',
+    held_at: session.heldAt ?? '',
   };
 }
