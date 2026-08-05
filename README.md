@@ -1,13 +1,14 @@
-# skgrove
+# Connectioner
 
-팀문화 개선 웹앱 목업 저장소.
+팀문화 개선 웹앱 목업 저장소. 저장소 이름은 `skgrove` 그대로입니다 —
+`localStorage` 키와 배포 설정이 그 이름을 쓰고 있어 바꾸면 기존 데이터가 사라집니다.
 
 대나무숲처럼 팀원이 익명/실명으로 의견을 접수하고, 리더가 안건화하며, 팀원이 익명 투표로 안건을 통과시키면 액션아이템으로 이어지는 흐름을 중심으로 잡았습니다.
 
 ## 시작하기
 
 ```bash
-git clone https://github.com/Mingleeda/skgrove.git
+git clone https://github.com/skax-k2h9205/skgrove.git
 cd skgrove
 npm install
 npm run dev
