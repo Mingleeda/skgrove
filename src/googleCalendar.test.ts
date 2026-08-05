@@ -4,6 +4,8 @@ import {
   buildPartByEmail,
   buildPartByName,
   countMeetingsByName,
+  countWorkdays,
+  meetingLoadByPerson,
   isAttendanceEvent,
   isTeamEventTitle,
   parseTitleTag,
@@ -442,5 +444,60 @@ describe('사람별 회의 수', () => {
     // 이 값이 '참석한 회의'가 아니라 '이름이 걸린 회의'인 이유가 여기다.
     // 파트 위클리에 매주 들어가는 사람도 여기서는 0 이다.
     expect(countMeetingsByName([event({ title: '[ITS혁신]파트 위클리' })], staff)).toEqual([]);
+  });
+});
+
+describe('회의 부담 — 사람별 하루 회의시간', () => {
+  const staff = [
+    account({ name: '심상준', part: 'ITS혁신파트' }),
+    account({ name: '박완배', part: 'ITS혁신파트' }),
+    account({ name: '이선민', part: 'PM혁신파트' }),
+  ];
+  // 2026-08-03(월) ~ 08-07(금) = 평일 5일
+  const at = (date: string, from: string, to: string, title: string) =>
+    event({ id: `${date}-${title}`, title, startsAt: `${date}T${from}:00+09:00`, endsAt: `${date}T${to}:00+09:00` });
+
+  it('평일만 분모에 넣는다 — 주말을 넣으면 하루 평균이 실제보다 작아진다', () => {
+    expect(countWorkdays('2026-08-03', '2026-08-07')).toBe(5);
+    expect(countWorkdays('2026-08-03', '2026-08-09')).toBe(5); // 토·일 제외
+  });
+
+  it('파트 회의는 그 파트 전원에게 붙는다', () => {
+    // 이게 없으면 파트 위클리에만 들어가는 사람이 0 이 되어 "회의 적다"로 읽힌다.
+    const { loads } = meetingLoadByPerson([at('2026-08-03', '10:00', '11:00', '[ITS혁신]파트 위클리')], staff);
+    expect(loads.map((l) => l.name).sort()).toEqual(['박완배', '심상준']);
+  });
+
+  it('이름이 적혀 있으면 그 사람에게만 붙는다', () => {
+    const { loads } = meetingLoadByPerson([at('2026-08-03', '10:00', '11:00', '[회의/심상준] 협의')], staff);
+    expect(loads).toHaveLength(1);
+    expect(loads[0].name).toBe('심상준');
+    expect(loads[0].totalMinutes).toBe(60);
+  });
+
+  it('가장 많았던 하루를 따로 남긴다 — 평균보다 이 값이 설득한다', () => {
+    const events = [
+      at('2026-08-03', '09:00', '13:00', '[회의/심상준] 종일 워크샵'),
+      at('2026-08-04', '10:00', '10:30', '[회의/심상준] 짧은 협의'),
+    ];
+    const { loads } = meetingLoadByPerson(events, staff);
+    expect(loads[0].busiestDay).toEqual({ date: '2026-08-03', minutes: 240 });
+  });
+
+  it('누구 것인지 모르는 회의는 세지 않고, 그 사실을 돌려준다', () => {
+    // 화면이 "이 값은 실제보다 작다"를 밝히려면 몇 건이 빠졌는지 알아야 한다.
+    const events = [
+      at('2026-08-03', '10:00', '11:00', '[회의/심상준] 협의'),
+      at('2026-08-03', '14:00', '15:00', '[PiMS2.0] Weekly'),
+    ];
+    const { attributed, total } = meetingLoadByPerson(events, staff);
+    expect(total).toBe(2);
+    expect(attributed).toBe(1);
+  });
+
+  it('근태는 시간이 잡혀 있어도 회의가 아니다', () => {
+    const { loads, total } = meetingLoadByPerson([at('2026-08-03', '09:00', '18:00', '[출장/심상준] 하이닉스')], staff);
+    expect(total).toBe(0);
+    expect(loads).toEqual([]);
   });
 });

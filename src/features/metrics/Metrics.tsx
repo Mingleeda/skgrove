@@ -9,6 +9,8 @@ import {
   calendarConfigured,
   fetchCalendarSnapshot,
   countMeetingsByName,
+  meetingLoadByPerson,
+  type MeetingLoad,
   toMetricEvents,
 } from '../../googleCalendar';
 import {
@@ -373,6 +375,40 @@ function buildPartMetrics(activity: MetricsActivity): PartMetric[] {
   });
 }
 
+/** 분 → '1시간 35분'. 0 이면 '0분'. 소수점은 사람에게 뜻이 없다. */
+function formatDuration(minutes: number): string {
+  const total = Math.round(minutes);
+  if (total < 60) return `${total}분`;
+  const hours = Math.floor(total / 60);
+  const rest = total % 60;
+  return rest === 0 ? `${hours}시간` : `${hours}시간 ${rest}분`;
+}
+
+/** 팀원들의 하루 평균을 다시 평균낸다. 사람 단위로 봐야 한 명의 폭주가 묻히지 않는다. */
+function averageOf(loads: MeetingLoad[]): number {
+  if (loads.length === 0) return 0;
+  return loads.reduce((sum, load) => sum + load.avgPerWorkday, 0) / loads.length;
+}
+
+/** 'YYYY-MM-DD' → '8월 7일'. 앞의 0 을 떼야 사람이 쓰는 표기가 된다. */
+function formatMonthDay(date: string): string {
+  const [, month, day] = date.split('-');
+  if (!month || !day) return date;
+  return `${Number(month)}월 ${Number(day)}일`;
+}
+
+/** 모든 사람·모든 날 중 가장 회의가 많았던 하루. */
+function busiestOf(loads: MeetingLoad[]): { name: string; date: string; minutes: number } | null {
+  let best: { name: string; date: string; minutes: number } | null = null;
+  for (const load of loads) {
+    if (!load.busiestDay) continue;
+    if (!best || load.busiestDay.minutes > best.minutes) {
+      best = { name: load.name, date: load.busiestDay.date, minutes: load.busiestDay.minutes };
+    }
+  }
+  return best;
+}
+
 export function Metrics({ currentUser }: MetricsProps) {
   const [activity, setActivity] = useState<MetricsActivity>(initialActivity);
   const [partMetrics, setPartMetrics] = useState<PartMetric[]>(() => buildPartMetrics(initialActivity));
@@ -382,6 +418,8 @@ export function Metrics({ currentUser }: MetricsProps) {
   const [calendarSyncedAt, setCalendarSyncedAt] = useState<string | null>(null);
   // 사람별 집계는 파트 판정과 다른 축이라 원시 일정에서 따로 센다.
   const [meetingsByName, setMeetingsByName] = useState<Array<{ name: string; count: number }>>([]);
+  // 회의 부담 — 요청한 세 지표(평균·최대·최소)와 그 값이 얼마나 믿을 만한지.
+  const [meetingLoad, setMeetingLoad] = useState<ReturnType<typeof meetingLoadByPerson> | null>(null);
   const [calendarBusy, setCalendarBusy] = useState(false);
   const [calendarError, setCalendarError] = useState('');
   const [selectedPart, setSelectedPart] = useState(currentUser.part === '전체' ? partNames[0] : currentUser.part);
@@ -504,6 +542,7 @@ export function Metrics({ currentUser }: MetricsProps) {
       applyCalendarEvents('synced', events, CALENDAR_LOOKBACK_DAYS);
       setCalendarSyncedAt(snap.syncedAt ?? null);
       setMeetingsByName(countMeetingsByName(snap.events, accounts));
+      setMeetingLoad(meetingLoadByPerson(snap.events, accounts));
 
       if (events.length === 0 && manual) {
         // 0건을 조용히 넘기면 "연동했는데 왜 그대로지?"가 된다. 이유를 밝힌다.
@@ -663,6 +702,41 @@ export function Metrics({ currentUser }: MetricsProps) {
             </div>
           )}
           {calendarError && <p className="form-error">{calendarError}</p>}
+          {meetingLoad && meetingLoad.loads.length > 0 && (
+            <div className="meeting-load">
+              <p className="meeting-load-title">
+                팀원 하루 회의시간
+                <span>
+                  근무일 기준입니다. 누구 회의인지 알 수 있는 {meetingLoad.attributed}건만 셌어요
+                  (전체 {meetingLoad.total}건) — <b>실제는 이보다 많습니다.</b>
+                </span>
+              </p>
+              <div className="meeting-load-stats">
+                <div>
+                  <span>평균</span>
+                  <strong>{formatDuration(averageOf(meetingLoad.loads))}</strong>
+                </div>
+                <div className="peak">
+                  <span>최대</span>
+                  <strong>{formatDuration(meetingLoad.loads[0].avgPerWorkday)}</strong>
+                  <em>{meetingLoad.loads[0].name}</em>
+                </div>
+                <div>
+                  <span>최소</span>
+                  <strong>{formatDuration(meetingLoad.loads[meetingLoad.loads.length - 1].avgPerWorkday)}</strong>
+                  <em>{meetingLoad.loads[meetingLoad.loads.length - 1].name}</em>
+                </div>
+              </div>
+              {/* 평균은 사람을 설득하지 못한다. 최악의 날이 설득한다. */}
+              {busiestOf(meetingLoad.loads) && (
+                <p className="meeting-load-peak">
+                  가장 회의가 많았던 하루는 <b>{busiestOf(meetingLoad.loads)!.name}</b> 님의{' '}
+                  <b>{formatDuration(busiestOf(meetingLoad.loads)!.minutes)}</b>이었어요
+                  <span> ({formatMonthDay(busiestOf(meetingLoad.loads)!.date)})</span>
+                </p>
+              )}
+            </div>
+          )}
           {meetingsByName.length > 0 && (
             <div className="meeting-rank">
               <p className="meeting-rank-title">

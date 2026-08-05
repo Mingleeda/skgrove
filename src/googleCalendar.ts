@@ -443,6 +443,110 @@ export function toMetricEvents(
   return result;
 }
 
+/* ------------------------------------------------------------------ *
+ * 회의 부담 — 사람별 하루 회의시간
+ *
+ * 목적이 "회의가 많으니 줄이자"를 보이는 것이라, 적게 잡히는 쪽으로 틀리면
+ * 근거가 되지 못한다. 그래서 이름이 적힌 회의만 세지 않고 파트 회의도 붙인다.
+ *   '[회의/심상준,박완배]'  → 그 두 사람
+ *   '[ITS혁신]파트 위클리'  → ITS혁신파트 전원   ← 이게 없으면 대부분 0 이 된다
+ *   '[전체]티미팅'          → 활성 계정 전원
+ * 그래도 프로젝트명만 있는 회의('[PiMS2.0] Weekly')는 누구 것인지 알 수 없어 빠진다.
+ * 실측 149건 중 79건(53%)만 사람에게 붙었다 — 즉 이 값은 **실제보다 작다.**
+ * 화면이 그 사실을 밝혀야 "우리 팀 회의 30분밖에 안 하네"로 잘못 읽히지 않는다.
+ * ------------------------------------------------------------------ */
+
+export type MeetingLoad = {
+  name: string;
+  /** 창 전체에서 이 사람에게 붙은 회의 시간(분). */
+  totalMinutes: number;
+  /** 근무일 하루 평균(분). 분모는 창 안의 평일 수다. */
+  avgPerWorkday: number;
+  /** 가장 회의가 많았던 하루. 평균보다 이 값이 사람을 설득한다. */
+  busiestDay: { date: string; minutes: number } | null;
+};
+
+/** 창 안의 평일 수. 주말을 분모에 넣으면 하루 평균이 실제보다 작아진다. */
+export function countWorkdays(from: string, to: string): number {
+  const start = Date.parse(from);
+  const end = Date.parse(to);
+  if (Number.isNaN(start) || Number.isNaN(end) || end < start) return 0;
+  let days = 0;
+  for (let t = start; t <= end; t += 86400000) {
+    const day = new Date(t).getDay();
+    if (day !== 0 && day !== 6) days += 1;
+  }
+  return days;
+}
+
+/** 이 회의가 누구 것인가. 이름 → 파트 → 아무도 아님 순으로 본다. */
+function attendeesOf(
+  event: RawCalendarEvent,
+  accounts: ManagedAccount[],
+  partByName: Map<string, string>,
+): string[] {
+  const active = accounts.filter((account) => account.status === '활성');
+  const named = namesFromTitle(event.title, active.map((account) => account.name));
+  if (named.length > 0) return named;
+
+  const part = partFromTitle(event.title, partByName);
+  if (!part) return [];
+  // '전체'는 특정 파트가 아니라 팀 전원이다.
+  if (part === '전체') return active.map((account) => account.name);
+  return active.filter((account) => account.part === part).map((account) => account.name);
+}
+
+export function meetingLoadByPerson(
+  events: RawCalendarEvent[],
+  accounts: ManagedAccount[],
+): { loads: MeetingLoad[]; workdays: number; attributed: number; total: number } {
+  const partByName = buildPartByName(accounts);
+  const meetings = events.filter((event) => isMeeting(event) && !isAttendanceEvent(event));
+
+  // 사람 → 날짜 → 분
+  const byPerson = new Map<string, Map<string, number>>();
+  let attributed = 0;
+
+  for (const event of meetings) {
+    const minutes = durationMinutes(event);
+    // 길이를 못 읽은 일정은 회의 시간 지표를 왜곡한다. 세지 않는다.
+    if (minutes <= 0) continue;
+    const who = attendeesOf(event, accounts, partByName);
+    if (who.length === 0) continue;
+    attributed += 1;
+
+    const date = (event.startsAt ?? '').slice(0, 10);
+    if (!date) continue;
+    for (const name of who) {
+      const days = byPerson.get(name) ?? new Map<string, number>();
+      days.set(date, (days.get(date) ?? 0) + minutes);
+      byPerson.set(name, days);
+    }
+  }
+
+  const dates = meetings.map((event) => (event.startsAt ?? '').slice(0, 10)).filter(Boolean).sort();
+  const workdays = dates.length > 0 ? countWorkdays(dates[0], dates[dates.length - 1]) : 0;
+
+  const loads: MeetingLoad[] = [...byPerson.entries()]
+    .map(([name, days]) => {
+      const totalMinutes = [...days.values()].reduce((sum, value) => sum + value, 0);
+      let busiestDay: MeetingLoad['busiestDay'] = null;
+      for (const [date, minutes] of days) {
+        if (!busiestDay || minutes > busiestDay.minutes) busiestDay = { date, minutes };
+      }
+      return {
+        name,
+        totalMinutes,
+        avgPerWorkday: workdays > 0 ? totalMinutes / workdays : 0,
+        busiestDay,
+      };
+    })
+    // 동수면 이름 순. 새로고침마다 순서가 흔들리면 순위로 안 읽힌다.
+    .sort((a, b) => b.avgPerWorkday - a.avgPerWorkday || a.name.localeCompare(b.name));
+
+  return { loads, workdays, attributed, total: meetings.length };
+}
+
 /**
  * 원시 일정 → 팀 추억 행사.
  * 종일 일정만 행사로 본다. 회의까지 추억 캘린더에 올리면 행사가 묻힌다.
