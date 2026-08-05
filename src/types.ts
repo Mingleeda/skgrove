@@ -318,7 +318,17 @@ export type TeaGroup = {
 
 // ===== 알림 / 메시지 (SKSOOP-21) =====
 // 시스템 알림(issue/agenda/deadline/action/tea/humor)과 사람이 보내는 DM(message).
-export type NotificationKind = 'issue' | 'agenda' | 'deadline' | 'action' | 'tea' | 'humor' | 'message';
+export type NotificationKind =
+  | 'issue'
+  | 'agenda'
+  | 'deadline'
+  | 'action'
+  | 'tea'
+  | 'humor'
+  | 'message'
+  // 번개/공모: 대기 승계와 모임 취소. 둘 다 "내 계획이 바뀌는" 일이라
+  // 앱을 다시 열어보기 전에 알아야 한다.
+  | 'gathering';
 
 export type AppNotification = {
   id: string;

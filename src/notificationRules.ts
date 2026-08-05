@@ -1,7 +1,16 @@
 // 알림 기준 정의 (SKSOOP-110). "어떤 이벤트가 → 누구에게 → 어떤 알림을" 을 한 곳에 명문화.
 // 순수 함수만 두어 단위 테스트로 회귀 검증한다(팀 관례: *Rules.ts). React·상태 의존 없음.
 import { daysLeft, isOpen } from './agendaRules';
-import type { ActionItem, Agenda, AppNotification, HumorPost, Issue, ManagedAccount, TeaSession } from './types';
+import type {
+  ActionItem,
+  Agenda,
+  AppNotification,
+  Gathering,
+  HumorPost,
+  Issue,
+  ManagedAccount,
+  TeaSession,
+} from './types';
 
 // 마감 며칠 전부터 "임박" 알림을 낼지.
 export const DEADLINE_SOON_DAYS = 2;
@@ -15,7 +24,9 @@ export type SlackChannel = 'team' | 'connector';
 export function slackChannelForKind(kind: AppNotification['kind']): SlackChannel | null {
   if (kind === 'agenda' || kind === 'deadline') return 'team'; // 공지성 → 팀 전체
   if (kind === 'tea' || kind === 'issue') return 'connector'; // 제안·접수 → 커넥셔너
-  return null; // action, message → 인앱만
+  // action, message, gathering → 인앱만.
+  // 승계·취소는 특정 개인에게만 뜻이 있는 소식이라 팀 채널에 뿌리면 소음이 된다.
+  return null;
 }
 
 // 같은 이벤트가 같은 수신자에게 중복 생성되는 것을 막는 키(특히 로드마다 계산되는 마감 임박).
@@ -181,4 +192,53 @@ export function messageDraft(
     createdAt: now,
     read: false,
   };
+}
+
+// ── 번개 모임 / 일정 공모 ──────────────────────────────────
+// 이 두 알림이 없으면 대기 명단이 껍데기가 된다. 자리가 났는데 본인이 앱을
+// 다시 열어보기 전까지 모르면, 자동 승계는 아무 일도 일어나지 않은 것과 같다.
+
+/** 모임 종류에 맞는 화면. 알림을 눌렀을 때 엉뚱한 메뉴로 가지 않게 한다. */
+function gatheringSection(gathering: Gathering) {
+  return gathering.kind === 'flash' ? ('flash' as const) : ('callup' as const);
+}
+
+/**
+ * 대기 → 확정 승계. 앞사람이 취소해 자리가 났을 때 올라온 사람에게만 보낸다.
+ * dedupeKey 에 '#promoted' 를 붙여 같은 모임의 취소 알림과 섞이지 않게 한다.
+ */
+export function gatheringPromotedDraft(gathering: Gathering, name: string, now: string): NotificationDraft {
+  return {
+    kind: 'gathering',
+    recipientName: name,
+    fromName: '시스템',
+    title: `자리가 났어요 · ${gathering.title}`,
+    body: `대기하던 자리가 확정으로 바뀌었어요. ${gathering.place}에서 만나요.`,
+    section: gatheringSection(gathering),
+    sourceId: gathering.id,
+    dedupeKey: dedupeKey('gathering', `${gathering.id}#promoted`, name),
+    createdAt: now,
+    read: false,
+  };
+}
+
+/**
+ * 모임 취소. 확정·대기를 가리지 않고 신청한 모두에게 보낸다 —
+ * 대기자도 그 시간을 비워두고 있었을 수 있다. 주최자 본인은 뺀다.
+ */
+export function gatheringCanceledDrafts(gathering: Gathering, names: string[], now: string): NotificationDraft[] {
+  return names
+    .filter((name) => name !== gathering.host)
+    .map((name): NotificationDraft => ({
+      kind: 'gathering',
+      recipientName: name,
+      fromName: '시스템',
+      title: `취소됐어요 · ${gathering.title}`,
+      body: `${gathering.host}님이 모임을 접었어요. 그 시간은 다시 비워두셔도 됩니다.`,
+      section: gatheringSection(gathering),
+      sourceId: gathering.id,
+      dedupeKey: dedupeKey('gathering', `${gathering.id}#canceled`, name),
+      createdAt: now,
+      read: false,
+    }));
 }

@@ -15,10 +15,10 @@ npm install && npm run dev
 
 | 이름 | 사내메일 | 권한 | 보이는 메뉴 |
 |---|---|---|---|
-| 이선민 | `sunmin.l@sk.com` | 팀리더 | 13개 |
-| 이두민 | `dumin@sk.com` | 팀원 | 11개 |
-| 김승현 | `k2h9205@sk.com` | 파트리더 | 12개 |
-| 김수정 | `crystalk@sk.com` | 팀원 | 11개 |
+| 이선민 | `sunmin.l@sk.com` | 팀리더 | 15개 |
+| 이두민 | `dumin@sk.com` | 팀원 | 13개 |
+| 김승현 | `k2h9205@sk.com` | 파트리더 | 14개 |
+| 김수정 | `crystalk@sk.com` | 팀원 | 13개 |
 
 마이페이지는 사이드바에 없다. **헤더 우측 사용자 칩**을 누르면 들어간다.
 
@@ -26,14 +26,46 @@ npm install && npm run dev
 
 ## 현재 상태
 
-- 브랜치 `dev` — **`origin/dev`에 push 완료**. 다른 PC에서 `git pull` 하면 된다.
+- 브랜치 `dev` — `origin/dev` 기준. 다른 PC에서 `git pull` 하면 된다.
 - 중간에 올라온 SKSOOP-152·153(캔미팅 DB 영속화, 파트 열 정렬)을 머지했다.
   `styles.css`의 `.can-part-columns` 한 곳만 충돌했고, **상대의 기능(파트 개수만큼
   등분)에 이쪽 토큰(`var(--space-3)`)을 얹어** 해결했다. 브라우저에서 3파트 → 3열,
   빈 칸 없음을 확인했다.
-- `npm test` **195/195**, `npm run build`, `tsc --noEmit` 모두 통과
+- `npm test` **237/237**, `npm run build`, `tsc --noEmit` 모두 통과
 - 두 역할 × 두 폭(1280px / 390px) 접근성 결함 **0**
 - 하드코딩 색상값 **0** / 정의 없는 `var()` **0**
+
+### 새로 붙은 기능 — 번개 모임 / 일정 공모
+
+메뉴는 둘이지만 **모델·규칙·화면은 한 벌**이다(`kind: 'flash' | 'callup'`).
+입력값이 90% 같아서 타입을 쪼개면 정원·승계 규칙이 두 벌이 된다.
+
+| 파일 | 역할 |
+|---|---|
+| `src/gatheringRules.ts` | 선착순·대기 승계·상태 파생. 순수 함수, 28 테스트 |
+| `src/aiPoster.ts` | 포스터 문구/색/아이콘. 엔드포인트 없으면 로컬 폴백, 9 테스트 |
+| `src/gatheringStore.ts` | Supabase + localStorage. 신청만 건별 insert/delete |
+| `src/features/gatherings/` | `GatheringBoard`(피드·상세) · `GatheringForm` · `PosterFrame` |
+
+**꼭 알아야 할 설계 두 가지**
+
+1. **확정/대기를 저장하지 않는다.** 신청 시각으로 정렬해 앞에서 정원만큼을
+   확정으로 *본다*. 그래서 취소는 레코드 삭제 하나로 끝나고 승계가 저절로 된다.
+   상태(`모집중`/`마감`)도 같은 이유로 파생시킨다 — 저장하면 아무도 접속 안 하는
+   사이 마감 시각이 지나도 '모집중'으로 남는다.
+   → **플래그를 저장하고 싶어지면 이 문단을 다시 읽을 것.**
+2. **포스터는 그림을 생성하지 않는다.** 틀은 CSS 고정, LLM 은 문구·색·아이콘만.
+   이미지 생성 모델을 쓰면 건마다 화풍이 달라 쌓였을 때 오히려 어지럽다.
+
+**아직 안 한 것**
+
+- `supabase-schema.sql` 끝에 `gatherings`, `gathering_signups` 테이블을 넣어뒀다.
+  **Supabase 에서 그 SQL 을 실행해야** 기기 간 공유가 된다. 지금은 localStorage 로만 돈다.
+- 이미지 첨부는 `gathering-images` 버킷을 쓴다. 버킷을 만들어야 첨부가 저장된다
+  (없으면 브라우저 안에서만 보이는 미리보기로 폴백한다).
+- 새 모임이 열렸을 때의 **공지 알림은 없다.** 승계·취소만 알린다
+  (`notificationRules.gatheringPromotedDraft` / `gatheringCanceledDrafts`).
+  전체 공지는 슬랙 소음이 될 수 있어 판단을 남겨뒀다.
 
 ### 브라우저 자동화 주의
 

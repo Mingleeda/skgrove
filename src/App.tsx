@@ -67,6 +67,8 @@ import {
   leadersFor,
   messageDraft,
   ownerAccount,
+  gatheringCanceledDrafts,
+  gatheringPromotedDraft,
   slackChannelForKind,
   teaProposalDrafts,
   type NotificationDraft,
@@ -91,6 +93,7 @@ import {
   saveGatherings,
   uploadGatheringImage,
 } from './gatheringStore';
+import { splitRoster } from './gatheringRules';
 import { GatheringBoard } from './features/gatherings/GatheringBoard';
 import type { GatheringDraft } from './features/gatherings/GatheringForm';
 import { loadProfiles } from './profileStore';
@@ -153,6 +156,8 @@ const SECTION_BY_HASH: Record<string, Section> = {
   '#accounts': 'accounts',
   '#notifications': 'notifications',
   '#humor': 'humor',
+  '#flash': 'flash',
+  '#callup': 'callup',
 };
 
 export function App() {
@@ -888,16 +893,32 @@ export function App() {
     const next = gatheringSignups.filter((s) => s.id !== mine.id);
     setGatheringSignups(next);
     cacheSignups(next);
+
+    /*
+      승계는 '사건'이 아니라 파생값이라 코드 어디에도 "지금 승격했다"는 순간이 없다.
+      그래서 전후를 비교해 찾아낸다. 이 알림이 없으면 자리가 났는데 본인은
+      앱을 다시 열어보기 전까지 모르고, 자동 승계가 아무 일도 아닌 게 된다.
+    */
+    const before = splitRoster(gathering, gatheringSignups).confirmed;
+    const after = splitRoster(gathering, next).confirmed;
+    const promoted = after.filter((seat) => !before.some((prev) => prev.id === seat.id));
+    if (promoted.length > 0) {
+      notify(promoted.map((seat) => gatheringPromotedDraft(gathering, seat.name, today())));
+    }
   };
 
   const cancelGathering = (gathering: Gathering) => {
-    // 신청자가 있는 모임을 지우면 그들의 기록까지 사라진다. 지우지 않고 취소로 남긴다.
-    persistGatherings(gatherings.map((item) => (item.id === gathering.id ? { ...item, canceled: true } : item)));
-    if (gatheringSignups.every((s) => s.gatheringId !== gathering.id)) {
-      // 아무도 신청하지 않았다면 흔적을 남길 이유가 없다.
-      void deleteGatheringRecord(gathering.id);
-      persistGatherings(gatherings.filter((item) => item.id !== gathering.id));
+    // 대기자도 그 시간을 비워두고 있었을 수 있다. 확정·대기를 가리지 않고 알린다.
+    const applicants = gatheringSignups.filter((s) => s.gatheringId === gathering.id).map((s) => s.name);
+    if (applicants.length > 0) {
+      notify(gatheringCanceledDrafts(gathering, applicants, today()));
+      // 신청자가 있는 모임을 지우면 그들의 기록까지 사라진다. 지우지 않고 취소로 남긴다.
+      persistGatherings(gatherings.map((item) => (item.id === gathering.id ? { ...item, canceled: true } : item)));
+      return;
     }
+    // 아무도 신청하지 않았다면 흔적을 남길 이유가 없다.
+    void deleteGatheringRecord(gathering.id);
+    persistGatherings(gatherings.filter((item) => item.id !== gathering.id));
   };
 
   const registerAccount = (account: Omit<ManagedAccount, 'id' | 'joinedAt' | 'status'>) => {
@@ -972,7 +993,10 @@ export function App() {
           agendas={agendas}
           currentUser={currentUser}
           actionItems={actionItems}
+          gatherings={gatherings}
+          signups={gatheringSignups}
           today={today()}
+          now={nowStamp()}
           onSectionChange={changeSection}
           onIdentityChange={setIdentity}
         />

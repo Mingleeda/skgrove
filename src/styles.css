@@ -9259,6 +9259,66 @@ button.notif-row {
   opacity: 0.75;
 }
 
+/* --- 홈의 내 모임 줄 --------------------------------------------
+   '오늘의 팀 연결' 패널 맨 위. 아래 고정 링크(.quick-card-list)와 생김새가
+   비슷해야 같은 패널로 읽히므로 톤만 달리하고 구조는 맞춘다. */
+.home-gathering-list {
+  display: grid;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.home-gathering-row {
+  align-items: center;
+  background: var(--tint-moss);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  color: var(--tint-moss-ink);
+  display: flex;
+  gap: var(--space-3);
+  min-height: 54px;
+  padding: var(--space-3);
+  text-align: left;
+  width: 100%;
+}
+
+.home-gathering-row svg {
+  flex-shrink: 0;
+}
+
+.home-gathering-row div {
+  display: grid;
+  flex: 1;
+  gap: 2px;
+  min-width: 0;
+}
+
+.home-gathering-row strong {
+  font-size: var(--text-body);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.home-gathering-row span {
+  font-size: var(--text-meta);
+  opacity: 0.85;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 대기는 확정과 구분돼야 한다 — 그 시간을 비워둘지 판단이 갈린다. */
+.home-gathering-wait {
+  background: var(--tint-pending);
+  border-radius: var(--radius-full);
+  color: var(--tint-pending-ink);
+  flex-shrink: 0;
+  font-size: var(--text-micro);
+  font-style: normal;
+  padding: 2px 8px;
+}
+
 /* --- 좁은 폭 ----------------------------------------------------
    반드시 위 기본 규칙 '뒤'에 온다. 앞에 두면 같은 특이도에서 순서로 져
    오류 없이 조용히 무시된다. */

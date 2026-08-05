@@ -6,6 +6,8 @@ import {
   agendaDrafts,
   deadlineDrafts,
   dedupeKey,
+  gatheringCanceledDrafts,
+  gatheringPromotedDraft,
   isDeadlineSoon,
   issueDrafts,
   leadersFor,
@@ -14,7 +16,7 @@ import {
   slackChannelForKind,
   teaProposalDrafts,
 } from './notificationRules';
-import type { ActionItem, Agenda, Issue, ManagedAccount, TeaSession } from './types';
+import type { ActionItem, Agenda, Gathering, Issue, ManagedAccount, TeaSession } from './types';
 
 const TODAY = '2026-07-28';
 
@@ -155,5 +157,54 @@ describe('티미팅 제안 알림', () => {
     expect(drafts[0].kind).toBe('tea');
     expect(drafts[0].section).toBe('meetings');
     expect(drafts.every((d) => d.dedupeKey.startsWith('tea:TEA-9:'))).toBe(true);
+  });
+});
+
+describe('번개/공모 알림', () => {
+  const meetup: Gathering = {
+    id: 'GAT-1',
+    kind: 'flash',
+    title: '퇴근 후 볼링',
+    startAt: '2026-08-05T19:00',
+    place: '강남 볼링장',
+    capacity: 2,
+    closeAt: '2026-08-05T18:00',
+    minPeople: null,
+    desc: '',
+    part: '전체',
+    cost: 'n빵',
+    host: '이선민',
+    createdAt: '2026-08-05',
+    canceled: false,
+  };
+
+  it('승계 알림은 올라온 본인에게, 모임 종류에 맞는 화면으로 간다', () => {
+    const draft = gatheringPromotedDraft(meetup, '김수정', TODAY);
+    expect(draft.kind).toBe('gathering');
+    expect(draft.recipientName).toBe('김수정');
+    expect(draft.section).toBe('flash');
+    expect(draft.title).toContain('자리가 났어요');
+  });
+
+  it('일정 공모 알림은 공모 화면으로 간다', () => {
+    expect(gatheringPromotedDraft({ ...meetup, kind: 'callup' }, '김수정', TODAY).section).toBe('callup');
+  });
+
+  it('취소 알림은 대기자까지 모두에게 가되 주최자는 뺀다', () => {
+    // 대기자도 그 시간을 비워두고 있었을 수 있다
+    const drafts = gatheringCanceledDrafts(meetup, ['이선민', '이두민', '김수정'], TODAY);
+    expect(drafts.map((d) => d.recipientName)).toEqual(['이두민', '김수정']);
+  });
+
+  it('승계와 취소는 dedupeKey 가 갈려 서로를 막지 않는다', () => {
+    // 둘 다 kind=gathering, sourceId=GAT-1 이라 구분자가 없으면 뒤엣것이 삼켜진다
+    const promoted = gatheringPromotedDraft(meetup, '김수정', TODAY).dedupeKey;
+    const canceled = gatheringCanceledDrafts(meetup, ['김수정'], TODAY)[0].dedupeKey;
+    expect(promoted).not.toBe(canceled);
+  });
+
+  it('모임 알림은 인앱 전용이다', () => {
+    // 특정 개인에게만 뜻이 있는 소식이라 팀 채널에 뿌리면 소음이 된다
+    expect(slackChannelForKind('gathering')).toBeNull();
   });
 });

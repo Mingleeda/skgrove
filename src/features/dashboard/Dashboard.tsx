@@ -1,4 +1,5 @@
 import {
+  CalendarClock,
   CheckCircle2,
   Coffee,
   FileCheck2,
@@ -7,12 +8,22 @@ import {
   ShieldCheck,
   Sparkles,
   Vote,
+  Zap,
 } from 'lucide-react';
 import { daysUntilDue, isDone, isOverdue, sortActionItems } from '../../actionRules';
+import { mySeat, timeUntil } from '../../gatheringRules';
 import { EmptyState } from '../../components/EmptyState';
 import { PanelHeader } from '../../components/PanelHeader';
 import { STATUS_ICON, dueLabel } from '../actions/actionDisplay';
-import type { ActionItem, Agenda, CurrentUser, Identity, Section } from '../../types';
+import type {
+  ActionItem,
+  Agenda,
+  CurrentUser,
+  Gathering,
+  GatheringSignup,
+  Identity,
+  Section,
+} from '../../types';
 
 type DashboardProps = {
   openIssueCount: number;
@@ -20,7 +31,11 @@ type DashboardProps = {
   agendas: Agenda[];
   currentUser: CurrentUser;
   actionItems: ActionItem[];
+  gatherings: Gathering[];
+  signups: GatheringSignup[];
   today: string;
+  /** 'YYYY-MM-DDTHH:mm' 로컬 시각. 모임의 '아직 안 지났는가' 판정에 쓴다. */
+  now: string;
   onSectionChange: (section: Section) => void;
   onIdentityChange: (identity: Identity) => void;
 };
@@ -31,7 +46,10 @@ export function Dashboard({
   agendas,
   currentUser,
   actionItems,
+  gatherings,
+  signups,
   today,
+  now,
   onSectionChange,
   onIdentityChange,
 }: DashboardProps) {
@@ -61,6 +79,15 @@ export function Dashboard({
   */
   const homeActions = sortActionItems(actionItems, today).slice(0, 4);
   const overdueCount = actionItems.filter((item) => isOverdue(item, today)).length;
+
+  /*
+    내가 자리를 잡아둔 모임 중 아직 오지 않은 것. 취소된 것은 뺀다 —
+    취소 알림을 이미 받았고, 홈에 남겨두면 아직 유효한 약속으로 읽힌다.
+  */
+  const myGatherings = gatherings
+    .filter((item) => !item.canceled && item.startAt >= now && mySeat(item, signups, currentUser.name) !== null)
+    .sort((a, b) => a.startAt.localeCompare(b.startAt))
+    .slice(0, 2);
 
   // 홈에서 방식을 고른 뜻이 접수 화면까지 이어져야 한다.
   // 이전에는 두 버튼이 똑같이 화면만 옮겨서, 고른 방식이 버려지고 다시 물었다.
@@ -156,6 +183,35 @@ export function Dashboard({
   const connectPanel = (
     <section className="panel">
       <PanelHeader icon={Coffee} title="오늘의 팀 연결" />
+      {/*
+        이 패널은 이름이 '오늘의'인데 내용은 고정 링크 두 개뿐이라 매일 같았다.
+        내가 자리를 잡아둔 모임이야말로 오늘 일어날 팀 연결이다. 있으면 위에 둔다.
+      */}
+      {myGatherings.length > 0 && (
+        <div className="home-gathering-list">
+          {myGatherings.map((item) => {
+            const seat = mySeat(item, signups, currentUser.name);
+            return (
+              <button
+                className="home-gathering-row"
+                key={item.id}
+                onClick={() => onSectionChange(item.kind === 'flash' ? 'flash' : 'callup')}
+                type="button"
+              >
+                {item.kind === 'flash' ? <Zap size={17} /> : <CalendarClock size={17} />}
+                <div>
+                  <strong>{item.title}</strong>
+                  <span>
+                    {timeUntil(item.startAt, now)} · {item.place}
+                  </span>
+                </div>
+                {/* 대기 중이면 확정과 구분돼야 한다. 나가려고 시간을 비워둘지 판단이 갈린다. */}
+                {seat !== '확정' && seat !== null && <em className="home-gathering-wait">대기 {seat.대기}</em>}
+              </button>
+            );
+          })}
+        </div>
+      )}
       <div className="quick-card-list">
         <button onClick={() => onSectionChange('connect')}>
           <Coffee size={19} />
