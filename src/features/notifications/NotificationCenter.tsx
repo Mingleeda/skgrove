@@ -82,7 +82,7 @@ export function NotificationCenter({
     <section className="screen">
       <section className="panel">
         <div className="notif-head">
-          <PanelHeader icon={Bell} title={`받은 알림 · 안읽음 ${unread}`} />
+          <PanelHeader icon={Bell} title="받은 알림" />
           {received.length > 0 && (
             <button className="secondary-button" onClick={onMarkAllRead} disabled={unread === 0}>
               모두 읽음
