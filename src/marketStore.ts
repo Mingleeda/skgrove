@@ -1,4 +1,4 @@
-// 벼룩숲 영속화 — Supabase 있으면 DB, 없으면 localStorage.
+// 이음장터 영속화 — Supabase 있으면 DB, 없으면 localStorage.
 // gatheringStore 와 같은 규약(load*/save*)을 따르고, 입찰은 신청과 같은 이유로 다르게 다룬다.
 //
 // 입찰은 통째로 upsert 하지 않고 한 건씩 insert 한다. 배열을 덮어쓰면 두 사람이 같은

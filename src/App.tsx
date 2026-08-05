@@ -1029,7 +1029,7 @@ export function App() {
     persistGatherings(gatherings.filter((item) => item.id !== gathering.id));
   };
 
-  /* ===== 벼룩숲 ===== */
+  /* ===== 이음장터 ===== */
 
   const persistMarketItems = (next: MarketItem[]) => {
     setMarketItems(next);

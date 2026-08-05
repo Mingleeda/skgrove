@@ -43,7 +43,7 @@ export const sections: AppSection[] = [
   { id: 'connect', label: '커피뽑기 / 조뽑기', icon: Shuffle, owner: '김수정' },
   { id: 'memory', label: '팀 추억', icon: Sparkles, owner: '김수정' },
   { id: 'humor', label: '유~머게시판', icon: Laugh, owner: '공통' },
-  { id: 'market', label: '벼룩숲', icon: Store, owner: '공통' },
+  { id: 'market', label: '이음장터', icon: Store, owner: '공통' },
   { id: 'metrics', label: '파트지수 / 리포트', icon: BarChart3, owner: '김수정' },
   { id: 'notifications', label: '알림 / 메시지', icon: Bell, owner: '김승현' },
   { id: 'accounts', label: '계정 관리', icon: UsersRound, owner: '팀리더' },

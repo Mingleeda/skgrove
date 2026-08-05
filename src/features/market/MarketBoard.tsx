@@ -375,7 +375,7 @@ export function MarketBoard({
       <section className="panel market-hall">
         <div className="market-hall-head">
           <Trophy size={18} />
-          <strong>벼룩숲 명예의 전당</strong>
+          <strong>이음장터 명예의 전당</strong>
         </div>
         {hasRanking ? (
           <div className="market-rank-grid">

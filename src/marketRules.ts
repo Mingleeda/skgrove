@@ -1,7 +1,7 @@
 import type { MarketBid, MarketItem, MarketStatus } from './types';
 
 /*
-  벼룩숲의 규칙. 화면과 저장소 어디에도 이 계산을 복사하지 않는다.
+  이음장터의 규칙. 화면과 저장소 어디에도 이 계산을 복사하지 않는다.
 
   설계의 핵심 둘 — 모임·번개에서 배운 것을 그대로 가져왔다.
 
