@@ -54,6 +54,10 @@
   --scrim-strong: rgba(20, 24, 21, 0.72);
   --scrim-none: rgba(20, 24, 21, 0);
 
+  /* 어두운 면(내 프로필 카드) 위의 구분선. 흰 계열 반투명이라야 배경 그라디언트가
+     비쳐 보인다. 토큰으로 두면 styles.css 본문의 rgba 개수를 늘리지 않는다. */
+  --divider-on-dark: rgba(255, 255, 255, 0.16);
+
   /* 간격 4px 스케일 */
   --space-1: 4px;
   --space-2: 8px;
@@ -2373,8 +2377,10 @@ textarea {
   display: grid;
   gap: 18px;
   grid-column: 1 / -1;
-  grid-template-columns: minmax(0, 0.95fr) minmax(360px, 1.05fr);
-  min-height: 220px;
+  /* 좌우로 갈랐더니 노트가 460px 밖에 못 받아 문장이 세 줄로 끊겼고, 정작 왼쪽
+     절반은 아바타와 이름뿐이라 비었다. 한 열로 펴서 문장에 폭을 준다. */
+  grid-template-columns: minmax(0, 1fr);
+  min-height: 0;
   padding: var(--space-6);
 }
 
@@ -2426,15 +2432,18 @@ textarea {
 }
 
 .my-profile-card .profile-detail-head span,
+.my-profile-card .my-profile-id span,
 .my-profile-card p {
   color: var(--tint-moss);
 }
 
-.my-profile-card .profile-detail-head h2 {
+.my-profile-card .profile-detail-head h2,
+.my-profile-card .my-profile-id h2 {
   font-size: var(--text-display);
 }
 
-.my-profile-card .profile-detail-head strong {
+.my-profile-card .profile-detail-head strong,
+.my-profile-card .my-profile-id strong {
   color: var(--color-surface);
 }
 
@@ -2453,31 +2462,65 @@ textarea {
   width: fit-content;
 }
 
-/* 4열이 453px 안에 들어가 칸마다 95px 였다. "품질 기준 정리와 테스트 흐름 설계" 가
-   3~4 글자씩 끊겨 읽을 수 없었다. 문장이 들어가는 칸이므로 최소 180px 을 준다. */
+/* 신원 한 줄: 아바타 · 이름 · 무드 · 수정 버튼.
+   세로로 쌓았을 때 라벨줄 40 + 이름블록 79 + 무드줄 19 + 여백 28 = 166px 을 썼다.
+   한 줄로 모으면 79px 이고, 카드 전체가 좌우 배치였을 때(346px)보다도 짧아진다. */
+.my-profile-head {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+}
+
+.my-profile-id {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+/* 무드는 이름 옆에 붙는 한 마디다. 줄을 따로 차지할 만큼의 정보가 아니다. */
+.my-profile-trait {
+  background: var(--divider-on-dark);
+  border-radius: var(--radius-full);
+  font-size: var(--text-body);
+  padding: 5px var(--space-4);
+}
+
+/* 버튼을 오른쪽 끝으로 밀어 신원과 붙어 읽히지 않게 한다. */
+.my-profile-head .secondary-button {
+  margin-left: auto;
+}
+
+/* 상자 넷을 가로 한 줄로. 예전에 4열이 안 됐던 건 카드가 좌우로 갈려 노트가
+   453px 밖에 못 받아 칸마다 95px 이 됐기 때문이다. 카드를 한 열로 편 지금은
+   894px 이라 칸이 210px 이 나와 문장이 읽힌다.
+   2x2 로 쌓으면 298px, 한 줄이면 그 절반이다. */
 .my-profile-notes {
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--space-3);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .my-profile-notes div {
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: var(--divider-on-dark);
   border-radius: var(--radius);
   display: grid;
   gap: var(--space-2);
-  min-height: 142px;
-  padding: 14px;
+  padding: var(--space-3);
 }
 
 .my-profile-notes span {
   color: var(--tint-moss);
-  font-size: var(--text-body);
+  font-size: var(--text-meta);
   font-weight: 600;
 }
 
+/* 칸이 210px 이라 15px 로는 줄이 자주 넘어간다. 한 단계 줄여 줄 수를 아낀다. */
 .my-profile-notes strong {
-  font-size: var(--text-body-lg);
-  line-height: 1.48;
+  font-size: var(--text-body);
+  font-weight: 500;
+  line-height: var(--leading-normal);
+  overflow-wrap: anywhere;
+  word-break: keep-all;
 }
 
 .profile-mood-row {
@@ -5588,8 +5631,9 @@ textarea {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  /* 390px 에서 4열이면 칸이 78px 이라 글자가 3~4 자씩 끊긴다. 2열까지만 간다. */
   .my-profile-notes {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .leader-layout {
@@ -5962,7 +6006,8 @@ textarea {
     padding: var(--space-5);
   }
 
-  .my-profile-card .profile-detail-head h2 {
+  .my-profile-card .profile-detail-head h2,
+.my-profile-card .my-profile-id h2 {
     font-size: var(--text-heading);
   }
 }

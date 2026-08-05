@@ -6,7 +6,6 @@ import {
   PenLine,
   Search,
   Sparkles,
-  UserRound,
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { Avatar } from '../../components/Avatar';
@@ -234,28 +233,23 @@ export function Profiles({ mode, currentUser, onProfilesChange }: ProfilesProps)
       */}
       {mode === 'mine' && myProfile && (
         <section className={`my-profile-card ${cardProfile.color}`}>
-          <div className="my-profile-main">
-            <div className="my-profile-topline">
-              <div className="my-profile-label">
-                <UserRound size={18} />
-                내 프로필 카드
-              </div>
-              <button className="secondary-button" onClick={startEdit}>
-                <PenLine size={17} />
-                카드 수정
-              </button>
+          {/*
+            신원(아바타·이름·무드)과 수정 버튼을 한 줄에 모은다. 예전에는
+            '내 프로필 카드' 라벨줄 40px + 이름블록 79px + 무드줄 19px 이 세로로
+            쌓여 신원에만 166px 을 썼다. 라벨은 화면 제목이 '마이페이지'라 군더더기다.
+          */}
+          <div className="my-profile-head">
+            <div className={`avatar ${cardProfile.color}`}>{cardProfile.name.slice(0, 1)}</div>
+            <div className="my-profile-id">
+              <span>{cardProfile.part}</span>
+              <h2>{cardProfile.name}</h2>
+              <strong>{cardProfile.englishName} · {cardProfile.character}</strong>
             </div>
-            <div className="profile-detail-head">
-              <div className={`avatar ${cardProfile.color}`}>{cardProfile.name.slice(0, 1)}</div>
-              <div>
-                <span>{cardProfile.part}</span>
-                <h2>{cardProfile.name}</h2>
-                <strong>{cardProfile.englishName} · {cardProfile.character}</strong>
-              </div>
-            </div>
-            <div className="profile-mood-row">
-              <p>{cardProfile.trait}</p>
-            </div>
+            <p className="my-profile-trait">{cardProfile.trait}</p>
+            <button className="secondary-button" onClick={startEdit}>
+              <PenLine size={17} />
+              카드 수정
+            </button>
           </div>
           <div className="my-profile-notes">
             <div>
