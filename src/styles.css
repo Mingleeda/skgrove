@@ -9003,6 +9003,80 @@ button.notif-row {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+/* ===== 인스타 활동 목록 (알림 · 메시지) =====
+   아바타 · 한 문장 · 시간. 카드가 아니라 줄이라 열 개가 한 화면에 들어온다.
+   안읽음은 우측 점 하나로만 표시한다 — 행 전체를 칠하면 "안읽은 것이 많다"가
+   아니라 "화면이 시끄럽다"로 읽힌다. */
+
+.ig-activity {
+  display: grid;
+}
+
+.ig-act {
+  align-items: center;
+  background: none;
+  border: 0;
+  border-radius: var(--radius);
+  display: flex;
+  gap: var(--space-3);
+  min-height: 56px;
+  padding: var(--space-2) var(--space-3);
+  text-align: left;
+  width: 100%;
+}
+
+.ig-act:hover {
+  background: var(--color-sunken);
+}
+
+.ig-act-text {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+
+.ig-act-text > span {
+  font-size: var(--text-body);
+  line-height: var(--leading-normal);
+}
+
+.ig-act-text b {
+  font-weight: 600;
+  margin-right: 5px;
+}
+
+/* 시간은 문장의 끝에 붙는다. 별도 줄로 내리면 목록이 두 배로 길어진다. */
+.ig-act-text em {
+  color: var(--color-muted);
+  font-size: var(--text-micro);
+  font-style: normal;
+  margin-left: 6px;
+}
+
+.ig-act-text small {
+  color: var(--color-muted);
+  font-size: var(--text-micro);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ig-act-kind {
+  align-items: center;
+  color: var(--color-muted);
+  display: flex;
+  flex: none;
+  margin-left: auto;
+}
+
+.ig-act-dot {
+  background: var(--color-primary);
+  border-radius: var(--radius-full);
+  flex: none;
+  height: 8px;
+  width: 8px;
+}
+
 /* ===== 인스타 쇼핑 문법 (벼룩숲) =====
    사진 위 가격 태그가 인스타 쇼핑의 상품 태그와 같은 자리다.
    이 화면에서 가장 먼저 알고 싶은 것이 값이라 상세까지 미루지 않는다. */
