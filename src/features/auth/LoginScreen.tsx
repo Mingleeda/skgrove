@@ -101,12 +101,12 @@ export function LoginScreen({ accounts, onLogin, onRegister }: LoginScreenProps)
       <section className="login-intro">
         <div className="brand login-brand">
           {/* 로고 클릭 = 커넥셔너용 빠른 로그인(데모) 히든 토글. 일반 유저는 알기 어렵다. */}
-          <div className="brand-mark" onClick={() => setShowQuickLogin((prev) => !prev)} title="SK Grove">
+          <div className="brand-mark" onClick={() => setShowQuickLogin((prev) => !prev)} title="Connectioner">
             <HeartHandshake size={24} />
           </div>
           <div>
-            <strong>SK Grove</strong>
-            <span>Team Culture Hub</span>
+            <strong>Connectioner</strong>
+            <span>팀을 잇는 곳</span>
           </div>
         </div>
 

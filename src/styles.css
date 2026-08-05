@@ -5,78 +5,77 @@
   여기 있는 것을 쓴다.
 */
 :root {
-  /* 표면 — 클린 뉴트럴 3단. 배경은 거의 무채색이고 정보는 흰 카드로 띄운다.
-     design.md 2.1. 예전 모래빛(#f6f4ef)은 표면 자체가 색을 갖고 있어
-     그 위에 올린 파랑이 탁해 보였다. */
-  --color-page: #f6f7fb;
+  /* 표면 — 인스타그램은 면을 색으로 나누지 않고 1px 헤어라인으로만 나눈다.
+     페이지와 카드가 같은 흰색이고, 가라앉은 면은 hover·입력에만 쓴다.
+     이렇게 해야 화면에서 색을 가진 것이 사진(일러스트) 하나로 남는다. */
+  --color-page: #ffffff;
   --color-surface: #ffffff;
-  /* hover · 입력 · 비활성 면. page 보다 한 단계만 진하다. */
-  --color-sunken: #f1f3f9;
+  --color-sunken: #fafafa;
 
-  /* 글자 — 위계는 색이 아니라 명도로 만든다. */
-  --color-ink: #0b1220;
-  /* 가이드는 Gray 500 #6b7280 이지만 page(#f6f7fb) 위에서 4.46:1 로 AA 미달이다.
-     이 앱은 본문 상당수가 카드 밖 page 위에 있어 한 단계 진한 Gray 600 을 쓴다.
-     design.md 9.2. */
-  --color-muted: #4b5563;
+  /* 글자 — 인스타는 순검정을 안 쓴다. #262626 이 본문, 회색이 메타. */
+  --color-ink: #262626;
+  /* 인스타의 회색은 #737373 인데 --color-sunken 위에서 4.27:1 로 AA 미달이다.
+     designTokens.test.ts 가 세 표면 모두에서 4.5:1 을 강제하므로 한 단계 내렸다. */
+  --color-muted: #616161;
 
-  /* 역할색 — 전부 세 표면에서 AA 통과. designTokens.test.ts 가 강제한다.
-     "강조는 딱 한 번" 원칙(design.md 1)에 따라 브랜드 색조는 파랑 하나뿐이고,
-     초록·빨강은 상태에만 쓴다. clay·pending 은 이 원칙에서 설 자리가 없어 없앴다. */
-  --color-primary: #2563eb;
-  --color-primary-strong: #1d4ed8;
-  --color-primary-soft: #93c5fd;
-  /* 주요 실행 버튼은 파랑이 아니라 검정이다. 파랑을 버튼까지 쓰면
-     링크·선택·진행바와 구분이 사라진다. */
-  --color-cta: #111827;
+  /* 역할색 — 인스타 UI 에는 색이 파랑 하나뿐이다. 초록·빨강은 상태에만 쓴다.
+     인스타의 파랑 #0095f6 은 흰 글자를 얹으면 3.17:1 로 AA 를 크게 밑돈다.
+     같은 계열에서 흰 글자와 회색 면(#efefef) 양쪽에서 4.5:1 을 넘는 값으로 내렸다. */
+  --color-primary: #006bb8;
+  --color-primary-strong: #00376b;
+  --color-primary-soft: #b2dffc;
+  /* 인스타의 주요 버튼은 검정이 아니라 파랑이다. 검정 버튼은 이 문법에 없다. */
+  --color-cta: #0073c9;
   --color-cta-ink: #ffffff;
-  /* 가이드의 #059669 는 흰 배경에서 3.77:1 로 AA 미달이라 한 단계 내렸다. */
   --color-success: #047857;
-  /* 가이드의 #dc2626 은 sunken 위에서 4.30:1 로 미달이라 한 단계 내렸다. */
   --color-danger: #b91c1c;
+  /* 좋아요 하트 전용. 인스타에서 색이 들어가는 아이콘은 이것 하나뿐이다.
+     글자가 아니라 아이콘이라 3:1 기준을 쓴다. */
+  --color-heart: #ed4956;
+  /* 보조 버튼의 회색 면. 위에 얹는 글자는 --color-ink 라 대비가 13:1 이다. */
+  --color-btn-soft: #efefef;
+  --color-btn-soft-press: #dbdbdb;
 
-  /* 틴트 — 배지 배경과 짝 글자색. 짝으로만 쓰고, 틴트 배경에 역할색을 얹지 않는다.
-     글자색이 가이드의 칩 텍스트보다 진한 것은 AAA(7:1) 기준 때문이다. */
-  --tint-primary: #eef2ff;
-  --tint-primary-ink: #1e3a8a;
+  /* 틴트 — 배지 배경과 짝 글자색. 인스타는 틴트 배지를 거의 안 쓰지만
+     이 앱에는 상태(통과·부결·대기)가 있어 남긴다. 짝으로만 쓴다. */
+  --tint-primary: #e8f4fd;
+  --tint-primary-ink: #00376b;
   --tint-success: #ecfdf5;
   --tint-success-ink: #065f46;
-  --tint-danger: #fef2f2;
+  --tint-danger: #fdecea;
   --tint-danger-ink: #991b1b;
-  --tint-neutral: #f1f3f9;
-  --tint-neutral-ink: #374151;
-  /* 아바타는 배지가 아니라 사람을 가리키는 표시라 짝을 따로 둔다. */
-  --tint-avatar: #dbeafe;
-  --tint-avatar-ink: #1e3a8a;
+  --tint-neutral: #efefef;
+  --tint-neutral-ink: #262626;
+  /* 아바타는 사진이 들어갈 자리다. 사진이 없을 때만 회색 면에 이니셜. */
+  --tint-avatar: #efefef;
+  --tint-avatar-ink: #262626;
 
-  /* 어두운 히어로 면. 예전에는 딥그린 그라디언트 두 겹이었는데, 그라디언트는
-     색을 정하지 못했을 때 쓰는 기본값이고 화면마다 각도·정지점이 달라
-     같은 앱으로 읽히지 않았다. 색조 없는 잉크 한 톤으로 평평하게 둔다. */
-  --surface-dark: #111827;
+  /* 어두운 면. 인스타 다크모드가 순검정이라 여기도 순검정을 쓴다. */
+  --surface-dark: #000000;
 
-  --color-border: #e7eaf3;
-  --color-border-strong: #d3d9e8;
-  /* 마감 지남 카드는 좌측 강조 바가 아니라 테두리 색만 바꾼다(design.md 5.2). */
-  --color-border-danger: #fecaca;
+  /* 경계선 — 인스타의 면 분리는 전부 이 한 값이다. */
+  --color-border: #dbdbdb;
+  --color-border-strong: #c7c7c7;
+  --color-border-danger: #f5b5b5;
 
-  /* 라운드 — 카드 16 / 버튼·입력 12 / 칩 full (design.md 4). */
-  --radius-sm: 8px;
-  --radius: 12px;
-  --radius-lg: 16px;
+  /* 라운드 — 인스타는 거의 안 굴린다. 미디어 4, 버튼·입력 8, 큰 면 12.
+     사진이 주인공인 화면에서 큰 라운드는 이미지를 깎아먹는다. */
+  --radius-sm: 4px;
+  --radius: 8px;
+  --radius-lg: 12px;
   --radius-full: 999px;
 
-  /* 그림자 — 카드에 아주 은은하게 한 겹, 떠 있는 것에 한 겹.
-     경계선과 병용한다. 두 번째 레이어의 음수 spread 가 번짐을 좁혀
-     "떠 있다"가 아니라 "얹혀 있다"로 읽히게 한다. */
-  --shadow-card: 0 1px 2px rgba(11, 18, 32, 0.06), 0 8px 24px -18px rgba(11, 18, 32, 0.5);
-  --shadow-float: 0 8px 24px rgba(11, 18, 32, 0.12);
+  /* 그림자 — 인스타 피드에는 그림자가 없다. 면 분리는 전부 헤어라인이다.
+     그림자는 정말로 떠 있는 것(모달·팝오버)에만 남긴다. */
+  --shadow-card: none;
+  --shadow-float: 0 4px 12px rgba(0, 0, 0, 0.15);
 
   /* 사진 위 글자용 어둠. 첨부 사진은 밝기를 알 수 없으므로 글자를 얹으려면
      스크림이 필요하다. 하드코딩하지 않고 토큰으로 두는 이유는 두 가지다 —
      포스터가 늘어도 어둠의 세기가 한 곳에서만 바뀌고, styles.css 본문의
      rgba 개수를 늘리지 않는다(designTokens.test.ts 가 상한을 지킨다). */
-  --scrim-strong: rgba(11, 18, 32, 0.72);
-  --scrim-none: rgba(11, 18, 32, 0);
+  --scrim-strong: rgba(0, 0, 0, 0.62);
+  --scrim-none: rgba(0, 0, 0, 0);
 
   /* 어두운 면(내 프로필 카드) 위의 구분선. 흰 계열 반투명이라야 배경 그라디언트가
      비쳐 보인다. 토큰으로 두면 styles.css 본문의 rgba 개수를 늘리지 않는다. */
@@ -115,9 +114,9 @@
   --text-meta: 13px;
   --text-body: 14px;
   --text-body-lg: 16px;
-  --text-title: 20px;
-  --text-heading: 24px;
-  --text-display: 28px;
+  --text-title: 18px;
+  --text-heading: 20px;
+  --text-display: 24px;
 
   --leading-tight: 1.35;
   --leading-normal: 1.5;
@@ -248,16 +247,19 @@ button {
   text-align: left;
 }
 
-/* 선택과 hover 를 같은 색으로 두면 "지금 어디 있는지"가 마우스만 올려도 흔들린다.
-   선택은 틴트 + 굵기로, hover 는 가라앉은 면으로만 알린다(design.md 5.7). */
+/* 인스타는 선택된 메뉴를 칠하지 않는다. 글자를 굵게 하고 아이콘 획을 두껍게 할 뿐이다.
+   면을 칠하면 사이드바가 콘텐츠보다 시끄러워진다. */
 .nav-item:hover {
   background: var(--color-sunken);
 }
 
 .nav-item.active {
-  background: var(--tint-primary);
-  color: var(--tint-primary-ink);
-  font-weight: 600;
+  color: var(--color-ink);
+  font-weight: 700;
+}
+
+.nav-item.active svg {
+  stroke-width: 2.4;
 }
 
 .nav-item:disabled {
@@ -496,14 +498,14 @@ h1 {
 }
 
 .secondary-button {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  background: var(--color-btn-soft);
+  border: 1px solid transparent;
   color: var(--color-ink);
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .secondary-button:hover:not(:disabled) {
-  background: var(--color-page);
+  background: var(--color-btn-soft-press);
 }
 
 .secondary-button:disabled {
@@ -2725,7 +2727,8 @@ textarea {
 .avatar {
   align-items: center;
   background: var(--tint-avatar);
-  border-radius: var(--radius);
+  /* 인스타 아바타는 사각형이 아니라 원이다. 사람과 콘텐츠를 모양으로 가른다. */
+  border-radius: 50%;
   color: var(--tint-avatar-ink);
   display: flex;
   font-size: var(--text-heading);
@@ -5491,9 +5494,16 @@ textarea {
   font-size: var(--text-display);
 }
 
+/* 열 다섯 개의 최소 폭 합이 794px 이라 1116px 창에서도 사이드바를 빼면 넘친다.
+   페이지 전체가 가로로 밀리는 대신 표만 스크롤하게 가둔다. */
 .account-table {
   display: grid;
   gap: var(--space-2);
+  overflow-x: auto;
+}
+
+.account-table > * {
+  min-width: 794px;
 }
 
 .account-table-head,
@@ -5537,9 +5547,11 @@ textarea {
   padding: 0 var(--space-3);
 }
 
+/* 행마다 면을 칠하면 목록 전체가 시끄러워진다. 인스타는 목록을 칠하지 않고
+   헤어라인으로만 나눈다. 배경은 흰 면 그대로 둔다. */
 .account-row {
   align-items: center;
-  background: var(--tint-primary);
+  background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   padding: var(--space-3);
@@ -8008,8 +8020,8 @@ button.notif-row {
 }
 
 .primary-button:hover:not(:disabled) {
-  background: var(--color-ink);
-  border-color: var(--color-ink);
+  background: var(--color-primary-strong);
+  border-color: var(--color-primary-strong);
 }
 
 .secondary-button:hover:not(:disabled),
@@ -8473,7 +8485,7 @@ button.notif-row {
 }
 
 .btn-primary:hover {
-  background: var(--color-ink);
+  background: var(--color-primary-strong);
 }
 
 /* 링크성 · 보조 액션. 면 없이 파랑 글자만 쓴다(design.md 5.1 Link/Accent). */
@@ -8501,21 +8513,18 @@ button.notif-row {
 }
 
 .btn-secondary {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  background: var(--color-btn-soft);
+  border: 1px solid transparent;
   border-radius: var(--radius);
   color: var(--color-ink);
   font-size: var(--text-body);
-  font-weight: 500;
+  font-weight: 600;
   padding: 9px var(--space-4);
-  transition:
-    background-color var(--ease-ui),
-    border-color var(--ease-ui);
+  transition: background-color var(--ease-ui);
 }
 
 .btn-secondary:hover {
-  background: var(--color-page);
-  border-color: var(--color-border-strong);
+  background: var(--color-btn-soft-press);
 }
 
 /* ===== 문화면 문법 — 하나를 읽거나 쓰는 화면 =====
@@ -8977,9 +8986,11 @@ button.notif-row {
 /* 인스타 프로필 격자와 같은 3열 고정. auto-fill 로 두면 폭에 따라 3~5열을
    오가서 "쌓아 보는" 리듬이 화면마다 달라진다. 열 수를 고정해야 스크롤할 때
    눈이 같은 자리를 짚는다. */
+/* 인스타 프로필 격자는 간격이 3px 다. 거의 붙여야 이미지가 UI 를 만든다.
+   3열 고정은 그대로 — 열 수가 변하면 스크롤할 때 눈이 짚는 자리가 달라진다. */
 .poster-grid {
   display: grid;
-  gap: var(--space-4);
+  gap: 3px;
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 

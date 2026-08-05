@@ -116,7 +116,7 @@ function buildTeamShareText(groups: TeamGroup[], rule: BalanceRule, basis: TeamB
   });
 
   return [
-    '[SK Grove 조뽑기 결과]',
+    '[Connectioner 조뽑기 결과]',
     `조건: ${getBalanceRuleLabel(rule)} · ${getTeamBasisLabel(basis, value)}`,
     ...lines,
   ].join('\n');
@@ -124,7 +124,7 @@ function buildTeamShareText(groups: TeamGroup[], rule: BalanceRule, basis: TeamB
 
 function buildCoffeeShareText(winner: Profile) {
   return [
-    '[SK Grove 커피뽑기 결과]',
+    '[Connectioner 커피뽑기 결과]',
     `오늘의 커피 담당: ${winner.name}`,
     `${winner.part} · ${getAgeMood(winner.birthYear).label}`,
   ].join('\n');
