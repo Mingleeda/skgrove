@@ -5,6 +5,7 @@ import {
   Check,
   Gavel,
   Gift,
+  Hourglass,
   MapPin,
   Package,
   Plus,
@@ -42,6 +43,8 @@ type MarketBoardProps = {
   currentUser: CurrentUser;
   /** 'YYYY-MM-DDTHH:mm' 로컬 시각. 상태 파생의 기준이라 App 이 한 곳에서 만든다. */
   now: string;
+  /** 등록 직후 배경에서 썸네일을 그리는 중인 물건. 격자에 '그리는 중' 을 띄운다(모임과 동일). */
+  imagePendingIds: string[];
   onCreate: (draft: MarketDraft) => void;
   onBid: (item: MarketItem, amount: number) => void;
   onCancelItem: (item: MarketItem) => void;
@@ -72,6 +75,7 @@ export function MarketBoard({
   bids,
   currentUser,
   now,
+  imagePendingIds,
   onCreate,
   onBid,
   onCancelItem,
@@ -409,7 +413,19 @@ export function MarketBoard({
               <figure className={open ? 'ig-shop-cell' : 'ig-shop-cell closed'} key={item.id}>
                 <button className="poster-cell" onClick={() => openDetail(item.id)} type="button">
                   <ItemPoster badge={badge.text} badgeTone={badge.tone} item={item} />
-                  <span className="ig-price-tag">{formatPrice(currentPrice(item, bids))}</span>
+                  {/*
+                    사진 없이 올리면 등록 직후 배경에서 크레파스 썸네일을 그린다(모임과 동일).
+                    8초 안팎 걸리는데 표시가 없으면 "포스터가 원래 저건가" 하고 지나친다.
+                    다 그려지면 이 자리가 사진으로 바뀐다. 실패하면 포스터가 그대로 남는다.
+                  */}
+                  {imagePendingIds.includes(item.id) ? (
+                    <span className="ig-drawing">
+                      <Hourglass size={14} />
+                      그림 그리는 중
+                    </span>
+                  ) : (
+                    <span className="ig-price-tag">{formatPrice(currentPrice(item, bids))}</span>
+                  )}
                 </button>
                 <figcaption className="ig-shop-meta">
                   <strong>{item.title}</strong>

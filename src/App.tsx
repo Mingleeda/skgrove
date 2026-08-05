@@ -114,6 +114,7 @@ import {
   saveMarketItems,
   uploadMarketImage,
 } from './marketStore';
+import { requestMarketImage } from './marketImage';
 import { GatheringBoard } from './features/gatherings/GatheringBoard';
 import { MarketBoard } from './features/market/MarketBoard';
 import { localItemPoster } from './features/market/ItemPoster';
@@ -1034,6 +1035,24 @@ export function App() {
     void saveMarketItems(next);
   };
 
+  /*
+    썸네일 생성은 10초 넘게 걸리므로, 그 사이 목록이 바뀔 수 있다(다른 물건 등록·취소).
+    등록 시점에 닫힌 변수로 잡아둔 배열에 덮어쓰면 그 사이의 변경이 조용히 사라진다.
+    그래서 최신 목록을 ref 로 따로 들고, 뒤늦게 도착한 결과는 '그 한 건만' 고친다.
+    (모임의 gatheringsRef/patchGathering 과 같은 판단.)
+  */
+  const marketItemsRef = useRef<MarketItem[]>(marketItems);
+  useEffect(() => {
+    marketItemsRef.current = marketItems;
+  }, [marketItems]);
+
+  const patchMarketItem = (id: string, patch: Partial<MarketItem>) => {
+    const current = marketItemsRef.current;
+    // 그 사이 취소·삭제됐으면 되살리지 않는다.
+    if (!current.some((entry) => entry.id === id)) return;
+    persistMarketItems(current.map((entry) => (entry.id === id ? { ...entry, ...patch } : entry)));
+  };
+
   const createMarketItem = async (draft: MarketDraft) => {
     if (!currentUser) return;
     const id = `MKT-${Date.now().toString(36).toUpperCase()}`;
@@ -1059,6 +1078,27 @@ export function App() {
     }
 
     persistMarketItems([enriched, ...marketItems]);
+
+    /*
+      그림은 등록을 마친 뒤 배경에서 그린다 — 모임과 같은 방식. 10초 넘는 일을 등록
+      버튼에 매달지 않는다. 그동안 카드는 방금 만든 로컬 포스터(틴트+아이콘)를 보여주고,
+      그림이 다 되면 그 카드에만 imageUrl 이 붙어 사진으로 바뀐다. 실패하면 포스터 유지.
+    */
+    if (!imageFile) {
+      setImagePendingIds((prev) => [...prev, id]);
+      void (async () => {
+        try {
+          const generated = await requestMarketImage(enriched);
+          if (!generated) return;
+          const { imageUrl } = await uploadMarketImage(id, generated);
+          patchMarketItem(id, { imageUrl });
+        } finally {
+          // 성공이든 실패든 표시는 걷는다 — 모임과 같은 판단. 실패했는데 모래시계가
+          // 남으면 영영 그리는 중인 것처럼 보인다.
+          setImagePendingIds((prev) => prev.filter((pendingId) => pendingId !== id));
+        }
+      })();
+    }
   };
 
   /*
@@ -1314,6 +1354,7 @@ export function App() {
           currentUser={currentUser}
           items={marketItems}
           now={nowStamp()}
+          imagePendingIds={imagePendingIds}
           onBid={(item, amount) => void placeMarketBid(item, amount)}
           onCancelItem={cancelMarketItem}
           onCreate={(draft) => void createMarketItem(draft)}
