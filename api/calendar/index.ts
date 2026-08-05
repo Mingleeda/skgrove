@@ -7,7 +7,10 @@
 //
 // 리디렉션 URI 는 /api/calendar/callback 처럼 쿼리 없는 경로여야 한다.
 // 쿼리가 붙은 리디렉션 URI 는 구글 콘솔이 거부하는 경우가 있다.
-import { AUTH_URL, EVENTS_URL, SCOPE, config, corsHeaders, normalizeEvents, type GoogleEvent } from './_shared.js';
+// './_shared.js' — 확장자를 빼면 Vercel 런타임이 모듈을 못 찾아 함수가 죽는다(#38).
+// eventsUrl — 읽을 캘린더를 설정에서 받는다. 'primary' 는 전용 계정 본인 캘린더라
+// 팀 캘린더에 초대만 받은 경우 빈 캘린더를 읽는다.
+import { AUTH_URL, SCOPE, config, corsHeaders, eventsUrl, normalizeEvents, type GoogleEvent } from './_shared.js';
 
 /*
   메서드별 이름 있는 export 여야 한다. `export default handler` 로 두면 Vercel 이
@@ -68,7 +71,7 @@ async function route(request: Request): Promise<Response> {
     if (payload.timeMax) query.set('timeMax', payload.timeMax);
 
     try {
-      const upstream = await fetch(`${EVENTS_URL}?${query}`, {
+      const upstream = await fetch(`${eventsUrl(settings.calendarId)}?${query}`, {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
       const data = (await upstream.json().catch(() => null)) as

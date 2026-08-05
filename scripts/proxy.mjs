@@ -9,7 +9,7 @@
 import { createServer } from 'node:http';
 import { handleAi } from './ai-proxy.mjs';
 import { handleReview } from './review-proxy.mjs';
-import { handleCalendar } from './calendar-proxy.mjs';
+import { SYNC_INTERVAL_MS, handleCalendar, syncCalendar } from './calendar-proxy.mjs';
 import { handleNotify } from './notify-proxy.mjs';
 
 const PORT = Number(process.env.PROXY_PORT || 8787);
@@ -34,5 +34,15 @@ createServer((req, res) => {
   console.log(`   • POST     /api/ai        (OpenRouter 취합)`);
   console.log(`   • POST     /api/review    (접수 검토)`);
   console.log(`   • GET/POST /api/calendar  (구글 캘린더 읽기)`);
+
+  /*
+    사람이 '연결'을 누르지 않아도 서버가 알아서 당겨온다.
+    GOOGLE_REFRESH_TOKEN 이 없으면 첫 시도에서 그 사실만 알리고 조용히 멈춘다 —
+    설정이 안 된 것과 실패한 것은 다르게 다뤄야 헛경고가 안 뜬다.
+  */
+  void syncCalendar();
+  const timer = setInterval(() => void syncCalendar(), SYNC_INTERVAL_MS);
+  // 프록시를 내릴 때 타이머가 프로세스를 붙잡지 않게 한다.
+  timer.unref?.();
   console.log(`   • POST     /api/notify    (슬랙 전송)`);
 });

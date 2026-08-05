@@ -7,8 +7,9 @@ import { loadAgendas } from '../../agendaStore';
 import { loadBallots } from '../../ballotStore';
 import {
   calendarConfigured,
-  connectGoogleCalendar,
-  fetchCalendarEvents,
+  fetchCalendarSnapshot,
+  meetingLoadByPerson,
+  type MeetingLoad,
   toMetricEvents,
 } from '../../googleCalendar';
 import {
@@ -83,7 +84,7 @@ const initialWeights: MetricWeights = {
   rewardScore: 82,
 };
 
-const partNames = ['TEST혁신파트', 'ITS혁신파트', '혁신도구파트'];
+const partNames = ['TEST혁신파트', 'ITS혁신파트', 'PM혁신파트'];
 
 
 type MetricsActivity = {
@@ -148,8 +149,8 @@ const sampleCalendarEvents: CalendarMetricEvent[] = [
   },
   {
     id: 'GCAL-003',
-    title: '혁신도구파트 원온원 블록',
-    part: '혁신도구파트',
+    title: 'PM혁신파트 원온원 블록',
+    part: 'PM혁신파트',
     type: '원온원',
     startsAt: '2026-08-05T11:00:00',
     durationMinutes: 30,
@@ -158,8 +159,8 @@ const sampleCalendarEvents: CalendarMetricEvent[] = [
   },
   {
     id: 'GCAL-004',
-    title: '혁신도구파트 티미팅 리허설',
-    part: '혁신도구파트',
+    title: 'PM혁신파트 티미팅 리허설',
+    part: 'PM혁신파트',
     type: '티미팅',
     startsAt: '2026-08-06T16:00:00',
     durationMinutes: 55,
@@ -373,11 +374,50 @@ function buildPartMetrics(activity: MetricsActivity): PartMetric[] {
   });
 }
 
+/** 분 → '1시간 35분'. 0 이면 '0분'. 소수점은 사람에게 뜻이 없다. */
+function formatDuration(minutes: number): string {
+  const total = Math.round(minutes);
+  if (total < 60) return `${total}분`;
+  const hours = Math.floor(total / 60);
+  const rest = total % 60;
+  return rest === 0 ? `${hours}시간` : `${hours}시간 ${rest}분`;
+}
+
+/** 팀원들의 하루 평균을 다시 평균낸다. 사람 단위로 봐야 한 명의 폭주가 묻히지 않는다. */
+function averageOf(loads: MeetingLoad[]): number {
+  if (loads.length === 0) return 0;
+  return loads.reduce((sum, load) => sum + load.avgPerWorkday, 0) / loads.length;
+}
+
+/** 'YYYY-MM-DD' → '8월 7일'. 앞의 0 을 떼야 사람이 쓰는 표기가 된다. */
+function formatMonthDay(date: string): string {
+  const [, month, day] = date.split('-');
+  if (!month || !day) return date;
+  return `${Number(month)}월 ${Number(day)}일`;
+}
+
+/** 모든 사람·모든 날 중 가장 회의가 많았던 하루. */
+function busiestOf(loads: MeetingLoad[]): { name: string; date: string; minutes: number } | null {
+  let best: { name: string; date: string; minutes: number } | null = null;
+  for (const load of loads) {
+    if (!load.busiestDay) continue;
+    if (!best || load.busiestDay.minutes > best.minutes) {
+      best = { name: load.name, date: load.busiestDay.date, minutes: load.busiestDay.minutes };
+    }
+  }
+  return best;
+}
+
 export function Metrics({ currentUser }: MetricsProps) {
   const [activity, setActivity] = useState<MetricsActivity>(initialActivity);
   const [partMetrics, setPartMetrics] = useState<PartMetric[]>(() => buildPartMetrics(initialActivity));
   const [calendarEvents, setCalendarEvents] = useState<CalendarMetricEvent[]>([]);
   const [calendarStatus, setCalendarStatus] = useState<CalendarConnection>('disconnected');
+  // 언제 기준 값인지 밝히지 않으면 오래된 값을 지금 값으로 착각한다.
+  const [calendarSyncedAt, setCalendarSyncedAt] = useState<string | null>(null);
+  // 사람별 집계는 파트 판정과 다른 축이라 원시 일정에서 따로 센다.
+  // 회의 부담 — 요청한 세 지표(평균·최대·최소)와 그 값이 얼마나 믿을 만한지.
+  const [meetingLoad, setMeetingLoad] = useState<ReturnType<typeof meetingLoadByPerson> | null>(null);
   const [calendarBusy, setCalendarBusy] = useState(false);
   const [calendarError, setCalendarError] = useState('');
   const [selectedPart, setSelectedPart] = useState(currentUser.part === '전체' ? partNames[0] : currentUser.part);
@@ -476,42 +516,36 @@ export function Metrics({ currentUser }: MetricsProps) {
   // 범위를 넓힐수록 구글 응답도 무거워진다.
   const CALENDAR_LOOKBACK_DAYS = 90;
 
-  const syncGoogleCalendar = async () => {
+  /*
+    서버가 30분마다 당겨둔 것을 읽는다. 사람이 '연결'을 누를 필요가 없다.
+    화면을 열 때 한 번 읽고, 버튼은 '지금 새로고침'으로만 남긴다.
+  */
+  const loadFromServer = async (manual = false) => {
     if (calendarBusy) return;
     setCalendarBusy(true);
-    setCalendarError('');
+    if (manual) setCalendarError('');
     try {
-      const connected = await connectGoogleCalendar();
-      if (!connected.ok || !connected.accessToken) {
-        setCalendarError(
-          connected.reason === 'disabled'
-            ? '캘린더 연동이 아직 설정되지 않았어요. 아래 샘플로 계산 흐름만 확인할 수 있습니다.'
-            : `구글 연결에 실패했어요: ${connected.reason ?? '알 수 없는 오류'}`,
-        );
-        return;
-      }
-
-      const now = Date.now();
-      const result = await fetchCalendarEvents(
-        connected.accessToken,
-        new Date(now - CALENDAR_LOOKBACK_DAYS * 86400000).toISOString(),
-        new Date(now).toISOString(),
-      );
-      if (!result.ok || !result.events) {
-        setCalendarError(`일정을 읽지 못했어요: ${result.reason ?? '알 수 없는 오류'}`);
+      const snap = await fetchCalendarSnapshot();
+      if (!snap.ok || !snap.events) {
+        // '설정 안 됨'은 잘못이 아니다. 조용히 샘플 흐름을 유지한다.
+        if (snap.reason === 'disabled') return;
+        // 자동 로드에서는 경고를 띄우지 않는다 — 화면을 열 때마다 빨간 배너가 뜨면 소음이 된다.
+        if (manual) setCalendarError(`캘린더를 읽지 못했어요: ${snap.reason ?? '알 수 없는 오류'}`);
         return;
       }
 
       // 파트 판정은 계정 정보를 가진 이 화면에서 한다. 조직 구성을 프록시로 보내지 않는다.
       const accounts = await loadAccounts();
-      const events = toMetricEvents(result.events, accounts);
+      const events = toMetricEvents(snap.events, accounts);
       applyCalendarEvents('synced', events, CALENDAR_LOOKBACK_DAYS);
+      setCalendarSyncedAt(snap.syncedAt ?? null);
+      setMeetingLoad(meetingLoadByPerson(snap.events, accounts));
 
-      if (events.length === 0) {
+      if (events.length === 0 && manual) {
         // 0건을 조용히 넘기면 "연동했는데 왜 그대로지?"가 된다. 이유를 밝힌다.
         setCalendarError(
-          `읽어온 일정 ${result.events.length}건 중 파트를 정할 수 있는 회의가 없었어요. ` +
-            '참석자 메일이 계정에 등록되어 있어야 파트별로 집계됩니다.',
+          `읽어온 일정 ${snap.events.length}건 중 파트를 정할 수 있는 회의가 없었어요. ` +
+            '제목 앞에 [회의/참여자] 또는 [파트명] 을 적으면 파트별로 집계됩니다.',
         );
       }
     } finally {
@@ -519,14 +553,17 @@ export function Metrics({ currentUser }: MetricsProps) {
     }
   };
 
+  /* 화면을 열면 서버가 담아둔 값을 한 번 읽는다. 사용자 동작이 필요 없다. */
+  useEffect(() => {
+    if (!calendarConfigured()) return;
+    void loadFromServer(false);
+    // 마운트 때 한 번만. 주기 조회는 서버가 한다.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const importSampleCalendar = () => {
     // 샘플은 한 주치 회의를 흉내낸 것이다. 90일 분모로 나누면 없는 것처럼 보인다.
     applyCalendarEvents('synced', sampleCalendarEvents, DEFAULT_CALENDAR_WINDOW_DAYS);
-    setCalendarError('');
-  };
-
-  const disconnectCalendar = () => {
-    applyCalendarEvents('disconnected', [], DEFAULT_CALENDAR_WINDOW_DAYS);
     setCalendarError('');
   };
 
@@ -640,35 +677,102 @@ export function Metrics({ currentUser }: MetricsProps) {
           <div>
             <CalendarClock size={20} />
             <strong>Google Calendar 회의 분석</strong>
-            <span>
-              {calendarStatus === 'synced'
-                ? '캘린더 회의가 파트지수 회의 건강도와 긴 회의 감점에 반영되고 있어요.'
-                : calendarConfigured()
-                  ? '최근 90일 회의를 읽어 회의 건강도와 긴 회의 감점에 반영합니다. 캘린더를 읽기만 하고 쓰지 않아요.'
+            {/* 연동이 돌고 있으면 설명하지 않는다. 아래 숫자가 이미 말한다.
+                기준 시각은 설명이 아니라 사실이라 칩 줄로 옮겼다. */}
+            {calendarStatus !== 'synced' && (
+              <span>
+                {calendarConfigured()
+                  ? '서버가 30분마다 팀 캘린더를 읽습니다. 읽기만 하고 쓰지 않아요.'
                   : '연동이 아직 설정되지 않았어요. 샘플 회의로 계산 흐름을 먼저 확인할 수 있습니다.'}
-            </span>
+              </span>
+            )}
           </div>
-          <div className="calendar-sync-actions">
-            <button type="button" disabled={calendarBusy} onClick={() => void syncGoogleCalendar()}>
-              {calendarBusy ? '구글 캘린더 읽는 중…' : '구글 캘린더 연결'}
-            </button>
-            {/* 연동을 설정하기 전에도 계산 흐름은 볼 수 있어야 한다. */}
-            {!calendarConfigured() && (
+          {/* 서버가 30분마다 알아서 당겨온다. 사람이 누를 버튼이 없다.
+              연동 전에는 계산 흐름을 볼 수 있게 샘플만 남긴다. */}
+          {!calendarConfigured() && (
+            <div className="calendar-sync-actions">
               <button className="secondary-button" type="button" onClick={importSampleCalendar}>
                 샘플 회의로 보기
               </button>
-            )}
-            {calendarStatus !== 'disconnected' && (
-              <button className="secondary-button" type="button" onClick={disconnectCalendar}>
-                연결 해제
-              </button>
-            )}
-          </div>
+            </div>
+          )}
           {calendarError && <p className="form-error">{calendarError}</p>}
+          {meetingLoad && meetingLoad.loads.length > 0 && (
+            <div className="meeting-load">
+              <p className="meeting-load-title">
+                팀원 하루 회의시간
+                <span>
+                  근무일 기준입니다. 누구 회의인지 알 수 있는 {meetingLoad.attributed}건만 셌어요
+                  (전체 {meetingLoad.total}건) — <b>실제는 이보다 많습니다.</b>
+                </span>
+              </p>
+              <div className="meeting-load-stats">
+                <div>
+                  <span>평균</span>
+                  <strong>{formatDuration(averageOf(meetingLoad.loads))}</strong>
+                </div>
+                <div className="peak">
+                  <span>최대</span>
+                  <strong>{formatDuration(meetingLoad.loads[0].avgPerWorkday)}</strong>
+                  <em>{meetingLoad.loads[0].name}</em>
+                </div>
+                <div>
+                  <span>최소</span>
+                  <strong>{formatDuration(meetingLoad.loads[meetingLoad.loads.length - 1].avgPerWorkday)}</strong>
+                  <em>{meetingLoad.loads[meetingLoad.loads.length - 1].name}</em>
+                </div>
+              </div>
+              {/* 평균은 사람을 설득하지 못한다. 최악의 날이 설득한다. */}
+              {busiestOf(meetingLoad.loads) && (
+                <p className="meeting-load-peak">
+                  가장 회의가 많았던 하루는 <b>{busiestOf(meetingLoad.loads)!.name}</b> 님의{' '}
+                  <b>{formatDuration(busiestOf(meetingLoad.loads)!.minutes)}</b>이었어요
+                  <span> ({formatMonthDay(busiestOf(meetingLoad.loads)!.date)})</span>
+                </p>
+              )}
+            </div>
+          )}
+          {meetingLoad && meetingLoad.loads.length > 0 && (
+            <div className="meeting-rank">
+              {/* 위 요약과 같은 기준으로 센다. 파트 위클리는 그 파트 전원에게 붙는다 —
+                  1시간짜리 파트 위클리면 파트원 각자에게 1시간이다. */}
+              <p className="meeting-rank-title">사람별 하루 평균 회의시간</p>
+              <ol className="meeting-rank-list">
+                {meetingLoad.loads.slice(0, 8).map((row, index) => (
+                  <li key={row.name}>
+                    <span className="meeting-rank-no">{index + 1}</span>
+                    <strong>{row.name}</strong>
+                    {/* 1등 대비 길이로 그린다. 절대값으로 그리면 막대가 다 짧아진다. */}
+                    <span className="meeting-rank-bar">
+                      <span
+                        style={{
+                          width: `${Math.round((row.avgPerWorkday / meetingLoad.loads[0].avgPerWorkday) * 100)}%`,
+                        }}
+                      />
+                    </span>
+                    <em>{formatDuration(row.avgPerWorkday)}</em>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          )}
           <div className="calendar-event-summary">
             <span>선택 파트 회의 {activeCalendarEvents.length}개</span>
             <span>60분 이상 {longCalendarEventCount}개</span>
-            <span>상태 {calendarStatus === 'synced' ? '동기화됨' : calendarStatus === 'connected' ? '연결됨' : '미연결'}</span>
+            {/* '상태 동기화됨'은 아무 정보가 없다. 언제 기준인지가 실제로 필요한 값이다. */}
+            {calendarSyncedAt ? (
+              <span>
+                {new Date(calendarSyncedAt).toLocaleString('ko-KR', {
+                  month: 'numeric',
+                  day: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })}{' '}
+                기준
+              </span>
+            ) : (
+              <span>미연결</span>
+            )}
           </div>
         </section>
       )}

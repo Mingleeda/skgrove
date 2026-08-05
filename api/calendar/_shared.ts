@@ -17,7 +17,14 @@
 export const SCOPE = 'https://www.googleapis.com/auth/calendar.readonly';
 export const AUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth';
 export const TOKEN_URL = 'https://oauth2.googleapis.com/token';
-export const EVENTS_URL = 'https://www.googleapis.com/calendar/v3/calendars/primary/events';
+/*
+  읽을 캘린더. 'primary' 는 접속한 계정 본인의 캘린더라, 전용 계정이 팀 캘린더에
+  초대만 받은 경우 엉뚱하게 빈 캘린더를 읽는다(실제로 그 상황이었다).
+  GOOGLE_CALENDAR_ID 를 주면 그 캘린더를, 없으면 예전처럼 primary 를 읽는다.
+*/
+export function eventsUrl(calendarId: string): string {
+  return `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events`;
+}
 
 export type GoogleEvent = {
   id?: string;
@@ -47,7 +54,9 @@ export function config() {
   const redirectUri = env('GOOGLE_REDIRECT_URI');
   const appOrigin = env('CALENDAR_ALLOWED_ORIGIN');
   if (!clientId || !clientSecret || !redirectUri || !appOrigin) return null;
-  return { clientId, clientSecret, redirectUri, appOrigin };
+  // 캘린더 ID 는 선택이다. 없으면 접속 계정의 기본 캘린더를 읽는다.
+  const calendarId = env('GOOGLE_CALENDAR_ID') || 'primary';
+  return { clientId, clientSecret, redirectUri, appOrigin, calendarId };
 }
 
 // 토큰이 오가는 경로다. '*' 로 열지 않고 설정된 오리진만 허용한다.

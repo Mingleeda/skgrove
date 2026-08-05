@@ -1,4 +1,5 @@
 import type { ManagedAccount } from './types';
+import { normalizeTeamPart } from './auth';
 import { supabase } from './supabaseClient';
 
 const ACCOUNT_STORAGE_KEY = 'skgrove:accounts';
@@ -32,7 +33,7 @@ export const seedAccounts: ManagedAccount[] = [
     name: '김수정',
     email: 'crystalk@sk.com',
     role: '팀원',
-    part: '혁신도구파트',
+    part: 'PM혁신파트',
     status: '활성',
     joinedAt: '2026-07-24',
     connectioner: true,
@@ -83,7 +84,9 @@ export async function loadAccounts() {
     const saved = window.localStorage.getItem(ACCOUNT_STORAGE_KEY);
     if (!saved) return seedAccounts;
     const parsed = JSON.parse(saved) as ManagedAccount[];
-    return parsed.length > 0 ? ensureAdminAccount(parsed) : seedAccounts;
+    // 로컬 캐시에도 옛 파트 이름이 남아 있다. DB 경로와 같은 정규화를 태운다.
+    const fixed = parsed.map((account) => ({ ...account, part: normalizeTeamPart(account.part) }));
+    return fixed.length > 0 ? ensureAdminAccount(fixed) : seedAccounts;
   } catch {
     return seedAccounts;
   }
@@ -122,7 +125,8 @@ function accountFromRow(row: AccountRow): ManagedAccount {
     name: row.name,
     email: row.email,
     role: row.role,
-    part: row.part,
+    // 옛 파트 이름('혁신도구파트')이 저장돼 있으면 지금 이름으로 갈아끼운다.
+    part: normalizeTeamPart(row.part),
     status: row.status,
     joinedAt: row.joined_at,
     photoUrl: row.photo_url ?? undefined,
