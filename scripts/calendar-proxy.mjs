@@ -105,7 +105,7 @@ function refreshTokenPage(refreshToken) {
   액세스 토큰은 1시간짜리라 보관하지 않고 매번 새로 받는다. 보관할 게 없으면 샐 것도 없다.
 */
 async function fetchWithRefreshToken(timeMin, timeMax) {
-  const refreshToken = process.env.GOOGLE_REFRESH_TOKEN;
+  const refreshToken = env.GOOGLE_REFRESH_TOKEN;
   if (!refreshToken) return { ok: false, reason: 'no refresh token' };
 
   const tokenRes = await fetch(TOKEN_URL, {
@@ -127,7 +127,7 @@ async function fetchWithRefreshToken(timeMin, timeMax) {
   const query = new URLSearchParams({ singleEvents: 'true', orderBy: 'startTime', maxResults: '250' });
   if (timeMin) query.set('timeMin', timeMin);
   if (timeMax) query.set('timeMax', timeMax);
-  const res = await fetch(`${eventsUrl(process.env.GOOGLE_CALENDAR_ID)}?${query}`, {
+  const res = await fetch(`${eventsUrl(env.GOOGLE_CALENDAR_ID)}?${query}`, {
     headers: { Authorization: `Bearer ${token.access_token}` },
   });
   const data = await res.json().catch(() => null);
@@ -287,7 +287,7 @@ export function handleCalendar(req, res) {
       if (payload.timeMin) query.set('timeMin', payload.timeMin);
       if (payload.timeMax) query.set('timeMax', payload.timeMax);
       try {
-        const upstream = await fetch(`${eventsUrl(process.env.GOOGLE_CALENDAR_ID)}?${query}`, {
+        const upstream = await fetch(`${eventsUrl(env.GOOGLE_CALENDAR_ID)}?${query}`, {
           headers: { Authorization: `Bearer ${accessToken}` },
         });
         const data = await upstream.json().catch(() => null);
