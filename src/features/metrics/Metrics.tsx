@@ -7,9 +7,8 @@ import { loadAgendas } from '../../agendaStore';
 import { loadBallots } from '../../ballotStore';
 import {
   calendarConfigured,
-  connectGoogleCalendar,
-  fetchCalendarEvents,
   fetchCalendarSnapshot,
+  countMeetingsByName,
   toMetricEvents,
 } from '../../googleCalendar';
 import {
@@ -381,6 +380,8 @@ export function Metrics({ currentUser }: MetricsProps) {
   const [calendarStatus, setCalendarStatus] = useState<CalendarConnection>('disconnected');
   // 언제 기준 값인지 밝히지 않으면 오래된 값을 지금 값으로 착각한다.
   const [calendarSyncedAt, setCalendarSyncedAt] = useState<string | null>(null);
+  // 사람별 집계는 파트 판정과 다른 축이라 원시 일정에서 따로 센다.
+  const [meetingsByName, setMeetingsByName] = useState<Array<{ name: string; count: number }>>([]);
   const [calendarBusy, setCalendarBusy] = useState(false);
   const [calendarError, setCalendarError] = useState('');
   const [selectedPart, setSelectedPart] = useState(currentUser.part === '전체' ? partNames[0] : currentUser.part);
@@ -502,6 +503,7 @@ export function Metrics({ currentUser }: MetricsProps) {
       const events = toMetricEvents(snap.events, accounts);
       applyCalendarEvents('synced', events, CALENDAR_LOOKBACK_DAYS);
       setCalendarSyncedAt(snap.syncedAt ?? null);
+      setMeetingsByName(countMeetingsByName(snap.events, accounts));
 
       if (events.length === 0 && manual) {
         // 0건을 조용히 넘기면 "연동했는데 왜 그대로지?"가 된다. 이유를 밝힌다.
@@ -523,57 +525,9 @@ export function Metrics({ currentUser }: MetricsProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const syncGoogleCalendar = async () => {
-    if (calendarBusy) return;
-    setCalendarBusy(true);
-    setCalendarError('');
-    try {
-      const connected = await connectGoogleCalendar();
-      if (!connected.ok || !connected.accessToken) {
-        setCalendarError(
-          connected.reason === 'disabled'
-            ? '캘린더 연동이 아직 설정되지 않았어요. 아래 샘플로 계산 흐름만 확인할 수 있습니다.'
-            : `구글 연결에 실패했어요: ${connected.reason ?? '알 수 없는 오류'}`,
-        );
-        return;
-      }
-
-      const now = Date.now();
-      const result = await fetchCalendarEvents(
-        connected.accessToken,
-        new Date(now - CALENDAR_LOOKBACK_DAYS * 86400000).toISOString(),
-        new Date(now).toISOString(),
-      );
-      if (!result.ok || !result.events) {
-        setCalendarError(`일정을 읽지 못했어요: ${result.reason ?? '알 수 없는 오류'}`);
-        return;
-      }
-
-      // 파트 판정은 계정 정보를 가진 이 화면에서 한다. 조직 구성을 프록시로 보내지 않는다.
-      const accounts = await loadAccounts();
-      const events = toMetricEvents(result.events, accounts);
-      applyCalendarEvents('synced', events, CALENDAR_LOOKBACK_DAYS);
-
-      if (events.length === 0) {
-        // 0건을 조용히 넘기면 "연동했는데 왜 그대로지?"가 된다. 이유를 밝힌다.
-        setCalendarError(
-          `읽어온 일정 ${result.events.length}건 중 파트를 정할 수 있는 회의가 없었어요. ` +
-            '참석자 메일이 계정에 등록되어 있어야 파트별로 집계됩니다.',
-        );
-      }
-    } finally {
-      setCalendarBusy(false);
-    }
-  };
-
   const importSampleCalendar = () => {
     // 샘플은 한 주치 회의를 흉내낸 것이다. 90일 분모로 나누면 없는 것처럼 보인다.
     applyCalendarEvents('synced', sampleCalendarEvents, DEFAULT_CALENDAR_WINDOW_DAYS);
-    setCalendarError('');
-  };
-
-  const disconnectCalendar = () => {
-    applyCalendarEvents('disconnected', [], DEFAULT_CALENDAR_WINDOW_DAYS);
     setCalendarError('');
   };
 
@@ -699,25 +653,39 @@ export function Metrics({ currentUser }: MetricsProps) {
                   : '연동이 아직 설정되지 않았어요. 샘플 회의로 계산 흐름을 먼저 확인할 수 있습니다.'}
             </span>
           </div>
-          <div className="calendar-sync-actions">
-            {/* 서버가 30분마다 당겨오므로 평소엔 누를 일이 없다. 방금 바꾼 일정을
-                바로 보고 싶을 때만 쓰는 버튼이라 '새로고침'이 맞는 이름이다. */}
-            <button type="button" disabled={calendarBusy} onClick={() => void loadFromServer(true)}>
-              {calendarBusy ? '읽는 중…' : '지금 새로고침'}
-            </button>
-            {/* 연동을 설정하기 전에도 계산 흐름은 볼 수 있어야 한다. */}
-            {!calendarConfigured() && (
+          {/* 서버가 30분마다 알아서 당겨온다. 사람이 누를 버튼이 없다.
+              연동 전에는 계산 흐름을 볼 수 있게 샘플만 남긴다. */}
+          {!calendarConfigured() && (
+            <div className="calendar-sync-actions">
               <button className="secondary-button" type="button" onClick={importSampleCalendar}>
                 샘플 회의로 보기
               </button>
-            )}
-            {calendarStatus !== 'disconnected' && (
-              <button className="secondary-button" type="button" onClick={disconnectCalendar}>
-                연결 해제
-              </button>
-            )}
-          </div>
+            </div>
+          )}
           {calendarError && <p className="form-error">{calendarError}</p>}
+          {meetingsByName.length > 0 && (
+            <div className="meeting-rank">
+              <p className="meeting-rank-title">
+                이름이 걸린 회의
+                {/* '참석한 회의'가 아니다. 이 차이를 안 밝히면 파트 위클리에만 들어가는
+                    사람이 0 으로 보이고, 주최를 많이 하는 사람만 바빠 보인다. */}
+                <span>제목에 이름이 적힌 회의만 셉니다. 파트 위클리처럼 이름 없는 회의는 빠집니다.</span>
+              </p>
+              <ol className="meeting-rank-list">
+                {meetingsByName.slice(0, 5).map((row, index) => (
+                  <li key={row.name}>
+                    <span className="meeting-rank-no">{index + 1}</span>
+                    <strong>{row.name}</strong>
+                    {/* 1등 대비 길이로 그린다. 전체 회의 수로 나누면 막대가 다 짧아진다. */}
+                    <span className="meeting-rank-bar">
+                      <span style={{ width: `${Math.round((row.count / meetingsByName[0].count) * 100)}%` }} />
+                    </span>
+                    <em>{row.count}건</em>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          )}
           <div className="calendar-event-summary">
             <span>선택 파트 회의 {activeCalendarEvents.length}개</span>
             <span>60분 이상 {longCalendarEventCount}개</span>

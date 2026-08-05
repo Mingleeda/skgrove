@@ -9385,6 +9385,83 @@ button.notif-row {
   padding: 2px 8px;
 }
 
+/* --- 이름이 걸린 회의 순위 ---------------------------------------- */
+.meeting-rank {
+  border-top: 1px solid var(--color-border);
+  display: grid;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+  padding-top: var(--space-4);
+}
+
+.meeting-rank-title {
+  display: grid;
+  font-size: var(--text-body);
+  font-weight: 600;
+  gap: 2px;
+}
+
+/* 무엇을 세는 값인지 제목 바로 밑에 붙인다. 따로 떨어뜨리면 안 읽고 지나친다. */
+.meeting-rank-title span {
+  color: var(--color-muted);
+  font-size: var(--text-meta);
+  font-weight: 400;
+  line-height: var(--leading-normal);
+  overflow-wrap: anywhere;
+  word-break: keep-all;
+}
+
+.meeting-rank-list {
+  display: grid;
+  gap: var(--space-2);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.meeting-rank-list li {
+  align-items: center;
+  display: flex;
+  gap: var(--space-3);
+}
+
+.meeting-rank-no {
+  color: var(--color-muted);
+  flex-shrink: 0;
+  font-size: var(--text-meta);
+  font-variant-numeric: tabular-nums;
+  width: 14px;
+}
+
+.meeting-rank-list strong {
+  flex-shrink: 0;
+  font-size: var(--text-body);
+  width: 72px;
+}
+
+.meeting-rank-bar {
+  background: var(--color-sunken);
+  border-radius: var(--radius-full);
+  flex: 1;
+  height: 8px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.meeting-rank-bar span {
+  background: var(--color-moss);
+  display: block;
+  height: 100%;
+}
+
+.meeting-rank-list em {
+  flex-shrink: 0;
+  font-size: var(--text-meta);
+  font-style: normal;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-ink);
+}
+
 /* --- 좁은 폭 ----------------------------------------------------
    반드시 위 기본 규칙 '뒤'에 온다. 앞에 두면 같은 특이도에서 순서로 져
    오류 없이 조용히 무시된다. */

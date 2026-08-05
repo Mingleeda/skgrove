@@ -298,6 +298,50 @@ export function partFromTitle(title: string, partByName: Map<string, string>): s
 }
 
 /**
+ * 제목에 이름이 적힌 사람들. 이 팀은 참석자를 초대하지 않고 제목에 적으므로
+ * 실제 참석자 목록을 얻을 다른 길이 없다(실측: 250건 중 참석자가 붙은 건 2건).
+ *
+ * 주의 — 이것은 '참석한 회의'가 아니라 '이름이 걸린 회의'다.
+ * '[ITS혁신]파트 위클리' 처럼 이름 없는 회의에 매주 들어가는 사람은 여기 안 잡힌다.
+ * 그래서 이 값을 '회의가 많은 사람'으로 부르면 안 된다 — 주최·주관하는 사람만
+ * 많아 보이고 묵묵히 참석하는 사람은 0으로 보인다. 화면 라벨이 그 차이를 밝혀야 한다.
+ */
+export function namesFromTitle(title: string, knownNames: Iterable<string>): string[] {
+  const text = title ?? '';
+  const found: string[] = [];
+  for (const name of knownNames) {
+    // 동명이인이 없다는 팀 약속에 기대 단순 포함으로 본다.
+    if (name && text.includes(name)) found.push(name);
+  }
+  return found;
+}
+
+/**
+ * 사람별 '이름이 걸린 회의' 수. 많은 순으로 돌려준다.
+ * 근태와 종일 일정은 회의가 아니므로 세지 않는다.
+ */
+export function countMeetingsByName(
+  events: RawCalendarEvent[],
+  accounts: ManagedAccount[],
+): Array<{ name: string; count: number }> {
+  const names = accounts.filter((a) => a.status === '활성').map((a) => a.name);
+  const tally = new Map<string, number>();
+
+  for (const event of events) {
+    if (!isMeeting(event)) continue;
+    if (isAttendanceEvent(event)) continue;
+    for (const name of namesFromTitle(event.title, names)) {
+      tally.set(name, (tally.get(name) ?? 0) + 1);
+    }
+  }
+
+  return [...tally.entries()]
+    .map(([name, count]) => ({ name, count }))
+    // 동수면 이름 순. 새로고침마다 순서가 흔들리면 순위로 안 읽힌다.
+    .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
+}
+
+/**
  * 근태 일정인가. 휴가·출장·건강검진·반차는 회의가 아니고 팀 추억도 아니다.
  *
  * 이 판정이 없으면 toMemoryEvents 가 종일 일정을 전부 행사로 만들어
