@@ -116,8 +116,6 @@ function MediaBlock({ media }: { media: Media | null }) {
 
 type RankerCard = { key: string; icon: ElementType; title: string; unit: string; list: Ranker[] };
 
-// 1·2·3위. 메달 이모지는 OS 마다 색과 모양이 달라 순위가 안 읽히는 기기가 있었다.
-const MEDAL_RANK = ['1위', '2위', '3위'];
 
 export function HumorBoard({
   posts,
@@ -348,6 +346,55 @@ export function HumorBoard({
 
   return (
     <section className="screen humor-screen">
+      {/*
+        명예의 전당을 이음장터와 같은 모양·자리로. 아바타 시상대 대신 압축 순위표를
+        맨 위에 둔다. 카드·번호는 이음장터(.market-rank*)를 그대로 재사용해 두 화면의
+        명예의 전당이 같은 모양이 되게 하고, 여긴 카테고리가 3개라 그리드만 3열로 둔다.
+        아무 실적도 없으면 4칸 '아직 없음' 대신 안내 한 줄로 첫 주인공을 유도한다.
+      */}
+      <section className="panel humor-hall">
+        <div className="market-hall-head">
+          <Trophy size={18} />
+          <strong>이번 달 명예의 전당</strong>
+        </div>
+        {rankers.some((card) => card.list.length > 0) ? (
+          <div className="humor-rank-grid">
+            {rankers.map((card) => (
+              <div className="market-rank" key={card.key}>
+                <h3>{card.title}</h3>
+                {card.list.length === 0 ? (
+                  <p className="field-note">아직 없음</p>
+                ) : (
+                  <ol>
+                    {card.list.map((ranker, index) => (
+                      <li key={ranker.name}>
+                        <span className="market-rank-no">{index + 1}</span>
+                        {ranker.name}
+                        <em>
+                          {ranker.count}
+                          {card.unit}
+                        </em>
+                      </li>
+                    ))}
+                  </ol>
+                )}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="market-hall-empty">
+            아직 이번 달 웃음왕이 없어요. 글 올리고 좋아요·댓글을 받아 첫 주인공이 되어보세요.
+          </p>
+        )}
+        <p className="humor-hall-foot">
+          <Medal size={14} aria-hidden />
+          지난 달 수상자 ·{' '}
+          {lastWinners.length === 0
+            ? '기록 없음'
+            : lastWinners.map((item) => `${item.label} ${item.ranker!.name}`).join('  ·  ')}
+        </p>
+      </section>
+
       <div className="humor-controls">
         <div className="humor-sort">
           <button className={sort === 'latest' ? 'active' : ''} onClick={() => setSort('latest')}>
@@ -453,44 +500,6 @@ export function HumorBoard({
         })}
       </div>
 
-      <section className="panel humor-hall">
-        <PanelHeader icon={Trophy} title="이번 달 명예의 전당" />
-        <div className="humor-rankers">
-          {rankers.map((card) => (
-            <div className={`humor-ranker ${card.list.length ? '' : 'empty'}`} key={card.key}>
-              <span className="humor-ranker-crown">
-                <Crown size={16} />
-                <card.icon size={16} aria-hidden />
-                {card.title}
-              </span>
-              {card.list.length === 0 ? (
-                <p className="humor-ranker-none">아직 없음</p>
-              ) : (
-                <ol className="humor-podium">
-                  {card.list.map((ranker, index) => (
-                    <li key={ranker.name} className={index === 0 ? 'top' : ''}>
-                      <span className="humor-medal">{MEDAL_RANK[index]}</span>
-                      <Avatar name={ranker.name} />
-                      <strong>{ranker.name}</strong>
-                      <em>
-                        {ranker.count}
-                        {card.unit}
-                      </em>
-                    </li>
-                  ))}
-                </ol>
-              )}
-            </div>
-          ))}
-        </div>
-        <p className="humor-hall-foot">
-          <Medal size={14} aria-hidden />
-          지난 달 수상자 ·{' '}
-          {lastWinners.length === 0
-            ? '기록 없음'
-            : lastWinners.map((item) => `${item.label} ${item.ranker!.name}`).join('  ·  ')}
-        </p>
-      </section>
     </section>
   );
 }

@@ -7677,89 +7677,6 @@ button.notif-row {
   font-size: var(--text-meta);
 }
 
-.humor-rankers {
-  display: grid;
-  gap: var(--space-3);
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-.humor-ranker {
-  background: var(--color-surface);
-  border: 1px solid var(--color-primary);
-  border-radius: 10px;
-  display: grid;
-  gap: var(--space-2);
-  padding: var(--space-4);
-}
-
-.humor-ranker.empty {
-  background: var(--tint-primary);
-  border-color: var(--color-page);
-}
-
-.humor-ranker-crown {
-  align-items: center;
-  color: var(--color-primary);
-  display: flex;
-  font-size: var(--text-body);
-  font-weight: 600;
-  gap: 6px;
-}
-
-.humor-podium {
-  display: grid;
-  gap: 6px;
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.humor-podium li {
-  align-items: center;
-  border-radius: var(--radius);
-  display: flex;
-  gap: var(--space-2);
-  padding: var(--space-1) 6px;
-}
-
-.humor-podium li.top {
-  background: rgba(255, 255, 255, 0.7);
-}
-
-.humor-medal {
-  flex: 0 0 auto;
-  font-size: var(--text-body-lg);
-  width: 20px;
-}
-
-.humor-podium .tiny-avatar {
-  font-size: var(--text-meta);
-  height: 26px;
-  width: 26px;
-}
-
-.humor-podium strong {
-  font-size: var(--text-body);
-}
-
-.humor-podium li.top strong {
-  font-size: var(--text-body-lg);
-}
-
-.humor-podium em {
-  color: var(--color-muted);
-  font-size: var(--text-meta);
-  font-style: normal;
-  font-weight: 700;
-  margin-left: auto;
-}
-
-/* var(--color-border-strong) 는 2.54:1 로 AA 미달이었다. 빈 상태도 읽혀야 빈 상태다. */
-.humor-ranker-none {
-  color: var(--color-muted);
-  font-size: var(--text-body);
-}
-
 .humor-hall-foot {
   color: var(--color-muted);
   font-size: var(--text-body);
@@ -8179,9 +8096,6 @@ button.notif-row {
   .humor-hero {
     flex-direction: column;
     align-items: flex-start;
-  }
-  .humor-rankers {
-    grid-template-columns: minmax(0, 1fr);
   }
 }
 
@@ -11429,6 +11343,13 @@ button.notif-row {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
+/* 유~머 명예의 전당은 카테고리가 3개라 3열. 카드(.market-rank)는 이음장터와 공유한다. */
+.humor-rank-grid {
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
 .market-rank {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
@@ -11657,7 +11578,8 @@ button.notif-row {
    반드시 위 기본 규칙 '뒤'에 온다. 앞에 두면 같은 특이도에서 순서로 져
    오류 없이 조용히 무시된다. */
 @media (max-width: 720px) {
-  .market-rank-grid {
+  .market-rank-grid,
+  .humor-rank-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
