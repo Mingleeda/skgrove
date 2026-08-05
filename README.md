@@ -25,7 +25,16 @@ npm run build
 
 1. Supabase 프로젝트를 만든다.
 2. SQL Editor에서 `supabase-schema.sql`을 실행한다.
-3. `.env.example`을 참고해서 `.env`를 만든다.
+3. `.env.example`을 참고해서 `.env.local`을 만든다.
+
+> 저장소 주소가 `skax-k2h9205/skgrove` 로 바뀌었습니다. 예전에 클론했다면
+> `git remote set-url origin https://github.com/skax-k2h9205/skgrove.git` 로 한 번 맞춰주세요.
+> (안 해도 GitHub 이 리다이렉트해주지만 푸시할 때마다 경고가 뜹니다.)
+
+> **이 저장소는 public 입니다.** 자동배포(Vercel Hobby)가 비공개 저장소에서는
+> 소유자 본인 커밋만 배포하기 때문에, 팀 전원의 자동배포를 위해 공개로 둡니다.
+> 키·토큰은 어떤 경우에도 커밋하지 마세요. 전부 `.env*.local`(gitignore)과
+> Vercel 환경변수에만 둡니다.
 
 ```bash
 VITE_SUPABASE_URL=https://your-project.supabase.co
