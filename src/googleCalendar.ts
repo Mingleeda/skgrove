@@ -285,6 +285,17 @@ export function partFromTitle(title: string, partByName: Map<string, string>): s
  * **동료의 휴가와 건강검진이 팀 추억 게시판에 올라간다.** 기능 오류를 넘어
  * 개인정보 문제라, 종일 일정을 다루는 모든 길목에서 먼저 걸러야 한다.
  */
+/**
+ * 팀 추억에 올릴 행사인가. 제목에 '팀행사'가 있어야 한다.
+ *
+ * 허용 목록이다. 캘린더에는 개인 일정이 섞여 있고 그 목록은 앞으로도 늘어난다.
+ * 무엇을 뺄지 세는 대신 무엇을 넣을지만 정하면, 규칙에서 빠진 것은 조용히
+ * 게시판에 뜨는 게 아니라 조용히 안 뜬다.
+ */
+export function isTeamEventTitle(title: string): boolean {
+  return (title ?? '').includes('팀행사');
+}
+
 const ATTENDANCE_WORDS = ['휴가', '출장', '건강검진', '반차', '연차', '재택', '교육', '경조'];
 
 export function isAttendanceEvent(event: RawCalendarEvent): boolean {
@@ -381,9 +392,17 @@ export function toMemoryEvents(
 ): TeamMemory[] {
   return events
     .filter((event) => event.isAllDay)
-    // 종일 일정의 대부분이 근태다(실측: 50종 중 40종이 휴가·출장·건강검진·반차).
-    // 거르지 않으면 동료의 휴가와 건강검진이 팀 추억 게시판에 올라간다.
-    .filter((event) => !isAttendanceEvent(event))
+    /*
+      제목에 '팀행사'가 있는 것만 올린다.
+
+      처음에는 근태(휴가·출장·건강검진)를 빼는 방식으로 짰는데, 그건 차단 목록이라
+      새로운 종류의 개인 일정(병가·육아휴직·경조사…)이 생기면 그대로 새어 나간다.
+      빠뜨린 낱말 하나가 곧 동료의 사생활이 게시판에 뜨는 것이라 대가가 너무 크다.
+
+      '표시한 것만 올린다'로 뒤집으면 실수의 방향이 바뀐다 — 빠뜨려도 안 올라올 뿐이다.
+      기본값이 '안전'인 쪽을 고른다.
+    */
+    .filter((event) => isTeamEventTitle(event.title))
     .map((event, index) => ({
       id: startId + index,
       title: event.title,

@@ -4,6 +4,7 @@ import {
   buildPartByEmail,
   buildPartByName,
   isAttendanceEvent,
+  isTeamEventTitle,
   parseTitleTag,
   partFromTitle,
   durationMinutes,
@@ -230,9 +231,10 @@ describe('toMetricEvents', () => {
 });
 
 describe('toMemoryEvents', () => {
+  // 제목에 '팀행사' 가 있어야 추억으로 올라간다(팀 약속). 없으면 개인 일정으로 본다.
   const allDay = event({
     id: 'EV-9',
-    title: '여름 팀데이',
+    title: '[팀행사] 여름 팀데이',
     isAllDay: true,
     startsAt: '2026-08-07',
     endsAt: '2026-08-08',
@@ -244,7 +246,7 @@ describe('toMemoryEvents', () => {
   it('종일 일정만 행사로 옮긴다', () => {
     const memories = toMemoryEvents([allDay, event({})], 10, '이선민');
     expect(memories).toHaveLength(1);
-    expect(memories[0].title).toBe('여름 팀데이');
+    expect(memories[0].title).toBe('[팀행사] 여름 팀데이');
   });
 
   it('시작 번호부터 id 를 매긴다', () => {
@@ -369,14 +371,30 @@ describe('근태 일정 판정', () => {
     expect(isAttendanceEvent(event({ title: '[ITS혁신]파트 위클리' }))).toBe(false);
   });
 
-  it('근태는 팀 추억 행사로 올라가지 않는다', () => {
-    // 이걸 놓치면 동료의 휴가와 건강검진이 팀 추억 게시판에 뜬다. 개인정보 문제다.
+});
+
+describe('팀 추억은 허용 목록으로 받는다', () => {
+  it("제목에 '팀행사'가 있어야 올라간다", () => {
+    expect(isTeamEventTitle('[팀행사] 여름 워크샵')).toBe(true);
+    expect(isTeamEventTitle('팀 워크샵')).toBe(false);
+  });
+
+  it('표시한 행사만 올리고 나머지는 전부 뺀다', () => {
     const events = [
       event({ id: 'A', title: '[휴가/심인수]', isAllDay: true, startsAt: '2026-07-27', endsAt: '2026-07-29' }),
       event({ id: 'B', title: '[건강검진/박완배]', isAllDay: true, startsAt: '2026-08-03', endsAt: '2026-08-03' }),
-      event({ id: 'C', title: '팀 워크샵', isAllDay: true, startsAt: '2026-08-10', endsAt: '2026-08-11' }),
+      event({ id: 'C', title: '[팀행사] 여름 워크샵', isAllDay: true, startsAt: '2026-08-10', endsAt: '2026-08-11' }),
     ];
-    const memories = toMemoryEvents(events, 1, '시스템');
-    expect(memories.map((m) => m.title)).toEqual(['팀 워크샵']);
+    expect(toMemoryEvents(events, 1, '시스템').map((m) => m.title)).toEqual(['[팀행사] 여름 워크샵']);
+  });
+
+  it('규칙에 없는 새 개인 일정도 자동으로 막힌다', () => {
+    // 차단 목록이었다면 '병가'·'육아휴직'처럼 낱말을 빠뜨린 순간 게시판에 떴다.
+    // 허용 목록이라 빠뜨려도 안 올라올 뿐이다 — 실수의 방향이 안전한 쪽이다.
+    const events = [
+      event({ id: 'A', title: '[병가/김수정]', isAllDay: true, startsAt: '2026-08-05', endsAt: '2026-08-05' }),
+      event({ id: 'B', title: '[육아휴직/이승주]', isAllDay: true, startsAt: '2026-08-05', endsAt: '2026-08-30' }),
+    ];
+    expect(toMemoryEvents(events, 1, '시스템')).toHaveLength(0);
   });
 });

@@ -31,7 +31,9 @@ const APP_ORIGIN = env.CALENDAR_ALLOWED_ORIGIN || 'http://127.0.0.1:5173';
 const SCOPE = 'https://www.googleapis.com/auth/calendar.readonly';
 const AUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth';
 const TOKEN_URL = 'https://oauth2.googleapis.com/token';
-const EVENTS_URL = 'https://www.googleapis.com/calendar/v3/calendars/primary/events';
+// 읽을 캘린더. GOOGLE_CALENDAR_ID 가 없으면 접속 계정의 기본 캘린더를 읽는다.
+const eventsUrl = (id) =>
+  `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(id || 'primary')}/events`;
 
 // 토큰이 오가는 경로다. '*' 로 열지 않고 설정된 오리진만 허용한다.
 const CORS = {
@@ -190,7 +192,7 @@ export function handleCalendar(req, res) {
       if (payload.timeMin) query.set('timeMin', payload.timeMin);
       if (payload.timeMax) query.set('timeMax', payload.timeMax);
       try {
-        const upstream = await fetch(`${EVENTS_URL}?${query}`, {
+        const upstream = await fetch(`${eventsUrl(process.env.GOOGLE_CALENDAR_ID)}?${query}`, {
           headers: { Authorization: `Bearer ${accessToken}` },
         });
         const data = await upstream.json().catch(() => null);

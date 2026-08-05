@@ -7,7 +7,7 @@
 //
 // 리디렉션 URI 는 /api/calendar/callback 처럼 쿼리 없는 경로여야 한다.
 // 쿼리가 붙은 리디렉션 URI 는 구글 콘솔이 거부하는 경우가 있다.
-import { AUTH_URL, EVENTS_URL, SCOPE, config, corsHeaders, normalizeEvents, type GoogleEvent } from './_shared';
+import { AUTH_URL, SCOPE, config, corsHeaders, eventsUrl, normalizeEvents, type GoogleEvent } from './_shared';
 
 export default async function handler(request: Request): Promise<Response> {
   const settings = config();
@@ -49,7 +49,7 @@ export default async function handler(request: Request): Promise<Response> {
     if (payload.timeMax) query.set('timeMax', payload.timeMax);
 
     try {
-      const upstream = await fetch(`${EVENTS_URL}?${query}`, {
+      const upstream = await fetch(`${eventsUrl(settings.calendarId)}?${query}`, {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
       const data = (await upstream.json().catch(() => null)) as
