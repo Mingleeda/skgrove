@@ -7605,10 +7605,11 @@ button.notif-row {
 }
 
 .humor-card {
-  background: rgba(255, 255, 255, 0.9);
+  /* 반투명 흰색 + 그림자였다. 인스타에는 둘 다 없다 — 면은 헤어라인으로만 나눈다. */
+  background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: 10px;
-  box-shadow: 0 12px 30px rgba(42, 58, 52, 0.07);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
   display: grid;
   gap: var(--space-3);
   padding: 18px;
@@ -7841,8 +7842,10 @@ button.notif-row {
   font-size: var(--text-micro);
 }
 
+/* 경계선 색을 글자에 쓰고 있었다. 흰 면 위에서 1.69:1 로 읽히지 않는다.
+   경계선과 글자는 쓰임이 달라 같은 값을 나눠 쓰면 안 된다. */
 .humor-comment-empty {
-  color: var(--color-border-strong);
+  color: var(--color-muted);
   font-size: var(--text-body);
 }
 
@@ -8998,6 +9001,95 @@ button.notif-row {
   display: grid;
   gap: 3px;
   grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+/* ===== 인스타 릴스 문법 (유~머게시판) =====
+   짧고 소비가 빠른 콘텐츠라 세로 9:16 이 맞다. 미디어가 배경이 되고
+   글과 반응이 그 위에 얹힌다. 목록에서는 플레이어를 붙이지 않는다 —
+   영상 열 개가 동시에 로드되면 스크롤이 끊긴다. */
+
+.ig-reels {
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+}
+
+.ig-reel {
+  aspect-ratio: 9 / 16;
+  background: var(--surface-dark);
+  border: 0;
+  border-radius: var(--radius);
+  color: var(--color-surface);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  overflow: hidden;
+  padding: 0;
+  position: relative;
+  text-align: left;
+}
+
+.ig-reel-bg {
+  height: 100%;
+  inset: 0;
+  object-fit: cover;
+  position: absolute;
+  width: 100%;
+}
+
+/* 우측 세로 액션 스택. 인스타 릴스에서 손가락이 닿는 자리다. */
+.ig-reel-side {
+  bottom: 96px;
+  display: grid;
+  gap: var(--space-4);
+  justify-items: center;
+  position: absolute;
+  right: var(--space-2);
+}
+
+.ig-reel-side > span {
+  display: grid;
+  font-size: var(--text-micro);
+  font-weight: 600;
+  gap: 2px;
+  justify-items: center;
+}
+
+.ig-reel-side .liked {
+  color: var(--color-heart);
+}
+
+/* 사진 위에도 글이 읽혀야 한다. 첨부 이미지의 밝기를 알 수 없으므로
+   아래쪽에 어둠을 깔고 그 위에 흰 글자를 얹는다(포스터와 같은 규칙). */
+.ig-reel-text {
+  background: linear-gradient(to top, var(--scrim-strong), var(--scrim-none));
+  display: grid;
+  gap: 3px;
+  padding: var(--space-6) 44px var(--space-3) var(--space-3);
+  position: relative;
+}
+
+.ig-reel-text b {
+  align-items: center;
+  display: flex;
+  font-size: var(--text-micro);
+  font-weight: 600;
+  gap: 6px;
+}
+
+.ig-reel-text em {
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  display: -webkit-box;
+  font-size: var(--text-meta);
+  font-style: normal;
+  line-height: var(--leading-tight);
+  overflow: hidden;
+}
+
+.ig-reel-text small {
+  font-size: var(--text-micro);
+  opacity: 0.8;
 }
 
 /* ===== 인스타 프로필 문법 (팀 추억) =====

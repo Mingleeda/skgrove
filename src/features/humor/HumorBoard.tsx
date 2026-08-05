@@ -348,59 +348,6 @@ export function HumorBoard({
 
   return (
     <section className="screen humor-screen">
-      <div className="humor-hero">
-        <div>
-          <p className="eyebrow">YU~MER BOARD</p>
-          <h2>유~머 한 잔 하고 가세요</h2>
-          <p>아재개그·짤·웃긴 영상 다 환영이에요. 매달 웃음 랭커에게 작은 상품도 드립니다</p>
-        </div>
-        <div className="humor-hero-badge">
-          <Sparkles size={20} />
-          <span>이번 달</span>
-          <strong>{thisMonth.replace('-', '.')}</strong>
-          <small>글 {posts.filter((post) => monthOf(post.createdAt) === thisMonth).length} · 댓글 {comments.filter((comment) => monthOf(comment.createdAt) === thisMonth).length}</small>
-        </div>
-      </div>
-
-      <section className="panel humor-hall">
-        <PanelHeader icon={Trophy} title="이번 달 명예의 전당" />
-        <div className="humor-rankers">
-          {rankers.map((card) => (
-            <div className={`humor-ranker ${card.list.length ? '' : 'empty'}`} key={card.key}>
-              <span className="humor-ranker-crown">
-                <Crown size={16} />
-                <card.icon size={16} aria-hidden />
-                {card.title}
-              </span>
-              {card.list.length === 0 ? (
-                <p className="humor-ranker-none">아직 없음</p>
-              ) : (
-                <ol className="humor-podium">
-                  {card.list.map((ranker, index) => (
-                    <li key={ranker.name} className={index === 0 ? 'top' : ''}>
-                      <span className="humor-medal">{MEDAL_RANK[index]}</span>
-                      <Avatar name={ranker.name} />
-                      <strong>{ranker.name}</strong>
-                      <em>
-                        {ranker.count}
-                        {card.unit}
-                      </em>
-                    </li>
-                  ))}
-                </ol>
-              )}
-            </div>
-          ))}
-        </div>
-        <p className="humor-hall-foot">
-          <Medal size={14} aria-hidden />
-          지난 달 수상자 ·{' '}
-          {lastWinners.length === 0
-            ? '기록 없음'
-            : lastWinners.map((item) => `${item.label} ${item.ranker!.name}`).join('  ·  ')}
-        </p>
-      </section>
-
       <div className="humor-controls">
         <div className="humor-sort">
           <button className={sort === 'latest' ? 'active' : ''} onClick={() => setSort('latest')}>
@@ -455,39 +402,95 @@ export function HumorBoard({
         </section>
       )}
 
-      <div className="humor-list">
+      {/*
+        릴스. 짧고 소비가 빠른 콘텐츠라 세로 9:16 카드가 맞다. 미디어가 배경이
+        되고 글과 반응이 그 위에 얹힌다. 미디어가 없는 글은 배경 없이 글만
+        크게 보여준다 — 인스타에도 텍스트 릴스가 있다.
+
+        목록 화면에서는 실제 플레이어를 붙이지 않는다. 영상 열 개가 동시에
+        로드되면 스크롤이 끊긴다. 이미지만 배경으로 깔고 영상은 표시만 한다.
+      */}
+      <div className="ig-reels">
         {visiblePosts.length === 0 && <p className="can-empty">아직 글이 없어요. 첫 유머를 올려보세요!</p>}
         {visiblePosts.map((post) => {
           const postComments = commentsByPost.get(post.id) ?? [];
+          const media = resolveMedia(post.mediaUrl);
+          const Glyph = mediaGlyph(media);
+          const liked = post.likedBy.includes(currentUser.name);
           return (
-            <button className="humor-row" key={post.id} onClick={() => openDetail(post.id)}>
-              <span className="humor-row-glyph">
-                {(() => {
-                  const Glyph = mediaGlyph(resolveMedia(post.mediaUrl));
-                  return <Glyph size={18} aria-hidden />;
-                })()}
-              </span>
-              <span className="humor-row-main">
-                <strong>{post.body}</strong>
-                <small>
-                  <Avatar name={post.author} />
-                  {post.author} · {post.createdAt}
-                </small>
-              </span>
-              <span className="humor-row-stats">
-                <span>
-                  <Laugh size={14} />
+            <button
+              className={media?.type === 'image' ? 'ig-reel has-media' : 'ig-reel'}
+              key={post.id}
+              onClick={() => openDetail(post.id)}
+              type="button"
+            >
+              {media?.type === 'image' && <img alt="" className="ig-reel-bg" loading="lazy" src={media.src} />}
+
+              <span className="ig-reel-side">
+                <span className={liked ? 'liked' : ''}>
+                  <Laugh size={22} />
                   {post.likedBy.length}
                 </span>
                 <span>
-                  <MessageCircle size={14} />
+                  <MessageCircle size={22} />
                   {postComments.length}
                 </span>
+                <span>
+                  <Glyph size={20} />
+                </span>
+              </span>
+
+              <span className="ig-reel-text">
+                <b>
+                  <Avatar name={post.author} />
+                  {post.author}
+                </b>
+                <em>{post.body}</em>
+                <small>{post.createdAt}</small>
               </span>
             </button>
           );
         })}
       </div>
+
+      <section className="panel humor-hall">
+        <PanelHeader icon={Trophy} title="이번 달 명예의 전당" />
+        <div className="humor-rankers">
+          {rankers.map((card) => (
+            <div className={`humor-ranker ${card.list.length ? '' : 'empty'}`} key={card.key}>
+              <span className="humor-ranker-crown">
+                <Crown size={16} />
+                <card.icon size={16} aria-hidden />
+                {card.title}
+              </span>
+              {card.list.length === 0 ? (
+                <p className="humor-ranker-none">아직 없음</p>
+              ) : (
+                <ol className="humor-podium">
+                  {card.list.map((ranker, index) => (
+                    <li key={ranker.name} className={index === 0 ? 'top' : ''}>
+                      <span className="humor-medal">{MEDAL_RANK[index]}</span>
+                      <Avatar name={ranker.name} />
+                      <strong>{ranker.name}</strong>
+                      <em>
+                        {ranker.count}
+                        {card.unit}
+                      </em>
+                    </li>
+                  ))}
+                </ol>
+              )}
+            </div>
+          ))}
+        </div>
+        <p className="humor-hall-foot">
+          <Medal size={14} aria-hidden />
+          지난 달 수상자 ·{' '}
+          {lastWinners.length === 0
+            ? '기록 없음'
+            : lastWinners.map((item) => `${item.label} ${item.ranker!.name}`).join('  ·  ')}
+        </p>
+      </section>
     </section>
   );
 }
