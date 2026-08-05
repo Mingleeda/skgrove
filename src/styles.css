@@ -9003,6 +9003,134 @@ button.notif-row {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+/* ===== 인스타 사람 프로필 (동료 성향) =====
+   해시태그 칩은 장식이 아니라 이동 경로다. 누르면 같은 성향의 동료만
+   모아 보여준다 — 인스타의 해시태그와 같은 성질이다. */
+
+.ig-person {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.ig-person-head {
+  align-items: center;
+  display: flex;
+  gap: var(--space-6);
+}
+
+.ig-person-head .avatar {
+  flex: none;
+  height: 96px;
+  width: 96px;
+}
+
+.ig-person-info {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.ig-person-line {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+/* 인스타 프로필의 username 은 굵지 않다. */
+.ig-person-line h2 {
+  font-size: var(--text-title);
+  font-weight: 400;
+}
+
+.ig-person-name {
+  color: var(--color-muted);
+  font-size: var(--text-body);
+}
+
+.ig-person-name b {
+  color: var(--color-ink);
+  font-weight: 600;
+  margin-right: var(--space-2);
+}
+
+.ig-person-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.ig-tag {
+  background: none;
+  border: 0;
+  color: var(--color-primary);
+  font-size: var(--text-meta);
+  font-weight: 600;
+  padding: 4px 0;
+}
+
+.ig-tag:hover {
+  text-decoration: underline;
+}
+
+/* 지금 이 태그로 걸러 보고 있다는 표시. 색만으로 알리면 어느 것이 눌린
+   상태인지 구분이 약해서 면을 준다. */
+.ig-tag.on {
+  background: var(--tint-primary);
+  border-radius: var(--radius-full);
+  color: var(--tint-primary-ink);
+  padding: 4px 10px;
+}
+
+/* 선택지에 없는 값(시드 기본값)은 칩으로 만들 수 없다. 칩이 없다고 정보를
+   지우면 안 되므로 사실 목록으로 내린다. 라벨은 좁게, 값은 남는 폭 전부. */
+.ig-person-facts {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+}
+
+.ig-person-facts > div {
+  align-items: baseline;
+  display: flex;
+  gap: var(--space-3);
+}
+
+.ig-person-facts dt {
+  color: var(--color-muted);
+  flex: none;
+  font-size: var(--text-micro);
+  font-weight: 600;
+  width: 48px;
+}
+
+.ig-person-facts dd {
+  font-size: var(--text-meta);
+  margin: 0;
+  min-width: 0;
+}
+
+.ig-person-bio {
+  font-size: var(--text-body);
+  line-height: var(--leading-normal);
+}
+
+.ig-person-bio b {
+  display: block;
+  font-weight: 600;
+}
+
+@media (max-width: 720px) {
+  .ig-person-head {
+    gap: var(--space-4);
+  }
+
+  .ig-person-head .avatar {
+    height: 72px;
+    width: 72px;
+  }
+}
+
 /* ===== 인스타 만들기 모달 (대나무숲 접수) =====
    왼쪽이 미디어 자리, 오른쪽이 캡션과 설정. 이 앱에서 미디어에 해당하는 것은
    본문이라 왼쪽을 본문 하나로 크게 비웠다. */
