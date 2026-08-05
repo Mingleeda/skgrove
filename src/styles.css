@@ -1145,7 +1145,8 @@ h1 {
 }
 
 .intake-choice-grid,
-.form-grid {
+.form-grid,
+.choice-row {
   display: grid;
   gap: var(--space-3);
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -6017,7 +6018,8 @@ textarea {
   .intake-choice-grid,
   .profile-mini-fields,
   .profile-directory-tools,
-  .form-grid {
+  .form-grid,
+  .choice-row {
     grid-template-columns: 1fr;
   }
 
@@ -6207,6 +6209,7 @@ textarea {
   .intake-stepper,
   .intake-choice-grid,
   .form-grid,
+  .choice-row,
   .summary-strip,
   .report-grid {
     grid-template-columns: 1fr;
@@ -6385,6 +6388,12 @@ textarea {
 .can-flow {
   display: grid;
   gap: 18px;
+}
+
+/* 세션 목록을 감싼 흰 카드. 박스 안에서 제목 줄과 목록이 붙지 않게 띄운다. */
+.can-list-panel {
+  display: grid;
+  gap: var(--space-4);
 }
 
 .can-stepper {

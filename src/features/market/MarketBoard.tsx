@@ -414,17 +414,16 @@ export function MarketBoard({
                 <button className="poster-cell" onClick={() => openDetail(item.id)} type="button">
                   <ItemPoster badge={badge.text} badgeTone={badge.tone} item={item} />
                   {/*
-                    사진 없이 올리면 등록 직후 배경에서 크레파스 썸네일을 그린다(모임과 동일).
-                    8초 안팎 걸리는데 표시가 없으면 "포스터가 원래 저건가" 하고 지나친다.
-                    다 그려지면 이 자리가 사진으로 바뀐다. 실패하면 포스터가 그대로 남는다.
+                    가격은 목록에 띄우지 않는다 — 얼마인지는 상세에서 본다(팀 문법: 목록은
+                    "무엇이 있나"). 격자에는 유형 배지(경매/나눔)만 남긴다.
+                    사진 없이 올리면 등록 직후 배경에서 크레파스 썸네일을 그리는데(모임과 동일),
+                    그동안만 '그림 그리는 중' 을 띄운다. 다 그려지면 이 자리가 사진으로 바뀐다.
                   */}
-                  {imagePendingIds.includes(item.id) ? (
+                  {imagePendingIds.includes(item.id) && (
                     <span className="ig-drawing">
                       <Hourglass size={14} />
                       그림 그리는 중
                     </span>
-                  ) : (
-                    <span className="ig-price-tag">{formatPrice(currentPrice(item, bids))}</span>
                   )}
                 </button>
                 <figcaption className="ig-shop-meta">

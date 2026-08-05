@@ -269,7 +269,9 @@ export function Meetings({
         <div className="can-flow">
           {/* ===== 세션 목록 ===== */}
           {!session && (
-            <>
+            /* 다른 화면과 같은 흰 카드 박스(.panel) 안에 둔다. 없으면 목록이 흰
+               배경에 그대로 얹혀 경계가 사라진다. */
+            <section className="panel can-list-panel">
               <div className="can-session-head">
                 <div>
                   <h2>캔미팅 세션</h2>
@@ -320,7 +322,7 @@ export function Meetings({
                   );
                 })}
               </div>
-            </>
+            </section>
           )}
 
           {/* ===== 세션 상세 ===== */}
