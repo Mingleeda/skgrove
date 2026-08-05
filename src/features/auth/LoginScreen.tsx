@@ -99,17 +99,6 @@ export function LoginScreen({ accounts, onLogin, onRegister }: LoginScreenProps)
   return (
     <main className="login-page">
       <section className="login-intro">
-        <div className="brand login-brand">
-          {/* 로고 클릭 = 커넥셔너용 빠른 로그인(데모) 히든 토글. 일반 유저는 알기 어렵다. */}
-          <div className="brand-mark" onClick={() => setShowQuickLogin((prev) => !prev)} title="Connectioner">
-            <HeartHandshake size={24} />
-          </div>
-          <div>
-            <strong>Connectioner</strong>
-            <span>팀을 잇는 곳</span>
-          </div>
-        </div>
-
         {/*
           기능 나열("의견 접수, 안건 투표, 리더 관리")은 바로 옆 로그인 폼과
           중복이고, 무엇을 하는 앱인지는 위 헤드라인이 이미 말한다.
@@ -123,10 +112,25 @@ export function LoginScreen({ accounts, onLogin, onRegister }: LoginScreenProps)
       </section>
 
       <form className="login-panel" onSubmit={submit}>
-        <div>
-          <p className="eyebrow">시작하기</p>
-          <h2>{mode === 'login' ? '사내 계정으로 로그인' : '새 계정 가입 요청'}</h2>
+        {/*
+          로고를 왼쪽 소개면에서 이 카드 안으로 옮겼다. 인스타 로그인도
+          워드마크가 카드 안에 있다 — 이름과 입력칸이 한 덩어리로 읽혀야
+          "여기서 시작한다"가 분명해진다. 왼쪽에 두면 헤드라인과 로고가
+          같은 위계로 경쟁했다.
+
+          로고 클릭 = 커넥셔너용 빠른 로그인(데모) 히든 토글. 일반 유저는 알기 어렵다.
+        */}
+        <div className="brand login-brand">
+          <div className="brand-mark" onClick={() => setShowQuickLogin((prev) => !prev)} title="Connectioner">
+            <HeartHandshake size={24} />
+          </div>
+          <div>
+            <strong>Connectioner</strong>
+            <span>팀을 잇는 곳</span>
+          </div>
         </div>
+
+        <h2>{mode === 'login' ? '사내 계정으로 로그인' : '새 계정 가입 요청'}</h2>
 
         <div className="auth-tabs" role="tablist" aria-label="인증 방식">
           <button className={mode === 'login' ? 'selected' : ''} type="button" onClick={() => setMode('login')}>

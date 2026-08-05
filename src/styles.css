@@ -554,6 +554,17 @@ h1 {
   color: var(--color-muted);
 }
 
+/* 로고가 카드 안으로 들어왔다. 이름과 입력칸이 한 덩어리로 읽혀야
+   "여기서 시작한다"가 분명해진다. 아래 제목과 붙지 않도록 선으로 끊는다. */
+.login-panel .login-brand {
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: var(--space-4);
+}
+
+.login-panel .login-brand .brand-mark {
+  cursor: pointer;
+}
+
 .login-intro h1 {
   font-size: var(--text-display);
   line-height: 1.16;
