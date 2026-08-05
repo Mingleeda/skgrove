@@ -9385,10 +9385,169 @@ button.notif-row {
   padding: 2px 8px;
 }
 
+
+/* --- 벼룩숲 ------------------------------------------------------- */
+/* 목록은 포스터면 문법(.poster-grid/.poster-cell)을 그대로 쓰고, 상세도 모임의
+   .gathering-detail 골격을 재사용한다. 여기 있는 것은 거래에만 있는 것들 —
+   가격 머리와 입찰 줄, 그리고 월별 실적판뿐이다. */
+
+/* 상세를 열었을 때의 첫 질문은 "지금 얼마인가"다. 사실 목록(dl)보다 먼저 답한다. */
+.market-price-head {
+  align-items: baseline;
+  background: var(--color-sunken);
+  border-radius: var(--radius);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-3);
+  padding: var(--space-3) var(--space-4);
+}
+
+.market-price-label {
+  color: var(--color-muted);
+  font-size: var(--text-micro);
+  font-weight: 500;
+  width: 100%;
+}
+
+.market-price-amount {
+  font-size: var(--text-heading);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+.market-price-amount small {
+  color: var(--color-muted);
+  font-size: var(--text-meta);
+  font-weight: 500;
+  margin-left: var(--space-2);
+}
+
+/* 남은 시간은 주의를 끌되 실패는 아니다 — 팀 규칙대로 clay 를 쓴다.
+   danger 는 부결·삭제처럼 되돌릴 수 없는 것에만 남겨둔다. */
+.market-time-chip {
+  background: var(--tint-clay);
+  border-radius: var(--radius-full);
+  color: var(--tint-clay-ink);
+  font-size: var(--text-micro);
+  font-weight: 500;
+  margin-left: auto;
+  padding: 3px 10px;
+}
+
+.market-time-chip.closed {
+  background: var(--color-sunken);
+  color: var(--color-muted);
+}
+
+.market-bid-form {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.market-bid-form input {
+  font-variant-numeric: tabular-nums;
+  min-width: 0;
+}
+
+.market-bid-amount {
+  font-style: normal;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  margin-left: auto;
+}
+
+.market-settle {
+  display: grid;
+  gap: var(--space-2);
+  justify-items: start;
+}
+
+/* 월별 실적. 유~머게시판의 명예의 전당과 같은 자리·같은 무게로 둔다. */
+.market-hall {
+  display: grid;
+  gap: var(--space-4);
+  margin-top: var(--space-6);
+}
+
+.market-hall-head {
+  align-items: center;
+  color: var(--color-moss-strong);
+  display: flex;
+  font-size: var(--text-body-lg);
+  font-weight: 600;
+  gap: var(--space-2);
+}
+
+.market-rank-grid {
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.market-rank {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: var(--space-3) var(--space-4);
+}
+
+.market-rank h3 {
+  color: var(--color-muted);
+  font-size: var(--text-meta);
+  font-weight: 600;
+  margin-bottom: var(--space-2);
+}
+
+.market-rank ol {
+  display: grid;
+  gap: var(--space-2);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.market-rank li {
+  align-items: center;
+  display: flex;
+  font-size: var(--text-body);
+  gap: var(--space-2);
+}
+
+.market-rank li em {
+  color: var(--color-muted);
+  font-size: var(--text-meta);
+  font-style: normal;
+  font-variant-numeric: tabular-nums;
+  margin-left: auto;
+}
+
+/* 순위는 색이 아니라 자리로 읽힌다. 1등만 틴트로 살짝 들어올린다. */
+.market-rank-no {
+  background: var(--color-sunken);
+  border-radius: var(--radius-full);
+  color: var(--color-muted);
+  flex: none;
+  font-size: var(--text-micro);
+  font-weight: 600;
+  height: 18px;
+  line-height: 18px;
+  text-align: center;
+  width: 18px;
+}
+
+.market-rank li:first-child .market-rank-no {
+  background: var(--tint-moss);
+  color: var(--tint-moss-ink);
+}
+
 /* --- 좁은 폭 ----------------------------------------------------
    반드시 위 기본 규칙 '뒤'에 온다. 앞에 두면 같은 특이도에서 순서로 져
    오류 없이 조용히 무시된다. */
 @media (max-width: 720px) {
+  .market-rank-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .poster-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: var(--space-3);
