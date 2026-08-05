@@ -25,8 +25,9 @@ import {
   timeUntil,
 } from '../../gatheringRules';
 import type { CurrentUser, Gathering, GatheringSignup, GatheringStatus } from '../../types';
+import { localPoster } from '../../aiPoster';
 import { GatheringForm, type GatheringDraft } from './GatheringForm';
-import { PosterFrame } from './PosterFrame';
+import { PosterFrame, PosterThumb } from './PosterFrame';
 
 type GatheringBoardProps = {
   gatherings: Gathering[];
@@ -78,6 +79,13 @@ export function GatheringBoard({
     signups,
     now,
   );
+
+  // 스토리에는 마감이 남은 것만 올린다. sortGatherings 가 이미 임박순이라 앞에서 자른다.
+  const openSoon = sortGatherings(
+    gatherings.filter((item) => deriveStatus(item, signups, now) === '모집중'),
+    signups,
+    now,
+  ).slice(0, 8);
 
   // 목록 필터에서 빠져도 열어둔 상세는 유지되어야 하므로 전체에서 찾는다.
   const selected = gatherings.find((item) => item.id === selectedId) ?? null;
@@ -259,6 +267,29 @@ export function GatheringBoard({
         </button>
       </div>
 
+      {/*
+        스토리 트레이 = 마감이 있는 것만. 스토리의 "24시간 뒤 사라짐"과 번개의
+        "마감"이 같은 성질이라 이 자리에 놓는다. 지난 모임은 여기 오지 않는다.
+      */}
+      <div className="ig-tray">
+        <button className="ig-story" onClick={() => setView('create')} type="button">
+          <span className="ig-ring new">
+            <span className="ig-thumb">
+              <Plus size={22} strokeWidth={2.4} />
+            </span>
+          </span>
+          <small>모임 열기</small>
+        </button>
+        {openSoon.map((item) => (
+          <button className="ig-story" key={item.id} onClick={() => openDetail(item.id)} type="button">
+            <span className="ig-ring">
+              <PosterThumb gathering={item} />
+            </span>
+            <small>{item.title}</small>
+          </button>
+        ))}
+      </div>
+
       {visible.length === 0 ? (
         <EmptyState
           action={{ label: '모임 열기', onClick: () => setView('create') }}
@@ -268,19 +299,103 @@ export function GatheringBoard({
         />
       ) : (
         /*
-          인스타 격자처럼 포스터만 쌓는다. 날짜·정원·내 신청 여부는 전부 상세로 미룬다.
-          목록은 "무엇이 있나"를 훑는 곳이고, 판단에 필요한 사실은 눌러서 본다.
+          격자에서 피드로 바꿨다. 격자는 "무엇이 있나"만 보여주고 판단에 필요한
+          사실(누가 열었나 · 언제 · 몇 자리 남았나)을 전부 상세로 미뤘는데,
+          그 셋이 실제로는 "갈지 말지"를 정하는 전부였다. 피드는 한 건씩만
+          보여주는 대신 그 셋을 포스터 아래에 같이 놓는다.
 
-          배지(모집중/마감)만 남겼다. 이건 내용이 아니라 문 상태다 — 없으면 이미 닫힌
-          모임을 눌러야만 알 수 있어 헛걸음이 생긴다.
+          좋아요와 댓글은 넣지 않았다. 데이터 모델에 없어서 넣으면 아무 데도
+          저장되지 않는 가짜 버튼이 된다. 그 자리는 실제로 있는 것 —
+          신청한 사람 — 이 대신 채운다.
         */
-        <div className="poster-grid">
+        <div className="ig-feed">
           {visible.map((item) => {
             const status = deriveStatus(item, signups, now);
+            const { confirmed } = splitRoster(item, signups);
+            const seat = mySeat(item, signups, currentUser.name);
+            const left = spotsLeft(item, signups);
+            const waitlistOnly = canJoinWaitlist(item, signups, now);
+            const joinable = status === '모집중' || waitlistOnly;
+            const poster = item.poster ?? localPoster(item);
+
             return (
-              <button className="poster-cell" key={item.id} onClick={() => openDetail(item.id)} type="button">
-                <PosterFrame badge={status} badgeTone={STATUS_TONE[status]} gathering={item} />
-              </button>
+              <article className="ig-post" key={item.id}>
+                <header className="ig-post-head">
+                  <span className="ig-ava">{item.host.slice(0, 1)}</span>
+                  <span className="ig-post-who">
+                    <b>{item.host}</b>
+                    <span>
+                      {item.place} · {formatWhen(item.startAt)}
+                    </span>
+                  </span>
+                  <span className={`ig-post-status ${STATUS_TONE[status]}`}>{status}</span>
+                </header>
+
+                <button
+                  aria-label={`${item.title} 자세히 보기`}
+                  className="ig-media"
+                  onClick={() => openDetail(item.id)}
+                  type="button"
+                >
+                  <PosterFrame gathering={item} />
+                  {left !== null && left > 0 && <span className="ig-media-tag">{left}자리 남음</span>}
+                </button>
+
+                <div className="ig-post-body">
+                  {confirmed.length > 0 ? (
+                    <p className="ig-roster">
+                      <span className="ig-stack">
+                        {confirmed.slice(0, 3).map((signup) => (
+                          <span className="ig-ava sm" key={signup.id}>
+                            {signup.name.slice(0, 1)}
+                          </span>
+                        ))}
+                      </span>
+                      <span>
+                        <b>{confirmed[0].name}</b>
+                        {confirmed.length > 1 ? `님 외 ${confirmed.length - 1}명이 신청했어요` : '님이 신청했어요'}
+                      </span>
+                    </p>
+                  ) : (
+                    <p className="ig-roster empty">아직 아무도 신청하지 않았어요</p>
+                  )}
+
+                  <p className="ig-cap">
+                    <b>{item.host}</b>
+                    {item.desc || poster.headline}
+                  </p>
+
+                  <button className="ig-more-link" onClick={() => openDetail(item.id)} type="button">
+                    자세히 보기
+                  </button>
+
+                  {seat === '확정' && (
+                    <button className="ig-join done" onClick={() => onLeave(item)} type="button">
+                      <Check size={16} />
+                      신청함 · 취소하기
+                    </button>
+                  )}
+                  {seat && seat !== '확정' && (
+                    <button className="ig-join done" onClick={() => onLeave(item)} type="button">
+                      <Hourglass size={16} />
+                      대기 {seat.대기}번 · 취소하기
+                    </button>
+                  )}
+                  {!seat && joinable && (
+                    <button className="ig-join" onClick={() => onJoin(item)} type="button">
+                      {waitlistOnly ? '대기 걸기' : '참여하기'}
+                      {left !== null && left > 0 && ` · ${left}자리 남음`}
+                    </button>
+                  )}
+                  {!seat && !joinable && (
+                    <button className="ig-join closed" disabled type="button">
+                      {status === '마감' ? '자리가 다 찼어요' : `${status}된 모임이에요`}
+                    </button>
+                  )}
+
+                  {status === '모집중' && <span className="ig-ago">{timeUntil(item.startAt, now)}</span>}
+                </div>
+              </article>
             );
           })}
         </div>

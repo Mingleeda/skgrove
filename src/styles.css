@@ -53,6 +53,12 @@
   /* 어두운 면. 인스타 다크모드가 순검정이라 여기도 순검정을 쓴다. */
   --surface-dark: #000000;
 
+  /* 스토리 링. 인스타 전체에서 그라디언트가 쓰이는 유일한 자리라
+     "아직 안 본 것"이라는 뜻이 강하게 전달된다. 다른 어디에도 쓰지 않는다. */
+  --ring-a: #f9ce34;
+  --ring-b: #ee2a7b;
+  --ring-c: #6228d7;
+
   /* 경계선 — 인스타의 면 분리는 전부 이 한 값이다. */
   --color-border: #dbdbdb;
   --color-border-strong: #c7c7c7;
@@ -8992,6 +8998,277 @@ button.notif-row {
   display: grid;
   gap: 3px;
   grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+/* ===== 인스타 피드 문법 =====
+   격자가 "무엇이 있나"만 보여줬다면 피드는 한 건씩 보여주는 대신
+   갈지 말지를 정하는 사실(누가 열었나 · 언제 · 몇 자리)을 함께 놓는다.
+   폭을 470px 로 고정하는 것은 인스타와 같은 이유다 — 창을 넓혀도
+   사진 크기가 변하지 않아야 스크롤 리듬이 유지된다. */
+
+.ig-tray {
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  gap: var(--space-4);
+  margin: 0 auto;
+  max-width: 470px;
+  overflow-x: auto;
+  padding-bottom: var(--space-4);
+  width: 100%;
+}
+
+.ig-story {
+  background: none;
+  border: 0;
+  display: grid;
+  flex: none;
+  gap: 6px;
+  justify-items: center;
+  padding: 0;
+  width: 68px;
+}
+
+/* 링은 conic-gradient 한 겹 + 안쪽 흰 테두리로 만든다.
+   테두리를 페이지색으로 두어야 링과 썸네일이 붙어 보이지 않는다. */
+.ig-ring {
+  align-items: center;
+  background: conic-gradient(
+    from 150deg,
+    var(--ring-a),
+    var(--ring-b) 45%,
+    var(--ring-c) 80%,
+    var(--ring-a)
+  );
+  border-radius: var(--radius-full);
+  display: flex;
+  height: 64px;
+  justify-content: center;
+  padding: 2.5px;
+  width: 64px;
+}
+
+/* '모임 열기'는 아직 아무것도 없는 자리라 링을 칠하지 않는다. */
+.ig-ring.new {
+  background: var(--color-border);
+}
+
+.ig-thumb {
+  align-items: center;
+  background: var(--tint-neutral);
+  border: 2.5px solid var(--color-page);
+  border-radius: var(--radius-full);
+  color: var(--tint-neutral-ink);
+  display: flex;
+  height: 100%;
+  justify-content: center;
+  width: 100%;
+}
+
+.ig-thumb.moss,
+.ig-thumb.info,
+.ig-thumb.pending {
+  background: var(--tint-primary);
+  color: var(--tint-primary-ink);
+}
+
+.ig-story small {
+  font-size: var(--text-micro);
+  max-width: 68px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ig-feed {
+  display: grid;
+  gap: var(--space-6);
+  justify-items: center;
+}
+
+.ig-post {
+  display: grid;
+  gap: var(--space-2);
+  max-width: 470px;
+  width: 100%;
+}
+
+.ig-post-head {
+  align-items: center;
+  display: flex;
+  gap: var(--space-3);
+  padding: var(--space-1) 0;
+}
+
+.ig-ava {
+  align-items: center;
+  background: var(--tint-avatar);
+  border-radius: var(--radius-full);
+  color: var(--tint-avatar-ink);
+  display: flex;
+  flex: none;
+  font-size: var(--text-meta);
+  font-weight: 700;
+  height: 34px;
+  justify-content: center;
+  width: 34px;
+}
+
+.ig-ava.sm {
+  font-size: var(--text-micro);
+  height: 26px;
+  width: 26px;
+}
+
+.ig-post-who {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+
+.ig-post-who b {
+  font-size: var(--text-body);
+  font-weight: 600;
+}
+
+.ig-post-who span {
+  color: var(--color-muted);
+  font-size: var(--text-micro);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 상태는 배지가 아니라 줄 끝의 한 마디로 둔다. 인스타 헤더에는 배지가 없다. */
+.ig-post-status {
+  color: var(--color-muted);
+  font-size: var(--text-micro);
+  font-weight: 600;
+  margin-left: auto;
+}
+
+.ig-post-status.moss {
+  color: var(--color-primary);
+}
+
+.ig-media {
+  background: none;
+  border: 0;
+  display: block;
+  padding: 0;
+  position: relative;
+  width: 100%;
+}
+
+.ig-media-tag {
+  background: var(--scrim-strong);
+  border-radius: var(--radius-full);
+  bottom: var(--space-3);
+  color: var(--color-surface);
+  font-size: var(--text-micro);
+  font-weight: 600;
+  left: var(--space-3);
+  padding: 3px 10px;
+  position: absolute;
+}
+
+.ig-post-body {
+  display: grid;
+  gap: var(--space-2);
+}
+
+/* 좋아요 자리. 데이터에 없는 하트 대신 실제로 있는 것 — 신청한 사람 — 을 놓는다. */
+.ig-roster {
+  align-items: center;
+  display: flex;
+  font-size: var(--text-body);
+  gap: var(--space-2);
+}
+
+.ig-roster.empty {
+  color: var(--color-muted);
+}
+
+.ig-roster b {
+  font-weight: 600;
+}
+
+.ig-stack {
+  display: flex;
+  flex: none;
+}
+
+.ig-stack .ig-ava {
+  border: 2px solid var(--color-surface);
+  margin-left: -10px;
+}
+
+.ig-stack .ig-ava:first-child {
+  margin-left: 0;
+}
+
+.ig-cap {
+  font-size: var(--text-body);
+  line-height: var(--leading-normal);
+}
+
+.ig-cap b {
+  font-weight: 600;
+  margin-right: 5px;
+}
+
+.ig-more-link {
+  background: none;
+  border: 0;
+  color: var(--color-muted);
+  font-size: var(--text-body);
+  justify-self: start;
+  padding: 0;
+}
+
+.ig-more-link:hover {
+  color: var(--color-ink);
+}
+
+/* 인스타 광고의 CTA 자리. 하트로 참여를 대신하지 않는 이유가 여기 있다 —
+   실수로 눌렀을 때 자리가 빠지면 되돌리기가 번거롭다. */
+.ig-join {
+  align-items: center;
+  background: var(--color-cta);
+  border: 0;
+  border-radius: var(--radius);
+  color: var(--color-cta-ink);
+  display: flex;
+  font-size: var(--text-body);
+  font-weight: 600;
+  gap: var(--space-2);
+  justify-content: center;
+  margin-top: var(--space-1);
+  min-height: 40px;
+  width: 100%;
+}
+
+.ig-join:hover:not(:disabled) {
+  background: var(--color-primary-strong);
+}
+
+.ig-join.done {
+  background: var(--color-btn-soft);
+  color: var(--color-ink);
+}
+
+.ig-join.done:hover {
+  background: var(--color-btn-soft-press);
+}
+
+.ig-join.closed {
+  background: var(--color-btn-soft);
+  color: var(--color-muted);
+  cursor: not-allowed;
+}
+
+.ig-ago {
+  color: var(--color-muted);
+  font-size: var(--text-micro);
 }
 
 /* 이제 포스터 하나만 감싼다. 아래 메타줄(날짜·자리)은 상세로 옮겼다.
