@@ -69,7 +69,13 @@ export async function fetchCalendarEvents(
   });
 }
 
-export type CalendarConnectResult = { ok: boolean; accessToken?: string; reason?: string };
+export type CalendarConnectResult = {
+  ok: boolean;
+  accessToken?: string;
+  /** 토큰이 몇 초 뒤 만료되는지. 구글이 안 주면 0 — 그때는 재사용하지 않는다. */
+  expiresIn?: number;
+  reason?: string;
+};
 
 const POPUP_TIMEOUT_MS = 120000;
 
@@ -112,14 +118,16 @@ export function connectGoogleCalendar(): Promise<CalendarConnectResult> {
     function onMessage(event: MessageEvent) {
       // 오리진을 확인하지 않으면 아무 창이나 토큰을 흘려보낼 수 있다.
       if (event.origin !== proxyOrigin) return;
-      const data = event.data as { type?: string; accessToken?: string; error?: string } | null;
+      const data = event.data as
+        | { type?: string; accessToken?: string; expiresIn?: number; error?: string }
+        | null;
       if (!data || data.type !== 'skgrove:calendar') return;
       if (data.error) {
         finish({ ok: false, reason: data.error });
         return;
       }
       if (data.accessToken) {
-        finish({ ok: true, accessToken: data.accessToken });
+        finish({ ok: true, accessToken: data.accessToken, expiresIn: Number(data.expiresIn) || 0 });
       }
     }
 

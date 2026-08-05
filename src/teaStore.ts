@@ -18,6 +18,7 @@ type TeaSessionRow = {
   description?: string | null;
   status?: string | null;
   memo?: string | null;
+  held_at?: string | null;
 };
 
 export async function loadTeaSessions(): Promise<TeaSession[]> {
@@ -33,7 +34,7 @@ export async function loadTeaSessions(): Promise<TeaSession[]> {
     const saved = window.localStorage.getItem(SESSIONS_KEY);
     if (!saved) return initialTeaSessions;
     const parsed = JSON.parse(saved) as TeaSession[];
-    return Array.isArray(parsed) ? parsed : initialTeaSessions;
+    return Array.isArray(parsed) ? parsed.map(withDefaults) : initialTeaSessions;
   } catch {
     return initialTeaSessions;
   }
@@ -72,6 +73,14 @@ export function makeTeaSessionId() {
   return `TEA-${Date.now().toString(36).toUpperCase()}-${teaSessionSequence.toString(36).toUpperCase()}`;
 }
 
+/**
+ * heldAt 이 생기기 전에 저장된 세션에는 그 값이 없다.
+ * 없는 채로 두면 캘린더 대조가 문자열 메서드를 빈 값에 부르게 된다.
+ */
+function withDefaults(session: TeaSession): TeaSession {
+  return { ...session, heldAt: session.heldAt ?? '' };
+}
+
 function sessionFromRow(row: TeaSessionRow): TeaSession {
   return {
     id: row.id,
@@ -82,6 +91,8 @@ function sessionFromRow(row: TeaSessionRow): TeaSession {
     desc: row.description ?? '',
     status: (row.status as TeaSessionStatus) ?? '제안',
     memo: row.memo ?? '',
+    // 컬럼이 생기기 전에 들어간 행은 null 이다. 빈 값이면 캘린더 대조에서 자연히 빠진다.
+    heldAt: row.held_at ?? '',
   };
 }
 
@@ -95,5 +106,7 @@ function sessionToRow(session: TeaSession): TeaSessionRow {
     description: session.desc || null,
     status: session.status,
     memo: session.memo || null,
+    // held_at 은 not null 컬럼이다. 빈 값을 null 로 보내면 upsert 가 제약에 걸린다.
+    held_at: session.heldAt,
   };
 }

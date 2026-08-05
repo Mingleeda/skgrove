@@ -8685,3 +8685,27 @@ button.notif-row {
   text-decoration: underline;
   text-underline-offset: 3px;
 }
+
+/* 세션 카드에 붙는 캘린더 대조 결과 (보기 전용).
+   확인된 일정은 moss 계열, 하나로 못 정한 경우는 pending 계열로 구분한다.
+   연동 전에는 아예 렌더되지 않으므로 '없음' 상태는 여기에 없다. */
+.calendar-link {
+  align-items: center;
+  display: flex;
+  font-size: var(--text-meta);
+  gap: var(--space-1);
+  line-height: var(--leading-tight);
+  margin: var(--space-2) 0 0;
+}
+
+.calendar-link svg {
+  flex: none;
+}
+
+.calendar-link.matched {
+  color: var(--tint-moss-ink);
+}
+
+.calendar-link.ambiguous {
+  color: var(--tint-pending-ink);
+}

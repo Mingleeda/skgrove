@@ -305,6 +305,9 @@ export type TeaSession = {
   desc: string; // 간단 설명(선택)
   status: TeaSessionStatus;
   memo: string; // 세션 후기 메모 (SKSOOP-71)
+  // 개최일 'YYYY-MM-DD'. 제안 단계에서는 비어 있을 수 있다.
+  // 구글 캘린더 일정과 대조하는 축이기도 하다(calendarMatch) — 비면 대조 후보가 없다.
+  heldAt: string;
 };
 
 // 파트를 섞어 편성한 티미팅 그룹 (SKSOOP-70)

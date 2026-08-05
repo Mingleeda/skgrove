@@ -5,12 +5,14 @@ import { loadAccounts } from '../../accountStore';
 import { loadActionItems } from '../../actionItemStore';
 import { loadAgendas } from '../../agendaStore';
 import { loadBallots } from '../../ballotStore';
+import { ensureCalendarToken, forgetToken } from '../../calendarSession';
 import {
-  calendarConfigured,
-  connectGoogleCalendar,
-  fetchCalendarEvents,
-  toMetricEvents,
-} from '../../googleCalendar';
+  readCalendarEvents,
+  readCalendarStatus,
+  readCalendarWindowDays,
+  saveCalendarState,
+} from '../../calendarStore';
+import { calendarConfigured, fetchCalendarEvents, toMetricEvents } from '../../googleCalendar';
 import {
   initialAgendas,
   initialCanOpinions,
@@ -119,11 +121,6 @@ const initialActivity: MetricsActivity = {
 type MetricsProps = {
   currentUser: CurrentUser;
 };
-
-const CALENDAR_STORAGE_KEY = 'skgrove:metrics-calendar-events';
-const CALENDAR_STATUS_KEY = 'skgrove:metrics-calendar-status';
-// 몇 일치를 모은 값인지 함께 남긴다. 이게 없으면 저장된 합계를 주당으로 되돌릴 수 없다.
-const CALENDAR_WINDOW_KEY = 'skgrove:metrics-calendar-window-days';
 
 const sampleCalendarEvents: CalendarMetricEvent[] = [
   {
@@ -292,33 +289,6 @@ function readConnectShareTexts() {
   }
 }
 
-function readCalendarEvents() {
-  try {
-    const saved = window.localStorage.getItem(CALENDAR_STORAGE_KEY);
-    if (!saved) return [];
-    return JSON.parse(saved) as CalendarMetricEvent[];
-  } catch {
-    return [];
-  }
-}
-
-function readCalendarStatus(): CalendarConnection {
-  const saved = window.localStorage.getItem(CALENDAR_STATUS_KEY);
-  if (saved === 'connected' || saved === 'synced') return saved;
-  return 'disconnected';
-}
-
-function readCalendarWindowDays(): number {
-  const saved = Number(window.localStorage.getItem(CALENDAR_WINDOW_KEY));
-  return Number.isFinite(saved) && saved > 0 ? saved : DEFAULT_CALENDAR_WINDOW_DAYS;
-}
-
-function saveCalendarState(status: CalendarConnection, events: CalendarMetricEvent[], windowDays: number) {
-  window.localStorage.setItem(CALENDAR_STATUS_KEY, status);
-  window.localStorage.setItem(CALENDAR_STORAGE_KEY, JSON.stringify(events));
-  window.localStorage.setItem(CALENDAR_WINDOW_KEY, String(windowDays));
-}
-
 function buildPartMetrics(activity: MetricsActivity): PartMetric[] {
   return partNames.map((partName) => {
     const members = profiles.filter((profile) => profile.part === partName);
@@ -481,7 +451,8 @@ export function Metrics({ currentUser }: MetricsProps) {
     setCalendarBusy(true);
     setCalendarError('');
     try {
-      const connected = await connectGoogleCalendar();
+      // 이 세션에서 이미 받아둔 토큰이 살아 있으면 팝업 없이 그것을 쓴다.
+      const connected = await ensureCalendarToken();
       if (!connected.ok || !connected.accessToken) {
         setCalendarError(
           connected.reason === 'disabled'
@@ -527,6 +498,8 @@ export function Metrics({ currentUser }: MetricsProps) {
 
   const disconnectCalendar = () => {
     applyCalendarEvents('disconnected', [], DEFAULT_CALENDAR_WINDOW_DAYS);
+    // 화면은 '연결 안 됨'인데 토큰이 남아 있으면 다음 조회가 팝업 없이 붙는다.
+    forgetToken();
     setCalendarError('');
   };
 

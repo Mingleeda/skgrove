@@ -661,6 +661,12 @@ export function App() {
     persistTeaSessions(teaSessions.map((session) => (session.id === id ? { ...session, status } : session)));
   };
 
+  // 이번 회차 날짜를 그 세션에 적어둔다. 공지문에만 쓰고 흘려보내면
+  // 나중에 "그 세션 언제 했더라"를 아무도 알 수 없고, 캘린더와 대조할 축도 없다.
+  const setTeaSessionHeldAt = (id: string, heldAt: string) => {
+    persistTeaSessions(teaSessions.map((session) => (session.id === id ? { ...session, heldAt } : session)));
+  };
+
   const setTeaSessionMemo = (id: string, memo: string) => {
     persistTeaSessions(teaSessions.map((session) => (session.id === id ? { ...session, memo } : session)));
   };
@@ -931,6 +937,7 @@ export function App() {
           onAddTeaSession={addTeaSession}
           onUpdateTeaStatus={updateTeaSessionStatus}
           onSetTeaMemo={setTeaSessionMemo}
+          onSetTeaHeldAt={setTeaSessionHeldAt}
           onTeaTypesChange={updateTeaSessionTypes}
           onAnnounceToSlack={announceTeaToSlack}
           onNotifyStatus={notifyStatus}

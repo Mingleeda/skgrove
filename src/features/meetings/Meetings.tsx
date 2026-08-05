@@ -16,6 +16,8 @@ import {
   UsersRound,
 } from 'lucide-react';
 import { hasTeamLeaderRole, isLeader, teamParts } from '../../auth';
+import { readCalendarEvents } from '../../calendarStore';
+import { CalendarLink } from './CalendarLink';
 import type { CanStepConfig } from '../../canConfig';
 import { makeStepId } from '../../canStepsStore';
 import { PanelHeader } from '../../components/PanelHeader';
@@ -25,6 +27,7 @@ import { summarizeCanMeeting } from '../../aiSummarize';
 import { teamRoster } from '../../data/mockData';
 import type {
   ActionItem,
+  CalendarMetricEvent,
   CanFollowRoute,
   CanMethod,
   CanOpinion,
@@ -96,6 +99,7 @@ type MeetingsProps = {
   onAddTeaSession: (session: Omit<TeaSession, 'id' | 'status' | 'memo'>) => void;
   onUpdateTeaStatus: (id: string, status: TeaSessionStatus) => void;
   onSetTeaMemo: (id: string, memo: string) => void;
+  onSetTeaHeldAt: (id: string, heldAt: string) => void;
   onTeaTypesChange: (types: string[]) => void;
   onAnnounceToSlack: (text: string) => Promise<'sent' | 'failed' | 'disabled'>;
   onNotifyStatus: (text: string, tone?: ToastTone) => void;
@@ -126,6 +130,7 @@ export function Meetings({
   onAddTeaSession,
   onUpdateTeaStatus,
   onSetTeaMemo,
+  onSetTeaHeldAt,
   onTeaTypesChange,
   onAnnounceToSlack,
   onNotifyStatus,
@@ -160,6 +165,9 @@ export function Meetings({
     type: '',
     desc: '',
   });
+  // 파트지수에서 연동해둔 일정을 읽기만 한다. 이 화면은 구글을 부르지 않는다.
+  // 마운트 시 한 번 읽는다 — 화면을 보는 동안 localStorage 가 바뀔 일은 없다.
+  const [calendarEvents] = useState<CalendarMetricEvent[]>(() => readCalendarEvents());
   const [teaFilter, setTeaFilter] = useState<string>('전체');
   const [teaGroups, setTeaGroups] = useState<TeaGroup[] | null>(null);
   const [teaMemoDrafts, setTeaMemoDrafts] = useState<Record<string, string>>({});
@@ -290,6 +298,10 @@ export function Meetings({
                         <span>의견 {count}</span>
                         <span>선정 {picked}</span>
                       </div>
+                      <CalendarLink
+                        session={{ heldAt: item.heldAt, title: item.topic, type: '캔미팅' }}
+                        events={calendarEvents}
+                      />
                     </button>
                   );
                 })}
@@ -1226,6 +1238,8 @@ export function Meetings({
               presenter: currentUser.name,
               part: currentUser.part,
               desc: teaDraft.desc.trim(),
+              // 제안 시점에는 날짜가 없다. 리더가 '이번 티미팅 구성'에서 회차를 정할 때 채워진다.
+              heldAt: '',
             });
             setTeaDraft({ title: '', type: '', desc: '' });
           };
@@ -1382,6 +1396,10 @@ export function Meetings({
                             </div>
                             <strong>{session.title}</strong>
                             {session.desc.trim() && <p className="tea-topic-desc">{session.desc}</p>}
+                            <CalendarLink
+                              session={{ heldAt: session.heldAt, title: session.title, type: '티미팅' }}
+                              events={calendarEvents}
+                            />
                           </div>
                           {isHost ? (
                             <div className="segmented tea-status-seg">
@@ -1436,6 +1454,8 @@ export function Meetings({
                         value={teaRoundDate}
                         onChange={(event) => {
                           setTeaRoundDate(event.target.value);
+                          // 세션이 이미 정해져 있으면 그 세션의 개최일로 함께 남긴다.
+                          if (teaRoundSessionId) onSetTeaHeldAt(teaRoundSessionId, event.target.value);
                           setTeaCopyNotice('');
                         }}
                       />
@@ -1446,6 +1466,8 @@ export function Meetings({
                         value={teaRoundSessionId}
                         onChange={(event) => {
                           setTeaRoundSessionId(event.target.value);
+                          // 날짜를 먼저 고르고 세션을 나중에 고르는 순서도 있다. 양쪽에서 적는다.
+                          if (event.target.value && teaRoundDate) onSetTeaHeldAt(event.target.value, teaRoundDate);
                           setTeaCopyNotice('');
                         }}
                       >

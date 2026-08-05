@@ -12,9 +12,9 @@ import {
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import type { ChangeEvent } from 'react';
+import { ensureCalendarToken } from '../../calendarSession';
 import {
   calendarConfigured,
-  connectGoogleCalendar,
   fetchCalendarEvents,
   mergeMemories,
   toMemoryEvents,
@@ -316,7 +316,8 @@ export function Memory({ currentUser }: MemoryProps) {
     setCalendarBusy(true);
     setCalendarNotice('');
     try {
-      const connected = await connectGoogleCalendar();
+      // 파트지수에서 이미 받아둔 토큰이 살아 있으면 팝업 없이 그것을 쓴다.
+      const connected = await ensureCalendarToken();
       if (!connected.ok || !connected.accessToken) {
         setCalendarNotice(
           connected.reason === 'disabled'
