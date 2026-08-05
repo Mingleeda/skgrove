@@ -187,6 +187,111 @@ export function meetingTypeOf(event: RawCalendarEvent): CalendarMeetingType {
   return '파트회의';
 }
 
+/* ------------------------------------------------------------------ *
+ * 제목 규칙 파싱
+ *
+ * 이 팀은 회의에 게스트를 초대하지 않는다. 공용 캘린더에 일정을 직접 등록하고
+ * 소속을 제목 앞 대괄호에 적는다. 그래서 참석자 메일로는 파트를 알 수 없다
+ * (실제 캘린더 14종 회의 중 참석자가 있는 건 0건이었다).
+ *
+ * 앞으로의 약속은 `[회의/참여자]` 형식이고, 참여자는 사람 이름 또는 파트명이다.
+ * 다만 이미 쌓인 회의 13종은 그 형식이 아니므로(`[ITS혁신]파트 위클리` 등)
+ * 새 형식만 읽으면 과거 데이터가 통째로 사라진다. 여러 단계로 훑어 최대한 살린다.
+ * ------------------------------------------------------------------ */
+
+/** 캘린더 제목의 짧은 파트 표기 → 앱의 TeamPart. '[팀전체]' 처럼 전사 성격도 여기서 받는다. */
+const PART_ALIAS: Record<string, string> = {
+  ITS혁신: 'ITS혁신파트',
+  TEST혁신: 'TEST혁신파트',
+  PM혁신: 'PM혁신파트',
+  ITS혁신파트: 'ITS혁신파트',
+  TEST혁신파트: 'TEST혁신파트',
+  PM혁신파트: 'PM혁신파트',
+  팀전체: '전체',
+  전체: '전체',
+};
+
+/**
+ * 제목 앞 대괄호를 뜯는다.
+ * '[회의/심상준,박완배]조달청 사전미팅' → { tag: '회의/심상준,박완배', rest: '조달청 사전미팅' }
+ * 대괄호가 없으면 tag 는 null 이다.
+ */
+export function parseTitleTag(title: string): { tag: string | null; rest: string } {
+  const match = /^\s*\[([^\]]*)\]\s*(.*)$/.exec(title ?? '');
+  if (!match) return { tag: null, rest: (title ?? '').trim() };
+  return { tag: match[1].trim(), rest: match[2].trim() };
+}
+
+/** 이름 → 파트. 동명이인이 없다는 팀 약속에 기대므로 이름 하나에 파트 하나다. */
+export function buildPartByName(accounts: ManagedAccount[]): Map<string, string> {
+  const map = new Map<string, string>();
+  for (const account of accounts) {
+    if (account.status !== '활성') continue;
+    if (!account.name) continue;
+    map.set(account.name.trim(), account.part);
+  }
+  return map;
+}
+
+/**
+ * 대괄호 안의 토큰 하나를 파트로 옮긴다. 파트 표기가 우선이고, 아니면 사람 이름으로 본다.
+ * 둘 다 아니면 null — 모르면 세지 않는 편이 잘못 붙이는 것보다 낫다.
+ */
+function partFromToken(token: string, partByName: Map<string, string>): string | null {
+  const clean = token.trim();
+  if (!clean) return null;
+  return PART_ALIAS[clean] ?? partByName.get(clean) ?? null;
+}
+
+/**
+ * 제목으로 파트를 판정한다.
+ *   1) '[회의/심상준,박완배]'  → 참여자들의 파트 중 가장 많은 것
+ *   2) '[ITS혁신]파트 위클리'  → 그 파트
+ *   3) '[심상준]CAIO Weekly'  → 그 사람의 파트
+ * 어느 것도 아니면 null. 회의 수에는 넣되 파트 집계에서는 뺀다.
+ */
+export function partFromTitle(title: string, partByName: Map<string, string>): string | null {
+  const { tag } = parseTitleTag(title);
+  if (!tag) return null;
+
+  // '회의/' 접두는 벗기고 뒤의 참여자 목록만 본다.
+  const body = tag.startsWith('회의/') ? tag.slice('회의/'.length) : tag;
+
+  // 쉼표로 여러 명을 적는다. '팀장/파트장' 처럼 슬래시가 든 표기는 토큰으로 안 잡혀 null 이 된다.
+  const counts = new Map<string, number>();
+  for (const token of body.split(',')) {
+    const part = partFromToken(token, partByName);
+    if (!part) continue;
+    counts.set(part, (counts.get(part) ?? 0) + 1);
+  }
+  if (counts.size === 0) return null;
+
+  let best: string | null = null;
+  let bestCount = 0;
+  for (const [part, count] of counts) {
+    // 동수면 먼저 나온 것을 쓴다. Map 이 삽입 순서를 지켜 결과가 흔들리지 않는다.
+    if (count > bestCount) {
+      best = part;
+      bestCount = count;
+    }
+  }
+  return best;
+}
+
+/**
+ * 근태 일정인가. 휴가·출장·건강검진·반차는 회의가 아니고 팀 추억도 아니다.
+ *
+ * 이 판정이 없으면 toMemoryEvents 가 종일 일정을 전부 행사로 만들어
+ * **동료의 휴가와 건강검진이 팀 추억 게시판에 올라간다.** 기능 오류를 넘어
+ * 개인정보 문제라, 종일 일정을 다루는 모든 길목에서 먼저 걸러야 한다.
+ */
+const ATTENDANCE_WORDS = ['휴가', '출장', '건강검진', '반차', '연차', '재택', '교육', '경조'];
+
+export function isAttendanceEvent(event: RawCalendarEvent): boolean {
+  const title = event.title ?? '';
+  return ATTENDANCE_WORDS.some((word) => title.includes(word));
+}
+
 /**
  * 참석자 메일을 계정에 맞춰보고 가장 많은 파트를 그 회의의 파트로 본다.
  * 사내 계정이 한 명도 없으면 우리 팀 회의가 아니므로 null 을 돌려주고 집계에서 뺀다.
@@ -230,13 +335,20 @@ export function toMetricEvents(
   accounts: ManagedAccount[],
 ): CalendarMetricEvent[] {
   const partByEmail = buildPartByEmail(accounts);
+  const partByName = buildPartByName(accounts);
   const result: CalendarMetricEvent[] = [];
 
   for (const event of events) {
     if (!isMeeting(event)) continue;
+    // 근태(휴가·출장·건강검진)는 시간이 잡혀 있어도 회의가 아니다.
+    if (isAttendanceEvent(event)) continue;
     // 전사 회의는 회의이긴 하나 한 파트의 회의량은 아니다.
     if (!isPartAttributable(event)) continue;
-    const part = partOf(event, partByEmail);
+    /*
+      제목을 먼저 본다. 이 팀은 게스트를 초대하지 않고 제목 대괄호에 소속을 적는다.
+      참석자로 판정하는 길은 남겨둔다 — 초대 기반으로 운영이 바뀌어도 그대로 동작한다.
+    */
+    const part = partFromTitle(event.title, partByName) ?? partOf(event, partByEmail);
     if (!part) continue;
     const minutes = durationMinutes(event);
     // 길이를 못 읽은 일정은 회의 길이 지표를 왜곡한다. 세지 않는다.
@@ -269,6 +381,9 @@ export function toMemoryEvents(
 ): TeamMemory[] {
   return events
     .filter((event) => event.isAllDay)
+    // 종일 일정의 대부분이 근태다(실측: 50종 중 40종이 휴가·출장·건강검진·반차).
+    // 거르지 않으면 동료의 휴가와 건강검진이 팀 추억 게시판에 올라간다.
+    .filter((event) => !isAttendanceEvent(event))
     .map((event, index) => ({
       id: startId + index,
       title: event.title,

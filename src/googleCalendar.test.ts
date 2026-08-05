@@ -2,6 +2,10 @@ import { describe, expect, it } from 'vitest';
 import {
   MAX_PART_MEETING_ATTENDEES,
   buildPartByEmail,
+  buildPartByName,
+  isAttendanceEvent,
+  parseTitleTag,
+  partFromTitle,
   durationMinutes,
   isMeeting,
   isPartAttributable,
@@ -290,5 +294,89 @@ describe('mergeMemories', () => {
     const once = mergeMemories([memory({})], [memory({ id: 99, date: '2026-09-01' })]);
     const twice = mergeMemories(once, [memory({ id: 99, date: '2026-09-01' })]);
     expect(twice).toHaveLength(2);
+  });
+});
+
+/*
+  아래 제목들은 실제 팀 캘린더(AI ITS 혁신팀)에서 그대로 가져왔다.
+  꾸며낸 예시로 테스트하면 규칙이 현실과 어긋나도 초록불이 켜진다.
+*/
+describe('제목 규칙 — 실제 캘린더 제목으로', () => {
+  const staff = [
+    account({ name: '심상준', part: 'ITS혁신파트' }),
+    account({ name: '박완배', part: 'ITS혁신파트' }),
+    account({ name: '이승주', part: 'PM혁신파트' }),
+    account({ name: '김수정', part: 'TEST혁신파트' }),
+  ];
+  const byName = buildPartByName(staff);
+
+  it('대괄호를 뜯어 태그와 본문을 나눈다', () => {
+    expect(parseTitleTag('[회의/심상준,박완배]조달청 사전미팅')).toEqual({
+      tag: '회의/심상준,박완배',
+      rest: '조달청 사전미팅',
+    });
+    expect(parseTitleTag('제목만 있는 일정')).toEqual({ tag: null, rest: '제목만 있는 일정' });
+  });
+
+  it('[회의/참여자] — 앞으로의 약속 형식', () => {
+    // 두 명이 ITS혁신, 한 명이 PM혁신이면 다수인 ITS혁신파트로 본다.
+    expect(partFromTitle('[회의/심상준,박완배,이승주]', byName)).toBe('ITS혁신파트');
+  });
+
+  it('참여자 자리에 파트명을 적어도 된다', () => {
+    expect(partFromTitle('[회의/ITS혁신]주간 점검', byName)).toBe('ITS혁신파트');
+  });
+
+  it('[파트명]… — 이미 쌓인 회의도 살린다', () => {
+    expect(partFromTitle('[ITS혁신]파트 위클리', byName)).toBe('ITS혁신파트');
+    expect(partFromTitle('[TEST혁신]파트 위클리', byName)).toBe('TEST혁신파트');
+    expect(partFromTitle('[PM혁신] 파트위클리', byName)).toBe('PM혁신파트');
+    expect(partFromTitle('[팀전체]AI 집중학습시간', byName)).toBe('전체');
+  });
+
+  it('[이름]… — 그 사람의 파트로 본다', () => {
+    expect(partFromTitle('[심상준]CAIO팀장Weekly', byName)).toBe('ITS혁신파트');
+  });
+
+  it('모르는 태그는 null — 잘못 붙이느니 세지 않는다', () => {
+    // 잘못 붙인 파트는 그 파트 지수를 조용히 망가뜨린다.
+    expect(partFromTitle('[DAVIS CODE] Daily', byName)).toBeNull();
+    expect(partFromTitle('[블루하츠]점심식사', byName)).toBeNull();
+    expect(partFromTitle('[CEO타운홀]', byName)).toBeNull();
+    expect(partFromTitle('[팀장/파트장]위클리', byName)).toBeNull();
+  });
+
+  it('퇴사·비활성 계정 이름으로는 파트를 정하지 않는다', () => {
+    const gone = buildPartByName([account({ name: '퇴사자', part: 'ITS혁신파트', status: '비활성' })]);
+    expect(partFromTitle('[퇴사자]주간', gone)).toBeNull();
+  });
+});
+
+describe('근태 일정 판정', () => {
+  it('휴가·출장·건강검진·반차를 근태로 본다', () => {
+    for (const title of [
+      '[휴가/심인수]',
+      '[출장]박완배-하이닉스이천',
+      '[출장/박소연] 한국투자증권 PiMS 패치',
+      '[건강검진/심상준]',
+      '[오전반차/이수현]',
+    ]) {
+      expect(isAttendanceEvent(event({ title }))).toBe(true);
+    }
+  });
+
+  it('회의는 근태가 아니다', () => {
+    expect(isAttendanceEvent(event({ title: '[ITS혁신]파트 위클리' }))).toBe(false);
+  });
+
+  it('근태는 팀 추억 행사로 올라가지 않는다', () => {
+    // 이걸 놓치면 동료의 휴가와 건강검진이 팀 추억 게시판에 뜬다. 개인정보 문제다.
+    const events = [
+      event({ id: 'A', title: '[휴가/심인수]', isAllDay: true, startsAt: '2026-07-27', endsAt: '2026-07-29' }),
+      event({ id: 'B', title: '[건강검진/박완배]', isAllDay: true, startsAt: '2026-08-03', endsAt: '2026-08-03' }),
+      event({ id: 'C', title: '팀 워크샵', isAllDay: true, startsAt: '2026-08-10', endsAt: '2026-08-11' }),
+    ];
+    const memories = toMemoryEvents(events, 1, '시스템');
+    expect(memories.map((m) => m.title)).toEqual(['팀 워크샵']);
   });
 });
