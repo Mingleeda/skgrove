@@ -9003,6 +9003,71 @@ button.notif-row {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+/* ===== 인스타 쇼핑 문법 (벼룩숲) =====
+   사진 위 가격 태그가 인스타 쇼핑의 상품 태그와 같은 자리다.
+   이 화면에서 가장 먼저 알고 싶은 것이 값이라 상세까지 미루지 않는다. */
+
+.ig-shop {
+  gap: var(--space-3);
+}
+
+.ig-shop-cell {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  min-width: 0;
+}
+
+.ig-shop-cell .poster-cell {
+  position: relative;
+}
+
+/* 포스터가 자기 제목을 이미 그리는데 아래 캡션이 같은 제목을 또 쓴다.
+   인스타 쇼핑은 이미지에 태그만 얹고 이름은 아래에 둔다 — 이미지 안의
+   글을 지워야 가격 태그가 겹치지 않고 사진이 온전히 보인다. */
+.ig-shop-cell .poster-text {
+  display: none;
+}
+
+/* 마감된 것은 지운 게 아니라 가라앉힌 것이다. 지난 거래도 참고가 된다. */
+.ig-shop-cell.closed {
+  opacity: 0.55;
+}
+
+.ig-price-tag {
+  background: var(--scrim-strong);
+  border-radius: var(--radius-full);
+  bottom: var(--space-2);
+  color: var(--color-surface);
+  font-size: var(--text-micro);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  left: var(--space-2);
+  padding: 3px 10px;
+  position: absolute;
+}
+
+.ig-shop-meta {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+
+.ig-shop-meta strong {
+  font-size: var(--text-meta);
+  font-weight: 600;
+  line-height: var(--leading-tight);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ig-shop-meta span {
+  color: var(--color-muted);
+  font-size: var(--text-micro);
+  font-variant-numeric: tabular-nums;
+}
+
 /* ===== 인스타 릴스 문법 (유~머게시판) =====
    짧고 소비가 빠른 콘텐츠라 세로 9:16 이 맞다. 미디어가 배경이 되고
    글과 반응이 그 위에 얹힌다. 목록에서는 플레이어를 붙이지 않는다 —
