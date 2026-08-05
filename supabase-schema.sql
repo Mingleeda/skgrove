@@ -589,6 +589,41 @@ alter table public.gathering_signups enable row level security;
 drop policy if exists "Allow prototype gathering signups all" on public.gathering_signups;
 create policy "Allow prototype gathering signups all" on public.gathering_signups for all using (true) with check (true);
 
+-- 모임 대표 이미지 버킷. 첨부 사진과 AI 가 그린 썸네일이 같은 경로를 탄다
+-- (gatheringStore.uploadGatheringImage). 버킷이 없으면 업로드가 실패하고 프론트가
+-- URL.createObjectURL 로 폴백하는데, blob: 은 그 페이지 수명까지만 살아서
+-- 새로고침하면 이미지가 사라진다. team-memory-assets 와 같은 개방 정책이다.
+insert into storage.buckets (id, name, public)
+values ('gathering-images', 'gathering-images', true)
+on conflict (id) do update set
+  public = excluded.public;
+
+drop policy if exists "Allow prototype gathering image reads" on storage.objects;
+drop policy if exists "Allow prototype gathering image writes" on storage.objects;
+drop policy if exists "Allow prototype gathering image updates" on storage.objects;
+drop policy if exists "Allow prototype gathering image deletes" on storage.objects;
+
+create policy "Allow prototype gathering image reads"
+  on storage.objects
+  for select
+  using (bucket_id = 'gathering-images');
+
+create policy "Allow prototype gathering image writes"
+  on storage.objects
+  for insert
+  with check (bucket_id = 'gathering-images');
+
+create policy "Allow prototype gathering image updates"
+  on storage.objects
+  for update
+  using (bucket_id = 'gathering-images')
+  with check (bucket_id = 'gathering-images');
+
+create policy "Allow prototype gathering image deletes"
+  on storage.objects
+  for delete
+  using (bucket_id = 'gathering-images');
+
 -- ===== 벼룩숲 (팀 내 중고거래) =====
 -- 모임·번개와 같은 구조다. 물건 하나 + 입찰 별도 행.
 -- 상태(거래중/거래완료/유찰)는 저장하지 않고 close_at 과 입찰에서 파생시킨다 —
