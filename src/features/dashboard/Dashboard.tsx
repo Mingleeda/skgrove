@@ -8,8 +8,10 @@ import {
   Sparkles,
   Vote,
 } from 'lucide-react';
+import { daysUntilDue, isDone, isOverdue, sortActionItems } from '../../actionRules';
 import { EmptyState } from '../../components/EmptyState';
 import { PanelHeader } from '../../components/PanelHeader';
+import { STATUS_ICON, dueLabel } from '../actions/actionDisplay';
 import type { ActionItem, Agenda, CurrentUser, Identity, Section } from '../../types';
 
 type DashboardProps = {
@@ -18,6 +20,7 @@ type DashboardProps = {
   agendas: Agenda[];
   currentUser: CurrentUser;
   actionItems: ActionItem[];
+  today: string;
   onSectionChange: (section: Section) => void;
   onIdentityChange: (identity: Identity) => void;
 };
@@ -28,6 +31,7 @@ export function Dashboard({
   agendas,
   currentUser,
   actionItems,
+  today,
   onSectionChange,
   onIdentityChange,
 }: DashboardProps) {
@@ -48,6 +52,15 @@ export function Dashboard({
   ];
 
   const activeAgendas = votingAgendas.slice(0, 2);
+  const hasVoting = activeAgendas.length > 0;
+
+  /*
+    이전에는 actionItems 를 받은 순서 그대로 slice(0, 4) 했다. 그래서 6일 지난
+    건이 다섯 번째에 있으면 홈에서 사라지고, 완료된 건이 첫 줄을 차지했다.
+    액션아이템 화면과 같은 정렬을 써야 "홈에 보이는 4건"이 "가장 급한 4건"이 된다.
+  */
+  const homeActions = sortActionItems(actionItems, today).slice(0, 4);
+  const overdueCount = actionItems.filter((item) => isOverdue(item, today)).length;
 
   // 홈에서 방식을 고른 뜻이 접수 화면까지 이어져야 한다.
   // 이전에는 두 버튼이 똑같이 화면만 옮겨서, 고른 방식이 버려지고 다시 물었다.
@@ -55,6 +68,112 @@ export function Dashboard({
     onIdentityChange(identity);
     onSectionChange('intake');
   };
+
+  const agendaPanel = (
+    <section className="panel agenda-panel">
+      <PanelHeader icon={Vote} title="진행 중인 안건 투표" />
+      <div className="home-agenda-list">
+        {!hasVoting && (
+          /* 바로 위 스탯카드가 이미 "투표 안건 0"을 말한다. 같은 사실을 258px 짜리
+             큰 빈 상자로 한 번 더 말하면, 화면에서 가장 큰 블록이 "할 일 없음"이 된다.
+             한 줄로 눕힌다. */
+          <EmptyState
+            compact
+            icon={Vote}
+            title="지금 투표 중인 안건이 없어요"
+            action={{ label: '안건함 열기', onClick: () => onSectionChange('agenda') }}
+          />
+        )}
+        {activeAgendas.map((agenda) => {
+          const total = agenda.approve + agenda.reject || 1;
+          const approveRate = Math.round((agenda.approve / total) * 100);
+          return (
+            <button className="home-agenda-card" key={agenda.id} onClick={() => onSectionChange('agenda')}>
+              <div>
+                <strong>{agenda.title}</strong>
+                <span>{agenda.source}</span>
+              </div>
+              <div className="vote-bar">
+                <span style={{ width: `${approveRate}%` }} />
+              </div>
+              <small>찬성 {approveRate}% · 투표하기</small>
+            </button>
+          );
+        })}
+      </div>
+    </section>
+  );
+
+  const actionPanel = (
+    <section className="panel">
+      {/* 지연이 있으면 패널을 열기 전에 알아야 한다. 행마다 "6일 지남"이 있어도
+          세 줄을 다 읽어야 몇 건인지 알 수 있다. */}
+      <PanelHeader
+        icon={FileCheck2}
+        title="액션아이템"
+        note={overdueCount > 0 ? `지연 ${overdueCount}` : undefined}
+      />
+      <div className="action-list">
+        {/* 옆 패널의 카드는 전부 눌리는데 이 행만 div였다. 같은 모양이면 같이 동작해야 한다. */}
+        {/* 홈은 요약 화면이다. 전체 목록은 액션아이템 화면이 담당한다. */}
+        {homeActions.map((item) => {
+          const StatusIcon = STATUS_ICON[item.status];
+          const late = isOverdue(item, today);
+          return (
+            <button
+              className={late ? 'action-row overdue' : 'action-row'}
+              key={item.id}
+              onClick={() => onSectionChange('actions')}
+            >
+              <StatusIcon size={18} />
+              <div>
+                <strong>{item.title}</strong>
+                {/* 원본 날짜("2026-07-30")는 오늘과 비교해야 뜻이 생긴다.
+                    그 계산을 사람에게 시키지 않는다. */}
+                <span>
+                  {item.owner} · {dueLabel(daysUntilDue(item, today), isDone(item))}
+                </span>
+              </div>
+              <em>{item.status}</em>
+            </button>
+          );
+        })}
+        {/* 안건 패널에만 빈 상태가 있어서, 액션이 0건이면 제목만 남은 빈 상자가 됐다. */}
+        {actionItems.length === 0 && (
+          <p className="field-note">
+            아직 액션아이템이 없어요. 통과된 안건이 실행 항목으로 바뀌면 여기에 담당자와 목표일이 표시됩니다.
+          </p>
+        )}
+        {actionItems.length > 4 && (
+          <button className="secondary-button wide" onClick={() => onSectionChange('actions')}>
+            액션아이템 {actionItems.length}건 전체 보기
+          </button>
+        )}
+      </div>
+    </section>
+  );
+
+  const connectPanel = (
+    <section className="panel">
+      <PanelHeader icon={Coffee} title="오늘의 팀 연결" />
+      <div className="quick-card-list">
+        <button onClick={() => onSectionChange('connect')}>
+          <Coffee size={19} />
+          <div>
+            <strong>파트 섞기 커피챗</strong>
+            <span>이번 주 랜덤 매칭을 시작해요</span>
+          </div>
+        </button>
+        <button onClick={() => onSectionChange('meetings')}>
+          <Sparkles size={19} />
+          <div>
+            <strong>다음 티미팅 주제</strong>
+            <span>자발 제안 채널에서 안건을 받아요</span>
+          </div>
+        </button>
+      </div>
+    </section>
+  );
 
   return (
     <section className="screen">
@@ -104,95 +223,29 @@ export function Dashboard({
       </div>
 
       {/* 두 열을 각각 채운다. 한 그리드에 네 패널을 넣고 행 높이를 맞추면,
-          투표가 없는 날 안건 패널이 오른쪽 열 높이까지 늘어나 500px 넘는 빈 상자가 된다. */}
-      <div className="home-grid">
-        <div className="home-col">
-          <section className="panel agenda-panel">
-            <PanelHeader icon={Vote} title="진행 중인 안건 투표" />
-            <div className="home-agenda-list">
-              {activeAgendas.length === 0 && (
-                <EmptyState
-                  icon={Vote}
-                  title="지금 투표 중인 안건이 없어요"
-                  description="접수된 의견이 안건이 되면 여기에서 바로 투표할 수 있습니다."
-                  action={{ label: '안건함 열기', onClick: () => onSectionChange('agenda') }}
-                />
-              )}
-              {activeAgendas.map((agenda) => {
-                const total = agenda.approve + agenda.reject || 1;
-                const approveRate = Math.round((agenda.approve / total) * 100);
-                return (
-                  <button className="home-agenda-card" key={agenda.id} onClick={() => onSectionChange('agenda')}>
-                    <div>
-                      <strong>{agenda.title}</strong>
-                      <span>{agenda.source}</span>
-                    </div>
-                    <div className="vote-bar">
-                      <span style={{ width: `${approveRate}%` }} />
-                    </div>
-                    <small>찬성 {approveRate}% · 투표하기</small>
-                  </button>
-                );
-              })}
-            </div>
-          </section>
+          투표가 없는 날 안건 패널이 오른쪽 열 높이까지 늘어나 500px 넘는 빈 상자가 된다.
 
+          넓은 왼쪽 칸은 "지금 할 일"이 가진다. 투표할 안건이 있으면 안건이, 없으면
+          액션아이템이 가져간다. 넓은 칸을 안건에 고정해 두면 투표가 없는 날 147px 짜리
+          "없어요" 패널이 그 자리를 잡고 아래로 387px 가 빈다 — 빈 상자를 빈 구멍으로
+          바꾸는 것일 뿐이다. */}
+      {hasVoting ? (
+        <div className="home-grid">
+          <div className="home-col">{agendaPanel}</div>
+          <div className="home-col">
+            {actionPanel}
+            {connectPanel}
+          </div>
         </div>
-
-        <div className="home-col">
-          <section className="panel">
-            <PanelHeader icon={FileCheck2} title="액션아이템" />
-            <div className="action-list">
-              {/* 옆 패널의 카드는 전부 눌리는데 이 행만 div였다. 같은 모양이면 같이 동작해야 한다. */}
-              {/* 홈은 요약 화면이다. 전체 목록은 액션아이템 화면이 담당한다. */}
-              {actionItems.slice(0, 4).map((item) => (
-                <button className="action-row" key={item.id} onClick={() => onSectionChange('actions')}>
-                  <CheckCircle2 size={18} />
-                  <div>
-                    <strong>{item.title}</strong>
-                    <span>
-                      {item.owner} · {item.due || '목표일 미정'}
-                    </span>
-                  </div>
-                  <em>{item.status}</em>
-                </button>
-              ))}
-              {/* 안건 패널에만 빈 상태가 있어서, 액션이 0건이면 제목만 남은 빈 상자가 됐다. */}
-              {actionItems.length === 0 && (
-                <p className="field-note">
-                  아직 액션아이템이 없어요. 통과된 안건이 실행 항목으로 바뀌면 여기에 담당자와 목표일이 표시됩니다.
-                </p>
-              )}
-              {actionItems.length > 4 && (
-                <button className="secondary-button wide" onClick={() => onSectionChange('actions')}>
-                  액션아이템 {actionItems.length}건 전체 보기
-                </button>
-              )}
-            </div>
-          </section>
-
-          <section className="panel">
-            <PanelHeader icon={Coffee} title="오늘의 팀 연결" />
-            <div className="quick-card-list">
-              <button onClick={() => onSectionChange('connect')}>
-                <Coffee size={19} />
-                <div>
-                  <strong>파트 섞기 커피챗</strong>
-                  <span>이번 주 랜덤 매칭을 시작해요</span>
-                </div>
-              </button>
-              <button onClick={() => onSectionChange('meetings')}>
-                <Sparkles size={19} />
-                <div>
-                  <strong>다음 티미팅 주제</strong>
-                  <span>자발 제안 채널에서 안건을 받아요</span>
-                </div>
-              </button>
-            </div>
-          </section>
-        </div>
-      </div>
-
+      ) : (
+        <>
+          {agendaPanel}
+          <div className="home-grid">
+            <div className="home-col">{actionPanel}</div>
+            <div className="home-col">{connectPanel}</div>
+          </div>
+        </>
+      )}
     </section>
   );
 }

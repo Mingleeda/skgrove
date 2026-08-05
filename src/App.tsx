@@ -857,6 +857,7 @@ export function App() {
           agendas={agendas}
           currentUser={currentUser}
           actionItems={actionItems}
+          today={today()}
           onSectionChange={changeSection}
           onIdentityChange={setIdentity}
         />

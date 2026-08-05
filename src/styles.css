@@ -817,6 +817,19 @@ h1 {
   font-size: var(--text-title);
 }
 
+/* 패널을 열기 전에 알아야 하는 한 마디. 제목 옆이 아니라 줄 끝에 두어
+   제목을 밀어내지 않는다. */
+.panel-header-note {
+  background: var(--tint-clay);
+  border-radius: var(--radius-full);
+  color: var(--tint-clay-ink);
+  font-size: var(--text-micro);
+  font-weight: 500;
+  margin-left: auto;
+  padding: 3px 10px;
+  white-space: nowrap;
+}
+
 .epic-list {
   display: grid;
   gap: var(--space-2);
@@ -1027,6 +1040,25 @@ h1 {
   font-style: normal;
   margin-left: auto;
   white-space: nowrap;
+}
+
+/* 목표일이 지난 행. danger 가 아니라 clay 를 쓴다 — 지연은 실패가 아니라
+   주의이고, danger 는 부결·삭제처럼 되돌릴 수 없는 것에 남겨둔다.
+   (0,2,0) 이라 위의 .action-row (0,1,0) 을 순서와 무관하게 이긴다. */
+.action-row.overdue {
+  background: var(--tint-clay);
+  border-color: var(--color-clay);
+}
+
+/* 색만으로 지연을 알리면 색각 이상 사용자에게 전달되지 않는다.
+   "6일 지남" 문구가 같은 정보를 글로도 나른다. */
+.action-row.overdue span {
+  color: var(--tint-clay-ink);
+  font-weight: 500;
+}
+
+.action-row.overdue em {
+  color: var(--tint-clay-ink);
 }
 
 .form-screen {
@@ -8301,6 +8333,27 @@ button.notif-row {
   gap: var(--space-3);
   padding: var(--space-12) var(--space-6);
   text-align: center;
+}
+
+/* 요약 패널용 한 줄 변형. 세로로 쌓인 것을 가로로 눕히고 큰 여백을 걷어낸다.
+   .empty-state.compact 는 특이도 (0,2,0) 이라 위의 (0,1,0) 을 순서와 무관하게
+   이긴다 — 이 파일에서 반복해 밟은 "미디어쿼리가 앞에 있어 조용히 지는" 함정을
+   특이도로 차단한 것이다. */
+.empty-state.compact {
+  flex-direction: row;
+  gap: var(--space-3);
+  justify-content: flex-start;
+  padding: var(--space-4) var(--space-3);
+  text-align: left;
+}
+
+.empty-state.compact .empty-state-title {
+  font-size: var(--text-body);
+}
+
+/* 버튼을 오른쪽 끝으로 밀어 제목과 붙어 읽히지 않게 한다. */
+.empty-state.compact .btn-secondary {
+  margin-left: auto;
 }
 
 .empty-state-title {
