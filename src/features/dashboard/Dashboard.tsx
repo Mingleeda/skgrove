@@ -293,31 +293,83 @@ export function Dashboard({
           </article>
         )}
 
-        {/* 매일 같은 두 링크라 피드가 아니라 아래에 조용히 둔다. */}
-        <div className="ig-quick">
-          <button onClick={() => onSectionChange('connect')} type="button">
-            <Coffee size={18} />
+      </div>
+
+      {/*
+        인스타 홈은 피드 옆에 레일이 있다. 470px 만 쓰면 1440px 창에서
+        오른쪽 절반이 통째로 빈다. 레일에는 스크롤과 무관하게 늘 같은 것을
+        둔다 — 내가 누구인지, 다음에 갈 만한 곳.
+      */}
+      <aside className="ig-rail">
+        <div className="ig-rail-me">
+          <span className="ig-ava lg">{currentUser.name.slice(0, 1)}</span>
+          <span>
+            <b>{currentUser.name}</b>
+            <em>
+              {currentUser.role} · {currentUser.part}
+            </em>
+          </span>
+        </div>
+
+        {openGatherings.length > 0 && (
+          <div className="ig-rail-block">
+            <p className="ig-rail-head">
+              이런 모임 어때요
+              <button onClick={() => onSectionChange('gatherings')} type="button">
+                모두 보기
+              </button>
+            </p>
+            {openGatherings.slice(0, 3).map((item) => (
+              <button className="ig-rail-row" key={item.id} onClick={() => onSectionChange('gatherings')} type="button">
+                <span className="ig-ava">{item.host.slice(0, 1)}</span>
+                <span>
+                  <b>{item.title}</b>
+                  <em>
+                    {item.host}님 · {timeUntil(item.startAt, now)}
+                  </em>
+                </span>
+              </button>
+            ))}
+          </div>
+        )}
+
+        <div className="ig-rail-block">
+          <p className="ig-rail-head">바로 가기</p>
+          <button className="ig-rail-row" onClick={() => onSectionChange('connect')} type="button">
+            <span className="ig-ava">
+              <Coffee size={16} />
+            </span>
             <span>
               <b>파트 섞기 커피챗</b>
               <em>이번 주 랜덤 매칭을 시작해요</em>
             </span>
           </button>
-          <button onClick={() => onSectionChange('meetings')} type="button">
-            <Sparkles size={18} />
+          <button className="ig-rail-row" onClick={() => onSectionChange('meetings')} type="button">
+            <span className="ig-ava">
+              <Sparkles size={16} />
+            </span>
             <span>
               <b>다음 티미팅 주제</b>
               <em>자발 제안 채널에서 안건을 받아요</em>
             </span>
           </button>
-          <button onClick={() => onSectionChange('agenda')} type="button">
-            <CheckCircle2 size={18} />
+          <button className="ig-rail-row" onClick={() => onSectionChange('agenda')} type="button">
+            <span className="ig-ava">
+              <CheckCircle2 size={16} />
+            </span>
             <span>
               <b>통과된 안건 {passedAgendaCount}건</b>
               <em>무엇이 실제로 바뀌었는지 봐요</em>
             </span>
           </button>
         </div>
-      </div>
+
+        <p className="ig-rail-foot">
+          Connectioner · 팀을 잇는 곳
+          <br />
+          대나무숲 · 안건 · 액션 · 모임 · 추억
+        </p>
+      </aside>
     </section>
   );
 }

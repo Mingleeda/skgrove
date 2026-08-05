@@ -461,7 +461,7 @@ h1 {
 }
 
 .photo-editor-preview span {
-  color: var(--color-border-strong);
+  color: var(--color-muted);
   font-size: var(--text-meta);
 }
 
@@ -5659,6 +5659,19 @@ textarea {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  /* 레일은 남는 가로가 있을 때만 뜻이 있다. 좁아지면 피드 아래로 내린다.
+     이 미디어쿼리는 파일에서 .ig-home 기본 규칙보다 앞에 있다. 같은 특이도로
+     쓰면 순서로 져서 조용히 무시된다 — 부모를 붙여 (0,2,0) 으로 올린다. */
+  .screen.ig-home {
+    grid-template-columns: minmax(0, 620px);
+  }
+
+  .ig-home .ig-rail {
+    grid-column: 1;
+    grid-row: auto;
+    position: static;
+  }
+
   /* 좁은 폭에서는 2단이 뜻이 없다. 고른 것이 있으면 작업판만, 없으면
      목록만 보여준다 — 예전의 화면 교체 방식과 같은 동작이다.
      요약·지연 알림은 목록의 머리말이라 상세만 볼 때는 같이 감춘다. */
@@ -7640,7 +7653,7 @@ button.notif-row {
   background: transparent;
   border: none;
   border-radius: 6px;
-  color: var(--color-border-strong);
+  color: var(--color-muted);
   cursor: pointer;
   display: flex;
   padding: 5px;
@@ -7838,7 +7851,7 @@ button.notif-row {
 }
 
 .humor-comment-body small {
-  color: var(--color-border-strong);
+  color: var(--color-muted);
   font-size: var(--text-micro);
 }
 
@@ -9831,14 +9844,153 @@ button.notif-row {
 
 /* .screen 이 grid 라 가로 정렬은 justify-items 가 한다. align-items 를 쓰면
    세로 축에 걸려서 트레이(margin:0 auto)만 가운데로 가고 컬럼은 왼쪽에 남는다. */
+/* 인스타 홈은 피드 옆에 레일이 있다. 470px 만 쓰면 1440px 창에서 오른쪽
+   절반이 통째로 빈다. 스토리는 피드 폭에 맞추고, 레일은 그 오른쪽에 붙는다.
+   두 열의 합을 가운데로 밀어야 피드가 화면 왼쪽에 치우치지 않는다. */
 .ig-home {
-  justify-items: center;
+  align-content: start;
+  column-gap: var(--space-8);
+  display: grid;
+  /* 인스타 본가는 피드를 470px 로 못박아 양옆을 비운다. 이 앱은 사이드바가
+     이미 가로를 먹고 있어 같은 값을 쓰면 오른쪽이 350px 통째로 빈다.
+     피드가 남는 폭을 가져가되 620px 에서 멈춘다 — 그 이상 넓어지면
+     한 줄이 길어져 눈이 줄 끝에서 앞으로 돌아오기 힘들어진다. */
+  grid-template-columns: minmax(0, 620px) 320px;
+  justify-content: center;
+  row-gap: var(--space-5);
 }
 
+/* 홈의 게시물은 피드 폭을 다 쓴다. 470px 상한은 모임·번개처럼 사진이
+   주인공인 피드의 값이고, 여기는 글과 목록이라 넓어도 읽힌다. */
+.ig-col .ig-post,
+.ig-home .ig-tray {
+  max-width: none;
+}
+
+.ig-home .ig-tray,
+.ig-home .ig-col {
+  grid-column: 1;
+  margin: 0;
+}
+
+.ig-rail {
+  align-content: start;
+  display: grid;
+  gap: var(--space-5);
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  padding-top: var(--space-2);
+  position: sticky;
+  top: var(--space-4);
+}
+
+.ig-rail-me {
+  align-items: center;
+  display: flex;
+  gap: var(--space-3);
+}
+
+.ig-rail-me b {
+  display: block;
+  font-size: var(--text-body);
+  font-weight: 600;
+}
+
+.ig-rail-me em {
+  color: var(--color-muted);
+  display: block;
+  font-size: var(--text-meta);
+  font-style: normal;
+}
+
+.ig-rail-block {
+  display: grid;
+  gap: var(--space-1);
+}
+
+/* 레일의 소제목은 회색이다. 인스타에서 이 자리는 콘텐츠가 아니라 안내라
+   본문보다 뒤로 물러나 있어야 한다. */
+.ig-rail-head {
+  align-items: center;
+  color: var(--color-muted);
+  display: flex;
+  font-size: var(--text-meta);
+  font-weight: 600;
+  margin-bottom: var(--space-1);
+}
+
+.ig-rail-head button {
+  background: none;
+  border: 0;
+  color: var(--color-ink);
+  font-size: var(--text-micro);
+  font-weight: 600;
+  margin-left: auto;
+  padding: 2px;
+}
+
+.ig-rail-row {
+  align-items: center;
+  background: none;
+  border: 0;
+  border-radius: var(--radius);
+  display: flex;
+  gap: var(--space-3);
+  min-height: 44px;
+  padding: var(--space-2);
+  text-align: left;
+  width: 100%;
+}
+
+.ig-rail-row:hover {
+  background: var(--color-sunken);
+}
+
+.ig-rail-row > span:last-child {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+
+.ig-rail-row b {
+  font-size: var(--text-meta);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ig-rail-row em {
+  color: var(--color-muted);
+  font-size: var(--text-micro);
+  font-style: normal;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ig-ava.lg {
+  font-size: var(--text-body-lg);
+  height: 48px;
+  width: 48px;
+}
+
+/* 인스타 레일의 푸터는 아주 흐린 회색이지만, 그 값을 그대로 가져오면
+   1.69:1 이 된다(--color-border-strong 을 글자에 쓴 셈이다 — 유~머게시판에서
+   같은 실수를 이미 한 번 고쳤다). 경계선과 글자는 쓰임이 다르다. */
+.ig-rail-foot {
+  color: var(--color-muted);
+  font-size: var(--text-micro);
+  line-height: var(--leading-normal);
+}
+
+/* 홈 전용 컬럼. 470px 상한은 사진이 주인공인 피드(모임·번개)의 값이고,
+   홈은 글과 목록이라 더 넓어도 읽힌다. 620px 에서 멈추는 이유는 그 이상
+   길어지면 눈이 줄 끝에서 다음 줄 앞으로 돌아오기 힘들어지기 때문이다. */
 .ig-col {
   display: grid;
   gap: var(--space-5);
-  max-width: 470px;
+  max-width: 620px;
   width: 100%;
 }
 

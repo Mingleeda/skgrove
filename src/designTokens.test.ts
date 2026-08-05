@@ -80,6 +80,20 @@ describe('토큰 경유율', () => {
     expect(found.length).toBeLessThanOrEqual(MAX_HARDCODED_RGBA);
   });
 
+  /*
+    경계선 토큰을 글자색으로 쓰면 대비가 무너진다. --color-border-strong 은
+    흰 면에서 1.69:1 이라 글자로는 읽히지 않는데, 회색이 필요할 때 손에 잡히는
+    이름이라 계속 끌려 들어왔다(유~머게시판·레일 푸터·사진 편집기에서 각각
+    한 번씩 발견했다). 값이 아니라 쓰임으로 막는다.
+  */
+  it('경계선 토큰을 글자색으로 쓰지 않는다', () => {
+    // border-color: 도 'color:' 로 끝나므로 선언 앞을 고정한다.
+    const misuse = [...outsideRoot.matchAll(/(?<![a-z-])color:\s*var\(--color-border[a-z-]*\)/g)].map(
+      (m) => m[0],
+    );
+    expect(misuse, `글자색에 쓰인 경계선 토큰: ${misuse.join(', ') || '없음'}`).toEqual([]);
+  });
+
   // 생김새 기준 토큰명은 다크모드 도입 시 의미가 깨진다.
   it('생김새 기준 토큰명을 쓰지 않는다', () => {
     expect(css).not.toMatch(/--color-shell/);
