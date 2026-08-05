@@ -8935,11 +8935,37 @@ button.notif-row {
 }
 
 /* --- 등록 폼 ----------------------------------------------------- */
+/* 폼을 좁은 단에 가두는 것은 의도다. 입력칸이 942px 로 늘어나면 라벨과 값 사이로
+   눈이 왕복하고 한 줄에 담기는 글자가 너무 많아진다(모바일 최적화가 아니라 폼 최적화).
+
+   다만 width:100% 가 없으면 max-width 가 '목표'가 아니라 '상한'이 된다 —
+   margin:0 auto 가 그리드 항목의 stretch 를 이겨서 박스가 내용 크기로 줄기 때문이다.
+   그래서 560px 로 선언했는데 실제로는 447px 로 렌더됐다. */
 .gathering-form {
   display: grid;
   gap: var(--space-4);
   margin: 0 auto;
-  max-width: 560px;
+  max-width: 720px;
+  width: 100%;
+}
+
+/* 짧은 답끼리는 나란히 둔다. 세로로만 쌓으면 데스크톱에서 5개 필드에
+   800px 스크롤이 생겨 "폼이 길다"는 인상만 남는다. */
+.gathering-pair {
+  align-items: start;
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: 2fr 1fr;
+}
+
+/* 짝의 두 필드는 자식 수가 다르다(정원 쪽에만 안내문이 붙는다). 늘어나게 두면
+   각자 남는 높이를 나눠 가져 라벨 줄이 서로 어긋난다. 위에서부터 쌓게 고정한다. */
+.gathering-pair .field {
+  align-content: start;
+}
+
+.gathering-more .gathering-pair {
+  grid-template-columns: 1fr 1fr;
 }
 
 .gathering-form .field {
@@ -9354,6 +9380,13 @@ button.notif-row {
   .gathering-toolbar {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  /* 짝을 좁은 폭에 그대로 두면 장소 입력칸이 118px 이 되어 주소를 칠 수 없다.
+     가로를 아끼는 배치는 가로가 있을 때만 뜻이 있다. */
+  .gathering-pair,
+  .gathering-more .gathering-pair {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .gathering-detail {

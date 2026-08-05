@@ -171,10 +171,11 @@ export function GatheringForm({ kind, onSubmit, onCancel }: GatheringFormProps) 
         />
       </div>
 
-      <label className="field">
-        <span className="field-label">
-          어디서 <em>필수</em>
-        </span>
+      <div className="gathering-pair">
+        <label className="field">
+          <span className="field-label">
+            어디서 <em>필수</em>
+          </span>
         <span className="field-with-icon">
           <MapPin size={16} />
           <input
@@ -207,6 +208,7 @@ export function GatheringForm({ kind, onSubmit, onCancel }: GatheringFormProps) 
           </label>
         </div>
         {!unlimited && <p className="field-note">정원을 넘으면 대기 순번으로 받고, 앞사람이 취소하면 자동으로 올라갑니다.</p>}
+        </div>
       </div>
 
       <button className="more-toggle" onClick={() => setMoreOpen((open) => !open)} type="button">
@@ -216,8 +218,9 @@ export function GatheringForm({ kind, onSubmit, onCancel }: GatheringFormProps) 
 
       {moreOpen && (
         <div className="gathering-more">
-          <label className="field">
-            <span className="field-label">신청 마감</span>
+          <div className="gathering-pair">
+            <label className="field">
+              <span className="field-label">신청 마감</span>
             <input onChange={(event) => setCloseAt(event.target.value)} type="datetime-local" value={closeAt} />
             <p className="field-note">비워두면 시작 시각까지 받습니다.</p>
           </label>
@@ -232,7 +235,8 @@ export function GatheringForm({ kind, onSubmit, onCancel }: GatheringFormProps) 
               value={minPeople}
             />
             <p className="field-note">이 인원이 안 모이면 부담 없이 접을 수 있게 미리 알려둡니다.</p>
-          </label>
+            </label>
+          </div>
 
           <label className="field">
             <span className="field-label">한 줄 설명</span>
@@ -245,8 +249,9 @@ export function GatheringForm({ kind, onSubmit, onCancel }: GatheringFormProps) 
             />
           </label>
 
-          <label className="field">
-            <span className="field-label">대상</span>
+          <div className="gathering-pair">
+            <label className="field">
+              <span className="field-label">대상</span>
             <select onChange={(event) => setPart(event.target.value as TeamPart)} value={part}>
               {parts.map((item) => (
                 <option key={item}>{item}</option>
@@ -260,8 +265,9 @@ export function GatheringForm({ kind, onSubmit, onCancel }: GatheringFormProps) 
               {costs.map((item) => (
                 <option key={item}>{item}</option>
               ))}
-            </select>
-          </label>
+              </select>
+            </label>
+          </div>
         </div>
       )}
 
