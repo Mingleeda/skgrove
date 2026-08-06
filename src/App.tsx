@@ -112,6 +112,7 @@ import {
 } from './marketRules';
 import {
   cacheMarketBids,
+  deleteMarketBidsForItem,
   deleteMarketItemRecord,
   insertMarketBid,
   loadMarketBids,
@@ -1098,6 +1099,19 @@ export function App() {
     persistGatherings(gatherings.filter((item) => item.id !== gathering.id));
   };
 
+  // 완전 삭제. 취소(기록 보존)와 달리 모임과 신청 기록까지 통째로 지운다. 글쓴이(주최자)와 팀리더만.
+  const deleteGathering = (gathering: Gathering) => {
+    if (!currentUser) return;
+    if (gathering.host !== currentUser.name && !isTeamLeader(currentUser)) return;
+    // gathering_signups 는 gatherings 에 on delete cascade 라 DB 에서는 함께 지워진다.
+    void deleteGatheringRecord(gathering.id);
+    persistGatherings(gatherings.filter((item) => item.id !== gathering.id));
+    // 로컬 상태·캐시에 남은 신청 기록도 걷어낸다(DB cascade 는 로컬 미러를 모른다).
+    const nextSignups = gatheringSignups.filter((signup) => signup.gatheringId !== gathering.id);
+    setGatheringSignups(nextSignups);
+    cacheSignups(nextSignups);
+  };
+
   /* ===== 이음장터 ===== */
 
   const persistMarketItems = (next: MarketItem[]) => {
@@ -1252,6 +1266,19 @@ export function App() {
     }
     void deleteMarketItemRecord(item.id);
     persistMarketItems(marketItems.filter((entry) => entry.id !== item.id));
+  };
+
+  // 완전 삭제. 내리기(기록 보존)와 달리 물건과 입찰 기록까지 통째로 지운다. 글쓴이(판매자)와 팀리더만.
+  const deleteMarketItem = (item: MarketItem) => {
+    if (!currentUser) return;
+    if (item.seller !== currentUser.name && !isTeamLeader(currentUser)) return;
+    void deleteMarketItemRecord(item.id);
+    // market_bids 는 item 에 FK 가 없어 DB 에서 자동으로 안 지워진다. 명시적으로 걷어낸다.
+    void deleteMarketBidsForItem(item.id);
+    persistMarketItems(marketItems.filter((entry) => entry.id !== item.id));
+    const nextBids = marketBids.filter((bid) => bid.itemId !== item.id);
+    setMarketBids(nextBids);
+    cacheMarketBids(nextBids);
   };
 
   /* 거래 완료는 양쪽이 각각 누른다. 앱은 결제를 다루지 않아 누가 잘못했는지
@@ -1466,6 +1493,8 @@ export function App() {
           onLeave={(gathering) => void leaveGathering(gathering)}
           imagePendingIds={imagePendingIds}
           onCancelGathering={cancelGathering}
+          canModerate={isTeamLeader(currentUser)}
+          onDelete={deleteGathering}
         />
       )}
       {active === 'market' && (
@@ -1480,6 +1509,8 @@ export function App() {
           onCreate={(draft) => void createMarketItem(draft)}
           onUpdate={(item, draft) => void updateMarketItem(item, draft)}
           onMarkDone={markMarketDone}
+          canModerate={isTeamLeader(currentUser)}
+          onDelete={deleteMarketItem}
         />
       )}
       {active === 'notifications' && (

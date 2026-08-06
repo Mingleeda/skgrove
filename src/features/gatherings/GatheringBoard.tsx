@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import {
+  AlertTriangle,
   ArrowLeft,
   Ban,
   CalendarClock,
@@ -7,6 +8,7 @@ import {
   Hourglass,
   MapPin,
   Plus,
+  Trash2,
   Users,
   Wallet,
   Zap,
@@ -39,6 +41,10 @@ type GatheringBoardProps = {
   onJoin: (gathering: Gathering) => void;
   onLeave: (gathering: Gathering) => void;
   onCancelGathering: (gathering: Gathering) => void;
+  /** 팀리더 권한. 남의 모임도 삭제할 수 있다. */
+  canModerate: boolean;
+  /** 완전 삭제(모임 + 신청 기록). 주최자 또는 팀리더만 호출한다. */
+  onDelete: (gathering: Gathering) => void;
   /** 등록 직후 배경에서 그림을 그리는 중인 모임. 격자에 '그리는 중' 을 띄운다. */
   imagePendingIds: string[];
 };
@@ -93,11 +99,15 @@ export function GatheringBoard({
   onJoin,
   onLeave,
   onCancelGathering,
+  canModerate,
+  onDelete,
   imagePendingIds,
 }: GatheringBoardProps) {
   const [view, setView] = useState<BoardView>('feed');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [filter, setFilter] = useState<Filter>('모집중');
+  // 삭제는 되돌릴 수 없어 상세 안에서 펼치는 확인 UI로 받는다(유머와 같은 방식).
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   const visible = sortGatherings(
     gatherings.filter((item) => {
@@ -117,6 +127,7 @@ export function GatheringBoard({
   const openDetail = (id: string) => {
     setSelectedId(id);
     setView('detail');
+    setConfirmingDelete(false);
   };
 
   const create = (draft: GatheringDraft) => {
@@ -241,7 +252,38 @@ export function GatheringBoard({
                   모임 취소
                 </button>
               )}
+
+              {(isHost || canModerate) && !confirmingDelete && (
+                <button className="btn-ghost danger" onClick={() => setConfirmingDelete(true)} type="button">
+                  <Trash2 size={16} />
+                  삭제
+                </button>
+              )}
             </div>
+
+            {confirmingDelete && (
+              <div className="agenda-close-box">
+                <AlertTriangle size={18} />
+                <p>이 모임을 삭제하면 되돌릴 수 없어요. 신청자·대기자 기록도 함께 사라집니다.</p>
+                <div className="vote-confirm-actions">
+                  <button className="secondary-button" onClick={() => setConfirmingDelete(false)} type="button">
+                    취소
+                  </button>
+                  <button
+                    className="primary-button"
+                    type="button"
+                    onClick={() => {
+                      onDelete(selected);
+                      setConfirmingDelete(false);
+                      setView('feed');
+                    }}
+                  >
+                    <Trash2 size={16} />
+                    삭제 확정
+                  </button>
+                </div>
+              </div>
+            )}
 
             <div className="roster">
               <p className="roster-title">

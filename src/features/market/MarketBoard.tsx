@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import {
+  AlertTriangle,
   ArrowLeft,
   Ban,
   Check,
@@ -10,6 +11,7 @@ import {
   Package,
   Pencil,
   Plus,
+  Trash2,
   Trophy,
 } from 'lucide-react';
 import { EmptyState } from '../../components/EmptyState';
@@ -52,6 +54,10 @@ type MarketBoardProps = {
   onBid: (item: MarketItem, amount: number) => void;
   onCancelItem: (item: MarketItem) => void;
   onMarkDone: (item: MarketItem) => void;
+  /** 팀리더 권한. 남의 물건도 삭제할 수 있다. */
+  canModerate: boolean;
+  /** 완전 삭제(물건 + 입찰 기록). 판매자 또는 팀리더만 호출한다. */
+  onDelete: (item: MarketItem) => void;
 };
 
 type BoardView = 'feed' | 'create' | 'edit' | 'detail';
@@ -84,12 +90,16 @@ export function MarketBoard({
   onBid,
   onCancelItem,
   onMarkDone,
+  canModerate,
+  onDelete,
 }: MarketBoardProps) {
   const [view, setView] = useState<BoardView>('feed');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [filter, setFilter] = useState<Filter>('거래중');
   const [amountInput, setAmountInput] = useState('');
   const [bidError, setBidError] = useState('');
+  // 삭제는 되돌릴 수 없어 상세 안에서 펼치는 확인 UI로 받는다(유머와 같은 방식).
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   const visible = sortItems(
     items.filter((item) => {
@@ -110,6 +120,7 @@ export function MarketBoard({
     setSelectedId(id);
     setAmountInput('');
     setBidError('');
+    setConfirmingDelete(false);
     setView('detail');
   };
 
@@ -284,7 +295,38 @@ export function MarketBoard({
                   거래 내리기
                 </button>
               )}
+
+              {(isSeller || canModerate) && !confirmingDelete && (
+                <button className="btn-ghost danger" onClick={() => setConfirmingDelete(true)} type="button">
+                  <Trash2 size={16} />
+                  삭제
+                </button>
+              )}
             </div>
+
+            {confirmingDelete && (
+              <div className="agenda-close-box">
+                <AlertTriangle size={18} />
+                <p>이 물건을 삭제하면 되돌릴 수 없어요. 입찰 기록도 함께 사라집니다.</p>
+                <div className="vote-confirm-actions">
+                  <button className="secondary-button" onClick={() => setConfirmingDelete(false)} type="button">
+                    취소
+                  </button>
+                  <button
+                    className="primary-button"
+                    type="button"
+                    onClick={() => {
+                      onDelete(selected);
+                      setConfirmingDelete(false);
+                      setView('feed');
+                    }}
+                  >
+                    <Trash2 size={16} />
+                    삭제 확정
+                  </button>
+                </div>
+              </div>
+            )}
 
             {bidError && <p className="form-error">{bidError}</p>}
             {!blocked && selected.kind === 'auction' && (
