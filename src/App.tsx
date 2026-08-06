@@ -1274,11 +1274,20 @@ export function App() {
   };
 
   // 딥링크: 로그인 상태에서 #해시가 있으면 해당 화면으로 이동(슬랙 알림 링크 진입점).
+  // 단, 해시는 '한 번만' 소비하고 주소창에서 지운다. 안 지우면 슬랙 링크로 한 번
+  // 들어온 해시가 주소창에 계속 남아, 다음 로그인 때마다 그 페이지로 되돌아간다
+  // (닫았던 화면이 되살아나 '새 로그인 = 홈'이 깨짐). 소비 후 지우면 다음 로그인은
+  // 해시가 없어 홈(dashboard)으로 시작한다.
   useEffect(() => {
     if (!currentUser) return;
     const applyHash = () => {
       const target = SECTION_BY_HASH[window.location.hash];
-      if (target) changeSection(target);
+      if (!target) return;
+      changeSection(target);
+      // 해시를 읽는 하위 화면(예: 티미팅 tea 탭)이 먼저 읽도록 다음 틱에 지운다.
+      window.setTimeout(() => {
+        window.history.replaceState(null, '', window.location.pathname + window.location.search);
+      }, 0);
     };
     applyHash();
     window.addEventListener('hashchange', applyHash);

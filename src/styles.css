@@ -4391,6 +4391,38 @@ textarea {
   margin: -6px 0 12px;
 }
 
+/* 달 이동 바 — 이전/다음 달로 넘겨 아무 날짜나 고르게 한다. */
+.memory-month-nav {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: var(--space-3);
+}
+
+.memory-month-nav strong {
+  color: var(--color-ink);
+  font-size: var(--text-body);
+  font-weight: 700;
+}
+
+.memory-month-nav button {
+  align-items: center;
+  background: var(--tint-primary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  color: var(--color-ink);
+  cursor: pointer;
+  display: flex;
+  height: 32px;
+  justify-content: center;
+  width: 32px;
+}
+
+.memory-month-nav button:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
 .memory-calendar-sync {
   display: grid;
   gap: 6px;
@@ -4434,13 +4466,21 @@ textarea {
   text-align: left;
 }
 
-/* 월 달력 칸에 행사 제목을 넣을 자리는 없다. 표시만 남기고 이름은 바로 아래
-   행사 목록과 툴팁이 맡는다. */
-.memory-day-dot {
-  background: var(--color-primary);
-  border-radius: 999px;
-  height: 6px;
-  width: 6px;
+/* 달력 칸에 행사 제목을 바로 보여준다. 칸이 좁아 긴 제목은 두 줄로 자른다
+   (알약 배지가 아니라 읽는 텍스트라, 아래 .memory-calendar small 의 배지를 덮는다). */
+.memory-calendar .memory-day-title {
+  -webkit-box-orient: vertical;
+  background: none;
+  color: var(--color-primary-strong);
+  display: -webkit-box;
+  font-size: var(--text-micro);
+  font-weight: 700;
+  line-height: 1.25;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  padding: 0;
+  text-align: left;
+  width: auto;
 }
 
 .memory-calendar button.selected {
@@ -4671,6 +4711,80 @@ textarea {
   font-size: var(--text-meta);
   line-height: 1.45;
   padding: 0 var(--space-3);
+}
+
+/* 상세 머리 — 행사 정보 한 줄 + 오른쪽에 수정·삭제. 좁으면 아래로 접힌다. */
+.memory-detail-head {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  justify-content: space-between;
+}
+
+.memory-detail-actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.memory-detail-actions button {
+  align-items: center;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius);
+  color: var(--color-ink);
+  cursor: pointer;
+  display: inline-flex;
+  font-size: var(--text-meta);
+  font-weight: 600;
+  gap: 4px;
+  min-height: 34px;
+  padding: 0 12px;
+}
+
+.memory-detail-actions button:hover {
+  border-color: var(--color-ink);
+}
+
+.memory-detail-actions button.danger {
+  border-color: var(--color-danger);
+  color: var(--color-danger);
+}
+
+.memory-detail-actions button.danger:hover {
+  background: var(--color-danger);
+  color: var(--color-surface);
+}
+
+/* 행사명·장소 편집 폼. */
+.memory-info-edit {
+  display: grid;
+  gap: var(--space-3);
+  padding: 0 var(--space-3);
+}
+
+.memory-info-edit label {
+  color: var(--color-muted);
+  display: grid;
+  font-size: var(--text-meta);
+  font-weight: 600;
+  gap: 4px;
+}
+
+.memory-info-edit input {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius);
+  color: var(--color-ink);
+  font-size: var(--text-body);
+  min-height: 40px;
+  padding: 0 12px;
+}
+
+.memory-info-edit-actions {
+  display: flex;
+  gap: var(--space-2);
+  justify-content: flex-end;
 }
 
 .memory-album-head {
@@ -10350,6 +10464,51 @@ button.notif-row {
   right: 8px;
   top: 8px;
   width: 26px;
+}
+
+/* 앨범 커버 칸 — 사진 위에 행사 이름·개수를 얹는다. 밝은 사진에서도 읽히도록
+   .ig-cell-mark 와 같은 스크림(어둠 한 겹) 위에 흰 글자를 둔다. */
+.memory-album-cell .memory-album-cap {
+  background: linear-gradient(to top, var(--scrim-strong), transparent);
+  bottom: 0;
+  color: var(--color-surface);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  left: 0;
+  padding: var(--space-4) var(--space-2) var(--space-2);
+  position: absolute;
+  right: 0;
+  text-align: left;
+}
+
+.memory-album-cell .memory-album-cap strong {
+  -webkit-box-orient: vertical;
+  display: -webkit-box;
+  font-size: var(--text-meta);
+  font-weight: 600;
+  line-height: 1.25;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+.memory-album-cell .memory-album-cap small {
+  font-size: var(--text-meta);
+  opacity: 0.85;
+}
+
+/* 상세로 들어간 앨범에서 목록으로 돌아가는 길. */
+.memory-back {
+  align-items: center;
+  background: none;
+  border: 0;
+  color: var(--color-primary);
+  cursor: pointer;
+  display: inline-flex;
+  font-size: var(--text-meta);
+  font-weight: 600;
+  gap: 4px;
+  padding: var(--space-2) var(--space-3);
 }
 
 /* 좁은 폭 — 반드시 위 기본 규칙 뒤에 온다. 앞에 두면 같은 특이도에서
