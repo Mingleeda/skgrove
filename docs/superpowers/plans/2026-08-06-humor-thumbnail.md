@@ -29,9 +29,7 @@
 - `src/types.ts` (수정) — `HumorPost.imageUrl?` 추가.
 - `supabase-schema.sql` (수정) — `humor_posts.image_url` 컬럼 + `humor-images` 버킷/정책.
 - `src/humorStore.ts` (수정) — row 매핑 + `uploadHumorImage`.
-- `scripts/image-proxy.mjs` (수정) — humor 프롬프트 함수 + 핸들러 분기(로컬 dev, 테스트 대상).
-- `src/humorImage.test.ts` (신규) — humor 프롬프트 순수 함수 테스트.
-- `api/gathering-image.ts` (수정) — humor 갈래(프로덕션 서버리스, 프록시와 동일 프롬프트).
+- `api/gathering-image.ts` (수정) — humor 갈래(유일한 서버 구현; Task 3의 로컬 프록시 미러링은 취소).
 - `src/humorImage.ts` (신규) — `requestHumorImage` 이음새.
 - `.env.example` / `.env.ai.example` (수정) — `VITE_HUMOR_IMAGE_ENDPOINT` 예시 주석.
 - `src/App.tsx` (수정) — `addHumorPost` 백그라운드 생성 + `patchHumorPost` + pending 전달.
@@ -290,168 +288,22 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 
 ---
 
-### Task 3: 로컬 프록시(image-proxy.mjs)에 humor 갈래 + 프롬프트 테스트
+### Task 3: [삭제됨 — 로컬 프록시 humor 갈래]
 
-`scripts/image-proxy.mjs`는 로컬 dev 프록시이자 프롬프트 순수 함수의 테스트 대상이다(기존 `gatheringImage.test.ts`가 이 파일에서 import). humor 프롬프트 함수와 핸들러 분기를 여기에 추가한다.
+**결정(2026-08-06):** 이 태스크는 취소됐다. 이음장터(market)가 로컬 프록시(`scripts/image-proxy.mjs`)를
+건드리지 않고 `api/gathering-image.ts`에만 item 갈래를 두었듯, humor도 **서버 로직을 `api/gathering-image.ts`
+한 곳(Task 4)에만** 둔다. 로컬 라이브 생성은 검증하지 않으며(dev 배포 환경에서 확인), 프록시↔서버리스
+프롬프트 이중화도 피한다. 원래 이 태스크로 넣었던 커밋 8f377d3 은 되돌렸다.
 
-**Files:**
-- Modify: `scripts/image-proxy.mjs`
-- Create: `src/humorImage.test.ts`
+### Task 4: 서버리스(api/gathering-image.ts)에 humor 갈래 — 유일한 서버 구현
 
-**Interfaces:**
-- Produces (from image-proxy.mjs):
-  - `export function humorFrame(): string` 는 만들지 않는다. 대신 상수+빌더:
-  - `export function buildHumorPrompt(subject)` — `STYLE + subject + HUMOR_FRAME` 한 줄.
-  - `usableSubject`(기존, 재사용) 로 번역 검증.
-
-- [ ] **Step 1: 실패하는 테스트 작성** — `src/humorImage.test.ts`
-
-```ts
-import { describe, expect, it } from 'vitest';
-import { buildHumorPrompt } from '../scripts/image-proxy.mjs';
-
-describe('buildHumorPrompt — 유머 장면 프롬프트', () => {
-  it('화풍(크레파스)과 장면 제약이 언제나 붙는다', () => {
-    const prompt = buildHumorPrompt('A cat knocking a cup off a desk while coworkers laugh.');
-    expect(prompt).toContain('crayon');
-    expect(prompt).toContain('A cat knocking a cup off a desk while coworkers laugh.');
-    // 말풍선·글자가 들어갈 자리가 없어야 격자가 깨끗하다.
-    expect(prompt.toLowerCase()).toContain('no speech bubble');
-  });
-  it('세로 4:5 썸네일로 고정한다 — 격자 통일감', () => {
-    expect(buildHumorPrompt('Anything funny.')).toContain('4:5');
-  });
-});
-```
-
-- [ ] **Step 2: 실패 확인**
-
-Run: `npm test -- humorImage`
-Expected: FAIL — `buildHumorPrompt` export 없음.
-
-- [ ] **Step 3: image-proxy.mjs에 humor 프롬프트 추가** — `FRAME`/`buildPrompt` 근처에
-
-```js
-/*
-  유머는 농담·짤을 그린다 — 사람이든 사물이든 '무슨 우스운 장면'인지가 주제다.
-  말장난이 많아 글자가 새기 쉬우므로, 말풍선·캡션·글자가 들어갈 자리를 아예 없앤다.
-  화풍은 크레파스 그대로 — 세 격자(모임·물건·유머)가 나란히 통일돼 보이게.
-*/
-const HUMOR_FRAME = [
-  'Vertical 4:5 thumbnail, single continuous funny scene filling the whole frame.',
-  'Full bleed edge to edge, no border, no white margin.',
-  'A light, wholesome, gently comic moment — nothing mean or crude.',
-  'No speech bubbles, no captions, no letters, no numbers anywhere.',
-  'Every surface is blank and unmarked. Faces simplified, no identifiable real person.',
-].join(' ');
-
-/** 유머: 화풍(고정) + 장면(가변) + 장면 제약(고정). */
-export function buildHumorPrompt(subject) {
-  return `${STYLE} A single funny everyday scene: ${subject}. ${HUMOR_FRAME}`;
-}
-
-/*
-  한국어 농담/짤 설명을 '무슨 우스운 장면인가'로 옮긴다. 말풍선·글자·캡션을 빼라고 지시한다 —
-  농담은 텍스트 유머가 많아, 그대로 두면 그림에 글자가 박힌다. 고유명사·실인물은 일반화한다.
-*/
-function askHumorSubject(body) {
-  return chat(
-    TEXT_MODEL,
-    [
-      {
-        role: 'user',
-        content:
-          'You write one-line scene descriptions for an illustrator.\n' +
-          'Turn this Korean humor post into ONE English sentence, 8-15 words, describing a single ' +
-          'funny visual scene one could draw. No speech, no captions, no text in the scene.\n' +
-          'Replace any real person or brand with a generic type. Keep it light and wholesome.\n' +
-          'Reply with the sentence alone — no markdown, no quotes, no preamble.\n' +
-          `글: ${body}`,
-      },
-    ],
-    60,
-  );
-}
-```
-
-- [ ] **Step 4: image-proxy.mjs — generateThumbnail을 humor도 처리하도록 확장**
-
-현재 `generateThumbnail(gathering)`은 모임 전용이다. 핸들러 `handleGatheringImage`가 `payload.humor`를 받으면 humor 경로로 그리도록 분기한다. `handleGatheringImage`의 본문 파싱부를 수정:
-
-```js
-    const gathering = payload?.gathering;
-    const humor = payload?.humor;
-    if (!gathering?.title && !humor?.body) {
-      send(200, { ok: false, reason: 'no subject' });
-      return;
-    }
-
-    const started = Date.now();
-    try {
-      const image = humor?.body
-        ? await generateHumorThumbnail(humor)
-        : await generateThumbnail(gathering);
-      const label = humor?.body ? humor.body.slice(0, 20) : gathering.title;
-      if (!image) {
-        console.warn(`[image] "${label}" 글자 제거 실패 — 폴백`);
-        send(200, { ok: false, reason: 'text remained' });
-        return;
-      }
-      const seconds = ((Date.now() - started) / 1000).toFixed(1);
-      console.log(`[image] "${label}" ${seconds}초 · 시도 ${image.attempts}회 · ${image.mime}`);
-      send(200, { ok: true, dataUri: image.dataUri, mime: image.mime, attempts: image.attempts });
-    } catch (error) {
-      console.error('[image] error:', String(error));
-      send(200, { ok: false, reason: String(error) });
-    }
-```
-
-그리고 `generateThumbnail` 아래에 humor용 생성기를 추가(재시도·글자검사 재사용):
-
-```js
-/** 유머 썸네일. 번역이 못 미더우면 밋밋한 fallback 장면으로. */
-export async function generateHumorThumbnail(humor) {
-  const translated = await askHumorSubject(humor.body).catch(() => '');
-  const subject = usableSubject(translated) ? translated : 'Coworkers laughing together at something silly.';
-  const prompt = buildHumorPrompt(subject);
-
-  let note = '';
-  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt += 1) {
-    const image = await draw(prompt + note);
-    const found = await findText(image.dataUri);
-    if (!found) return { ...image, attempts: attempt };
-    console.log(`[image] ${attempt}회차 글자 검출 → 재시도: ${found.replace(/\s+/g, ' ').slice(0, 40)}`);
-    note = retryNoteFor(found);
-  }
-  return null;
-}
-```
-
-- [ ] **Step 5: 테스트 확인**
-
-Run: `npm test -- humorImage && npm test -- gatheringImage`
-Expected: 둘 다 PASS (기존 gathering 테스트도 깨지지 않음).
-
-- [ ] **Step 6: 커밋**
-
-```bash
-git add scripts/image-proxy.mjs src/humorImage.test.ts
-git commit -m "로컬 프록시에 유머 썸네일 생성 갈래 추가
-
-Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
-```
-
----
-
-### Task 4: 프로덕션 서버리스(api/gathering-image.ts)에 humor 갈래 (프록시와 동일)
-
-로컬 프록시(Task 3)와 같은 프롬프트·로직을 프로덕션 서버리스 함수에도 넣는다. 이 파일이 배포 환경에서 실제로 도는 구현이다.
+humor 서버 로직은 이 파일 한 곳에만 둔다(Task 3 삭제). 이 파일이 배포 환경에서 실제로 도는 구현이며, market의 item 갈래와 같은 구조다. 프론트는 같은 `/api/gathering-image` 엔드포인트로 `{ humor: { body } }`를 보낸다.
 
 **Files:**
 - Modify: `api/gathering-image.ts`
 
 **Interfaces:**
-- Consumes: Task 3에서 확정한 프롬프트 문장(같은 문구를 재사용해 두 구현의 결과가 같게).
+- Consumes: 기존 `STYLE`/`chat`/`usableSubject`/`generateClean`(글자검사·재시도) 재사용.
 - Produces: `POST`가 `{ humor: { body } }`를 받으면 humor 이미지를 반환.
 
 - [ ] **Step 1: HumorInput 타입 추가** — `GatheringInput`/`ItemInput` 옆에
