@@ -97,7 +97,7 @@ import {
   saveGatherings,
   uploadGatheringImage,
 } from './gatheringStore';
-import { splitRoster } from './gatheringRules';
+import { coffeeCandidates, splitRoster } from './gatheringRules';
 import {
   bidBlockedReason,
   canEditMarketItem,
@@ -1015,6 +1015,32 @@ export function App() {
     }
   };
 
+  // 번개 커피뽑기: 주최자만, 1회 확정(잠김). 당첨자는 여기서 뽑아 즉시 저장한다 —
+  // 도는 연출과 결정을 분리해 모두가 같은 결과(저장값)를 본다.
+  const drawCoffeePick = (gathering: Gathering) => {
+    if (!currentUser || gathering.host !== currentUser.name) return;
+    if (gathering.coffeePick) return; // 잠김
+    const candidates = coffeeCandidates(gathering, gatheringSignups);
+    if (candidates.length < 2) return;
+    const winner = candidates[Math.floor(Math.random() * candidates.length)].name;
+    persistGatherings(
+      gatherings.map((item) =>
+        item.id === gathering.id
+          ? { ...item, coffeePick: winner, coffeePickedAt: new Date().toISOString() }
+          : item,
+      ),
+    );
+  };
+
+  const resetCoffeePick = (gathering: Gathering) => {
+    if (!currentUser || gathering.host !== currentUser.name) return;
+    persistGatherings(
+      gatherings.map((item) =>
+        item.id === gathering.id ? { ...item, coffeePick: null, coffeePickedAt: null } : item,
+      ),
+    );
+  };
+
   const cancelGathering = (gathering: Gathering) => {
     // 대기자도 그 시간을 비워두고 있었을 수 있다. 확정·대기를 가리지 않고 알린다.
     const applicants = gatheringSignups.filter((s) => s.gatheringId === gathering.id).map((s) => s.name);
@@ -1371,6 +1397,8 @@ export function App() {
           onLeave={(gathering) => void leaveGathering(gathering)}
           imagePendingIds={imagePendingIds}
           onCancelGathering={cancelGathering}
+          onDrawCoffee={drawCoffeePick}
+          onResetCoffee={resetCoffeePick}
         />
       )}
       {active === 'market' && (
