@@ -8,12 +8,16 @@ import {
   ImagePlus,
   MessageCircle,
   PartyPopper,
+  Pencil,
+  Trash2,
   UploadCloud,
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import type { ChangeEvent } from 'react';
 import { compressImage } from '../../imageCompress';
 import {
+  deleteMemoryAssetRecord,
+  deleteMemoryRecord,
   loadMemories,
   saveMemories,
   uploadMemoryAssetFile,
@@ -70,6 +74,10 @@ export function Memory({ currentUser }: MemoryProps) {
   // 게시물 탭 안의 두 단계. 'events'는 행사별 커버 한 장씩 보는 앨범 목록,
   // 'detail'은 한 행사로 들어가 그 안의 사진들을 보고 올리는 곳이다.
   const [view, setView] = useState<'events' | 'detail'>('events');
+  // 상세에서 행사명·장소를 고쳐 쓰는 중인지. 앨범을 옮기면 항상 닫는다.
+  const [editingInfo, setEditingInfo] = useState(false);
+  const [titleDraft, setTitleDraft] = useState('');
+  const [placeDraft, setPlaceDraft] = useState('');
 
   // 프로필 통계. 인스타의 게시물·팔로워 자리라 팀 전체를 세야 뜻이 맞는다.
   const totalAssets = memories.reduce((sum, memory) => sum + memory.assets.length, 0);
@@ -123,8 +131,45 @@ export function Memory({ currentUser }: MemoryProps) {
   const openAlbum = (memory: TeamMemory) => {
     setSelectedId(memory.id);
     setSelectedAssetId(memory.assets[0]?.id ?? 0);
+    setEditingInfo(false);
     setTab('grid');
     setView('detail');
+  };
+
+  // 행사명·장소 편집을 연다. 지금 값으로 입력칸을 채운다.
+  const startEditInfo = () => {
+    if (!selectedMemory) return;
+    setTitleDraft(selectedMemory.title);
+    setPlaceDraft(selectedMemory.place);
+    setEditingInfo(true);
+  };
+
+  const saveAlbumInfo = () => {
+    if (!selectedMemory) return;
+    const title = titleDraft.trim() || selectedMemory.title;
+    const place = placeDraft.trim() || '장소 미정';
+    persistMemories(
+      memories.map((memory) => (memory.id === selectedMemory.id ? { ...memory, title, place } : memory)),
+    );
+    setEditingInfo(false);
+  };
+
+  // 행사 삭제 — 사진·영상까지 함께 지운다. 화면(로컬)을 먼저 정리하고 목록으로
+  // 빠진 뒤, Supabase 의 파일·자산행·행사행을 지운다. persistMemories 는 upsert 라
+  // 지운 행사를 되살리지 않게, 남은 것만 저장하고 삭제는 별도로 호출한다.
+  const deleteAlbum = async (memory: TeamMemory) => {
+    const ok = window.confirm(`'${memory.title}' 행사를 삭제할까요?\n이 행사의 사진·영상도 함께 지워집니다.`);
+    if (!ok) return;
+
+    const remaining = memories.filter((item) => item.id !== memory.id);
+    persistMemories(remaining);
+    setEditingInfo(false);
+    setView('events');
+    setSelectedId(remaining[0]?.id ?? 0);
+    setSelectedAssetId(remaining[0]?.assets[0]?.id ?? 0);
+
+    await Promise.all(memory.assets.map((asset) => deleteMemoryAssetRecord(asset)));
+    await deleteMemoryRecord(memory.id);
   };
 
   const selectCalendarDay = (date: string, memory?: TeamMemory) => {
@@ -356,14 +401,65 @@ export function Memory({ currentUser }: MemoryProps) {
           </div>
         ) : (
         <div className="ig-grid-tab">
-          <button className="memory-back" type="button" onClick={() => setView('events')}>
+          <button
+            className="memory-back"
+            type="button"
+            onClick={() => {
+              setView('events');
+              setEditingInfo(false);
+            }}
+          >
             <ChevronLeft size={16} />
             앨범 목록
           </button>
-          <p className="ig-grid-note">
-            <b>{selectedMemory.title}</b>
-            {selectedMemory.date} · {selectedMemory.place} · 담당 {selectedMemory.host}
-          </p>
+
+          {editingInfo ? (
+            <div className="memory-info-edit">
+              <label>
+                행사명
+                <input
+                  value={titleDraft}
+                  onChange={(event) => setTitleDraft(event.target.value)}
+                  placeholder="예: 여름 팀 워크샵"
+                  aria-label="행사명"
+                />
+              </label>
+              <label>
+                장소
+                <input
+                  value={placeDraft}
+                  onChange={(event) => setPlaceDraft(event.target.value)}
+                  placeholder="예: 성수 라운지"
+                  aria-label="장소"
+                />
+              </label>
+              <div className="memory-info-edit-actions">
+                <button className="secondary-button" type="button" onClick={() => setEditingInfo(false)}>
+                  취소
+                </button>
+                <button className="primary-button" type="button" onClick={saveAlbumInfo}>
+                  저장
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="memory-detail-head">
+              <p className="ig-grid-note">
+                <b>{selectedMemory.title}</b>
+                {selectedMemory.date} · {selectedMemory.place} · 담당 {selectedMemory.host}
+              </p>
+              <div className="memory-detail-actions">
+                <button type="button" onClick={startEditInfo}>
+                  <Pencil size={14} />
+                  행사명 수정
+                </button>
+                <button type="button" className="danger" onClick={() => void deleteAlbum(selectedMemory)}>
+                  <Trash2 size={14} />
+                  삭제
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* 인스타 프로필 격자. 1:1 · 3열 · 3px 간격. 셀을 누르면 아래 게시물이 바뀐다. */}
           <div className="ig-cells">

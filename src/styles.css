@@ -4705,6 +4705,72 @@ textarea {
   padding: 0 var(--space-3);
 }
 
+/* 상세 머리 — 행사 정보 한 줄 + 오른쪽에 수정·삭제. 좁으면 아래로 접힌다. */
+.memory-detail-head {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  justify-content: space-between;
+}
+
+.memory-detail-actions {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.memory-detail-actions button {
+  align-items: center;
+  background: none;
+  border: 0;
+  color: var(--color-muted);
+  cursor: pointer;
+  display: inline-flex;
+  font-size: var(--text-meta);
+  font-weight: 600;
+  gap: 4px;
+  padding: var(--space-1) 0;
+}
+
+.memory-detail-actions button:hover {
+  color: var(--color-ink);
+}
+
+.memory-detail-actions button.danger {
+  color: var(--color-danger);
+}
+
+/* 행사명·장소 편집 폼. */
+.memory-info-edit {
+  display: grid;
+  gap: var(--space-3);
+  padding: 0 var(--space-3);
+}
+
+.memory-info-edit label {
+  color: var(--color-muted);
+  display: grid;
+  font-size: var(--text-meta);
+  font-weight: 600;
+  gap: 4px;
+}
+
+.memory-info-edit input {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius);
+  color: var(--color-ink);
+  font-size: var(--text-body);
+  min-height: 40px;
+  padding: 0 12px;
+}
+
+.memory-info-edit-actions {
+  display: flex;
+  gap: var(--space-2);
+  justify-content: flex-end;
+}
+
 .memory-album-head {
   align-items: center;
   background: var(--tint-primary);
