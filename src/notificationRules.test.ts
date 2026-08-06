@@ -28,6 +28,7 @@ const account = (patch: Partial<ManagedAccount> = {}): ManagedAccount => ({
 const agenda = (patch: Partial<Agenda> = {}): Agenda => ({
   id: 'AGD-T', title: '테스트 안건', description: '', category: '회의문화', source: '직접 등록',
   part: '전체', author: '익명', authorName: '', approve: 0, reject: 0, status: '투표중',
+  voteType: '찬반', options: [], multiSelect: false, voterCount: 0,
   createdAt: '2026-07-20', eligibleCount: 4, deadline: '', closedAt: '', ...patch,
 });
 

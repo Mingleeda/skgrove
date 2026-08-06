@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { loadAccounts, makeAccountId, saveAccounts, seedAccounts } from './accountStore';
 import { loadActionItems, makeActionItemId, saveActionItems } from './actionItemStore';
-import { finalStatus, isOpen, liveStatus, settleAgendas } from './agendaRules';
-import { loadAgendas, makeAgendaId, saveAgendas } from './agendaStore';
+import { applySelection, finalStatus, isOpen, liveStatus, settleAgendas } from './agendaRules';
+import { loadAgendas, makeAgendaId, makeAgendaOptions, saveAgendas } from './agendaStore';
 import { hasVoted, loadBallots, makeVoterKey, saveBallots } from './ballotStore';
 import { hasLeaderRole, isLeader, isTeamLeader, teamParts } from './auth';
 import { loadCanSteps, saveCanSteps } from './canStepsStore';
@@ -42,6 +42,7 @@ import {
 import { ActionBoard } from './features/actions/ActionBoard';
 import { ActionCreateForm } from './features/actions/ActionCreateForm';
 import { AgendaBoard } from './features/agenda/AgendaBoard';
+import type { AgendaDraft } from './features/agenda/AgendaForm';
 import { AccountManagement } from './features/auth/AccountManagement';
 import { LoginScreen } from './features/auth/LoginScreen';
 import { Connect } from './features/connect/Connect';
@@ -146,7 +147,7 @@ import type {
   Section,
   TeaSession,
   TeaSessionStatus,
-  VoteChoice,
+  VoteSelection,
 } from './types';
 
 const today = () => new Date().toISOString().slice(0, 10);
@@ -482,16 +483,17 @@ export function App() {
     ).length;
 
   // 안건 직접 등록(안건함 화면). 익명이면 작성자 이름은 저장하지 않는다.
-  const createAgenda = (
-    draft: Pick<Agenda, 'title' | 'description' | 'category' | 'part' | 'author' | 'deadline'>,
-  ) => {
+  const createAgenda = (draft: AgendaDraft) => {
+    const { optionLabels, ...rest } = draft;
     const next: Agenda = {
-      ...draft,
+      ...rest,
       id: makeAgendaId(),
       source: '직접 등록',
       authorName: draft.author === '실명' ? (currentUser?.name ?? '') : '',
       approve: 0,
       reject: 0,
+      options: makeAgendaOptions(optionLabels),
+      voterCount: 0,
       status: '투표중',
       createdAt: today(),
       eligibleCount: eligibleCountFor(draft.part),
@@ -520,6 +522,11 @@ export function App() {
       authorName: shouldAnonymize || draft.author === '익명' ? '' : (currentUser?.name ?? ''),
       approve: 0,
       reject: 0,
+      // 대나무숲에서 올라온 안건은 "이 제안을 받아들일까"를 묻는 것이라 늘 찬반이다.
+      voteType: '찬반',
+      options: [],
+      multiSelect: false,
+      voterCount: 0,
       status: '투표중',
       createdAt: today(),
       eligibleCount: eligibleCountFor(draft.part),
@@ -548,11 +555,16 @@ export function App() {
   //  - 선택(찬성/반대)은 안건의 카운터에만 더한다. 누가 골랐는지는 남기지 않는다.
   //  - "이 사람이 투표했다"는 사실만 투표용지에 남긴다. 무엇을 골랐는지는 담지 않는다.
   // 두 기록이 만나지 않으므로 중복은 막으면서 선택은 익명으로 남는다.
-  const vote = async (id: string, type: VoteChoice) => {
+  const vote = async (id: string, selection: VoteSelection) => {
     if (!currentUser) return;
 
     const target = agendas.find((agenda) => agenda.id === id);
     if (!target || !isOpen(target)) return;
+
+    const applied = applySelection(target, selection);
+    // 고른 것이 없거나 없는 선택지를 가리키면 투표용지까지 써버리면 안 된다.
+    // 한 번 남은 투표용지는 지울 수 없어서, 표는 안 들어가고 투표권만 사라진다.
+    if (!applied) return;
 
     const voterKey = await makeVoterKey(currentUser.email, id);
     if (hasVoted(ballots, id, voterKey)) return;
@@ -560,10 +572,9 @@ export function App() {
     persistAgendas(
       agendas.map((agenda) => {
         if (agenda.id !== id) return agenda;
-        const next = { ...agenda, [type]: agenda[type] + 1 };
-        const status = liveStatus(next);
+        const status = liveStatus(applied);
         // 조기 확정된 경우에만 마감 처리한다. 아직 뒤집힐 수 있으면 열어둔다.
-        return status === '투표중' ? next : { ...next, status, closedAt: today() };
+        return status === '투표중' ? applied : { ...applied, status, closedAt: today() };
       }),
     );
 
@@ -668,6 +679,11 @@ export function App() {
         authorName: '',
         approve: 0,
         reject: 0,
+        // 캔미팅 후속 안건도 제목 하나로 찬반을 묻는 형태다.
+        voteType: '찬반',
+        options: [],
+        multiSelect: false,
+        voterCount: 0,
         status: '투표중',
         createdAt: today(),
         eligibleCount: eligibleCountFor('전체'),

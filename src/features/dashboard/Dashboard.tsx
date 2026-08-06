@@ -12,6 +12,7 @@ import {
   Zap,
 } from 'lucide-react';
 import { daysUntilDue, isDone, isOverdue, sortActionItems } from '../../actionRules';
+import { optionRate, voteTotal, winningOptions } from '../../agendaRules';
 import { mySeat, timeUntil } from '../../gatheringRules';
 import { PanelHeader } from '../../components/PanelHeader';
 import { STATUS_ICON, dueLabel } from '../actions/actionDisplay';
@@ -165,8 +166,10 @@ export function Dashboard({
         </div>
 
         {votingAgendas.slice(0, 2).map((agenda) => {
-          const total = agenda.approve + agenda.reject || 1;
-          const approveRate = Math.round((agenda.approve / total) * 100);
+          const total = voteTotal(agenda);
+          const approveRate = total === 0 ? 0 : Math.round((agenda.approve / total) * 100);
+          const multipleChoice = agenda.voteType === '객관식';
+          const winners = winningOptions(agenda);
           return (
             <article className="ig-post plain" key={agenda.id}>
               <header className="ig-post-head">
@@ -188,16 +191,32 @@ export function Dashboard({
                     실제 투표는 안건함에서 한다 — 홈에서 한 표가 잘못 나가면
                     되돌리는 화면이 따로 없다. */}
                 <div className="ig-poll">
-                  <div className="ig-opt win">
-                    <span className="ig-opt-bar" style={{ width: `${approveRate}%` }} />
-                    <b>찬성</b>
-                    <em>{approveRate}%</em>
-                  </div>
-                  <div className="ig-opt">
-                    <span className="ig-opt-bar" style={{ width: `${100 - approveRate}%` }} />
-                    <b>반대</b>
-                    <em>{100 - approveRate}%</em>
-                  </div>
+                  {multipleChoice ? (
+                    agenda.options.map((option) => {
+                      const share = optionRate(agenda, option);
+                      const leading = total > 0 && winners.some((winner) => winner.id === option.id);
+                      return (
+                        <div className={leading ? 'ig-opt win' : 'ig-opt'} key={option.id}>
+                          <span className="ig-opt-bar" style={{ width: `${share}%` }} />
+                          <b>{option.label}</b>
+                          <em>{share}%</em>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <>
+                      <div className="ig-opt win">
+                        <span className="ig-opt-bar" style={{ width: `${approveRate}%` }} />
+                        <b>찬성</b>
+                        <em>{approveRate}%</em>
+                      </div>
+                      <div className="ig-opt">
+                        <span className="ig-opt-bar" style={{ width: `${100 - approveRate}%` }} />
+                        <b>반대</b>
+                        <em>{100 - approveRate}%</em>
+                      </div>
+                    </>
+                  )}
                 </div>
 
                 <button className="ig-join" onClick={() => onSectionChange('agenda')} type="button">

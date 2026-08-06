@@ -2043,6 +2043,12 @@ textarea {
   color: var(--tint-danger-ink);
 }
 
+/* 객관식이 끝난 상태. 통과와 같은 "결론이 났다"는 뜻이라 같은 색을 쓴다. */
+.status-dot.결정됨 {
+  background: var(--tint-success);
+  color: var(--tint-success-ink);
+}
+
 /* 진행바 트랙은 페이지색이 아니라 파랑 틴트다(design.md 5.5). 카드 위에
    얹히는 요소라 페이지색을 쓰면 카드와 같은 흰 면 위에서 사라진다. */
 .vote-bar,
@@ -2143,12 +2149,16 @@ textarea {
   font-size: var(--text-body);
 }
 
+/* 이 패널은 .screen(grid)의 아이템이다. 그리드 아이템에 margin:auto를 주면 stretch가
+   꺼지고 폭이 '내용물 크기'로 정해진다 — 안에 든 글이 짧아지는 순간 폼이 통째로 쪼그라든다.
+   width를 못 박아 폭이 내용에 끌려다니지 않게 한다. */
 .agenda-form-panel,
 .agenda-detail-panel {
   display: grid;
   gap: var(--space-4);
   margin: 0 auto;
   max-width: 720px;
+  width: 100%;
 }
 
 .agenda-detail-head {
@@ -2197,6 +2207,126 @@ textarea {
   font-size: var(--text-body);
   font-weight: 700;
   gap: 6px;
+}
+
+/* 안건 등록 폼의 선택 카드는 아이콘과 이름만 남긴다.
+   이 화면에서만 고를 것이 넷(익명/실명 · 찬반/객관식)이라, 카드마다 설명이 붙으면
+   정작 채워야 할 제목·배경 설명이 화면 밖으로 밀려난다. 다른 화면의 카드는 그대로 둔다. */
+.agenda-form-panel .choice-card {
+  align-items: center;
+  gap: var(--space-2);
+  grid-auto-flow: column;
+  justify-content: start;
+  min-height: 0;
+  padding: var(--space-3);
+}
+
+/* 폼 안에서 여러 입력을 한 덩어리로 묶는 제목. label이 아니라 묶음의 이름이다. */
+.form-section-label {
+  color: var(--color-ink);
+  font-size: var(--text-body);
+  font-weight: 700;
+}
+
+.agenda-options-editor {
+  display: grid;
+  gap: 10px;
+}
+
+.agenda-option-row {
+  display: flex;
+  gap: 8px;
+}
+
+.agenda-option-row input {
+  flex: 1;
+  min-width: 0;
+}
+
+.agenda-option-remove {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  color: var(--color-muted);
+  flex: none;
+  width: 42px;
+}
+
+.agenda-option-remove:disabled {
+  opacity: 0.4;
+}
+
+.agenda-multi-toggle {
+  align-items: start;
+  display: flex;
+  gap: 10px;
+}
+
+/* 전역 input은 width:100% · min-height:42px짜리 텍스트 입력 기준이다.
+   체크박스가 그걸 물려받으면 줄을 통째로 먹고 옆 설명이 세로로 눌린다. */
+.agenda-multi-toggle input {
+  flex: none;
+  height: 18px;
+  margin-top: 3px;
+  min-height: 0;
+  padding: 0;
+  width: 18px;
+}
+
+.agenda-multi-toggle span {
+  color: var(--color-muted);
+  display: grid;
+  font-size: var(--text-body);
+  gap: 2px;
+  line-height: 1.45;
+}
+
+.agenda-multi-toggle strong {
+  color: var(--color-ink);
+}
+
+/* 투표 전 선택지 고르기. 결과 막대(.ig-opt)와 높이를 맞춰
+   고른 뒤 결과 화면으로 넘어갈 때 줄이 튀지 않게 한다. */
+.agenda-choice-list {
+  display: grid;
+  gap: 6px;
+}
+
+.agenda-choice {
+  align-items: center;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  color: var(--color-ink);
+  display: flex;
+  font-size: var(--text-body);
+  gap: 10px;
+  min-height: 44px;
+  padding: 0 var(--space-3);
+  text-align: left;
+}
+
+.agenda-choice.selected {
+  background: var(--tint-primary);
+  border-color: var(--color-primary);
+  font-weight: 600;
+}
+
+.agenda-choice-mark {
+  align-items: center;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  display: flex;
+  flex: none;
+  height: 20px;
+  justify-content: center;
+  width: 20px;
+}
+
+.agenda-choice.selected .agenda-choice-mark {
+  background: var(--color-cta);
+  border-color: var(--color-cta);
+  color: var(--color-cta-ink);
 }
 
 .issue-body-box {
