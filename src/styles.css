@@ -12268,3 +12268,28 @@ button.notif-row {
   font-style: normal;
   opacity: 0.75;
 }
+
+/* 번개 만들 때 '커피 뽑기' 켜는 토글 */
+.checkline.coffee-toggle {
+  align-items: center;
+  gap: 8px;
+}
+.checkline.coffee-toggle > span {
+  display: grid;
+  gap: 1px;
+}
+.checkline.coffee-toggle strong {
+  font-size: var(--text-meta);
+  font-weight: 600;
+}
+.checkline.coffee-toggle em {
+  color: var(--color-muted);
+  font-size: var(--text-micro);
+  font-style: normal;
+}
+/* 상세의 커피 안내 문구 — 아이콘과 한 줄로 */
+.coffee-pick-hint {
+  align-items: center;
+  display: flex;
+  gap: 6px;
+}

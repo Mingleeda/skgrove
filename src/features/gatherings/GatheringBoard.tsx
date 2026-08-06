@@ -291,7 +291,7 @@ export function GatheringBoard({
               </div>
             )}
 
-            {selected.kind === 'flash' && !selected.canceled && (selected.coffeePick || isHost) && (
+            {selected.kind === 'flash' && !selected.canceled && selected.coffeeDraw && (
               <div className="coffee-pick">
                 {selected.coffeePick ? (
                   <div className="coffee-pick-result">
@@ -313,9 +313,15 @@ export function GatheringBoard({
                       커피 살 사람 뽑기
                     </button>
                   ) : (
-                    <p className="coffee-pick-hint">확정 2명부터 커피 담당을 뽑을 수 있어요</p>
+                    <p className="coffee-pick-hint">
+                      <Coffee size={15} /> 확정 2명부터 커피 담당을 뽑을 수 있어요
+                    </p>
                   )
-                ) : null}
+                ) : (
+                  <p className="coffee-pick-hint">
+                    <Coffee size={15} /> 이 번개는 주최자가 커피 담당을 뽑아요
+                  </p>
+                )}
               </div>
             )}
 

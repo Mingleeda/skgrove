@@ -31,6 +31,7 @@ type GatheringRow = {
   host?: string | null;
   created_at?: string | null;
   canceled?: boolean | null;
+  coffee_draw?: boolean | null;
   coffee_pick?: string | null;
   coffee_picked_at?: string | null;
 };
@@ -80,6 +81,7 @@ function gatheringFromRow(row: GatheringRow): Gathering {
     host: row.host ?? '',
     createdAt: row.created_at?.slice(0, 10) ?? '',
     canceled: Boolean(row.canceled),
+    coffeeDraw: row.coffee_draw ?? false,
     coffeePick: row.coffee_pick ?? null,
     coffeePickedAt: row.coffee_picked_at ?? null,
   };
@@ -103,6 +105,7 @@ function gatheringToRow(gathering: Gathering): GatheringRow {
     host: gathering.host,
     created_at: gathering.createdAt,
     canceled: gathering.canceled,
+    coffee_draw: gathering.coffeeDraw ?? false,
     coffee_pick: gathering.coffeePick ?? null,
     coffee_picked_at: gathering.coffeePickedAt ?? null,
   };

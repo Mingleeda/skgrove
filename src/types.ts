@@ -439,6 +439,8 @@ export type Gathering = {
   host: string; // 주최자 실명 — 로그인 사용자에서 자동
   createdAt: string; // 'YYYY-MM-DD'
   // 번개에서 뽑은 '오늘 커피 담당' 실명. 없음/undefined = 아직 안 뽑음. 번개(flash)에서만 쓴다.
+  // 번개를 만들 때 주최자가 '커피 뽑기'를 켰는가(opt-in). flash 에서만 의미. 켜야 상세에 커피 영역이 뜬다.
+  coffeeDraw?: boolean;
   coffeePick?: string | null;
   coffeePickedAt?: string | null; // ISO. 언제 뽑았는지(표시용)
   canceled: boolean;

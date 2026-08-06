@@ -204,13 +204,18 @@ describe('coffeeCandidates / canDrawCoffee', () => {
     expect(list.map((s) => s.name)).toEqual(['가', '나']);
   });
 
-  it('flash + 확정 2명 이상 + 아직 안 뽑음이면 뽑을 수 있다', () => {
-    const g = meetup({ kind: 'flash', capacity: null });
+  it('커피 뽑기를 켠 flash + 확정 2명 이상 + 아직 안 뽑음이면 뽑을 수 있다', () => {
+    const g = meetup({ kind: 'flash', capacity: null, coffeeDraw: true });
     expect(canDrawCoffee(g, signups(['가', '나']))).toBe(true);
   });
 
+  it('커피 뽑기를 안 켠 번개는 확정 2명이어도 뽑을 수 없다', () => {
+    const g = meetup({ kind: 'flash', capacity: null, coffeeDraw: false });
+    expect(canDrawCoffee(g, signups(['가', '나']))).toBe(false);
+  });
+
   it('확정이 1명이면 뽑을 수 없다', () => {
-    const g = meetup({ kind: 'flash', capacity: null });
+    const g = meetup({ kind: 'flash', capacity: null, coffeeDraw: true });
     expect(canDrawCoffee(g, signups(['가']))).toBe(false);
   });
 
@@ -220,12 +225,12 @@ describe('coffeeCandidates / canDrawCoffee', () => {
   });
 
   it('이미 뽑았으면(잠김) 다시 뽑을 수 없다', () => {
-    const g = meetup({ kind: 'flash', capacity: null, coffeePick: '가' });
+    const g = meetup({ kind: 'flash', capacity: null, coffeeDraw: true, coffeePick: '가' });
     expect(canDrawCoffee(g, signups(['가', '나']))).toBe(false);
   });
 
   it('취소된 모임에서는 뽑을 수 없다', () => {
-    const g = meetup({ kind: 'flash', capacity: null, canceled: true });
+    const g = meetup({ kind: 'flash', capacity: null, coffeeDraw: true, canceled: true });
     expect(canDrawCoffee(g, signups(['가', '나']))).toBe(false);
   });
 });

@@ -39,6 +39,7 @@ export function coffeeCandidates(gathering: Gathering, signups: GatheringSignup[
  */
 export function canDrawCoffee(gathering: Gathering, signups: GatheringSignup[]) {
   if (gathering.kind !== 'flash') return false;
+  if (!gathering.coffeeDraw) return false; // 주최자가 만들 때 커피 뽑기를 켠 번개에서만
   if (gathering.canceled) return false;
   if (gathering.coffeePick) return false;
   return coffeeCandidates(gathering, signups).length >= 2;

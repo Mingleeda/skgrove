@@ -1,12 +1,12 @@
 import { useMemo, useState, type ChangeEvent } from 'react';
-import { CalendarClock, ChevronDown, ImagePlus, MapPin, Trash2, Users, Zap } from 'lucide-react';
+import { CalendarClock, ChevronDown, Coffee, ImagePlus, MapPin, Trash2, Users, Zap } from 'lucide-react';
 import { PanelHeader } from '../../components/PanelHeader';
 import { teamParts } from '../../auth';
 import type { Gathering, GatheringCost, GatheringKind, TeamPart } from '../../types';
 
 export type GatheringDraft = Pick<
   Gathering,
-  'title' | 'startAt' | 'place' | 'capacity' | 'closeAt' | 'minPeople' | 'desc' | 'part' | 'cost'
+  'title' | 'startAt' | 'place' | 'capacity' | 'closeAt' | 'minPeople' | 'desc' | 'part' | 'cost' | 'coffeeDraw'
 > & { kind: GatheringKind; imageFile: File | null };
 
 type GatheringFormProps = {
@@ -73,6 +73,7 @@ export function GatheringForm({ onSubmit, onCancel }: GatheringFormProps) {
   const [desc, setDesc] = useState('');
   const [part, setPart] = useState<TeamPart>('전체');
   const [cost, setCost] = useState<GatheringCost>('없음');
+  const [coffeeDraw, setCoffeeDraw] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [error, setError] = useState('');
 
@@ -136,6 +137,8 @@ export function GatheringForm({ onSubmit, onCancel }: GatheringFormProps) {
       desc: desc.trim(),
       part,
       cost,
+      // 커피 뽑기는 번개에서만. 공모로 냈다가 번개로 바꿔도 값이 남지 않게 여기서 정리한다.
+      coffeeDraw: isFlash ? coffeeDraw : false,
       imageFile,
     });
   };
@@ -246,6 +249,18 @@ export function GatheringForm({ onSubmit, onCancel }: GatheringFormProps) {
         {!unlimited && <p className="field-note">정원을 넘으면 대기 순번으로 받고, 앞사람이 취소하면 자동으로 올라갑니다.</p>}
         </div>
       </div>
+
+      {/* 커피 뽑기는 '이 번개에서 할지'를 만들 때 정한다. 실제 뽑기는 사람이 모인 뒤 상세에서. */}
+      {isFlash && (
+        <label className="checkline coffee-toggle">
+          <input checked={coffeeDraw} onChange={(event) => setCoffeeDraw(event.target.checked)} type="checkbox" />
+          <Coffee size={16} />
+          <span>
+            <strong>커피 살 사람 뽑기</strong>
+            <em>모인 사람 중에서 오늘 커피 담당을 이 번개에서 뽑아요</em>
+          </span>
+        </label>
+      )}
 
       <button className="more-toggle" onClick={() => setMoreOpen((open) => !open)} type="button">
         <ChevronDown className={moreOpen ? 'rotated' : ''} size={16} />
