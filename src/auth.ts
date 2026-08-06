@@ -43,6 +43,13 @@ export function hasTeamLeaderRole(user: CurrentUser) {
   return user.role === '팀리더';
 }
 
+// 커넥셔너 전권을 적용하지 않는 '리더 역할'(파트리더·팀리더) 체크.
+// 리더 관리함처럼 실제 사람-리더에게만 열려야 하는 화면에 쓴다 — 커넥셔너는
+// 시스템 관리자일 뿐 사람들의 리더가 아니라, 리더에게 온 접수를 봐선 안 된다.
+export function hasLeaderRole(user: CurrentUser) {
+  return user.role === '파트리더' || user.role === '팀리더';
+}
+
 export function isCompanyEmail(email: string) {
   return /^[^\s@]+@sk\.com$/i.test(email.trim());
 }

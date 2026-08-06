@@ -5,6 +5,7 @@ import { createRoot } from 'react-dom/client';
 import 'pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css';
 import { App } from './App';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { startVersionWatch } from './versionWatch';
 import './styles.css';
 
 // 바깥 경계. 여기까지 오면 앱 전체가 죽은 상황이라 최소한의 안내와 재시도만 남긴다.
@@ -14,3 +15,6 @@ createRoot(document.getElementById('root')!).render(
     <App />
   </ErrorBoundary>,
 );
+
+// 새 배포가 나오면 옛 번들 탭이 스스로 최신화된다(공유 DB 를 옛 로직으로 되돌리는 사고 방지).
+void startVersionWatch();

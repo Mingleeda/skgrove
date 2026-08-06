@@ -1,28 +1,38 @@
-// 모임 썸네일 생성 (OpenRouter) — 사진을 첨부하지 않은 모임의 대표 이미지를 그린다.
+// 크레파스 썸네일 생성 함수 (OpenRouter) — 사진을 첨부하지 않은 카드의 대표 이미지를 그린다.
+// 모임·번개(gathering)와 벼룩숲(market) 두 곳이 이 함수를 함께 쓴다. 화풍·글자 제거 재시도
+// 엔진은 하나로 공유하고, "무엇을 그리나"(주제·구도)만 갈린다. 로컬 프록시 scripts/image-proxy.mjs
+// 에서 옮겨온 것. 프론트(gatheringImage.ts / marketImage.ts)는 등록값(사실)만 넘긴다. 키는 서버에만.
 //
-// scripts/image-proxy.mjs 의 배포판이다. 로컬은 그 스크립트가, 배포는 이 함수가 같은
-// 규약(/api/gathering-image)을 답한다. 프롬프트와 화풍을 프론트가 아니라 서버가 갖는
-// 이유도 같다 — 화풍이 바뀌어도 프론트를 배포할 필요가 없고, 키가 브라우저로 안 나간다.
-//
-// 프론트(gatheringImage.ts)는 VITE_GATHERING_IMAGE_ENDPOINT 로 아래를 POST 한다:
-//   { gathering: { title, place, capacity, startAt } }
-// 응답: { ok: boolean, dataUri?: string, mime?: string, attempts?: number, reason?: string }
+// 프론트 규격:
+//   모임 : POST { gathering: { kind, title, startAt, place, capacity, desc } }
+//   물건 : POST { item: { kind, title, desc, place } }
+//   응답 : { ok: boolean, dataUri?: string, mime?: string, attempts?: number, reason?: string }
 //
 // 서버 환경변수(비밀은 서버에만):
-//   OPENROUTER_API_KEY       : OpenRouter 키. 없으면 휴면 → 프론트는 기존 로컬 포스터를 쓴다.
-//   OPENROUTER_MODEL         : 장면 한 줄을 짓는 텍스트 모델
-//   OPENROUTER_IMAGE_MODEL   : 그림 모델
-//   OPENROUTER_VISION_MODEL  : 글자 검사기. claude 계열은 이 경로에서 jpeg 를 거절해 쓸 수 없었다.
-//
-// 실행 시간: 한 번에 8초 안팎이고 최대 3회까지 다시 그린다. Vercel 기본 상한(10초)에
-// 걸리면 이미지가 조용히 안 나오고 에러도 안 뜬다 — vercel.json 에서 maxDuration 을 올린다.
+//   OPENROUTER_API_KEY     : OpenRouter 키. 없으면 휴면 → 프론트는 로컬 포스터로 폴백.
+//   OPENROUTER_MODEL       : 장면 번역용 텍스트 모델(기본 anthropic/claude-haiku-4.5)
+//   OPENROUTER_IMAGE_MODEL : 그림 모델(기본 google/gemini-3.1-flash-lite-image)
+//   OPENROUTER_VISION_MODEL: 글자 검사용 비전 모델(기본 google/gemini-3.1-flash-lite)
 
 type GatheringInput = {
+  kind?: string;
   title?: string;
+  startAt?: string;
   place?: string;
   capacity?: number | null;
-  startAt?: string;
+  desc?: string;
 };
+
+type ItemInput = {
+  kind?: string;
+  title?: string;
+  desc?: string;
+  place?: string;
+};
+
+type ChatPart = { type: string; text?: string; image_url?: { url: string } };
+type ChatMessage = { role: string; content: string | ChatPart[] };
+type Models = { text: string; image: string; vision: string };
 
 const CHAT_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const IMAGE_URL = 'https://openrouter.ai/api/v1/images';
@@ -34,6 +44,7 @@ function env(name: string): string | undefined {
 /*
   화풍은 코드에 고정한다. 격자에 스무 장이 쌓였을 때의 통일감이 여기서 나온다.
   건마다 화풍이 흔들리면 목록이 어지러워지는데, 그건 이 기능의 목적과 정반대다.
+  모임이든 물건이든 같은 크레파스 화풍을 쓴다 — 두 격자가 나란히 통일돼 보이게.
 */
 const STYLE = [
   "A child's crayon drawing on rough paper.",
@@ -48,7 +59,7 @@ const STYLE = [
   오히려 signage 가 활성화돼 간판이 그려진다. 카메라를 사람 쪽으로 당기면
   벽·간판·모니터가 자연히 화면 밖으로 나간다.
 */
-const FRAME = [
+const GATHERING_FRAME = [
   'Vertical 4:5 thumbnail, single continuous scene filling the whole frame.',
   'Full bleed edge to edge, no border, no white margin.',
   'Camera close on the people and what their hands are doing, so walls stay out of frame.',
@@ -57,6 +68,20 @@ const FRAME = [
   // 표면만 비우면 손에 든 종이·점수표에 숫자가 남는다. 소품까지 범위를 넓힌다.
   'Hands hold only the equipment of the activity itself — no paper, cards, tickets, menus or phones.',
   'Faces simplified, no identifiable real person.',
+].join(' ');
+
+/*
+  물건은 사람이 아니라 사물 하나를 그린다. 배경을 단색으로 비우고 사람·손·방을
+  화면에서 뺀다 — 물건 격자에서 스무 장이 같은 리듬으로 보이려면 구도가 단순해야 한다.
+  제품은 키캡·표지·브랜드처럼 글자를 달고 있기 쉬워, '모든 면을 비워라' 를 더 강하게 건다.
+  그래도 남는 글자는 아래 비전 검사가 잡아 다시 그리게 한다.
+*/
+const MARKET_FRAME = [
+  'Vertical 4:5 thumbnail. A single object on its own, centered and filling most of the frame.',
+  'Full bleed edge to edge, no border, no white margin.',
+  'Plain solid-color background, one soft flat color — no people, no hands, no room, nothing else.',
+  'Every surface of the object is completely blank: no text, no numbers, no logos, no brand marks,',
+  'no labels, no letters on keys or covers or screens. Simple naive shapes.',
 ].join(' ');
 
 /**
@@ -88,7 +113,7 @@ function castFor(capacity: number | null | undefined): string {
 
 /*
   번역이 지시를 못 알아듣고 '이미지가 첨부되지 않았다' 같은 답을 돌려준 적이 있다.
-  그대로 이미지 프롬프트에 넣으면 등산이 회식 장면이 되므로, 쓸 수 있는 문장인지 본다.
+  그대로 이미지 프롬프트에 넣으면 엉뚱한 장면이 되므로, 쓸 수 있는 문장인지 본다.
 */
 function usableSubject(line: string): boolean {
   const text = String(line || '').trim();
@@ -102,23 +127,25 @@ function usableSubject(line: string): boolean {
   data URI 의 타입이 실제 바이트와 다르면 비전 API 가 400 을 내고,
   그 빈 응답이 '글자 없음' 으로 오해돼 검사기가 통째로 무력화된다.
 */
-function sniffMime(bytes: Uint8Array): string {
-  if (bytes[0] === 0xff && bytes[1] === 0xd8) return 'image/jpeg';
-  if (bytes[0] === 0x89 && bytes[1] === 0x50) return 'image/png';
-  if (bytes.length > 12) {
-    const tag = String.fromCharCode(bytes[8], bytes[9], bytes[10], bytes[11]);
-    if (tag === 'WEBP') return 'image/webp';
-  }
+function sniffMime(buf: Buffer): string {
+  if (buf[0] === 0xff && buf[1] === 0xd8) return 'image/jpeg';
+  if (buf[0] === 0x89 && buf[1] === 0x50) return 'image/png';
+  if (buf.length > 12 && buf.slice(8, 12).toString() === 'WEBP') return 'image/webp';
   return 'application/octet-stream';
 }
 
-/** 화풍(고정) + 등록값(가변) + 제약(고정) 을 한 줄로 잇는다. */
-function buildPrompt(subject: string, gathering: GatheringInput): string {
+/** 모임: 화풍(고정) + 등록값(가변) + 사람 구도(고정). */
+function buildGatheringPrompt(subject: string, gathering: GatheringInput): string {
   return (
     `${STYLE} Subject: Korean coworkers in Korea. ${subject}` +
     ` Cast: ${castFor(gathering.capacity)}.` +
-    ` Mood: ${timeOfDay(gathering.startAt)}, friendly. ${FRAME}`
+    ` Mood: ${timeOfDay(gathering.startAt)}, friendly. ${GATHERING_FRAME}`
   );
+}
+
+/** 물건: 화풍(고정) + 사물 묘사(가변) + 단일 사물 구도(고정). */
+function buildItemPrompt(subject: string): string {
+  return `${STYLE} A single second-hand object drawn on its own: ${subject}. ${MARKET_FRAME}`;
 }
 
 /** 재시도 프롬프트. 같은 말을 반복하면 같은 이유로 또 글자가 나온다. */
@@ -126,15 +153,18 @@ function retryNoteFor(found: string): string {
   const seen = String(found).replace(/\s+/g, ' ').slice(0, 40);
   return (
     ` The previous attempt wrongly showed the writing "${seen}".` +
-    ' Remove whatever object carried it — the gate, sign, board or banner — from the scene entirely.'
+    ' Remove whatever object carried it — the gate, sign, board, banner, label or key-cap letters — from the scene entirely.'
   );
 }
 
+// OpenRouter 대시보드에 표기되는 앱 이름. api/ai.ts 와 같은 값으로 맞춘다.
+const APP_TITLE = 'Connectioner';
+
 // 응답이 비면 조용히 통과시키지 않는다. 검사기가 죽은 것을 '이상 없음' 으로 읽으면 안 된다.
-async function chat(apiKey: string, model: string, messages: unknown[], maxTokens: number): Promise<string> {
+async function chat(apiKey: string, model: string, messages: ChatMessage[], maxTokens: number): Promise<string> {
   const res = await fetch(CHAT_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}`, 'X-Title': 'Connectioner' },
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}`, 'X-Title': APP_TITLE },
     body: JSON.stringify({ model, max_tokens: maxTokens, messages }),
   });
   const data = (await res.json().catch(() => null)) as
@@ -146,13 +176,13 @@ async function chat(apiKey: string, model: string, messages: unknown[], maxToken
 }
 
 /*
-  장소 고유명사를 일반명사로 바꾼다. 'Gangnam bowling alley' 가 남으면 그 가게 간판이 그려진다.
+  모임: 장소 고유명사를 일반명사로 바꾼다. 'Gangnam bowling alley' 가 남으면 그 가게 간판이 그려진다.
   금지어를 늘리는 대신 '바꿔라' 로 지시하는 게 중요하다 — 금지 목록이 길어지자 모델이 거절문을 뱉었다.
 */
-function askSubject(apiKey: string, model: string, gathering: GatheringInput): Promise<string> {
+function askGatheringSubject(apiKey: string, textModel: string, gathering: GatheringInput): Promise<string> {
   return chat(
     apiKey,
-    model,
+    textModel,
     [
       {
         role: 'user',
@@ -171,14 +201,38 @@ function askSubject(apiKey: string, model: string, gathering: GatheringInput): P
 }
 
 /*
+  물건: 제목·설명을 '무슨 사물인가'로 옮긴다. 브랜드명을 빼라고 지시한다 —
+  브랜드가 남으면 그 로고를 그리려다 글자가 박힌다.
+*/
+function askItemSubject(apiKey: string, textModel: string, item: ItemInput): Promise<string> {
+  return chat(
+    apiKey,
+    textModel,
+    [
+      {
+        role: 'user',
+        content:
+          'You name objects for an illustrator drawing a single second-hand item.\n' +
+          'Turn this Korean listing into ONE English phrase, 4-12 words, naming the object ' +
+          'and one or two visible physical features (shape, color, material).\n' +
+          'Drop any brand name and any writing — describe only the physical thing.\n' +
+          'Reply with the phrase alone — no markdown, no quotes, no preamble.\n' +
+          `제목: ${item.title}\n설명: ${item.desc ?? ''}`,
+      },
+    ],
+    40,
+  );
+}
+
+/*
   판정 대신 받아쓰기를 요구한다.
   'YES/NO' 로 물으면 큰 간판만 보고 전체 인상으로 답해, 손에 든 점수표의 숫자를 놓쳤다.
   본 것을 적게 하면 실제로 훑어봐야 하므로 작은 글자도 걸린다.
 */
-async function findText(apiKey: string, model: string, dataUri: string): Promise<string | null> {
+async function findText(apiKey: string, visionModel: string, dataUri: string): Promise<string | null> {
   const answer = await chat(
     apiKey,
-    model,
+    visionModel,
     [
       {
         role: 'user',
@@ -188,7 +242,7 @@ async function findText(apiKey: string, model: string, dataUri: string): Promise
             type: 'text',
             text:
               'Transcribe every letter, digit, word or written mark visible anywhere in this picture — ' +
-              'on signs, screens, posters, clothing, and on any paper or object a person is holding. ' +
+              'on signs, screens, posters, clothing, keys, covers, and on any object shown. ' +
               'Include marks that only look like writing. ' +
               'Reply with the transcription alone, or exactly NONE if there is truly nothing.',
           },
@@ -200,11 +254,11 @@ async function findText(apiKey: string, model: string, dataUri: string): Promise
   return /^none\b/i.test(answer) ? null : answer;
 }
 
-async function draw(apiKey: string, model: string, prompt: string): Promise<{ mime: string; dataUri: string }> {
+async function draw(apiKey: string, imageModel: string, prompt: string): Promise<{ mime: string; dataUri: string }> {
   const res = await fetch(IMAGE_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}`, 'X-Title': 'Connectioner' },
-    body: JSON.stringify({ model, prompt }),
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}`, 'X-Title': APP_TITLE },
+    body: JSON.stringify({ model: imageModel, prompt }),
   });
   const data = (await res.json().catch(() => null)) as
     | { data?: { b64_json?: string; image?: string }[]; error?: { message?: string } }
@@ -212,64 +266,82 @@ async function draw(apiKey: string, model: string, prompt: string): Promise<{ mi
   const raw = String(data?.data?.[0]?.b64_json ?? data?.data?.[0]?.image ?? '');
   const b64 = raw.replace(/^data:image\/\w+;base64,/, '');
   if (!b64) throw new Error(`이미지 없음 (HTTP ${res.status}) ${data?.error?.message ?? ''}`);
-
-  // Buffer 대신 atob 를 쓴다. 이 함수는 Node/Edge 어느 런타임에서도 돌 수 있어야 한다.
-  const binary = atob(b64);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
-  const mime = sniffMime(bytes);
+  const buf = Buffer.from(b64, 'base64');
+  const mime = sniffMime(buf);
   return { mime, dataUri: `data:${mime};base64,${b64}` };
 }
 
 // 세 번까지 다시 그린다. 등록 직후 배경에서 도는 일이라 사용자는 이 시간을 기다리지 않는다.
 const MAX_ATTEMPTS = 3;
 
+type ThumbResult = { mime: string; dataUri: string; attempts: number };
+
+/**
+ * 글자 없는 썸네일을 만든다. 주제 프롬프트는 호출부(모임/물건)가 만들어 넘긴다.
+ * 못 만들면 null — 호출부는 기존 로컬 포스터로 떨어진다. 이게 '글자 0' 의 마지막 보장이다.
+ */
+async function generateClean(apiKey: string, models: Models, basePrompt: string): Promise<ThumbResult | null> {
+  let note = '';
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt += 1) {
+    const image = await draw(apiKey, models.image, basePrompt + note);
+    const found = await findText(apiKey, models.vision, image.dataUri);
+    if (!found) return { ...image, attempts: attempt };
+    console.log(`[image] ${attempt}회차 글자 검출 → 재시도: ${found.replace(/\s+/g, ' ').slice(0, 40)}`);
+    note = retryNoteFor(found);
+  }
+  return null;
+}
+
+// Vercel Node 함수는 기본 export 를 (req,res)=>void 로 취급해 반환한 Response 를 버린다
+// (응답이 안 나가고 타임아웃). named export(POST)로 Web API 시그니처를 쓴다 — api/ai.ts 와 같다.
 export async function POST(request: Request): Promise<Response> {
   const apiKey = env('OPENROUTER_API_KEY');
-  if (!apiKey) {
-    // 키 미주입 → 휴면. 프론트는 기존 로컬 포스터를 그대로 쓴다.
-    return Response.json({ ok: false, reason: 'OPENROUTER_API_KEY not configured' });
-  }
+  // 키 미주입 → 휴면. 프론트는 로컬 포스터로 폴백한다.
+  if (!apiKey) return Response.json({ ok: false, reason: 'OPENROUTER_API_KEY not configured' });
 
-  let payload: { gathering?: GatheringInput };
+  let payload: { gathering?: GatheringInput; item?: ItemInput };
   try {
-    payload = (await request.json()) as { gathering?: GatheringInput };
+    payload = (await request.json()) as { gathering?: GatheringInput; item?: ItemInput };
   } catch {
     return new Response('Bad Request', { status: 400 });
   }
 
-  const gathering = payload.gathering;
-  if (!gathering?.title) {
-    return Response.json({ ok: false, reason: 'no gathering' });
-  }
+  const models: Models = {
+    text: env('OPENROUTER_MODEL') || 'anthropic/claude-haiku-4.5',
+    image: env('OPENROUTER_IMAGE_MODEL') || 'google/gemini-3.1-flash-lite-image',
+    vision: env('OPENROUTER_VISION_MODEL') || 'google/gemini-3.1-flash-lite',
+  };
 
-  const textModel = env('OPENROUTER_MODEL') || 'anthropic/claude-haiku-4.5';
-  const imageModel = env('OPENROUTER_IMAGE_MODEL') || 'google/gemini-3.1-flash-lite-image';
-  const visionModel = env('OPENROUTER_VISION_MODEL') || 'google/gemini-3.1-flash-lite';
+  // 무엇을 그릴지 정한다 — 물건이면 사물 하나, 모임이면 사람 장면.
+  let basePrompt: string;
+  let label: string;
+  if (payload.item?.title) {
+    const item = payload.item;
+    const translated = await askItemSubject(apiKey, models.text, item).catch(() => '');
+    const subject = usableSubject(translated) ? translated : 'a simple everyday second-hand object';
+    basePrompt = buildItemPrompt(subject);
+    label = item.title;
+  } else if (payload.gathering?.title) {
+    const gathering = payload.gathering;
+    const translated = await askGatheringSubject(apiKey, models.text, gathering).catch(() => '');
+    // 못 미더운 번역은 버린다. 그림이 밋밋해질 뿐 주제가 엉뚱해지지는 않는다.
+    const subject = usableSubject(translated) ? translated : 'Coworkers spending time together after work.';
+    basePrompt = buildGatheringPrompt(subject, gathering);
+    label = gathering.title;
+  } else {
+    return Response.json({ ok: false, reason: 'no subject' });
+  }
 
   const started = Date.now();
   try {
-    const translated = await askSubject(apiKey, textModel, gathering).catch(() => '');
-    // 못 미더운 번역은 버린다. 그림이 밋밋해질 뿐 주제가 엉뚱해지지는 않는다.
-    const subject = usableSubject(translated) ? translated : 'Coworkers spending time together after work.';
-    const prompt = buildPrompt(subject, gathering);
-
-    let note = '';
-    for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt += 1) {
-      const image = await draw(apiKey, imageModel, prompt + note);
-      const found = await findText(apiKey, visionModel, image.dataUri);
-      if (!found) {
-        const seconds = ((Date.now() - started) / 1000).toFixed(1);
-        console.log(`[image] "${gathering.title}" ${seconds}초 · 시도 ${attempt}회 · ${image.mime}`);
-        return Response.json({ ok: true, dataUri: image.dataUri, mime: image.mime, attempts: attempt });
-      }
-      console.log(`[image] ${attempt}회차 글자 검출 → 재시도: ${found.replace(/\s+/g, ' ').slice(0, 40)}`);
-      note = retryNoteFor(found);
+    const image = await generateClean(apiKey, models, basePrompt);
+    if (!image) {
+      console.warn(`[image] "${label}" 글자 제거 실패 — 포스터로 폴백`);
+      return Response.json({ ok: false, reason: 'text remained' });
     }
-
-    // 깨끗한 그림을 못 얻으면 아무것도 주지 않는다. 이게 '글자 0' 의 마지막 보장이다.
-    console.warn(`[image] "${gathering.title}" 글자 제거 실패 — 포스터로 폴백`);
-    return Response.json({ ok: false, reason: 'text remained' });
+    const seconds = ((Date.now() - started) / 1000).toFixed(1);
+    console.log(`[image] "${label}" ${seconds}초 · 시도 ${image.attempts}회 · ${image.mime}`);
+    return Response.json({ ok: true, dataUri: image.dataUri, mime: image.mime, attempts: image.attempts });
   } catch (error) {
     console.error('[image] error:', String(error));
     return Response.json({ ok: false, reason: String(error) });

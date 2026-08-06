@@ -27,7 +27,10 @@ export async function loadTeaSessions(): Promise<TeaSession[]> {
     if (!error && data) {
       const sessions = (data as TeaSessionRow[]).map(sessionFromRow);
       window.localStorage.setItem(SESSIONS_KEY, JSON.stringify(sessions));
-      return sessions.length > 0 ? sessions : initialTeaSessions;
+      // DB 가 비어 있으면 빈 목록이다. 여기서 목업으로 채우면 그 가짜 세션이 다음
+      // 저장 때 실제 DB 로 함께 upsert 돼(첫 제안이 목업까지 끌고 들어간다) 데이터가
+      // 오염된다. 목업은 Supabase 가 아예 없는 로컬 데모에서만 쓴다(아래 분기).
+      return sessions;
     }
   }
   try {
@@ -97,16 +100,18 @@ function sessionFromRow(row: TeaSessionRow): TeaSession {
 }
 
 function sessionToRow(session: TeaSession): TeaSessionRow {
+  // 이 표의 텍스트 컬럼은 전부 not null default ''(supabase-schema.sql) 이다.
+  // 빈 값에 null 을 보내면 upsert 가 not-null 제약에 걸려 저장이 통째로 실패한다
+  // (제안은 desc·memo·held_at 이 비어 있어 특히 잘 걸린다). '' 로 보낸다.
   return {
     id: session.id,
-    title: session.title || null,
-    type: session.type || null,
-    presenter: session.presenter || null,
+    title: session.title || '',
+    type: session.type || '',
+    presenter: session.presenter || '',
     part: session.part,
-    description: session.desc || null,
+    description: session.desc || '',
     status: session.status,
-    memo: session.memo || null,
-    // held_at 은 not null 컬럼이다. 빈 값을 null 로 보내면 upsert 가 제약에 걸린다.
-    held_at: session.heldAt,
+    memo: session.memo || '',
+    held_at: session.heldAt ?? '',
   };
 }

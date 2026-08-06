@@ -4,7 +4,7 @@ import { loadActionItems, makeActionItemId, saveActionItems } from './actionItem
 import { finalStatus, isOpen, liveStatus, settleAgendas } from './agendaRules';
 import { loadAgendas, makeAgendaId, saveAgendas } from './agendaStore';
 import { hasVoted, loadBallots, makeVoterKey, saveBallots } from './ballotStore';
-import { isLeader, isTeamLeader, teamParts } from './auth';
+import { hasLeaderRole, isLeader, isTeamLeader, teamParts } from './auth';
 import { loadCanSteps, saveCanSteps } from './canStepsStore';
 import {
   loadCanOpinions,
@@ -100,6 +100,7 @@ import {
 import { splitRoster } from './gatheringRules';
 import {
   bidBlockedReason,
+  canEditMarketItem,
   deriveStatus as deriveMarketStatus,
   extendedCloseFor,
   leadingBid,
@@ -114,6 +115,7 @@ import {
   saveMarketItems,
   uploadMarketImage,
 } from './marketStore';
+import { requestMarketImage } from './marketImage';
 import { GatheringBoard } from './features/gatherings/GatheringBoard';
 import { MarketBoard } from './features/market/MarketBoard';
 import { localItemPoster } from './features/market/ItemPoster';
@@ -205,6 +207,11 @@ export function App() {
   const [humorComments, setHumorComments] = useState<HumorComment[]>(initialHumorComments);
   const [gatherings, setGatherings] = useState<Gathering[]>([]);
   const [gatheringSignups, setGatheringSignups] = useState<GatheringSignup[]>([]);
+  /*
+    등록 직후 배경에서 그림을 그리는 동안의 id 목록. 저장하지 않는다 —
+    새로고침하면 그리기도 같이 끝나 있으므로 남겨두면 영영 '그리는 중' 이 된다.
+  */
+  const [imagePendingIds, setImagePendingIds] = useState<string[]>([]);
   const [marketItems, setMarketItems] = useState<MarketItem[]>([]);
   const [marketBids, setMarketBids] = useState<MarketBid[]>([]);
   // 알림이 DB(있으면)에서 로드 완료됐는지. 마감 임박 체크는 이게 true여야 실행(중복 슬랙 방지).
@@ -943,11 +950,18 @@ export function App() {
       실패하면 아무것도 하지 않는다 — 포스터가 그대로 남는 것이 정상 동작이다.
     */
     if (!imageFile) {
+      setImagePendingIds((prev) => [...prev, id]);
       void (async () => {
-        const generated = await requestGatheringImage(enriched);
-        if (!generated) return;
-        const { imageUrl } = await uploadGatheringImage(id, generated);
-        patchGathering(id, { imageUrl });
+        try {
+          const generated = await requestGatheringImage(enriched);
+          if (!generated) return;
+          const { imageUrl } = await uploadGatheringImage(id, generated);
+          patchGathering(id, { imageUrl });
+        } finally {
+          // 성공이든 실패든 표시는 걷는다. 실패했는데 모래시계가 남으면
+          // 영영 그리는 중인 것처럼 보인다.
+          setImagePendingIds((prev) => prev.filter((pendingId) => pendingId !== id));
+        }
       })();
     }
   };
@@ -1015,11 +1029,29 @@ export function App() {
     persistGatherings(gatherings.filter((item) => item.id !== gathering.id));
   };
 
-  /* ===== 벼룩숲 ===== */
+  /* ===== 이음장터 ===== */
 
   const persistMarketItems = (next: MarketItem[]) => {
     setMarketItems(next);
     void saveMarketItems(next);
+  };
+
+  /*
+    썸네일 생성은 10초 넘게 걸리므로, 그 사이 목록이 바뀔 수 있다(다른 물건 등록·취소).
+    등록 시점에 닫힌 변수로 잡아둔 배열에 덮어쓰면 그 사이의 변경이 조용히 사라진다.
+    그래서 최신 목록을 ref 로 따로 들고, 뒤늦게 도착한 결과는 '그 한 건만' 고친다.
+    (모임의 gatheringsRef/patchGathering 과 같은 판단.)
+  */
+  const marketItemsRef = useRef<MarketItem[]>(marketItems);
+  useEffect(() => {
+    marketItemsRef.current = marketItems;
+  }, [marketItems]);
+
+  const patchMarketItem = (id: string, patch: Partial<MarketItem>) => {
+    const current = marketItemsRef.current;
+    // 그 사이 취소·삭제됐으면 되살리지 않는다.
+    if (!current.some((entry) => entry.id === id)) return;
+    persistMarketItems(current.map((entry) => (entry.id === id ? { ...entry, ...patch } : entry)));
   };
 
   const createMarketItem = async (draft: MarketDraft) => {
@@ -1047,6 +1079,50 @@ export function App() {
     }
 
     persistMarketItems([enriched, ...marketItems]);
+
+    /*
+      그림은 등록을 마친 뒤 배경에서 그린다 — 모임과 같은 방식. 10초 넘는 일을 등록
+      버튼에 매달지 않는다. 그동안 카드는 방금 만든 로컬 포스터(틴트+아이콘)를 보여주고,
+      그림이 다 되면 그 카드에만 imageUrl 이 붙어 사진으로 바뀐다. 실패하면 포스터 유지.
+    */
+    if (!imageFile) {
+      setImagePendingIds((prev) => [...prev, id]);
+      void (async () => {
+        try {
+          const generated = await requestMarketImage(enriched);
+          if (!generated) return;
+          const { imageUrl } = await uploadMarketImage(id, generated);
+          patchMarketItem(id, { imageUrl });
+        } finally {
+          // 성공이든 실패든 표시는 걷는다 — 모임과 같은 판단. 실패했는데 모래시계가
+          // 남으면 영영 그리는 중인 것처럼 보인다.
+          setImagePendingIds((prev) => prev.filter((pendingId) => pendingId !== id));
+        }
+      })();
+    }
+  };
+
+  /*
+    물건 수정. 아직 아무도 입찰하지 않았을 때만 허용한다 — 입찰이 붙으면 그 사람은
+    가격·마감·물건을 믿고 건 것이라, 몰래 바꾸면 입찰 취소 불가 원칙과 어긋난다.
+    화면(수정 버튼)에서도 막지만, 저장 직전에 규칙으로 한 번 더 확인한다.
+    이미지는 새 사진을 넣었을 때만 교체하고, 사진이 없던 물건은 바뀐 값으로 로컬
+    포스터를 다시 만든다. 크레파스 AI 재생성은 하지 않는다 — 새로 그리려면 재등록한다.
+  */
+  const updateMarketItem = async (item: MarketItem, draft: MarketDraft) => {
+    if (!currentUser) return;
+    // 화면(수정 버튼)에서도 막지만 저장 직전 같은 규칙으로 재확인한다.
+    if (!canEditMarketItem(item, marketBids, nowStamp(), currentUser.name)) return;
+
+    const { imageFile, ...rest } = draft;
+    let next: MarketItem = { ...item, ...rest };
+    if (imageFile) {
+      const { imageUrl } = await uploadMarketImage(item.id, imageFile);
+      next = { ...next, imageUrl, poster: undefined };
+    } else if (!item.imageUrl) {
+      next = { ...next, poster: localItemPoster(next) };
+    }
+    patchMarketItem(item.id, next);
   };
 
   /*
@@ -1140,7 +1216,8 @@ export function App() {
   };
 
   const changeSection = (section: Section) => {
-    if (section === 'leader' && currentUser && !isLeader(currentUser)) {
+    // 리더 관리함은 실제 리더 역할만. 커넥셔너 전권으로는 딥링크(#leader)로도 못 들어온다.
+    if (section === 'leader' && currentUser && !hasLeaderRole(currentUser)) {
       setActive('dashboard');
       return;
     }
@@ -1217,7 +1294,7 @@ export function App() {
           onSubmitIssue={submitIssue}
         />
       )}
-      {active === 'leader' && isLeader(currentUser) && (
+      {active === 'leader' && hasLeaderRole(currentUser) && (
         <LeaderInbox issues={issues} today={today()} onIssueUpdate={updateIssue} onPromoteToAgenda={promoteToAgenda} />
       )}
       {active === 'agenda' && !agendaForActions && (
@@ -1292,6 +1369,7 @@ export function App() {
           onCreate={(draft) => void createGathering(draft)}
           onJoin={(gathering) => void joinGathering(gathering)}
           onLeave={(gathering) => void leaveGathering(gathering)}
+          imagePendingIds={imagePendingIds}
           onCancelGathering={cancelGathering}
         />
       )}
@@ -1301,9 +1379,11 @@ export function App() {
           currentUser={currentUser}
           items={marketItems}
           now={nowStamp()}
+          imagePendingIds={imagePendingIds}
           onBid={(item, amount) => void placeMarketBid(item, amount)}
           onCancelItem={cancelMarketItem}
           onCreate={(draft) => void createMarketItem(draft)}
+          onUpdate={(item, draft) => void updateMarketItem(item, draft)}
           onMarkDone={markMarketDone}
         />
       )}

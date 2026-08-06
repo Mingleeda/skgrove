@@ -5,8 +5,10 @@ import {
   Check,
   Gavel,
   Gift,
+  Hourglass,
   MapPin,
   Package,
+  Pencil,
   Plus,
   Trophy,
 } from 'lucide-react';
@@ -15,6 +17,7 @@ import {
   bidBlockedReason,
   bidCount,
   bidsFor,
+  canEditMarketItem,
   currentPrice,
   isOpen,
   deriveStatus,
@@ -42,13 +45,16 @@ type MarketBoardProps = {
   currentUser: CurrentUser;
   /** 'YYYY-MM-DDTHH:mm' 로컬 시각. 상태 파생의 기준이라 App 이 한 곳에서 만든다. */
   now: string;
+  /** 등록 직후 배경에서 썸네일을 그리는 중인 물건. 격자에 '그리는 중' 을 띄운다(모임과 동일). */
+  imagePendingIds: string[];
   onCreate: (draft: MarketDraft) => void;
+  onUpdate: (item: MarketItem, draft: MarketDraft) => void;
   onBid: (item: MarketItem, amount: number) => void;
   onCancelItem: (item: MarketItem) => void;
   onMarkDone: (item: MarketItem) => void;
 };
 
-type BoardView = 'feed' | 'create' | 'detail';
+type BoardView = 'feed' | 'create' | 'edit' | 'detail';
 type Filter = '거래중' | '나눔' | '내가 올린 것' | '전체';
 
 const FILTERS: Filter[] = ['거래중', '나눔', '내가 올린 것', '전체'];
@@ -72,7 +78,9 @@ export function MarketBoard({
   bids,
   currentUser,
   now,
+  imagePendingIds,
   onCreate,
+  onUpdate,
   onBid,
   onCancelItem,
   onMarkDone,
@@ -114,6 +122,23 @@ export function MarketBoard({
     return (
       <section className="screen">
         <MarketForm onCancel={() => setView('feed')} onSubmit={create} />
+      </section>
+    );
+  }
+
+  // 수정은 입찰 0건일 때만 상세에서 열린다. 저장 후 상세로 돌아간다.
+  if (view === 'edit' && selected) {
+    const target = selected;
+    return (
+      <section className="screen">
+        <MarketForm
+          initial={target}
+          onCancel={() => setView('detail')}
+          onSubmit={(draft) => {
+            onUpdate(target, draft);
+            setView('detail');
+          }}
+        />
       </section>
     );
   }
@@ -241,6 +266,18 @@ export function MarketBoard({
                 </div>
               )}
 
+              {/*
+                수정은 아직 아무도 입찰하지 않았을 때만 연다. 입찰이 붙으면 그 사람은
+                이 조건(가격·마감·물건)을 믿고 건 것이라, 몰래 바꾸면 입찰 취소 불가
+                원칙과 어긋난다. 바꿔야 하면 '거래 내리기'(입찰자에게 알림)로 무른다.
+              */}
+              {canEditMarketItem(selected, bids, now, currentUser.name) && (
+                <button className="btn-ghost" onClick={() => setView('edit')} type="button">
+                  <Pencil size={16} />
+                  수정
+                </button>
+              )}
+
               {isSeller && !selected.canceled && status === '거래중' && (
                 <button className="btn-ghost danger" onClick={() => onCancelItem(selected)} type="button">
                   <Ban size={16} />
@@ -332,14 +369,15 @@ export function MarketBoard({
         아래에 두면 포스터 격자를 다 지나야 나와 아무도 보지 않는다.
         다만 순위표는 한 줄 띠로 유지한다. 유~머처럼 시상대를 세우면
         물건을 보러 온 사람이 매번 그만큼을 지나쳐야 한다.
-        아무 거래도 성사되지 않았으면 빈 표를 보여주지 않는다.
+        판은 항상 띄운다 — 통째로 숨기면 기능이 사라진 것처럼 보인다.
+        성사된 거래가 하나도 없으면 4칸 '아직 없음' 대신 안내 한 줄로 대신한다.
       */}
-      {hasRanking && (
-        <section className="panel market-hall">
-          <div className="market-hall-head">
-            <Trophy size={18} />
-            <strong>벼룩숲 명예의 전당</strong>
-          </div>
+      <section className="panel market-hall">
+        <div className="market-hall-head">
+          <Trophy size={18} />
+          <strong>이음장터 명예의 전당</strong>
+        </div>
+        {hasRanking ? (
           <div className="market-rank-grid">
             {boards.map((board) => (
               <div className="market-rank" key={board.key}>
@@ -362,8 +400,12 @@ export function MarketBoard({
               </div>
             ))}
           </div>
-        </section>
-      )}
+        ) : (
+          <p className="market-hall-empty">
+            아직 성사된 거래가 없어요. 첫 거래의 주인공이 되어보세요 — 판매왕 · 나눔왕 · 구매왕 · 큰손이 여기 오릅니다.
+          </p>
+        )}
+      </section>
 
       <div className="gathering-toolbar">
         <div className="toolbar">
@@ -409,7 +451,18 @@ export function MarketBoard({
               <figure className={open ? 'ig-shop-cell' : 'ig-shop-cell closed'} key={item.id}>
                 <button className="poster-cell" onClick={() => openDetail(item.id)} type="button">
                   <ItemPoster badge={badge.text} badgeTone={badge.tone} item={item} />
-                  <span className="ig-price-tag">{formatPrice(currentPrice(item, bids))}</span>
+                  {/*
+                    가격은 목록에 띄우지 않는다 — 얼마인지는 상세에서 본다(팀 문법: 목록은
+                    "무엇이 있나"). 격자에는 유형 배지(경매/나눔)만 남긴다.
+                    사진 없이 올리면 등록 직후 배경에서 크레파스 썸네일을 그리는데(모임과 동일),
+                    그동안만 '그림 그리는 중' 을 띄운다. 다 그려지면 이 자리가 사진으로 바뀐다.
+                  */}
+                  {imagePendingIds.includes(item.id) && (
+                    <span className="ig-drawing">
+                      <Hourglass size={14} />
+                      그림 그리는 중
+                    </span>
+                  )}
                 </button>
                 <figcaption className="ig-shop-meta">
                   <strong>{item.title}</strong>

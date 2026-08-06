@@ -118,7 +118,7 @@ export function handleReview(req, res) {
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${API_KEY}`,
-          'X-Title': 'SK Grove',
+          'X-Title': 'Connectioner',
         },
         body: JSON.stringify({
           model: MODEL,

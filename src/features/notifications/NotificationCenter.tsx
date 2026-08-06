@@ -37,7 +37,7 @@ const KIND_LABEL: Record<NotificationKind, string> = {
   humor: '유머',
   message: '메시지',
   gathering: '모임',
-  market: '벼룩숲',
+  market: '이음장터',
 };
 
 const KIND_ICON: Record<NotificationKind, ElementType> = {
