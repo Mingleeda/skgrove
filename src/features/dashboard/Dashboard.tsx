@@ -65,9 +65,6 @@ export function Dashboard({
   onSectionChange,
   onIdentityChange,
 }: DashboardProps) {
-  const votingAgendas = agendas.filter((agenda) => agenda.status === '투표중');
-  const openActionCount = actionItems.filter((item) => item.status !== '완료').length;
-
   /*
     스토리 줄에는 번개(flash)로 등록된 것만, 최신 등록순(맨 앞이 최신)으로 올린다.
     취소된 것은 뺀다.
@@ -95,14 +92,6 @@ export function Dashboard({
     onIdentityChange(identity);
     onSectionChange('intake');
   };
-
-  const stats: Array<{ label: string; value: number; target: Section }> = [
-    { label: '접수 의견', value: openIssueCount, target: 'intake' },
-    { label: '투표 안건', value: votingAgendas.length, target: 'agenda' },
-    { label: '통과 안건', value: passedAgendaCount, target: 'agenda' },
-    // '진행 액션'이므로 완료된 것은 빼야 한다. 전체를 세면 아무것도 안 해도 숫자가 유지된다.
-    { label: '진행 액션', value: openActionCount, target: 'actions' },
-  ];
 
   return (
     <section className="screen ig-home">
@@ -132,16 +121,6 @@ export function Dashboard({
       </div>
 
       <div className="ig-col">
-        {/* 인스타 프로필의 게시물·팔로워 줄과 같은 자리. 숫자가 곧 이동 경로다. */}
-        <div className="ig-stats">
-          {stats.map((stat) => (
-            <button key={stat.label} onClick={() => onSectionChange(stat.target)} type="button">
-              <b>{stat.value}</b>
-              <span>{stat.label}</span>
-            </button>
-          ))}
-        </div>
-
         {/*
           홈 통합 피드. 안건·액션·번개·유머·장터의 최근 소식을 한 판에 최신순 3열로 모은다.
           풀폭 포스트로 도메인마다 다른 리치 UI(투표 진행바·인라인 토글)를 두던 것을 걷어내고,
