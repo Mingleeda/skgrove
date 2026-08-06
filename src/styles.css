@@ -10577,10 +10577,8 @@ button.notif-row {
   align-content: start;
   column-gap: var(--space-8);
   display: grid;
-  /* 피드가 남는 폭을 가져가되 620px 에서 멈추고 가운데 정렬한다 — 그 이상 넓어지면
-     한 줄이 길어져 눈이 줄 끝에서 앞으로 돌아오기 힘들어진다. (오른쪽 레일은 걷어냈다.) */
-  grid-template-columns: minmax(0, 620px);
-  justify-content: center;
+  /* 홈 피드도 유머·모임·장터 격자처럼 화면 폭을 가득 채운다. (오른쪽 레일은 걷어냈다.) */
+  grid-template-columns: minmax(0, 1fr);
   row-gap: var(--space-5);
 }
 
@@ -10714,7 +10712,6 @@ button.notif-row {
 .ig-col {
   display: grid;
   gap: var(--space-5);
-  max-width: 620px;
   width: 100%;
 }
 
