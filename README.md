@@ -1,4 +1,4 @@
-# Connectioner
+# SKonnection
 
 팀문화 개선 웹앱 목업 저장소. 저장소 이름은 `skgrove` 그대로입니다 —
 `localStorage` 키와 배포 설정이 그 이름을 쓰고 있어 바꾸면 기존 데이터가 사라집니다.

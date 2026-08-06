@@ -118,7 +118,7 @@ function buildTeamShareText(groups: TeamGroup[], rule: BalanceRule, basis: TeamB
   });
 
   return [
-    '[Connectioner 조뽑기 결과]',
+    '[SKonnection 조뽑기 결과]',
     `조건: ${getBalanceRuleLabel(rule)} · ${getTeamBasisLabel(basis, value)}`,
     ...lines,
   ].join('\n');
@@ -126,7 +126,7 @@ function buildTeamShareText(groups: TeamGroup[], rule: BalanceRule, basis: TeamB
 
 function buildCoffeeShareText(winner: Profile) {
   return [
-    '[Connectioner 커피뽑기 결과]',
+    '[SKonnection 커피뽑기 결과]',
     `오늘의 커피 담당: ${winner.name}`,
     `${winner.part} · ${getAgeMood(winner.birthYear).label}`,
   ].join('\n');
@@ -274,7 +274,8 @@ function analyzeAllTeams(groups: TeamGroup[]) {
 }
 
 export function Connect({ members }: ConnectProps) {
-  const [mode, setMode] = useState<ConnectMode>('teams');
+  // 커피뽑기는 번개로 통합됐다. 이 화면(커넥셔너 · 조뽑기)은 조뽑기 전용으로 고정한다.
+  const [mode] = useState<ConnectMode>('teams');
   const participantNames = useMemo(() => members.map((member) => member.name), [members]);
   const [selectedNames, setSelectedNames] = useState(participantNames);
 
@@ -521,18 +522,7 @@ export function Connect({ members }: ConnectProps) {
   return (
     <section className="screen connect-screen">
       <section className="panel connect-studio">
-        {/* 상단 헤더가 이미 '커피뽑기 / 조뽑기'다. 같은 제목을 두 번 쓰지 않는다. */}
-        <PanelHeader icon={Shuffle} title="뽑기 방식 고르기" />
-        <div className="connect-mode-tabs" role="tablist" aria-label="뽑기 방식">
-          <button className={mode === 'teams' ? 'selected' : ''} onClick={() => setMode('teams')} type="button">
-            <UsersRound size={18} />
-            조뽑기
-          </button>
-          <button className={mode === 'coffee' ? 'selected' : ''} onClick={() => setMode('coffee')} type="button">
-            <Coffee size={18} />
-            커피뽑기
-          </button>
-        </div>
+        <PanelHeader icon={Shuffle} title="조뽑기" note="파트·세대를 골고루 섞어 조를 짜요" />
 
         <div className="connect-layout">
           <aside className={`participant-panel ${mode === 'coffee' ? 'coffee-participants' : 'team-participants'}`}>

@@ -167,11 +167,11 @@ export function LoginScreen({ accounts, onLogin, onRegister, onSetPassword }: Lo
           로고 클릭 = 커넥셔너용 빠른 로그인(데모) 히든 토글. 일반 유저는 알기 어렵다.
         */}
         <div className="brand login-brand">
-          <div className="brand-mark" onClick={() => setShowQuickLogin((prev) => !prev)} title="Connectioner">
+          <div className="brand-mark" onClick={() => setShowQuickLogin((prev) => !prev)} title="SKonnection">
             <HeartHandshake size={24} />
           </div>
           <div>
-            <strong>Connectioner</strong>
+            <strong>SKonnection</strong>
             <span>팀을 잇는 곳</span>
           </div>
         </div>

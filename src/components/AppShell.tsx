@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react';
 import { Bell, Camera, HeartHandshake, LogOut, MessageSquarePlus } from 'lucide-react';
-import { hasLeaderRole, isTeamLeader } from '../auth';
+import { hasLeaderRole, isConnectioner, isTeamLeader } from '../auth';
 import { navGroups, sections } from '../navigation';
 import type { CurrentUser, Section } from '../types';
 import { Avatar } from './Avatar';
@@ -11,9 +11,11 @@ import { Avatar } from './Avatar';
   (접수 → 리더 검토 → 익명 투표 → 액션)'이 이미 흐름을 보여준다.
   팀원에게 13개 중 2개가 매일 못 누르는 상태로 남는 건 순손실이라 감춘다.
 */
-function canSee(id: Section, canUseLeaderMenu: boolean, canUseAccountsMenu: boolean) {
+function canSee(id: Section, canUseLeaderMenu: boolean, canUseAccountsMenu: boolean, canUseConnectionerMenu: boolean) {
   if (id === 'leader') return canUseLeaderMenu;
   if (id === 'accounts') return canUseAccountsMenu;
+  // 조뽑기 등 커넥셔너 도구는 커넥셔너로 지정된 사람에게만.
+  if (id === 'connect') return canUseConnectionerMenu;
   return true;
 }
 
@@ -42,6 +44,7 @@ export function AppShell({
   // 리더 관리함은 실제 리더 역할(파트리더·팀리더)에게만. 커넥셔너 전권은 통과시키지 않는다.
   const userCanUseLeaderMenu = hasLeaderRole(currentUser);
   const userCanUseAccountsMenu = isTeamLeader(currentUser);
+  const userCanUseConnectionerMenu = isConnectioner(currentUser);
 
   const [photoOpen, setPhotoOpen] = useState(false);
   const [photoInput, setPhotoInput] = useState('');
@@ -64,7 +67,7 @@ export function AppShell({
             <HeartHandshake size={24} />
           </div>
           <div>
-            <strong>Connectioner</strong>
+            <strong>SKonnection</strong>
             <span>팀을 잇는 곳</span>
           </div>
         </div>
@@ -72,7 +75,7 @@ export function AppShell({
         <nav className="nav">
           {navGroups.map((group) => {
             const visible = group.items.filter((section) =>
-              canSee(section.id, userCanUseLeaderMenu, userCanUseAccountsMenu),
+              canSee(section.id, userCanUseLeaderMenu, userCanUseAccountsMenu, userCanUseConnectionerMenu),
             );
             // 항목이 모두 걸러진 그룹은 제목만 남는다. 그룹째 렌더하지 않는다.
             if (visible.length === 0) return null;
