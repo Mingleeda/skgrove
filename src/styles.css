@@ -82,6 +82,9 @@
      rgba 개수를 늘리지 않는다(designTokens.test.ts 가 상한을 지킨다). */
   --scrim-strong: rgba(0, 0, 0, 0.62);
   --scrim-none: rgba(0, 0, 0, 0);
+  /* 뽑기 영상 위 자막용. 아래가 짙고 가운데가 비어 동물이 안 가린다.
+     한 값이 아니라 그라디언트라 --scrim-strong 으로는 못 쓴다. */
+  --scrim-video: linear-gradient(to top, rgba(0, 0, 0, 0.74) 0%, rgba(0, 0, 0, 0.12) 46%, rgba(0, 0, 0, 0.3) 100%);
 
   /* 어두운 면(내 프로필 카드) 위의 구분선. 흰 계열 반투명이라야 배경 그라디언트가
      비쳐 보인다. 토큰으로 두면 styles.css 본문의 rgba 개수를 늘리지 않는다. */
@@ -3106,6 +3109,13 @@ textarea {
   flex: 0 1 420px;
 }
 
+/*
+  z-index 가 필요한 이유: 이 패널은 sticky(=배치 요소)인데 z-index 가 없었고,
+  아래 뽑기 무대도 position: relative 라 역시 배치 요소였다. z-index 없는 배치
+  요소끼리는 DOM 순서가 이겨서, 스크롤로 무대가 패널 밑으로 들어오면 무대가
+  패널을 덮었다 — 당첨 조각이 참여자 목록 위에 떠 있는 것처럼 보였다.
+  고정해 두는 쪽이 위에 있어야 고정한 의미가 있다.
+*/
 .participant-panel {
   background: var(--tint-primary);
   border: 1px solid var(--color-border);
@@ -3113,6 +3123,7 @@ textarea {
   max-height: calc(100vh - 56px);
   padding: 14px;
   position: sticky;
+  z-index: 1;
   top: 28px;
 }
 
@@ -3341,11 +3352,18 @@ textarea {
   text-align: center;
 }
 
+/*
+  isolation 이 필요한 이유: 무대 안에서 자막이 z-index 1 로 캔버스·영상 위에
+  올라선다. 무대가 쌓임 맥락을 안 만들면 그 1 이 무대 밖까지 새어 나가 바깥
+  요소들과 직접 겨룬다 — 참여자 패널을 z-index 1 로 올려도 자막만 그 위로
+  다시 뚫고 올라왔다. 안에서 쓰는 층은 안에서 끝나야 한다.
+*/
 .draw-stage {
   align-items: center;
   background: var(--surface-dark);
   color: var(--color-surface);
   gap: 14px;
+  isolation: isolate;
   min-height: 170px;
   overflow: hidden;
   padding: 22px;
@@ -3458,6 +3476,7 @@ textarea {
   grid-template-columns: minmax(0, 1fr) 220px;
 }
 
+/* 안에서 쓰는 z-index 를 밖으로 안 새게 한다 — .draw-stage 의 isolation 과 같은 이유. */
 .coffee-draw-stage {
   align-items: center;
   background: var(--surface-dark);
@@ -3465,6 +3484,7 @@ textarea {
   color: var(--color-surface);
   display: grid;
   gap: var(--space-4);
+  isolation: isolate;
   min-height: 260px;
   overflow: hidden;
   padding: var(--space-6);
@@ -3473,11 +3493,59 @@ textarea {
 }
 
 /* 3D 무대. 높이를 직접 주지 않으면 캔버스 기본값(150px)이 잡혀 납작해진다.
-   렌더러는 이 요소의 clientWidth/Height 를 보고 해상도를 정하므로 CSS 가 먼저다. */
+   렌더러는 이 요소의 clientWidth/Height 를 보고 해상도를 정하므로 CSS 가 먼저다.
+
+   190px 로 못박았더니 폭 348 · 높이 190 인 우편함이 됐다 — 스토리 뷰어 안인데
+   스토리와 정반대 비율이라, 당첨자가 튀어나오면 위아래가 잘렸다. 폭을 따라가는
+   세로 비율로 두되 화면을 다 먹지는 않게 높이만 막는다. 막혀서 다시 납작해져도
+   카메라가 비율을 보고 물러난다(drawScene 의 frameCamera). */
 .draw-canvas {
+  aspect-ratio: 4 / 5;
   display: block;
-  height: 190px;
+  max-height: 52vh;
   width: 100%;
+}
+
+/*
+  뽑는 동안 무대를 덮는 춤추는 동물 영상.
+
+  3D 캔버스를 지우지 않고 그 위에 깐다 — 뽑을 때마다 캔버스를 껐다 켜면 WebGL
+  컨텍스트가 쌓이다 브라우저 한도에 걸린다. 캔버스는 자리에 그대로 있고, 이
+  영상이 opacity 로 걷혔다 덮였다 한다.
+
+  자막(z-index 1)보다는 아래다. 이름이 깜빡이는 줄이 가려지면 "아직 안 정해졌다"
+  를 나르는 신호가 사라진다. */
+.draw-hype {
+  height: 100%;
+  inset: 0;
+  object-fit: cover;
+  opacity: 0;
+  pointer-events: none;
+  position: absolute;
+  transition: opacity 0.2s ease;
+  width: 100%;
+}
+
+.draw-hype.on {
+  opacity: 1;
+}
+
+/* 영상 위 흰 글씨가 폭포·이불 같은 밝은 배경에 묻힌다. 아래쪽을 짙게 깔아
+   자막이 놓일 자리를 만든다. 자막은 z-index 1 이라 이 막 위에 남는다. */
+.draw-stage.rolling::after,
+.coffee-draw-stage.rolling::after {
+  background: var(--scrim-video);
+  content: "";
+  inset: 0;
+  pointer-events: none;
+  position: absolute;
+}
+
+/* 뽑는 중에는 같은 버튼이 멈추기가 된다. 색까지 갈라 놓아야 "다시 뽑기" 로
+   잘못 읽고 누르는 일이 없다. */
+.primary-button.draw-stop {
+  background: var(--color-danger);
+  border-color: var(--color-danger);
 }
 
 .coffee-draw-stage::before {
