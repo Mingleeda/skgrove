@@ -25,163 +25,7 @@ type MemoryProps = {
 
 const today = new Date('2026-07-25T09:00:00');
 
-const initialMemories: TeamMemory[] = [
-  {
-    id: 1,
-    title: '여름 팀데이',
-    date: '2026-08-07',
-    place: '성수 오프사이트 라운지',
-    host: '김수정',
-    createdBy: '김수정',
-    summary: '파트를 섞어 점심을 먹고, 오후에는 짧은 회고와 사진 공유 시간을 가져요.',
-    tags: ['팀행사', 'D-DAY', '사진모음'],
-    assets: [
-      {
-        id: 101,
-        type: 'photo',
-        title: '사전 장소 답사',
-        uploader: '김수정',
-        tone: 'green',
-        uploadedAt: '오늘 09:20',
-        reactions: { '👍': 18, '👏': 6, '😂': 0, '🔥': 3, '💚': 9 },
-        comments: ['여기 조명 좋다. 단체샷 여기서 찍자!'],
-      },
-      {
-        id: 102,
-        type: 'video',
-        title: '지난 회고 하이라이트',
-        uploader: '이상협',
-        tone: 'blue',
-        uploadedAt: '어제 17:42',
-        reactions: { '👍': 12, '👏': 8, '😂': 2, '🔥': 1, '💚': 5 },
-        comments: ['마지막 멘트가 제일 좋았어요.'],
-      },
-      {
-        id: 103,
-        type: 'photo',
-        title: '점심 메뉴 후보',
-        uploader: '강리안',
-        tone: 'coral',
-        uploadedAt: '오늘 10:04',
-        reactions: { '👍': 9, '👏': 2, '😂': 4, '🔥': 1, '💚': 3 },
-        comments: ['이 메뉴면 오후 회고까지 버틸 수 있어요.'],
-      },
-      {
-        id: 104,
-        type: 'photo',
-        title: '팀 좌석 배치',
-        uploader: '장우진',
-        tone: 'amber',
-        uploadedAt: '오늘 10:31',
-        reactions: { '👍': 14, '👏': 5, '😂': 1, '🔥': 2, '💚': 6 },
-        comments: [],
-      },
-      {
-        id: 105,
-        type: 'photo',
-        title: '포토존 시안',
-        uploader: '노지아',
-        tone: 'green',
-        uploadedAt: '오늘 11:12',
-        reactions: { '👍': 21, '👏': 7, '😂': 0, '🔥': 5, '💚': 10 },
-        comments: ['이 배경이면 다들 사진 남길 듯!'],
-      },
-      {
-        id: 106,
-        type: 'video',
-        title: '오프닝 영상 초안',
-        uploader: '서민호',
-        tone: 'blue',
-        uploadedAt: '오늘 11:45',
-        reactions: { '👍': 8, '👏': 11, '😂': 3, '🔥': 4, '💚': 2 },
-        comments: [],
-      },
-    ],
-    comments: ['날씨 좋으면 야외 단체샷도 찍어요.', '파트 섞기 좌석표 기대됩니다.'],
-    reactions: { 좋아요: 18, 웃겨요: 6, 또가요: 11 },
-  },
-  {
-    id: 2,
-    title: '캔미팅 워크샵',
-    date: '2026-07-18',
-    place: '판교 7층 라운지',
-    host: '김승현',
-    createdBy: '김승현',
-    summary: '캔미팅에서 나온 액션아이템을 한 장씩 정리하고 다음 실험을 골랐어요.',
-    tags: ['캔미팅', '회고', '자료'],
-    assets: [
-      {
-        id: 201,
-        type: 'photo',
-        title: '액션아이템 보드',
-        uploader: '이선민',
-        tone: 'amber',
-        uploadedAt: '7월 18일',
-        reactions: { '👍': 24, '👏': 10, '😂': 0, '🔥': 2, '💚': 7 },
-        comments: ['다음 회의 때 이 보드 그대로 쓰면 좋겠어요.'],
-      },
-      {
-        id: 202,
-        type: 'photo',
-        title: '팀별 토론 장면',
-        uploader: '강리안',
-        tone: 'coral',
-        uploadedAt: '7월 18일',
-        reactions: { '👍': 16, '👏': 9, '😂': 2, '🔥': 3, '💚': 4 },
-        comments: ['이 조 아이디어가 제일 현실적이었어요.'],
-      },
-      {
-        id: 203,
-        type: 'video',
-        title: '마무리 한마디',
-        uploader: '서민호',
-        tone: 'green',
-        uploadedAt: '7월 18일',
-        reactions: { '👍': 11, '👏': 5, '😂': 1, '🔥': 0, '💚': 3 },
-        comments: [],
-      },
-    ],
-    comments: ['정리된 보드가 다음 회의 때 바로 도움이 됐어요.'],
-    reactions: { 좋아요: 24, 웃겨요: 3, 또가요: 8 },
-  },
-  {
-    id: 3,
-    title: '랜덤 커피챗',
-    date: '2026-07-29',
-    place: '사내 카페',
-    host: '장우진',
-    createdBy: '장우진',
-    summary: '조뽑기로 만난 사람끼리 짧게 커피를 마시고 서로의 일하는 방식을 나눠요.',
-    tags: ['커피챗', '파트섞기'],
-    assets: [
-      {
-        id: 301,
-        type: 'photo',
-        title: '지난 커피 인증',
-        uploader: '노지아',
-        tone: 'blue',
-        uploadedAt: '7월 23일',
-        reactions: { '👍': 14, '👏': 2, '😂': 5, '🔥': 1, '💚': 4 },
-        comments: ['다음에는 디카페인 조도 만들어주세요.'],
-      },
-    ],
-    comments: ['이번에는 음료 취향도 같이 남겨봐요.'],
-    reactions: { 좋아요: 12, 웃겨요: 5, 또가요: 15 },
-  },
-  {
-    id: 4,
-    title: '파트 데모데이',
-    date: '2026-09-04',
-    place: '대회의실 A',
-    host: '한유진',
-    createdBy: '한유진',
-    summary: '각 파트가 만든 개선 도구와 실험 결과를 짧게 공유하는 날이에요.',
-    tags: ['데모', '공유회'],
-    assets: [],
-    comments: [],
-    reactions: { 좋아요: 9, 웃겨요: 1, 또가요: 6 },
-  },
-];
+const initialMemories: TeamMemory[] = [];
 
 const assetTones: MemoryAsset['tone'][] = ['green', 'blue', 'coral', 'amber'];
 const emojiOptions: MemoryEmoji[] = ['👍', '👏', '😂', '🔥', '💚'];
@@ -212,8 +56,8 @@ function getCalendarDays(memories: TeamMemory[]) {
 
 export function Memory({ currentUser }: MemoryProps) {
   const [memories, setMemories] = useState<TeamMemory[]>(initialMemories);
-  const [selectedId, setSelectedId] = useState(initialMemories[0].id);
-  const [selectedAssetId, setSelectedAssetId] = useState(initialMemories[0].assets[0]?.id ?? 0);
+  const [selectedId, setSelectedId] = useState(initialMemories[0]?.id ?? 0);
+  const [selectedAssetId, setSelectedAssetId] = useState(initialMemories[0]?.assets[0]?.id ?? 0);
   const [assetCommentDrafts, setAssetCommentDrafts] = useState<Record<number, string>>({});
   // 인스타 프로필의 탭. 기본은 격자다 — 이 화면에 오는 이유가 사진을 보는 것이라
   // 캘린더(행사 만들기)는 필요할 때 들어가는 두 번째 탭으로 내렸다.
@@ -228,8 +72,11 @@ export function Memory({ currentUser }: MemoryProps) {
     memories.flatMap((memory) => memory.assets.map((asset) => asset.uploader)),
   ).size;
 
+  // 행사가 하나도 없을 수 있다(가데이터를 걷어낸 첫 상태). 이 경우 selectedMemory 는
+  // undefined 이고, 게시물 탭은 늘 앨범 목록(빈 안내)만 보여주므로 상세를 못 만진다.
   const selectedMemory = memories.find((memory) => memory.id === selectedId) ?? memories[0];
-  const selectedAsset = selectedMemory.assets.find((asset) => asset.id === selectedAssetId) ?? selectedMemory.assets[0];
+  const selectedAsset =
+    selectedMemory?.assets.find((asset) => asset.id === selectedAssetId) ?? selectedMemory?.assets[0];
   const calendarDays = useMemo(() => getCalendarDays(memories), [memories]);
 
   useEffect(() => {
@@ -238,7 +85,7 @@ export function Memory({ currentUser }: MemoryProps) {
     loadMemories(initialMemories).then((loadedMemories) => {
       if (!isMounted) return;
       setMemories(loadedMemories);
-      setSelectedId(loadedMemories[0]?.id ?? initialMemories[0].id);
+      setSelectedId(loadedMemories[0]?.id ?? 0);
       setSelectedAssetId(loadedMemories[0]?.assets[0]?.id ?? 0);
     });
 
@@ -291,6 +138,7 @@ export function Memory({ currentUser }: MemoryProps) {
   };
 
   const uploadAssets = async (event: ChangeEvent<HTMLInputElement>) => {
+    if (!selectedMemory) return;
     const files = Array.from(event.target.files ?? []);
     if (files.length === 0) return;
 
@@ -330,6 +178,7 @@ export function Memory({ currentUser }: MemoryProps) {
   };
 
   const reactAsset = (assetId: number, emoji: MemoryEmoji) => {
+    if (!selectedMemory) return;
     persistMemories(
       memories.map((memory) =>
         memory.id === selectedMemory.id
@@ -347,6 +196,7 @@ export function Memory({ currentUser }: MemoryProps) {
   };
 
   const addAssetComment = (assetId: number) => {
+    if (!selectedMemory) return;
     const comment = assetCommentDrafts[assetId]?.trim();
     if (!comment) return;
 
@@ -411,7 +261,7 @@ export function Memory({ currentUser }: MemoryProps) {
             onClick={() => openAlbum(memory)}
             type="button"
           >
-            <span className={memory.id === selectedMemory.id ? 'ig-ring' : 'ig-ring seen'}>
+            <span className={memory.id === selectedMemory?.id ? 'ig-ring' : 'ig-ring seen'}>
               <span className="ig-thumb">
                 <CalendarDays size={22} strokeWidth={1.6} />
               </span>
@@ -444,7 +294,7 @@ export function Memory({ currentUser }: MemoryProps) {
       </div>
 
       {tab === 'grid' ? (
-        view === 'events' ? (
+        view === 'events' || !selectedMemory ? (
           // 앨범 목록 — 행사마다 커버 한 장. 인스타 프로필 격자를 재사용하되
           // 각 칸이 사진 하나가 아니라 '행사 하나'다. 누르면 그 행사 상세로 들어간다.
           <div className="ig-grid-tab">
@@ -623,7 +473,7 @@ export function Memory({ currentUser }: MemoryProps) {
             <div className="memory-calendar">
               {calendarDays.map((day) => (
                 <button
-                  className={day.memory?.id === selectedMemory.id ? 'selected' : ''}
+                  className={day.memory?.id === selectedMemory?.id ? 'selected' : ''}
                   key={day.key}
                   // 칸이 좁아 제목을 넣을 수 없다. 이름은 툴팁과 아래 행사 목록에서 읽는다.
                   title={day.memory ? day.memory.title : `${day.label} 추억 만들기`}
@@ -646,7 +496,7 @@ export function Memory({ currentUser }: MemoryProps) {
           <section className="memory-event-list">
             {memories.map((memory) => (
               <button
-                className={memory.id === selectedMemory.id ? 'memory-event-card selected' : 'memory-event-card'}
+                className={memory.id === selectedMemory?.id ? 'memory-event-card selected' : 'memory-event-card'}
                 key={memory.id}
                 onClick={() => {
                   setSelectedId(memory.id);
