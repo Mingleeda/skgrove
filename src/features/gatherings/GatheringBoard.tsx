@@ -249,7 +249,7 @@ export function GatheringBoard({
               )}
             </div>
 
-            {selected.kind === 'flash' && !selected.canceled && (
+            {selected.kind === 'flash' && !selected.canceled && (selected.coffeePick || isHost) && (
               <div className="coffee-pick">
                 {selected.coffeePick ? (
                   <div className="coffee-pick-result">
