@@ -10241,6 +10241,10 @@ button.notif-row {
   justify-content: flex-start;
   max-width: none;
   padding: 0 var(--space-3) var(--space-6);
+  /* 웹(데스크톱)은 스와이프가 없어 가로 스크롤을 감추면 넘어간 스토리를 볼 수 없다.
+     이벤트가 전부 나열되는 트레이라, 가로 스크롤 대신 여러 줄로 펼쳐 다 보이게 한다. */
+  flex-wrap: wrap;
+  overflow-x: visible;
 }
 
 .ig-tabs {
@@ -10815,6 +10819,14 @@ button.notif-row {
   overflow-x: auto;
   padding-bottom: var(--space-4);
   width: 100%;
+  /* 스토리 트레이는 인스타처럼 가로로 넘기되 스크롤바는 감춘다 — 회색 막대가 보이면
+     지저분하다. 스와이프·트랙패드·shift+휠로 여전히 넘어간다. */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* 옛 Edge */
+}
+
+.ig-tray::-webkit-scrollbar {
+  display: none; /* Chrome · Safari */
 }
 
 .ig-story {
