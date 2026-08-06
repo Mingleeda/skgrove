@@ -1,4 +1,4 @@
-import { BadgeCheck, ClipboardCopy, Hand, Save, Search, Shuffle, Sparkles } from 'lucide-react';
+import { BadgeCheck, ChevronDown, ClipboardCopy, Hand, Save, Search, Shuffle, Sparkles, UsersRound } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { EmptyState } from '../../components/EmptyState';
 import { Avatar } from '../../components/Avatar';
@@ -281,6 +281,8 @@ export function Connect({ members }: ConnectProps) {
   const [isDrawing, setIsDrawing] = useState(false);
   const [teamEventText, setTeamEventText] = useState('조건을 고르고 셔플 버튼을 눌러보세요');
   const [hypeClip, setHypeClip] = useState<HypeClip | null>(null);
+  // 참여자 선택은 기본 접힘. 대부분 '전체'로 조를 짜므로 요약만 보이고, 바꿀 때만 편다.
+  const [participantsOpen, setParticipantsOpen] = useState(false);
 
   /* 뽑기가 시작된 순간의 명단을 붙잡아 둔다. 멈출 때 화면 상태를 다시 읽으면,
      도는 동안 참여자를 지운 경우 빈 명단에서 당첨자를 꺼내다 화면이 죽는다. */
@@ -433,18 +435,26 @@ export function Connect({ members }: ConnectProps) {
       <section className="panel connect-studio">
         <PanelHeader icon={Shuffle} title="조뽑기" note="파트·세대를 골고루 섞어 조를 짜요" />
 
-        <div className="connect-layout">
-          <aside className="participant-panel">
-            <div className="participant-head">
-              <div>
-                <strong>참여자 선택</strong>
-                <span>{selectedParticipants.length}명 선택</span>
-              </div>
-              <div>
-                <button className="secondary-button" onClick={selectAll} type="button">전체</button>
-                <button className="secondary-button" onClick={clearAll} type="button">해제</button>
-              </div>
+        {/* ① 참여자 — 기본 접힘. 요약만 보이고 '참여자 고르기'로 편다. */}
+        <section className="connect-participants">
+          <div className="cp-summary">
+            <div className="cp-summary-info">
+              <UsersRound size={18} />
+              <strong>{selectedParticipants.length}명 참여</strong>
+              <span>파트 {selectedParts}종 · 세대 {selectedAgeMoods}종</span>
             </div>
+            <div className="cp-summary-actions">
+              <button className="secondary-button" onClick={selectAll} type="button">전체</button>
+              <button className="secondary-button" onClick={clearAll} type="button">해제</button>
+              <button className="secondary-button" onClick={() => setParticipantsOpen((open) => !open)} type="button">
+                <ChevronDown className={participantsOpen ? 'rotated' : ''} size={16} />
+                {participantsOpen ? '접기' : '참여자 고르기'}
+              </button>
+            </div>
+          </div>
+
+          {participantsOpen && (
+            <div className="cp-body">
             <div className="participant-search">
               <Search size={17} />
               <input
@@ -489,9 +499,11 @@ export function Connect({ members }: ConnectProps) {
                 </section>
               ))}
             </div>
-          </aside>
+            </div>
+          )}
+        </section>
 
-          <div className="connect-workbench">
+        <div className="connect-workbench">
             <section className="connect-control-panel">
               <div className="connect-control-grid">
                 <label>
@@ -523,7 +535,7 @@ export function Connect({ members }: ConnectProps) {
               </div>
               {/* getTeamCount가 인원수에 맞춰 조용히 깎아냈다. 입력칸은 4를 보여주는데
                   실제로는 3개 조로 돌아가서, 왜 다른지 알 길이 없었다. 덮어쓰지 말고 알린다. */}
-              {teamAdjustedNote && <p className="form-error">{teamAdjustedNote}</p>}
+              {teamAdjustedNote && <p className="field-note connect-adjust-note">{teamAdjustedNote}</p>}
               <div className="connect-summary-strip">
                 <span>파트 {selectedParts}종</span>
                 <span>세대 {selectedAgeMoods}종</span>
@@ -544,13 +556,16 @@ export function Connect({ members }: ConnectProps) {
               </button>
             </section>
 
-            <DrawStage
-              hypeClip={hypeClip}
-              isDrawing={isDrawing}
-              members={selectedParticipants}
-              teams={teams}
-              text={teamEventText}
-            />
+            {/* ③ 결과 — 뽑는 중이거나 결과가 있을 때만 무대를 띄운다(평소 빈 검은 박스 제거). */}
+            {(isDrawing || teams.length > 0) && (
+              <DrawStage
+                hypeClip={hypeClip}
+                isDrawing={isDrawing}
+                members={selectedParticipants}
+                teams={teams}
+                text={teamEventText}
+              />
+            )}
 
             <section className="team-result-grid">
               {teams.map((team) => (
@@ -619,7 +634,6 @@ export function Connect({ members }: ConnectProps) {
               </div>
             </section>
           </div>
-        </div>
       </section>
     </section>
   );
