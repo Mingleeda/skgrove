@@ -165,10 +165,14 @@ function postToRow(post: HumorPost): HumorPostRow {
   return {
     id: post.id,
     author: post.author,
-    body: post.body || null,
-    media_url: post.mediaUrl || null,
+    // body·media_url·created_at 는 DB에서 not null default ''. 빈 값에 null 을 보내면
+    // 23502(not-null 위반)로 저장이 통째로 막힌다 — 특히 미디어 없는 썸네일 전용 글.
+    // 값이 없으면 default 와 같은 빈 문자열로 저장한다.
+    body: post.body || '',
+    media_url: post.mediaUrl || '',
+    // image_url 만 nullable 이라 없으면 null 로 둔다.
     image_url: post.imageUrl ?? null,
-    created_at: post.createdAt || null,
+    created_at: post.createdAt || '',
     liked_by: post.likedBy,
   };
 }
