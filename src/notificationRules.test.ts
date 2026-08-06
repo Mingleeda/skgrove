@@ -61,6 +61,12 @@ describe('수신자 해석', () => {
   it('리더 전체는 활성 리더 모두', () => {
     expect(leadersFor(accounts, '리더 전체').map((a) => a.name).sort()).toEqual(['김승현', '이선민']);
   });
+  it('특정 파트리더 이름을 대상으로 주면 그 한 사람만', () => {
+    expect(leadersFor(accounts, '김승현').map((a) => a.name)).toEqual(['김승현']);
+  });
+  it('대상이 리더로 매칭 안 되면 안전하게 전체 리더로 폴백', () => {
+    expect(leadersFor(accounts, '없는사람').map((a) => a.name).sort()).toEqual(['김승현', '이선민']);
+  });
   it('파트 한정 안건은 해당 파트 + 전체 소속만, 비활성 제외', () => {
     const names = agendaAudience(accounts, 'ITS혁신파트').map((a) => a.name);
     expect(names).toContain('김승현'); // ITS

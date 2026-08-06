@@ -19,6 +19,9 @@ alter table public.accounts add column if not exists is_connectioner boolean not
 -- 슬랙 DM 발송용 이메일. 앱 로그인 이메일과 슬랙 계정 이메일이 다를 수 있어 별도 관리(없으면 email로 폴백).
 alter table public.accounts add column if not exists slack_email text;
 
+-- 로그인 비밀번호 해시(pbkdf2$...). 없으면 첫 로그인 때 본인이 설정. 평문은 저장하지 않는다.
+alter table public.accounts add column if not exists password_hash text;
+
 alter table public.accounts enable row level security;
 
 drop policy if exists "Allow prototype account reads" on public.accounts;

@@ -60,6 +60,7 @@ type AccountRow = {
   photo_url?: string | null;
   is_connectioner?: boolean | null;
   slack_email?: string | null;
+  password_hash?: string | null;
 };
 
 export async function loadAccounts() {
@@ -132,6 +133,7 @@ function accountFromRow(row: AccountRow): ManagedAccount {
     photoUrl: row.photo_url ?? undefined,
     connectioner: row.is_connectioner ?? false,
     slackEmail: row.slack_email ?? undefined,
+    passwordHash: row.password_hash ?? undefined,
   };
 }
 
@@ -147,5 +149,6 @@ function accountToRow(account: ManagedAccount): AccountRow {
     photo_url: account.photoUrl || null,
     is_connectioner: account.connectioner ?? false,
     slack_email: account.slackEmail || null,
+    password_hash: account.passwordHash || null,
   };
 }
