@@ -11300,6 +11300,45 @@ button.notif-row {
   opacity: 0.75;
 }
 
+/* 번개 상세 커피뽑기 */
+.coffee-pick {
+  margin: 12px 0;
+}
+.coffee-pick .primary-button.coffee {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.coffee-pick-result {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--color-sunken);
+  border: 1px solid var(--color-border);
+}
+.coffee-pick-result > div {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+.coffee-pick-result span {
+  font-size: 12px;
+  opacity: 0.7;
+}
+.coffee-pick-result strong {
+  font-size: 18px;
+}
+.coffee-pick-result .btn-ghost {
+  margin-left: auto;
+}
+.coffee-pick-hint {
+  font-size: 13px;
+  opacity: 0.7;
+  margin: 0;
+}
+
 /* --- 홈의 내 모임 줄 --------------------------------------------
    '오늘의 팀 연결' 패널 맨 위. 아래 고정 링크(.quick-card-list)와 생김새가
    비슷해야 같은 패널로 읽히므로 톤만 달리하고 구조는 맞춘다. */
