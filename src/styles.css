@@ -10685,6 +10685,14 @@ button.notif-row {
   overflow-x: auto;
   padding-bottom: var(--space-4);
   width: 100%;
+  /* 스토리 트레이는 인스타처럼 가로로 넘기되 스크롤바는 감춘다 — 회색 막대가 보이면
+     지저분하다. 스와이프·트랙패드·shift+휠로 여전히 넘어간다. */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* 옛 Edge */
+}
+
+.ig-tray::-webkit-scrollbar {
+  display: none; /* Chrome · Safari */
 }
 
 .ig-story {
