@@ -49,22 +49,30 @@ export function GatheringForm({ onSubmit, onCancel }: GatheringFormProps) {
     공모인가"라는 판단을 사용자에게 떠넘긴 것뿐이었다. 여기로 내렸다.
     고르면 기본 날짜와 날짜 칩이 그에 맞게 바뀐다 — 실제로 다른 건 그 둘뿐이다.
   */
-  const [kind, setKind] = useState<GatheringKind>('flash');
-  const isFlash = kind === 'flash';
+  // 폼 선택은 3갈래지만 저장 kind 는 둘뿐이다 — 커피내기는 내부적으로 번개(flash)다.
+  const [pick, setPick] = useState<'flash' | 'callup' | 'coffee'>('flash');
+  const isFlash = pick === 'flash';
+  const isCoffee = pick === 'coffee';
+  const kind: GatheringKind = pick === 'callup' ? 'callup' : 'flash';
 
   const [title, setTitle] = useState('');
   const [startAt, setStartAt] = useState(at(0, 18));
-
-  // 종류를 바꾸면 기본 날짜도 그에 맞게 옮긴다. 사용자가 직접 고른 뒤 종류만
-  // 바꿨을 때 그 값을 덮어쓰지 않도록, 기본값 그대로일 때만 옮긴다.
-  const chooseKind = (next: GatheringKind) => {
-    setKind(next);
-    const wasDefault = startAt === at(0, 18) || startAt === at(7, 18);
-    if (wasDefault) setStartAt(next === 'flash' ? at(0, 18) : at(7, 18));
-  };
   const [place, setPlace] = useState('');
   const [unlimited, setUnlimited] = useState(false);
   const [capacity, setCapacity] = useState('6');
+
+  // 종류를 바꾸면 기본 날짜도 그에 맞게 옮긴다(직접 고른 값은 안 덮는다).
+  // 커피내기는 시각을 안 받는 대신 장소·정원 기본값을 채운다.
+  const choosePick = (next: 'flash' | 'callup' | 'coffee') => {
+    setPick(next);
+    if (next === 'coffee') {
+      if (!place.trim()) setPlace('4층 cafe4u');
+      setCapacity('4');
+      return;
+    }
+    const wasDefault = startAt === at(0, 18) || startAt === at(7, 18);
+    if (wasDefault) setStartAt(next === 'flash' ? at(0, 18) : at(7, 18));
+  };
 
   // 선택 항목은 접어 둔다. 번개 등록이 5개 필드를 넘어가면 번개가 아니게 된다.
   const [moreOpen, setMoreOpen] = useState(false);
@@ -73,7 +81,6 @@ export function GatheringForm({ onSubmit, onCancel }: GatheringFormProps) {
   const [desc, setDesc] = useState('');
   const [part, setPart] = useState<TeamPart>('전체');
   const [cost, setCost] = useState<GatheringCost>('없음');
-  const [coffeeDraw, setCoffeeDraw] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [error, setError] = useState('');
 
@@ -86,14 +93,19 @@ export function GatheringForm({ onSubmit, onCancel }: GatheringFormProps) {
   };
 
   const submit = () => {
-    const trimmedTitle = title.trim();
     const trimmedPlace = place.trim();
+    // 커피내기는 제목·시각을 안 받는다 — 제목은 자동, 마감은 만든 뒤 10분(정원 차면 그 전에 마감).
+    const trimmedTitle = isCoffee ? '커피 내기' : title.trim();
+    const pad = (n: number) => String(n).padStart(2, '0');
+    const soon = new Date(Date.now() + 10 * 60000);
+    const coffeeAt = `${soon.getFullYear()}-${pad(soon.getMonth() + 1)}-${pad(soon.getDate())}T${pad(soon.getHours())}:${pad(soon.getMinutes())}`;
+    const effStartAt = isCoffee ? coffeeAt : startAt;
 
-    if (trimmedTitle.length < 2) {
+    if (!isCoffee && trimmedTitle.length < 2) {
       setError('무엇을 하는 자리인지 적어주세요. 피드에서 제목만 보고 들어올지 정합니다.');
       return;
     }
-    if (!startAt) {
+    if (!isCoffee && !startAt) {
       setError('언제 만나는지 정해주세요.');
       return;
     }
@@ -108,9 +120,9 @@ export function GatheringForm({ onSubmit, onCancel }: GatheringFormProps) {
       return;
     }
 
-    // 마감을 비워두면 시작 시각을 그대로 쓴다. 대부분 그게 맞고, 물어볼 이유가 없다.
-    const finalCloseAt = closeAt || startAt;
-    if (finalCloseAt > startAt) {
+    // 커피내기 마감 = 만든 뒤 10분(effStartAt). 그 외는 비우면 시작 시각을 쓴다.
+    const finalCloseAt = isCoffee ? effStartAt : closeAt || startAt;
+    if (!isCoffee && finalCloseAt > startAt) {
       setError('신청 마감은 시작 시각보다 늦을 수 없습니다.');
       return;
     }
@@ -129,7 +141,7 @@ export function GatheringForm({ onSubmit, onCancel }: GatheringFormProps) {
     onSubmit({
       kind,
       title: trimmedTitle,
-      startAt,
+      startAt: effStartAt,
       place: trimmedPlace,
       capacity: parsedCapacity,
       closeAt: finalCloseAt,
@@ -137,8 +149,8 @@ export function GatheringForm({ onSubmit, onCancel }: GatheringFormProps) {
       desc: desc.trim(),
       part,
       cost,
-      // 커피 뽑기는 번개에서만. 공모로 냈다가 번개로 바꿔도 값이 남지 않게 여기서 정리한다.
-      coffeeDraw: isFlash ? coffeeDraw : false,
+      // 커피내기 카드로 만든 것만 커피 뽑기가 켜진다.
+      coffeeDraw: isCoffee,
       imageFile,
     });
   };
@@ -147,10 +159,10 @@ export function GatheringForm({ onSubmit, onCancel }: GatheringFormProps) {
     <section className="panel gathering-form">
       <PanelHeader icon={Zap} title="모임 열기" />
 
-      <div className="intake-choice-grid">
+      <div className="intake-choice-grid gathering-choice-3">
         <button
-          className={isFlash ? 'choice-card selected' : 'choice-card'}
-          onClick={() => chooseKind('flash')}
+          className={pick === 'flash' ? 'choice-card selected' : 'choice-card'}
+          onClick={() => choosePick('flash')}
           type="button"
         >
           <Zap size={22} />
@@ -158,57 +170,71 @@ export function GatheringForm({ onSubmit, onCancel }: GatheringFormProps) {
           <span>오늘·내일 바로 만나요. 날짜를 칩으로 한 번에 고릅니다.</span>
         </button>
         <button
-          className={!isFlash ? 'choice-card selected' : 'choice-card'}
-          onClick={() => chooseKind('callup')}
+          className={pick === 'callup' ? 'choice-card selected' : 'choice-card'}
+          onClick={() => choosePick('callup')}
           type="button"
         >
           <CalendarClock size={22} />
           <strong>미리 잡는 일정</strong>
           <span>날짜를 정해두고 선착순으로 모아요. 기본값이 일주일 뒤입니다.</span>
         </button>
+        <button
+          className={pick === 'coffee' ? 'choice-card selected' : 'choice-card'}
+          onClick={() => choosePick('coffee')}
+          type="button"
+        >
+          <Coffee size={22} />
+          <strong>커피내기</strong>
+          <span>모인 사람 중 커피 살 사람을 뽑아요. 어디서만 정하면 끝.</span>
+        </button>
       </div>
 
-      <label className="field">
-        <span className="field-label">
-          무엇을 하나요 <em>필수</em>
-        </span>
-        <input
-          autoFocus
-          maxLength={40}
-          onChange={(event) => setTitle(event.target.value)}
-          placeholder={isFlash ? '예) 점심 같이 먹어요' : '예) 제주 워크샵 함께 가실 분'}
-          value={title}
-        />
-      </label>
+      {/* 커피내기는 제목·시각을 안 받는다 — 제목은 '커피 내기'로 자동, 마감은 만든 뒤 10분. */}
+      {!isCoffee && (
+        <label className="field">
+          <span className="field-label">
+            무엇을 하나요 <em>필수</em>
+          </span>
+          <input
+            autoFocus
+            maxLength={40}
+            onChange={(event) => setTitle(event.target.value)}
+            placeholder={isFlash ? '예) 점심 같이 먹어요' : '예) 제주 워크샵 함께 가실 분'}
+            value={title}
+          />
+        </label>
+      )}
 
-      <div className="field">
-        <span className="field-label">
-          언제 만나나요 <em>필수</em>
-        </span>
-        {isFlash && (
-          <div className="chip-row">
-            {FLASH_CHIPS.map((chip) => {
-              const value = chip.value();
-              return (
-                <button
-                  className={startAt === value ? 'chip selected' : 'chip'}
-                  key={chip.label}
-                  onClick={() => setStartAt(value)}
-                  type="button"
-                >
-                  {chip.label}
-                </button>
-              );
-            })}
-          </div>
-        )}
-        <input
-          aria-label="시작 시각"
-          onChange={(event) => setStartAt(event.target.value)}
-          type="datetime-local"
-          value={startAt}
-        />
-      </div>
+      {!isCoffee && (
+        <div className="field">
+          <span className="field-label">
+            언제 만나나요 <em>필수</em>
+          </span>
+          {isFlash && (
+            <div className="chip-row">
+              {FLASH_CHIPS.map((chip) => {
+                const value = chip.value();
+                return (
+                  <button
+                    className={startAt === value ? 'chip selected' : 'chip'}
+                    key={chip.label}
+                    onClick={() => setStartAt(value)}
+                    type="button"
+                  >
+                    {chip.label}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+          <input
+            aria-label="시작 시각"
+            onChange={(event) => setStartAt(event.target.value)}
+            type="datetime-local"
+            value={startAt}
+          />
+        </div>
+      )}
 
       <div className="gathering-pair">
         <label className="field">
@@ -250,18 +276,14 @@ export function GatheringForm({ onSubmit, onCancel }: GatheringFormProps) {
         </div>
       </div>
 
-      {/* 커피 뽑기는 '이 번개에서 할지'를 만들 때 정한다. 실제 뽑기는 사람이 모인 뒤 상세에서. */}
-      {isFlash && (
-        <label className="checkline coffee-toggle">
-          <input checked={coffeeDraw} onChange={(event) => setCoffeeDraw(event.target.checked)} type="checkbox" />
-          <Coffee size={16} />
-          <span>
-            <strong>커피 살 사람 뽑기</strong>
-            <em>모인 사람 중에서 오늘 커피 담당을 이 번개에서 뽑아요</em>
-          </span>
-        </label>
+      {isCoffee && (
+        <p className="field-note coffee-form-note">
+          <Coffee size={14} /> 제목은 '커피 내기'로 자동, 만든 뒤 10분 또는 정원이 차면 마감돼요. 모이면 상세에서 커피 살 사람을 뽑습니다.
+        </p>
       )}
 
+      {!isCoffee && (
+        <>
       <button className="more-toggle" onClick={() => setMoreOpen((open) => !open)} type="button">
         <ChevronDown className={moreOpen ? 'rotated' : ''} size={16} />
         {moreOpen ? '선택 항목 접기' : '선택 항목 더 보기'}
@@ -341,6 +363,8 @@ export function GatheringForm({ onSubmit, onCancel }: GatheringFormProps) {
           </label>
         )}
       </div>
+        </>
+      )}
 
       {error && <p className="form-error">{error}</p>}
 
@@ -349,7 +373,7 @@ export function GatheringForm({ onSubmit, onCancel }: GatheringFormProps) {
           취소
         </button>
         <button className="primary-button" onClick={submit} type="button">
-          {isFlash ? '번개 열기' : '공모 올리기'}
+          {isCoffee ? '커피내기 열기' : isFlash ? '번개 열기' : '공모 올리기'}
         </button>
       </div>
     </section>

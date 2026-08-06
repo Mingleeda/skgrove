@@ -3170,35 +3170,6 @@ textarea {
   gap: 18px;
 }
 
-.connect-mode-tabs {
-  background: var(--tint-primary);
-  border: 1px solid var(--color-page);
-  border-radius: var(--radius);
-  display: grid;
-  gap: 6px;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  padding: 6px;
-}
-
-.connect-mode-tabs button {
-  align-items: center;
-  background: transparent;
-  border: 0;
-  border-radius: var(--radius);
-  color: var(--color-ink);
-  display: inline-flex;
-  font-weight: 700;
-  gap: var(--space-2);
-  justify-content: center;
-  min-height: 42px;
-}
-
-.connect-mode-tabs button.selected {
-  background: var(--color-surface);
-  color: var(--color-primary-strong);
-  box-shadow: var(--shadow-float);
-}
-
 /*
   좌우 2단을 걷어냈다. 참여자 32명을 360px 칸에 1인 1행으로 넣으면 세로로
   1,800px 이 되어 스스로 스크롤을 갖게 되는데, 정작 오른쪽 작업판은
@@ -3215,8 +3186,7 @@ textarea {
 .connect-workbench,
 .connect-control-panel,
 .draw-stage,
-.team-result-card,
-.coffee-winner-card {
+.team-result-card {
   border-radius: var(--radius);
   display: grid;
 }
@@ -3289,8 +3259,7 @@ textarea {
 .participant-head span,
 .connect-control-panel span,
 .team-result-head span,
-.team-member-list small,
-.coffee-winner-card p {
+.team-member-list small {
   color: var(--color-muted);
   font-size: var(--text-body);
 }
@@ -3334,57 +3303,10 @@ textarea {
 
 /* 자체 스크롤은 목록이 360px 짜리 옆칸이던 시절의 장치다. 이제 가로를 다 써서
    32명이 몇 줄에 들어가므로, 페이지 스크롤 안에 또 스크롤을 두면 오히려 갇힌다. */
-.part-group-list,
-.coffee-chip-grid {
-  padding-right: 3px;
-}
-
-.coffee-chip-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-}
-
-.coffee-chip-grid button {
-  background: var(--color-surface);
-  border: 1px solid var(--color-page);
-  border-radius: 999px;
-  color: var(--color-ink);
-  font-size: var(--text-body);
-  font-weight: 700;
-  min-height: 34px;
-  padding: 0 var(--space-3);
-}
-
-.coffee-chip-grid button.selected {
-  background: var(--color-primary-strong);
-  border-color: var(--color-primary-strong);
-  color: var(--color-surface);
-}
-
-.coffee-chip-grid button.selected.green {
-  background: var(--color-primary);
-  border-color: var(--color-primary);
-}
-
-.coffee-chip-grid button.selected.red {
-  background: var(--color-primary);
-  border-color: var(--color-primary);
-}
-
-.coffee-chip-grid button.selected.blue {
-  background: var(--color-primary);
-  border-color: var(--color-primary);
-}
-
-.coffee-chip-grid button.selected.yellow {
-  background: var(--color-primary);
-  border-color: var(--color-primary);
-}
-
 .part-group-list {
   display: grid;
   gap: var(--space-3);
+  padding-right: 3px;
 }
 
 .part-group {
@@ -12289,6 +12211,21 @@ button.notif-row {
 }
 /* 상세의 커피 안내 문구 — 아이콘과 한 줄로 */
 .coffee-pick-hint {
+  align-items: center;
+  display: flex;
+  gap: 6px;
+}
+
+/* 모임 열기: 커피내기까지 3개 선택 카드 (좁은 폭에선 세로로) */
+.intake-choice-grid.gathering-choice-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+@media (max-width: 720px) {
+  .intake-choice-grid.gathering-choice-3 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.coffee-form-note {
   align-items: center;
   display: flex;
   gap: 6px;
