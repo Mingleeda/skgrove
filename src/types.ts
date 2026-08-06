@@ -43,6 +43,8 @@ export type ManagedAccount = CurrentUser & {
   // 슬랙 DM 발송용 이메일. 앱 로그인 이메일과 슬랙 계정 이메일이 다를 수 있어 별도 관리.
   // 없으면 앱 이메일(email)로 폴백.
   slackEmail?: string;
+  // 로그인 비밀번호 해시(pbkdf2$...). 없으면 첫 로그인 때 본인이 설정한다.
+  passwordHash?: string;
 };
 
 // 접수자가 고른 공개 범위. '리더만 보기'는 안건 전환을 막는 약속이므로 저장해야 한다.

@@ -633,6 +633,19 @@ h1 {
   line-height: 1.45;
 }
 
+/* 첫 로그인 안내(비밀번호 설정). 놓치지 않게 옅은 파랑 박스로 또렷하게. */
+.login-hint {
+  background: var(--tint-primary);
+  border-radius: var(--radius);
+  color: var(--tint-primary-ink);
+  display: block;
+  font-size: var(--text-meta);
+  font-weight: 600;
+  line-height: 1.45;
+  margin-top: 6px;
+  padding: 8px 10px;
+}
+
 .hero-panel {
   align-items: center;
   background: var(--surface-dark);

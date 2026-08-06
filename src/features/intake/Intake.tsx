@@ -22,13 +22,16 @@ type IntakeProps = {
   identity: Identity;
   currentUser: CurrentUser;
   issues: Issue[];
+  // 특정 파트리더에게 바로 보낼 수 있게 활성 파트리더 목록을 받는다.
+  partLeaders: { name: string; part: string }[];
   onIdentityChange: (identity: Identity) => void;
   onIssueUpdate: (issue: Issue) => void;
   onSubmitIssue: (issue: Omit<Issue, 'id' | 'status' | 'createdAt'>) => Issue;
 };
 
 type IntakeStep = 'scope' | 'content' | 'review' | 'complete';
-type Target = '팀리더' | '파트리더' | '리더 전체';
+// 대상은 '팀리더' · '리더 전체' 이거나, 특정 파트리더의 이름 문자열.
+type Target = string;
 type MyIssueFilter = '전체' | '답변 대기' | '1on1' | '완료';
 
 const categories = ['회의문화', '협업', '업무방식', '갈등', '성장/피드백', '복지/분위기', '기타'];
@@ -39,7 +42,7 @@ const steps: Array<{ id: IntakeStep; label: string }> = [
   { id: 'complete', label: '접수 완료' },
 ];
 
-export function Intake({ identity, currentUser, issues, onIdentityChange, onIssueUpdate, onSubmitIssue }: IntakeProps) {
+export function Intake({ identity, currentUser, issues, partLeaders, onIdentityChange, onIssueUpdate, onSubmitIssue }: IntakeProps) {
   const [step, setStep] = useState<IntakeStep>('scope');
   const [target, setTarget] = useState<Target>('팀리더');
   const [visibility, setVisibility] = useState<IssueVisibility>('리더만 보기');
@@ -253,10 +256,18 @@ export function Intake({ identity, currentUser, issues, onIdentityChange, onIssu
             <div className="form-grid">
               <label>
                 전달 대상
-                <select value={target} onChange={(event) => setTarget(event.target.value as Target)}>
-                  <option>팀리더</option>
-                  <option>파트리더</option>
-                  <option>리더 전체</option>
+                <select value={target} onChange={(event) => setTarget(event.target.value)}>
+                  <option value="팀리더">팀리더</option>
+                  {partLeaders.length > 0 && (
+                    <optgroup label="파트리더에게 직접">
+                      {partLeaders.map((leader) => (
+                        <option key={leader.name} value={leader.name}>
+                          {leader.name} · {leader.part}
+                        </option>
+                      ))}
+                    </optgroup>
+                  )}
+                  <option value="리더 전체">리더 전체</option>
                 </select>
               </label>
               <label>

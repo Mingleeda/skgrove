@@ -419,23 +419,34 @@ export function App() {
     if (fresh.length === 0) return;
     const next = [...fresh, ...notifications];
     persistNotifications(next);
-    // 슬랙: 이벤트(kind:sourceId)당 1회, 채널 라우팅. fresh는 최초 1회만 생기므로 슬랙도 이벤트당 1회.
-    const events = new Map<string, AppNotification>();
+    // 슬랙: 이벤트(kind:sourceId)당 채널 1회. DM은 수신자별이라 이벤트별 draft를 모아둔다.
+    const byEvent = new Map<string, AppNotification[]>();
     fresh.forEach((item) => {
       const key = `${item.kind}:${item.sourceId}`;
-      if (!events.has(key)) events.set(key, item);
+      const list = byEvent.get(key);
+      if (list) list.push(item);
+      else byEvent.set(key, [item]);
     });
-    events.forEach((rep) => {
-      // 개인 메시지(DM): 계정 관리에서 슬랙 이메일을 명시적으로 등록한 사람에게만 DM을 보낸다.
-      // 앱 로그인 이메일로는 폴백하지 않음(매핑 안 된 사람에게 잘못된 상대로 DM이 가는 걸 방지).
-      // 매핑 없으면 인앱 알림만 남고 슬랙 DM은 조용히 스킵. 실제 발송은 프록시(SLACK_DM_ENABLED)에서 잠금.
+    // 슬랙 이메일이 명시적으로 등록된 사람만 DM 대상. 앱 로그인 이메일로 폴백하지 않는다
+    // (매핑 안 된 사람에게 엉뚱한 상대로 DM이 가는 걸 방지). 실제 발송은 서버 SLACK_DM_ENABLED 로 잠금.
+    const slackEmailFor = (name: string) => accounts.find((item) => item.name === name)?.slackEmail;
+    byEvent.forEach((items) => {
+      const rep = items[0];
       if (rep.kind === 'message') {
-        const slackEmail = accounts.find((item) => item.name === rep.recipientName)?.slackEmail;
+        const slackEmail = slackEmailFor(rep.recipientName);
         if (slackEmail) deliverDm(slackEmail, rep.kind, rep.title, rep.body, rep.fromName);
         return;
       }
       const channel = slackChannelForKind(rep.kind);
       if (channel) deliverToSlack(channel, rep.kind, rep.title, rep.body, rep.fromName);
+      // 대나무숲 접수: 채널 게시에 더해 '전달 대상' 리더에게 개인 DM도 보낸다.
+      // 익명 접수도 본문에 '익명 접수'로만 나가 작성자는 드러나지 않는다.
+      if (rep.kind === 'issue') {
+        items.forEach((item) => {
+          const slackEmail = slackEmailFor(item.recipientName);
+          if (slackEmail) deliverDm(slackEmail, item.kind, item.title, item.body, item.fromName);
+        });
+      }
     });
   };
 
@@ -927,6 +938,15 @@ export function App() {
     void saveAccounts(nextAccounts);
   };
 
+  // 첫 로그인 때 본인이 정한 비밀번호 해시를 그 계정에 저장한다.
+  const setAccountPassword = (email: string, passwordHash: string) => {
+    persistAccounts(
+      accounts.map((account) =>
+        account.email.toLowerCase() === email.toLowerCase() ? { ...account, passwordHash } : account,
+      ),
+    );
+  };
+
   // 자율 관리: 로그인한 본인 계정의 프로필 사진만 갱신한다.
   const saveMyProfilePhoto = (photoUrl: string) => {
     if (!currentUser) return;
@@ -1304,7 +1324,14 @@ export function App() {
   };
 
   if (!currentUser) {
-    return <LoginScreen accounts={accounts} onLogin={handleLogin} onRegister={registerAccount} />;
+    return (
+      <LoginScreen
+        accounts={accounts}
+        onLogin={handleLogin}
+        onRegister={registerAccount}
+        onSetPassword={setAccountPassword}
+      />
+    );
   }
 
   const unreadCount = notifications.filter(
@@ -1345,6 +1372,9 @@ export function App() {
           currentUser={currentUser}
           identity={identity}
           issues={issues}
+          partLeaders={accounts
+            .filter((account) => account.status === '활성' && account.role === '파트리더')
+            .map((account) => ({ name: account.name, part: account.part }))}
           onIdentityChange={setIdentity}
           onIssueUpdate={updateIssue}
           onSubmitIssue={submitIssue}
