@@ -1,5 +1,6 @@
 import {
   AlarmClock,
+  AlertTriangle,
   ArrowLeft,
   CalendarPlus,
   FileCheck2,
@@ -11,6 +12,7 @@ import {
   Vote,
 } from 'lucide-react';
 import { useState } from 'react';
+import { MIN_OPTIONS, VoteMethodEditor, validateVoteOptions } from '../agenda/VoteMethodEditor';
 import { teamParts } from '../../auth';
 import {
   RESPONSE_DUE_DAYS,
@@ -20,19 +22,22 @@ import {
   oldestWaitingDays,
   statusNeedsReason,
 } from '../../issueRules';
-import type { Agenda, Identity, Issue, IssueStatus, TeamPart } from '../../types';
+import type { Agenda, Identity, Issue, IssueStatus, TeamPart, VoteType } from '../../types';
+
+type AgendaDraft = Pick<
+  Agenda,
+  'title' | 'description' | 'category' | 'part' | 'author' | 'deadline' | 'voteType' | 'multiSelect'
+> & {
+  // 라벨만 넘긴다. 선택지 id 발급과 집계 초기화는 안건을 만드는 쪽(App) 책임이다.
+  optionLabels: string[];
+};
 
 type LeaderInboxProps = {
   issues: Issue[];
   today: string;
   onIssueUpdate: (issue: Issue) => void;
-  onPromoteToAgenda: (
-    issue: Issue,
-    draft: Pick<Agenda, 'title' | 'description' | 'category' | 'part' | 'author' | 'deadline'>,
-  ) => void;
+  onPromoteToAgenda: (issue: Issue, draft: AgendaDraft) => void;
 };
-
-type AgendaDraft = Pick<Agenda, 'title' | 'description' | 'category' | 'part' | 'author' | 'deadline'>;
 type LeaderAction = 'reply' | 'oneOnOne' | 'actionItem' | 'agenda' | 'memo';
 
 /*
@@ -67,6 +72,7 @@ export function LeaderInbox({ issues, today, onIssueUpdate, onPromoteToAgenda }:
   const [activeAction, setActiveAction] = useState<LeaderAction>('reply');
   const [draft, setDraft] = useState('');
   const [agendaDrafts, setAgendaDrafts] = useState<Record<string, AgendaDraft>>({});
+  const [agendaError, setAgendaError] = useState('');
   // 보류·종료로 바꾸려는 중인 건. 사유를 받기 전에는 상태를 바꾸지 않는다.
   const [pendingStatus, setPendingStatus] = useState<{ issueId: string; status: IssueStatus } | null>(null);
   const [reasonDraft, setReasonDraft] = useState('');
@@ -149,6 +155,12 @@ export function LeaderInbox({ issues, today, onIssueUpdate, onPromoteToAgenda }:
   const submitAgendaDraft = () => {
     if (!selectedIssue || !agendaDraft) return;
 
+    const { error: optionError, labels } = validateVoteOptions(agendaDraft.voteType, agendaDraft.optionLabels);
+    if (optionError) {
+      setAgendaError(optionError);
+      return;
+    }
+
     const nextDraft: AgendaDraft = {
       ...agendaDraft,
       title: agendaDraft.title.trim(),
@@ -156,10 +168,14 @@ export function LeaderInbox({ issues, today, onIssueUpdate, onPromoteToAgenda }:
       category: agendaDraft.category.trim() || selectedIssue.category,
       author: selectedIssue.visibility === '리더만 보기' ? '익명' : agendaDraft.author,
       deadline: agendaDraft.deadline || addDays(DEFAULT_VOTING_DAYS),
+      // 찬반이면 선택지를 저장하지 않는다. 방식을 바꿔가며 쓴 흔적이 남을 이유가 없다.
+      optionLabels: agendaDraft.voteType === '객관식' ? labels : [],
+      multiSelect: agendaDraft.voteType === '객관식' && agendaDraft.multiSelect,
     };
 
     if (!nextDraft.title || !nextDraft.description) return;
 
+    setAgendaError('');
     onPromoteToAgenda(selectedIssue, nextDraft);
     setAgendaDrafts((current) => {
       const next = { ...current };
@@ -447,6 +463,15 @@ export function LeaderInbox({ issues, today, onIssueUpdate, onPromoteToAgenda }:
                     </label>
                   </div>
 
+                  <VoteMethodEditor
+                    voteType={agendaDraft.voteType}
+                    optionLabels={agendaDraft.optionLabels}
+                    multiSelect={agendaDraft.multiSelect}
+                    onVoteTypeChange={(voteType) => updateAgendaDraft({ voteType })}
+                    onOptionLabelsChange={(optionLabels) => updateAgendaDraft({ optionLabels })}
+                    onMultiSelectChange={(multiSelect) => updateAgendaDraft({ multiSelect })}
+                  />
+
                   {selectedIssue.visibility === '리더만 보기' && (
                     <div className="privacy-promotion-note">
                       <ShieldCheck size={18} />
@@ -464,9 +489,16 @@ export function LeaderInbox({ issues, today, onIssueUpdate, onPromoteToAgenda }:
                     </p>
                     <small>
                       작성자 표기: {selectedIssue.visibility === '리더만 보기' ? '익명' : agendaDraft.author} · 투표 대상:{' '}
-                      {agendaDraft.part}
+                      {agendaDraft.part} · 투표 방식: {agendaDraft.voteType}
                     </small>
                   </div>
+
+                  {agendaError && (
+                    <div className="notice-line">
+                      <AlertTriangle size={18} />
+                      {agendaError}
+                    </div>
+                  )}
 
                   <button
                     className="primary-button wide"
@@ -586,6 +618,12 @@ function makeAgendaDraft(issue: Issue): AgendaDraft {
     part: '전체',
     author: issue.visibility === '리더만 보기' ? '익명' : issue.author,
     deadline: addDays(DEFAULT_VOTING_DAYS),
+    // 대나무숲 접수는 대개 "이 제안을 받아들일까"라 찬반이 기본이다.
+    // 답이 둘이 아닌 건은 리더가 객관식으로 바꿔 선택지를 직접 채운다.
+    voteType: '찬반',
+    multiSelect: false,
+    // 객관식으로 바꿨을 때 바로 두 칸이 보이도록 미리 열어둔다(새 안건 등록과 같다).
+    optionLabels: Array(MIN_OPTIONS).fill(''),
   };
 }
 
