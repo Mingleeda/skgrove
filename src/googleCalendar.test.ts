@@ -6,19 +6,16 @@ import {
   countWorkdays,
   meetingLoadByPerson,
   isAttendanceEvent,
-  isTeamEventTitle,
   parseTitleTag,
   partFromTitle,
   durationMinutes,
   isMeeting,
   isPartAttributable,
   meetingTypeOf,
-  mergeMemories,
   partOf,
-  toMemoryEvents,
   toMetricEvents,
 } from './googleCalendar';
-import type { ManagedAccount, RawCalendarEvent, TeamMemory } from './types';
+import type { ManagedAccount, RawCalendarEvent } from './types';
 
 const account = (patch: Partial<ManagedAccount>): ManagedAccount => ({
   id: 'USR-X',
@@ -232,75 +229,6 @@ describe('toMetricEvents', () => {
   });
 });
 
-describe('toMemoryEvents', () => {
-  // 제목에 '팀행사' 가 있어야 추억으로 올라간다(팀 약속). 없으면 개인 일정으로 본다.
-  const allDay = event({
-    id: 'EV-9',
-    title: '[팀행사] 여름 팀데이',
-    isAllDay: true,
-    startsAt: '2026-08-07',
-    endsAt: '2026-08-08',
-    location: '성수 오프사이트 라운지',
-    organizerEmail: 'host@sk.com',
-    description: '팀 전체 워크샵',
-  });
-
-  it('종일 일정만 행사로 옮긴다', () => {
-    const memories = toMemoryEvents([allDay, event({})], 10, '이선민');
-    expect(memories).toHaveLength(1);
-    expect(memories[0].title).toBe('[팀행사] 여름 팀데이');
-  });
-
-  it('시작 번호부터 id 를 매긴다', () => {
-    const memories = toMemoryEvents([allDay, { ...allDay, id: 'EV-10', startsAt: '2026-09-01' }], 5, '이선민');
-    expect(memories.map((m) => m.id)).toEqual([5, 6]);
-  });
-
-  it('날짜는 YYYY-MM-DD 로 남긴다', () => {
-    expect(toMemoryEvents([allDay], 1, '이선민')[0].date).toBe('2026-08-07');
-  });
-
-  it('장소와 설명이 없으면 자리표시 문구를 넣는다', () => {
-    const [memory] = toMemoryEvents([{ ...allDay, location: undefined, description: undefined }], 1, '이선민');
-    expect(memory.place).toBe('장소 미정');
-    expect(memory.summary).toContain('구글 캘린더');
-  });
-});
-
-describe('mergeMemories', () => {
-  const memory = (patch: Partial<TeamMemory>): TeamMemory => ({
-    id: 1,
-    title: '여름 팀데이',
-    date: '2026-08-07',
-    place: '성수',
-    host: 'host',
-    createdBy: '이선민',
-    summary: '',
-    tags: [],
-    assets: [],
-    comments: [],
-    reactions: { 좋아요: 0, 웃겨요: 0, 또가요: 0 },
-    ...patch,
-  });
-
-  it('같은 날짜의 행사는 다시 만들지 않는다', () => {
-    const merged = mergeMemories([memory({})], [memory({ id: 99, title: '중복 행사' })]);
-    expect(merged).toHaveLength(1);
-    expect(merged[0].title).toBe('여름 팀데이');
-  });
-
-  it('새 날짜의 행사는 뒤에 붙인다', () => {
-    const merged = mergeMemories([memory({})], [memory({ id: 99, date: '2026-09-01', title: '가을 워크샵' })]);
-    expect(merged.map((m) => m.title)).toEqual(['여름 팀데이', '가을 워크샵']);
-  });
-
-  it('여러 번 불러도 결과가 늘어나지 않는다', () => {
-    const once = mergeMemories([memory({})], [memory({ id: 99, date: '2026-09-01' })]);
-    const twice = mergeMemories(once, [memory({ id: 99, date: '2026-09-01' })]);
-    expect(twice).toHaveLength(2);
-  });
-});
-
 /*
   아래 제목들은 실제 팀 캘린더(AI ITS 혁신팀)에서 그대로 가져왔다.
   꾸며낸 예시로 테스트하면 규칙이 현실과 어긋나도 초록불이 켜진다.
@@ -373,32 +301,6 @@ describe('근태 일정 판정', () => {
     expect(isAttendanceEvent(event({ title: '[ITS혁신]파트 위클리' }))).toBe(false);
   });
 
-});
-
-describe('팀 추억은 허용 목록으로 받는다', () => {
-  it("제목에 '팀행사'가 있어야 올라간다", () => {
-    expect(isTeamEventTitle('[팀행사] 여름 워크샵')).toBe(true);
-    expect(isTeamEventTitle('팀 워크샵')).toBe(false);
-  });
-
-  it('표시한 행사만 올리고 나머지는 전부 뺀다', () => {
-    const events = [
-      event({ id: 'A', title: '[휴가/심인수]', isAllDay: true, startsAt: '2026-07-27', endsAt: '2026-07-29' }),
-      event({ id: 'B', title: '[건강검진/박완배]', isAllDay: true, startsAt: '2026-08-03', endsAt: '2026-08-03' }),
-      event({ id: 'C', title: '[팀행사] 여름 워크샵', isAllDay: true, startsAt: '2026-08-10', endsAt: '2026-08-11' }),
-    ];
-    expect(toMemoryEvents(events, 1, '시스템').map((m) => m.title)).toEqual(['[팀행사] 여름 워크샵']);
-  });
-
-  it('규칙에 없는 새 개인 일정도 자동으로 막힌다', () => {
-    // 차단 목록이었다면 '병가'·'육아휴직'처럼 낱말을 빠뜨린 순간 게시판에 떴다.
-    // 허용 목록이라 빠뜨려도 안 올라올 뿐이다 — 실수의 방향이 안전한 쪽이다.
-    const events = [
-      event({ id: 'A', title: '[병가/김수정]', isAllDay: true, startsAt: '2026-08-05', endsAt: '2026-08-05' }),
-      event({ id: 'B', title: '[육아휴직/이승주]', isAllDay: true, startsAt: '2026-08-05', endsAt: '2026-08-30' }),
-    ];
-    expect(toMemoryEvents(events, 1, '시스템')).toHaveLength(0);
-  });
 });
 
 describe('회의 부담 — 사람별 하루 회의시간', () => {

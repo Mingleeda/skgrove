@@ -1,10 +1,7 @@
 import {
   CalendarDays,
-  Clock3,
   Download,
-  ExternalLink,
   Film,
-  FolderOpen,
   Grid3x3,
   ImagePlus,
   MessageCircle,
@@ -13,13 +10,7 @@ import {
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import type { ChangeEvent } from 'react';
-import { ensureCalendarToken } from '../../calendarSession';
-import {
-  calendarConfigured,
-  fetchCalendarEvents,
-  mergeMemories,
-  toMemoryEvents,
-} from '../../googleCalendar';
+import { compressImage } from '../../imageCompress';
 import {
   loadMemories,
   saveMemories,
@@ -193,63 +184,10 @@ const initialMemories: TeamMemory[] = [
 
 const assetTones: MemoryAsset['tone'][] = ['green', 'blue', 'coral', 'amber'];
 const emojiOptions: MemoryEmoji[] = ['👍', '👏', '😂', '🔥', '💚'];
-const driveRootUrl = 'https://drive.google.com/drive/folders';
-const driveFileUrl = 'https://drive.google.com/file/d';
 
-function getDriveFolderId(memory: Pick<TeamMemory, 'id'>) {
-  return `skgrove-memory-${memory.id}`;
-}
-
-function getDriveFolderUrl(folderId: string) {
-  return `${driveRootUrl}/${folderId}`;
-}
-
-function getDriveFileMeta(folderId: string, assetId: number) {
-  const driveFileId = `${folderId}-file-${assetId}`;
-  return {
-    driveFileId,
-    driveViewUrl: `${driveFileUrl}/${driveFileId}/view`,
-    driveDownloadUrl: `${driveFileUrl}/${driveFileId}/uc?export=download`,
-  };
-}
-
-function getSampleDriveAssets(memory: TeamMemory): MemoryAsset[] {
-  const folderId = memory.driveFolderId ?? getDriveFolderId(memory);
-  const firstId = Date.now();
-  const secondId = firstId + 1;
-  return [
-    {
-      id: firstId,
-      type: 'photo',
-      title: `${memory.title} 단체컷`,
-      uploader: 'Google Drive',
-      tone: 'green',
-      uploadedAt: 'Drive 동기화',
-      reactions: { '👍': 0, '👏': 0, '😂': 0, '🔥': 0, '💚': 0 },
-      comments: [],
-      ...getDriveFileMeta(folderId, firstId),
-    },
-    {
-      id: secondId,
-      type: 'video',
-      title: `${memory.title} 하이라이트`,
-      uploader: 'Google Drive',
-      tone: 'blue',
-      uploadedAt: 'Drive 동기화',
-      reactions: { '👍': 0, '👏': 0, '😂': 0, '🔥': 0, '💚': 0 },
-      comments: [],
-      ...getDriveFileMeta(folderId, secondId),
-    },
-  ];
-}
-
-function getDday(date: string) {
-  const eventDate = new Date(`${date}T00:00:00`);
-  const diff = Math.ceil((eventDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-
-  if (diff === 0) return 'D-DAY';
-  if (diff > 0) return `D-${diff}`;
-  return `D+${Math.abs(diff)}`;
+function shortDate(date: string) {
+  const [, month, day] = date.split('-');
+  return `${Number(month)}/${Number(day)}`;
 }
 
 function getCalendarDays(memories: TeamMemory[]) {
@@ -279,8 +217,6 @@ export function Memory({ currentUser }: MemoryProps) {
   // 인스타 프로필의 탭. 기본은 격자다 — 이 화면에 오는 이유가 사진을 보는 것이라
   // 캘린더(행사 만들기)는 필요할 때 들어가는 두 번째 탭으로 내렸다.
   const [tab, setTab] = useState<'grid' | 'calendar'>('grid');
-  const [calendarBusy, setCalendarBusy] = useState(false);
-  const [calendarNotice, setCalendarNotice] = useState('');
 
   // 프로필 통계. 인스타의 게시물·팔로워 자리라 팀 전체를 세야 뜻이 맞는다.
   const totalAssets = memories.reduce((sum, memory) => sum + memory.assets.length, 0);
@@ -290,10 +226,6 @@ export function Memory({ currentUser }: MemoryProps) {
 
   const selectedMemory = memories.find((memory) => memory.id === selectedId) ?? memories[0];
   const selectedAsset = selectedMemory.assets.find((asset) => asset.id === selectedAssetId) ?? selectedMemory.assets[0];
-  const upcomingMemories = useMemo(
-    () => [...memories].sort((a, b) => a.date.localeCompare(b.date)).filter((memory) => !getDday(memory.date).startsWith('D+')),
-    [memories],
-  );
   const calendarDays = useMemo(() => getCalendarDays(memories), [memories]);
 
   useEffect(() => {
@@ -316,55 +248,6 @@ export function Memory({ currentUser }: MemoryProps) {
     void saveMemories(nextMemories);
   };
 
-  // 구글 캘린더의 '종일 일정'만 행사로 가져온다. 시간이 잡힌 일정은 회의라
-  // 추억 캘린더에 올리면 팀데이·워크샵이 회의에 묻힌다.
-  // 앞뒤 6개월을 본다 — 지난 행사는 기록으로, 앞으로의 행사는 D-day 로 쓰인다.
-  const CALENDAR_WINDOW_DAYS = 180;
-
-  const importCalendarEvents = async () => {
-    if (calendarBusy) return;
-    setCalendarBusy(true);
-    setCalendarNotice('');
-    try {
-      // 파트지수에서 이미 받아둔 토큰이 살아 있으면 팝업 없이 그것을 쓴다.
-      const connected = await ensureCalendarToken();
-      if (!connected.ok || !connected.accessToken) {
-        setCalendarNotice(
-          connected.reason === 'disabled'
-            ? '캘린더 연동이 아직 설정되지 않았어요.'
-            : `구글 연결에 실패했어요: ${connected.reason ?? '알 수 없는 오류'}`,
-        );
-        return;
-      }
-
-      const now = Date.now();
-      const result = await fetchCalendarEvents(
-        connected.accessToken,
-        new Date(now - CALENDAR_WINDOW_DAYS * 86400000).toISOString(),
-        new Date(now + CALENDAR_WINDOW_DAYS * 86400000).toISOString(),
-      );
-      if (!result.ok || !result.events) {
-        setCalendarNotice(`일정을 읽지 못했어요: ${result.reason ?? '알 수 없는 오류'}`);
-        return;
-      }
-
-      const nextId = memories.reduce((max, memory) => Math.max(max, memory.id), 0) + 1;
-      const incoming = toMemoryEvents(result.events, nextId, currentUser.name);
-      const merged = mergeMemories(memories, incoming);
-      const added = merged.length - memories.length;
-
-      if (added > 0) persistMemories(merged);
-      // 0건도 결과다. 조용히 넘기면 눌렀는데 아무 일도 안 난 것처럼 보인다.
-      setCalendarNotice(
-        added > 0
-          ? `행사 ${added}건을 가져왔어요.`
-          : '새로 가져올 행사가 없어요. 구글 캘린더의 종일 일정만 행사로 가져옵니다.',
-      );
-    } finally {
-      setCalendarBusy(false);
-    }
-  };
-
   const selectCalendarDay = (date: string, memory?: TeamMemory) => {
     if (memory) {
       setSelectedId(memory.id);
@@ -373,19 +256,15 @@ export function Memory({ currentUser }: MemoryProps) {
     }
 
     const [, month, day] = date.split('-');
-    const nextMemoryId = Date.now();
-    const nextDriveFolderId = getDriveFolderId({ id: nextMemoryId });
     const nextMemory: TeamMemory = {
-      id: nextMemoryId,
+      id: Date.now(),
       title: `${Number(month)}/${Number(day)} 팀 추억`,
       date,
       place: '장소 미정',
       host: currentUser.name,
       createdBy: currentUser.name,
-      summary: '캘린더에서 만든 새 추억 공간이에요. 팀원이 함께 사진과 영상을 모아갈 수 있어요.',
-      tags: ['새앨범', '공동사진첩'],
-      driveFolderId: nextDriveFolderId,
-      driveFolderUrl: getDriveFolderUrl(nextDriveFolderId),
+      summary: '새 추억 공간이에요. 게시물 탭에서 사진과 영상을 올려 함께 채워가요.',
+      tags: ['새앨범'],
       assets: [],
       comments: [],
       reactions: { 좋아요: 0, 웃겨요: 0, 또가요: 0 },
@@ -403,13 +282,15 @@ export function Memory({ currentUser }: MemoryProps) {
     const uploadedAssets: MemoryAsset[] = await Promise.all(
       files.map(async (file, index) => {
         const id = Date.now() + index;
-        const localPreviewUrl = URL.createObjectURL(file);
-        const stored = await uploadMemoryAssetFile(selectedMemory.id, id, file);
-        const folderId = selectedMemory.driveFolderId ?? getDriveFolderId(selectedMemory);
+        const isVideo = file.type.startsWith('video');
+        // 사진은 업로드 전에 줄여 용량을 아낀다(영상·GIF는 compressImage가 원본 유지).
+        const toUpload = await compressImage(file);
+        const localPreviewUrl = URL.createObjectURL(toUpload);
+        const stored = await uploadMemoryAssetFile(selectedMemory.id, id, toUpload);
 
         return {
           id,
-          type: file.type.startsWith('video') ? 'video' : 'photo',
+          type: isVideo ? 'video' : 'photo',
           title: file.name.replace(/\.[^/.]+$/, ''),
           uploader: currentUser.name,
           tone: assetTones[(selectedMemory.assets.length + index) % assetTones.length],
@@ -418,7 +299,6 @@ export function Memory({ currentUser }: MemoryProps) {
           comments: [],
           previewUrl: stored.previewUrl || localPreviewUrl,
           storagePath: stored.storagePath || undefined,
-          ...getDriveFileMeta(folderId, id),
         };
       }),
     );
@@ -426,57 +306,12 @@ export function Memory({ currentUser }: MemoryProps) {
     persistMemories(
       memories.map((memory) =>
         memory.id === selectedMemory.id
-          ? {
-              ...memory,
-              driveFolderId: memory.driveFolderId ?? getDriveFolderId(memory),
-              driveFolderUrl: memory.driveFolderUrl ?? getDriveFolderUrl(memory.driveFolderId ?? getDriveFolderId(memory)),
-              assets: [...uploadedAssets, ...memory.assets],
-            }
+          ? { ...memory, assets: [...uploadedAssets, ...memory.assets] }
           : memory,
       ),
     );
     setSelectedAssetId(uploadedAssets[0].id);
     event.target.value = '';
-  };
-
-  const connectDriveFolder = () => {
-    const folderId = selectedMemory.driveFolderId ?? getDriveFolderId(selectedMemory);
-    persistMemories(
-      memories.map((memory) =>
-        memory.id === selectedMemory.id
-          ? {
-              ...memory,
-              driveFolderId: folderId,
-              driveFolderUrl: getDriveFolderUrl(folderId),
-              tags: memory.tags.includes('Drive연동') ? memory.tags : ['Drive연동', ...memory.tags],
-            }
-          : memory,
-      ),
-    );
-  };
-
-  const importDriveSamples = () => {
-    const folderId = selectedMemory.driveFolderId ?? getDriveFolderId(selectedMemory);
-    const sampleAssets = getSampleDriveAssets({
-      ...selectedMemory,
-      driveFolderId: folderId,
-      driveFolderUrl: getDriveFolderUrl(folderId),
-    });
-
-    persistMemories(
-      memories.map((memory) =>
-        memory.id === selectedMemory.id
-          ? {
-              ...memory,
-              driveFolderId: folderId,
-              driveFolderUrl: getDriveFolderUrl(folderId),
-              tags: memory.tags.includes('Drive연동') ? memory.tags : ['Drive연동', ...memory.tags],
-              assets: [...sampleAssets, ...memory.assets],
-            }
-          : memory,
-      ),
-    );
-    setSelectedAssetId(sampleAssets[0].id);
   };
 
   const reactAsset = (assetId: number, emoji: MemoryEmoji) => {
@@ -642,7 +477,7 @@ export function Memory({ currentUser }: MemoryProps) {
             <label className="memory-file-drop">
               <input accept="image/*,video/*" multiple type="file" onChange={uploadAssets} />
               <span>사진/동영상 선택</span>
-              <small>여러 파일을 한 번에 선택하면 구글 드라이브처럼 앨범에 바로 쌓여요.</small>
+              <small>여러 파일을 한 번에 선택하면 앨범에 바로 쌓여요. 사진은 올릴 때 자동으로 가볍게 줄여 저장해요.</small>
             </label>
           </div>
 
@@ -678,18 +513,14 @@ export function Memory({ currentUser }: MemoryProps) {
                     </button>
                   ))}
                 </div>
-                <div className="memory-asset-actions">
-                  {selectedAsset.driveViewUrl && (
-                    <a href={selectedAsset.driveViewUrl} rel="noreferrer" target="_blank">
-                      <ExternalLink size={16} />
-                      Drive 보기
+                {selectedAsset.previewUrl && (
+                  <div className="memory-asset-actions">
+                    <a href={selectedAsset.previewUrl} rel="noreferrer" target="_blank">
+                      <Download size={16} />
+                      원본 보기
                     </a>
-                  )}
-                  <a href={selectedAsset.driveDownloadUrl ?? selectedAsset.previewUrl ?? '#'} rel="noreferrer" target="_blank">
-                    <Download size={16} />
-                    다운로드
-                  </a>
-                </div>
+                  </div>
+                )}
                 <div className="memory-asset-comments">
                   <div className="memory-asset-comment-input">
                     <MessageCircle size={16} />
@@ -714,29 +545,15 @@ export function Memory({ currentUser }: MemoryProps) {
           )}
         </div>
       ) : (
-        <div className="memory-layout">
-          <div className="memory-main">
-            <section className="panel memory-calendar-panel">
+        <div className="ig-grid-tab">
+          <section className="panel memory-calendar-panel">
             <div className="panel-header">
               <CalendarDays size={20} />
               <h2>행사 선택</h2>
             </div>
-            <p className="memory-calendar-guide">빈 날짜를 누르면 바로 추억 공간이 만들어져요.</p>
-            <div className="memory-calendar-sync">
-              <button
-                className="secondary-button wide"
-                type="button"
-                disabled={calendarBusy}
-                onClick={() => void importCalendarEvents()}
-              >
-                <CalendarDays size={16} />
-                {calendarBusy ? '구글 캘린더 읽는 중…' : '구글 캘린더에서 행사 가져오기'}
-              </button>
-              {!calendarConfigured() && (
-                <small>연동을 설정하면 캘린더의 종일 일정이 행사로 들어옵니다.</small>
-              )}
-              {calendarNotice && <small className="memory-calendar-notice">{calendarNotice}</small>}
-            </div>
+            <p className="memory-calendar-guide">
+              빈 날짜를 누르면 그 날짜의 추억 공간이 만들어져요. 만든 뒤 게시물 탭에서 사진·영상을 올리면 됩니다.
+            </p>
             <div className="memory-weekdays">
               {['일', '월', '화', '수', '목', '금', '토'].map((day) => (
                 <span key={day}>{day}</span>
@@ -748,7 +565,7 @@ export function Memory({ currentUser }: MemoryProps) {
                   className={day.memory?.id === selectedMemory.id ? 'selected' : ''}
                   key={day.key}
                   // 칸이 좁아 제목을 넣을 수 없다. 이름은 툴팁과 아래 행사 목록에서 읽는다.
-                  title={day.memory ? `${day.memory.title} · ${getDday(day.memory.date)}` : `${day.label} 추억 만들기`}
+                  title={day.memory ? day.memory.title : `${day.label} 추억 만들기`}
                   aria-label={day.memory ? `${day.label} ${day.memory.title}` : `${day.label} 추억 만들기`}
                   onClick={() => selectCalendarDay(day.key, day.memory)}
                 >
@@ -756,7 +573,7 @@ export function Memory({ currentUser }: MemoryProps) {
                   {day.memory ? (
                     <>
                       <span className="memory-day-dot" aria-hidden="true" />
-                      <small>{getDday(day.memory.date)}</small>
+                      <small>{day.memory.assets.length}개</small>
                     </>
                   ) : (
                     <small className="memory-create-hint">만들기</small>
@@ -765,7 +582,7 @@ export function Memory({ currentUser }: MemoryProps) {
               ))}
             </div>
           </section>
-            <section className="memory-event-list">
+          <section className="memory-event-list">
             {memories.map((memory) => (
               <button
                 className={memory.id === selectedMemory.id ? 'memory-event-card selected' : 'memory-event-card'}
@@ -775,7 +592,7 @@ export function Memory({ currentUser }: MemoryProps) {
                   setSelectedAssetId(memory.assets[0]?.id ?? 0);
                 }}
               >
-                <span>{getDday(memory.date)}</span>
+                <span>{shortDate(memory.date)}</span>
                 <div>
                   <strong>{memory.title}</strong>
                   <small>{memory.date} · {memory.place}</small>
@@ -784,41 +601,6 @@ export function Memory({ currentUser }: MemoryProps) {
               </button>
             ))}
           </section>
-          </div>
-          <aside className="memory-side">
-            <section className="panel">
-              <div className="memory-drive-panel">
-                <div>
-                  <FolderOpen size={20} />
-                  <strong>Google Drive 공동 사진첩</strong>
-                  <span>
-                    {selectedMemory.driveFolderUrl
-                      ? '행사별 Drive 폴더와 연결되어 업로드/다운로드 링크를 함께 관리해요.'
-                      : '실제 Drive OAuth 전까지 행사별 폴더 매핑과 파일 링크 구조를 먼저 확인해요.'}
-                  </span>
-                </div>
-                <div className="memory-drive-actions">
-                  <button className="secondary-button" type="button" onClick={connectDriveFolder}>
-                    폴더 연결
-                  </button>
-                  <button type="button" onClick={importDriveSamples}>
-                    Drive 샘플 가져오기
-                  </button>
-                  {selectedMemory.driveFolderUrl && (
-                    <a className="secondary-button" href={selectedMemory.driveFolderUrl} rel="noreferrer" target="_blank">
-                      <ExternalLink size={15} />
-                      폴더 열기
-                    </a>
-                  )}
-                </div>
-                <div className="memory-drive-meta">
-                  <span>{selectedMemory.driveFolderId ? 'Drive 폴더 연결됨' : 'Drive 미연결'}</span>
-                  <span>{selectedMemory.assets.filter((asset) => asset.driveFileId).length}개 파일 링크</span>
-                  <span>파일 반응/댓글은 앱에 저장</span>
-                </div>
-              </div>
-            </section>
-          </aside>
         </div>
       )}
     </section>
