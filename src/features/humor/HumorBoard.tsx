@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import type { ElementType } from 'react';
-import { AlertTriangle, ArrowLeft, Crown, FileText, Image as ImageIcon, Laugh, Link2, MessageCircle, Medal, PenLine, PlayCircle, Send, Sparkles, Trash2, Trophy, X } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, Crown, FileText, Hourglass, Image as ImageIcon, Laugh, Link2, MessageCircle, Medal, PenLine, PlayCircle, Send, Sparkles, Trash2, Trophy, X } from 'lucide-react';
 import { Avatar } from '../../components/Avatar';
 import { PanelHeader } from '../../components/PanelHeader';
 import { monthOf, rankCommenters, rankLiked, rankPosters, resolveMedia, topCommenter, topLiked, topPoster } from '../../humorRules';
@@ -12,6 +12,7 @@ type HumorBoardProps = {
   comments: HumorComment[];
   currentUser: CurrentUser;
   canModerate: boolean;
+  imagePendingIds: string[];
   onAddPost: (draft: { body: string; mediaUrl: string }) => void;
   onToggleLike: (postId: string) => void;
   onAddComment: (postId: string, body: string) => void;
@@ -84,6 +85,7 @@ export function HumorBoard({
   comments,
   currentUser,
   canModerate,
+  imagePendingIds,
   onAddPost,
   onToggleLike,
   onAddComment,
@@ -230,6 +232,11 @@ export function HumorBoard({
             <>
               <p className="humor-card-body">{detailPost.body}</p>
               <MediaBlock media={resolveMedia(detailPost.mediaUrl)} />
+              {!resolveMedia(detailPost.mediaUrl) && detailPost.imageUrl && (
+                <div className="humor-card-image">
+                  <img src={detailPost.imageUrl} alt="" loading="lazy" />
+                </div>
+              )}
             </>
           )}
           <div className="humor-card-actions">
@@ -426,14 +433,23 @@ export function HumorBoard({
           const media = resolveMedia(post.mediaUrl);
           const Glyph = mediaGlyph(media);
           const liked = post.likedBy.includes(currentUser.name);
+          // 배경: 사용자가 붙인 이미지 우선, 없으면 생성 썸네일(imageUrl).
+          const bgSrc = media?.type === 'image' ? media.src : post.imageUrl || null;
+          const drawing = imagePendingIds.includes(post.id);
           return (
             <button
-              className={media?.type === 'image' ? 'ig-reel has-media' : 'ig-reel'}
+              className={bgSrc ? 'ig-reel has-media' : 'ig-reel'}
               key={post.id}
               onClick={() => openDetail(post.id)}
               type="button"
             >
-              {media?.type === 'image' && <img alt="" className="ig-reel-bg" loading="lazy" src={media.src} />}
+              {bgSrc && <img alt="" className="ig-reel-bg" loading="lazy" src={bgSrc} />}
+              {drawing && !bgSrc && (
+                <span className="ig-drawing">
+                  <Hourglass size={14} />
+                  그림 그리는 중
+                </span>
+              )}
 
               <span className="ig-reel-side">
                 <span className={liked ? 'liked' : ''}>
