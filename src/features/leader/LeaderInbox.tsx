@@ -142,17 +142,20 @@ export function LeaderInbox({ issues, accounts, currentUser, today, onIssueUpdat
 
   const saveAction = () => {
     if (!selectedIssue || !draft.trim()) return;
+    const entry = draft.trim();
 
+    // 처리기록은 덮어쓰지 않고 이어 붙인다. 한 건에 답변·메모를 여러 번 남길 수 있고,
+    // 예전엔 마지막 것만 남아 이전 처리가 사라졌다. 빈 줄로 구분해 쌓는다.
     if (activeAction === 'reply') {
-      onIssueUpdate({ ...selectedIssue, leaderReply: draft.trim(), status: '답변완료' });
+      onIssueUpdate({ ...selectedIssue, leaderReply: appendEntry(selectedIssue.leaderReply, entry), status: '답변완료' });
     }
 
     if (activeAction === 'oneOnOne') {
-      onIssueUpdate({ ...selectedIssue, oneOnOneNote: draft.trim(), status: '1on1 제안' });
+      onIssueUpdate({ ...selectedIssue, oneOnOneNote: appendEntry(selectedIssue.oneOnOneNote, entry), status: '1on1 제안' });
     }
 
     if (activeAction === 'memo') {
-      onIssueUpdate({ ...selectedIssue, leaderMemo: draft.trim(), status: '검토중' });
+      onIssueUpdate({ ...selectedIssue, leaderMemo: appendEntry(selectedIssue.leaderMemo, entry), status: '검토중' });
     }
 
     setDraft('');
@@ -572,10 +575,31 @@ export function LeaderInbox({ issues, accounts, currentUser, today, onIssueUpdat
                     {selectedIssue.status} 사유: {selectedIssue.statusReason}
                   </p>
                 )}
-                {selectedIssue.leaderReply && <p>답변: {selectedIssue.leaderReply}</p>}
-                {selectedIssue.oneOnOneNote && <p>1on1: {selectedIssue.oneOnOneNote}</p>}
+                {selectedIssue.leaderReply && (
+                  <div className="leader-followup-thread">
+                    <strong>답변</strong>
+                    {selectedIssue.leaderReply.split('\n\n').map((line, index) => (
+                      <p key={index}>{line}</p>
+                    ))}
+                  </div>
+                )}
+                {selectedIssue.oneOnOneNote && (
+                  <div className="leader-followup-thread">
+                    <strong>1on1 제안</strong>
+                    {selectedIssue.oneOnOneNote.split('\n\n').map((line, index) => (
+                      <p key={index}>{line}</p>
+                    ))}
+                  </div>
+                )}
                 {selectedIssue.actionItem && <p>액션아이템: {selectedIssue.actionItem}</p>}
-                {selectedIssue.leaderMemo && <p>리더 메모: {selectedIssue.leaderMemo}</p>}
+                {selectedIssue.leaderMemo && (
+                  <div className="leader-followup-thread">
+                    <strong>리더 메모</strong>
+                    {selectedIssue.leaderMemo.split('\n\n').map((line, index) => (
+                      <p key={index}>{line}</p>
+                    ))}
+                  </div>
+                )}
                 {selectedIssue.oneOnOneResponse && <p>팀원 1on1 응답: {selectedIssue.oneOnOneResponse}</p>}
                 {selectedIssue.submitterResponse && (
                   <div className="leader-followup-thread">
@@ -628,6 +652,11 @@ function makeAgendaDraft(issue: Issue): AgendaDraft {
     // 객관식으로 바꿨을 때 바로 두 칸이 보이도록 미리 열어둔다(새 안건 등록과 같다).
     optionLabels: Array(MIN_OPTIONS).fill(''),
   };
+}
+
+// 처리기록을 덮어쓰지 않고 이어 붙인다. 빈 줄로 구분해 쌓아 이력이 남게 한다.
+function appendEntry(existing: string | undefined, addition: string) {
+  return existing ? `${existing}\n\n${addition}` : addition;
 }
 
 // '원문 불러오기'를 눌렀을 때만 쓰이는 값. 공개 가능으로 접수된 건에서만 노출한다.
