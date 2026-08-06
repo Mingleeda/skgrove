@@ -9,7 +9,11 @@ import { fileFromDataUri } from './gatheringImage';
 import type { HumorPost } from './types';
 
 function endpoint() {
-  return (import.meta.env as Record<string, string | undefined>).VITE_HUMOR_IMAGE_ENDPOINT || undefined;
+  const env = import.meta.env as Record<string, string | undefined>;
+  // 같은 서버 함수(api/gathering-image)가 모임·물건·유머를 함께 그린다. 유머 전용
+  // 변수를 따로 안 두면 모임 엔드포인트로 폴백한다 — 배포에 VITE_HUMOR_IMAGE_ENDPOINT
+  // 를 안 넣어 유머 썸네일만 조용히 꺼지던(빌드에서 fetch 가 제거되던) 것을 막는다.
+  return env.VITE_HUMOR_IMAGE_ENDPOINT || env.VITE_GATHERING_IMAGE_ENDPOINT || undefined;
 }
 
 /**
