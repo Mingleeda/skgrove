@@ -112,7 +112,7 @@ export function Dashboard({
           <small>말하기</small>
         </button>
         {flashStories.map((item) => (
-          <button className="ig-story" key={item.id} onClick={() => onSectionChange('gatherings')} type="button">
+          <button className="ig-story" key={item.id} onClick={() => onOpenFeedItem('gatherings', item.id)} type="button">
             <span className="ig-ring">
               <span className="ig-thumb">
                 <Zap size={22} strokeWidth={1.6} />
