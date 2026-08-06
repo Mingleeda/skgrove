@@ -193,16 +193,18 @@ export function LoginScreen({ accounts, onLogin, onRegister, onSetPassword }: Lo
 
         {mode === 'login' && (
           <label>
-            비밀번호
+            {isFirstLogin ? '비밀번호 설정' : '비밀번호'}
             <input
               type="password"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
-              placeholder={isFirstLogin ? `${MIN_PASSWORD_LENGTH}자 이상 새 비밀번호` : '비밀번호'}
+              placeholder={isFirstLogin ? `앞으로 쓸 비밀번호 (${MIN_PASSWORD_LENGTH}자 이상)` : '비밀번호'}
               autoComplete={isFirstLogin ? 'new-password' : 'current-password'}
             />
             {isFirstLogin && (
-              <small className="login-hint">첫 로그인이에요. 지금 입력한 비밀번호가 이 계정의 비밀번호로 등록됩니다.</small>
+              <small className="login-hint">
+                👋 처음 오셨네요. 앞으로 쓸 비밀번호를 정해 입력하면 이 계정에 바로 등록됩니다. (따로 초기 비밀번호는 없어요)
+              </small>
             )}
           </label>
         )}
