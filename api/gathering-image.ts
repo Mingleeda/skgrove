@@ -30,6 +30,10 @@ type ItemInput = {
   place?: string;
 };
 
+type HumorInput = {
+  body?: string;
+};
+
 type ChatPart = { type: string; text?: string; image_url?: { url: string } };
 type ChatMessage = { role: string; content: string | ChatPart[] };
 type Models = { text: string; image: string; vision: string };
@@ -146,6 +150,39 @@ function buildGatheringPrompt(subject: string, gathering: GatheringInput): strin
 /** 물건: 화풍(고정) + 사물 묘사(가변) + 단일 사물 구도(고정). */
 function buildItemPrompt(subject: string): string {
   return `${STYLE} A single second-hand object drawn on its own: ${subject}. ${MARKET_FRAME}`;
+}
+
+const HUMOR_FRAME = [
+  'Vertical 4:5 thumbnail, single continuous funny scene filling the whole frame.',
+  'Full bleed edge to edge, no border, no white margin.',
+  'A light, wholesome, gently comic moment — nothing mean or crude.',
+  'No speech bubbles, no captions, no letters, no numbers anywhere.',
+  'Every surface is blank and unmarked. Faces simplified, no identifiable real person.',
+].join(' ');
+
+/** 유머: 화풍(고정) + 장면 묘사(가변) + 장면 제약(고정). */
+function buildHumorPrompt(subject: string): string {
+  return `${STYLE} A single funny everyday scene: ${subject}. ${HUMOR_FRAME}`;
+}
+
+function askHumorSubject(apiKey: string, textModel: string, humor: HumorInput): Promise<string> {
+  return chat(
+    apiKey,
+    textModel,
+    [
+      {
+        role: 'user',
+        content:
+          'You write one-line scene descriptions for an illustrator.\n' +
+          'Turn this Korean humor post into ONE English sentence, 8-15 words, describing a single ' +
+          'funny visual scene one could draw. No speech, no captions, no text in the scene.\n' +
+          'Replace any real person or brand with a generic type. Keep it light and wholesome.\n' +
+          'Reply with the sentence alone — no markdown, no quotes, no preamble.\n' +
+          `글: ${humor.body ?? ''}`,
+      },
+    ],
+    60,
+  );
 }
 
 /** 재시도 프롬프트. 같은 말을 반복하면 같은 이유로 또 글자가 나온다. */
@@ -299,9 +336,9 @@ export async function POST(request: Request): Promise<Response> {
   // 키 미주입 → 휴면. 프론트는 로컬 포스터로 폴백한다.
   if (!apiKey) return Response.json({ ok: false, reason: 'OPENROUTER_API_KEY not configured' });
 
-  let payload: { gathering?: GatheringInput; item?: ItemInput };
+  let payload: { gathering?: GatheringInput; item?: ItemInput; humor?: HumorInput };
   try {
-    payload = (await request.json()) as { gathering?: GatheringInput; item?: ItemInput };
+    payload = (await request.json()) as { gathering?: GatheringInput; item?: ItemInput; humor?: HumorInput };
   } catch {
     return new Response('Bad Request', { status: 400 });
   }
@@ -328,6 +365,12 @@ export async function POST(request: Request): Promise<Response> {
     const subject = usableSubject(translated) ? translated : 'Coworkers spending time together after work.';
     basePrompt = buildGatheringPrompt(subject, gathering);
     label = gathering.title;
+  } else if (payload.humor?.body) {
+    const humor = payload.humor;
+    const translated = await askHumorSubject(apiKey, models.text, humor).catch(() => '');
+    const subject = usableSubject(translated) ? translated : 'Coworkers laughing together at something silly.';
+    basePrompt = buildHumorPrompt(subject);
+    label = humor.body.slice(0, 20);
   } else {
     return Response.json({ ok: false, reason: 'no subject' });
   }
