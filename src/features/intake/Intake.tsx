@@ -114,10 +114,15 @@ export function Intake({ identity, currentUser, issues, partLeaders, onIdentityC
     setResponseDrafts((drafts) => ({ ...drafts, [issueId]: value }));
   };
 
+  // 후속 응답은 덮어쓰지 않고 이어 붙인다. 예전엔 새 응답이 이전 응답을 지워
+  // 주고받은 맥락이 사라졌다. 빈 줄로 구분해 쌓는다.
+  const appendResponse = (existing: string | undefined, addition: string) =>
+    existing ? `${existing}\n\n${addition}` : addition;
+
   const saveSubmitterResponse = (issue: Issue) => {
     const response = responseDrafts[issue.id]?.trim();
     if (!response) return;
-    onIssueUpdate({ ...issue, submitterResponse: response });
+    onIssueUpdate({ ...issue, submitterResponse: appendResponse(issue.submitterResponse, response) });
     setResponseDrafts((drafts) => ({ ...drafts, [issue.id]: '' }));
   };
 
@@ -126,7 +131,7 @@ export function Intake({ identity, currentUser, issues, partLeaders, onIdentityC
     onIssueUpdate({
       ...issue,
       oneOnOneResponse,
-      submitterResponse: response || issue.submitterResponse,
+      submitterResponse: response ? appendResponse(issue.submitterResponse, response) : issue.submitterResponse,
     });
     if (response) {
       setResponseDrafts((drafts) => ({ ...drafts, [issue.id]: '' }));

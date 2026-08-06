@@ -437,16 +437,18 @@ export function App() {
         if (slackEmail) deliverDm(slackEmail, rep.kind, rep.title, rep.body, rep.fromName);
         return;
       }
-      const channel = slackChannelForKind(rep.kind);
-      if (channel) deliverToSlack(channel, rep.kind, rep.title, rep.body, rep.fromName);
-      // 대나무숲 접수: 채널 게시에 더해 '전달 대상' 리더에게 개인 DM도 보낸다.
-      // 익명 접수도 본문에 '익명 접수'로만 나가 작성자는 드러나지 않는다.
+      // 대나무숲 접수는 채널에 뿌리지 않고 '전달 대상' 리더에게만 개인 DM으로 보낸다.
+      // (채널 게시는 모두에게 노출돼, 특정 리더에게 향한 접수 취지와 안 맞는다.)
+      // 익명 접수도 본문엔 '익명 접수'로만 나가 작성자는 드러나지 않는다.
       if (rep.kind === 'issue') {
         items.forEach((item) => {
           const slackEmail = slackEmailFor(item.recipientName);
           if (slackEmail) deliverDm(slackEmail, item.kind, item.title, item.body, item.fromName);
         });
+        return;
       }
+      const channel = slackChannelForKind(rep.kind);
+      if (channel) deliverToSlack(channel, rep.kind, rep.title, rep.body, rep.fromName);
     });
   };
 
@@ -1381,7 +1383,14 @@ export function App() {
         />
       )}
       {active === 'leader' && hasLeaderRole(currentUser) && (
-        <LeaderInbox issues={issues} today={today()} onIssueUpdate={updateIssue} onPromoteToAgenda={promoteToAgenda} />
+        <LeaderInbox
+          issues={issues}
+          accounts={accounts}
+          currentUser={currentUser}
+          today={today()}
+          onIssueUpdate={updateIssue}
+          onPromoteToAgenda={promoteToAgenda}
+        />
       )}
       {active === 'agenda' && !agendaForActions && (
         <AgendaBoard

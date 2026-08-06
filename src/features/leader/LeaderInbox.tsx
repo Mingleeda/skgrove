@@ -22,7 +22,8 @@ import {
   oldestWaitingDays,
   statusNeedsReason,
 } from '../../issueRules';
-import type { Agenda, Identity, Issue, IssueStatus, TeamPart, VoteType } from '../../types';
+import { leadersFor } from '../../notificationRules';
+import type { Agenda, CurrentUser, Identity, Issue, IssueStatus, ManagedAccount, TeamPart, VoteType } from '../../types';
 
 type AgendaDraft = Pick<
   Agenda,
@@ -34,11 +35,14 @@ type AgendaDraft = Pick<
 
 type LeaderInboxProps = {
   issues: Issue[];
+  accounts: ManagedAccount[];
+  currentUser: CurrentUser;
   today: string;
   onIssueUpdate: (issue: Issue) => void;
   onPromoteToAgenda: (issue: Issue, draft: AgendaDraft) => void;
 };
-type LeaderAction = 'reply' | 'oneOnOne' | 'actionItem' | 'agenda' | 'memo';
+// 안건 탭에서 답변·1on1·안건화·메모를 처리한다. '액션'은 별도 액션보드로 옮겨 여기선 뺐다.
+type LeaderAction = 'reply' | 'oneOnOne' | 'agenda' | 'memo';
 
 /*
   상태 10개를 전부 칩으로 늘어놓으면 두 줄(94px)을 먹는다. 목록에 걸린 건이
@@ -59,7 +63,7 @@ const agendaParts: TeamPart[] = ['전체', ...teamParts];
 const DEFAULT_VOTING_DAYS = 7;
 const addDays = (days: number) => new Date(Date.now() + days * 86400000).toISOString().slice(0, 10);
 
-export function LeaderInbox({ issues, today, onIssueUpdate, onPromoteToAgenda }: LeaderInboxProps) {
+export function LeaderInbox({ issues, accounts, currentUser, today, onIssueUpdate, onPromoteToAgenda }: LeaderInboxProps) {
   const [filter, setFilter] = useState<'전체' | IssueStatus>('전체');
   /*
     목록과 상세를 화면 단위로 나눈다. 예전에는 좌우 분할이었는데, 작업판이
@@ -77,18 +81,24 @@ export function LeaderInbox({ issues, today, onIssueUpdate, onPromoteToAgenda }:
   const [pendingStatus, setPendingStatus] = useState<{ issueId: string; status: IssueStatus } | null>(null);
   const [reasonDraft, setReasonDraft] = useState('');
 
+  // 리더 관리함은 '나에게 접수된 건'만 본다. 전달 대상(target)이 나를 가리키는 건만
+  // (leadersFor 가 팀리더·리더전체·특정 파트리더 이름을 모두 해석). 남의 파트로 간
+  // 접수까지 다 보이면 대나무숲의 대상 지정이 무의미해진다.
+  const myIssues = issues.filter((issue) =>
+    leadersFor(accounts, issue.target).some((leader) => leader.email.toLowerCase() === currentUser.email.toLowerCase()),
+  );
   const visibleIssues =
     filter === '전체'
-      ? issues.filter((issue) => issue.status !== '회수' && issue.status !== '종료')
-      : issues.filter((issue) => issue.status === filter);
+      ? myIssues.filter((issue) => issue.status !== '회수' && issue.status !== '종료')
+      : myIssues.filter((issue) => issue.status === filter);
   const selectedIssue = visibleIssues.find((issue) => issue.id === selectedIssueId) ?? null;
   const agendaDraft = selectedIssue ? agendaDrafts[selectedIssue.id] ?? makeAgendaDraft(selectedIssue) : null;
-  const waitingCount = issues.filter((issue) => issue.status === '접수' || issue.status === '검토중').length;
-  const answeredCount = issues.filter((issue) => issue.leaderReply).length;
-  const followUpCount = issues.filter((issue) => issue.oneOnOneNote || issue.actionItem).length;
+  const waitingCount = myIssues.filter((issue) => issue.status === '접수' || issue.status === '검토중').length;
+  const answeredCount = myIssues.filter((issue) => issue.leaderReply).length;
+  const followUpCount = myIssues.filter((issue) => issue.oneOnOneNote || issue.actionItem).length;
   // 개수만으로는 방치가 보이지 않는다. 3건이 3일째인지 30일째인지가 다르다.
-  const oldestWaiting = oldestWaitingDays(issues, today);
-  const overdueCount = issues.filter((issue) => isResponseOverdue(issue, today)).length;
+  const oldestWaiting = oldestWaitingDays(myIssues, today);
+  const overdueCount = myIssues.filter((issue) => isResponseOverdue(issue, today)).length;
 
   const chooseIssue = (issue: Issue) => {
     setSelectedIssueId(issue.id);
@@ -139,10 +149,6 @@ export function LeaderInbox({ issues, today, onIssueUpdate, onPromoteToAgenda }:
 
     if (activeAction === 'oneOnOne') {
       onIssueUpdate({ ...selectedIssue, oneOnOneNote: draft.trim(), status: '1on1 제안' });
-    }
-
-    if (activeAction === 'actionItem') {
-      onIssueUpdate({ ...selectedIssue, actionItem: draft.trim(), status: '액션아이템' });
     }
 
     if (activeAction === 'memo') {
@@ -373,10 +379,6 @@ export function LeaderInbox({ issues, today, onIssueUpdate, onPromoteToAgenda }:
                   <CalendarPlus size={17} />
                   1on1
                 </button>
-                <button className={activeAction === 'actionItem' ? 'selected' : ''} onClick={() => setActiveAction('actionItem')}>
-                  <FileCheck2 size={17} />
-                  액션
-                </button>
                 <button className={activeAction === 'agenda' ? 'selected' : ''} onClick={() => setActiveAction('agenda')}>
                   <Vote size={17} />
                   안건
@@ -574,14 +576,15 @@ export function LeaderInbox({ issues, today, onIssueUpdate, onPromoteToAgenda }:
                 {selectedIssue.oneOnOneNote && <p>1on1: {selectedIssue.oneOnOneNote}</p>}
                 {selectedIssue.actionItem && <p>액션아이템: {selectedIssue.actionItem}</p>}
                 {selectedIssue.leaderMemo && <p>리더 메모: {selectedIssue.leaderMemo}</p>}
-                {selectedIssue.oneOnOneResponse && (
-                  <p>
-                    팀원 1on1 응답: {selectedIssue.oneOnOneResponse}
-                    {selectedIssue.submitterResponse ? ` · ${selectedIssue.submitterResponse}` : ''}
-                  </p>
-                )}
-                {!selectedIssue.oneOnOneResponse && selectedIssue.submitterResponse && (
-                  <p>팀원 후속 응답: {selectedIssue.submitterResponse}</p>
+                {selectedIssue.oneOnOneResponse && <p>팀원 1on1 응답: {selectedIssue.oneOnOneResponse}</p>}
+                {selectedIssue.submitterResponse && (
+                  <div className="leader-followup-thread">
+                    <strong>팀원 후속 응답</strong>
+                    {/* 후속 응답은 빈 줄로 누적된다. 각 응답을 한 줄씩 보여준다. */}
+                    {selectedIssue.submitterResponse.split('\n\n').map((line, index) => (
+                      <p key={index}>{line}</p>
+                    ))}
+                  </div>
                 )}
                 {!selectedIssue.statusReason &&
                   !selectedIssue.leaderReply &&
@@ -637,14 +640,12 @@ function issueSourceText(issue: Issue) {
 function getActionLabel(action: LeaderAction) {
   if (action === 'reply') return '작성자에게 남길 답변';
   if (action === 'oneOnOne') return '1on1 제안 내용';
-  if (action === 'actionItem') return '액션아이템';
   return '리더 내부 메모';
 }
 
 function getActionPlaceholder(action: LeaderAction) {
   if (action === 'reply') return '검토 결과와 다음 조치를 작성해주세요.';
   if (action === 'oneOnOne') return '대화 목적, 제안 일정, 참여 대상을 적어주세요.';
-  if (action === 'actionItem') return '담당자, 완료 기준, 희망 일정을 포함해 적어주세요.';
   return '리더끼리 공유할 판단 근거를 남겨주세요.';
 }
 
