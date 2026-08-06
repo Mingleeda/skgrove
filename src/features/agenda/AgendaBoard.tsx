@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { FilePlus2, Search, Vote } from 'lucide-react';
 import { daysLeft, isOpen, optionRate, voteTotal, winningOptions } from '../../agendaRules';
 import { teamParts } from '../../auth';
@@ -28,6 +28,9 @@ type AgendaBoardProps = {
   // 안건별로 이미 만들어진 액션아이템 수. 중복 생성 여부를 사용자가 판단할 근거가 된다.
   actionCountByAgenda: Record<string, number>;
   onCreateActions: (agenda: Agenda) => void;
+  /** 홈 피드에서 이 안건을 눌러 들어온 경우 그 id. 바로 상세를 열고 한 번만 소비한다. */
+  focusId?: string | null;
+  onFocusHandled?: () => void;
 };
 
 type BoardView = 'list' | 'create' | 'detail';
@@ -45,6 +48,8 @@ export function AgendaBoard({
   onCreateAgenda,
   actionCountByAgenda,
   onCreateActions,
+  focusId,
+  onFocusHandled,
 }: AgendaBoardProps) {
   const [view, setView] = useState<BoardView>('list');
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -62,6 +67,14 @@ export function AgendaBoard({
     setSelectedId(id);
     setView('detail');
   };
+
+  // 홈 피드에서 이 안건을 눌러 들어오면 바로 그 상세를 연다(한 번만 소비).
+  useEffect(() => {
+    if (focusId) {
+      openDetail(focusId);
+      onFocusHandled?.();
+    }
+  }, [focusId]);
 
   const createAgenda = (draft: AgendaDraft) => {
     const created = onCreateAgenda(draft);

@@ -47,6 +47,8 @@ type DashboardProps = {
   /** 'YYYY-MM-DDTHH:mm' 로컬 시각. 모임의 '아직 안 지났는가' 판정에 쓴다. */
   now: string;
   onSectionChange: (section: Section) => void;
+  // 피드 게시글 클릭: 섹션으로만 가지 않고 그 항목 상세를 연다. id 는 도메인 원본 id(접두어 제거).
+  onOpenFeedItem: (section: Section, id: string) => void;
   onIdentityChange: (identity: Identity) => void;
 };
 
@@ -63,6 +65,7 @@ export function Dashboard({
   today,
   now,
   onSectionChange,
+  onOpenFeedItem,
   onIdentityChange,
 }: DashboardProps) {
   /*
@@ -135,7 +138,7 @@ export function Dashboard({
                 <button
                   className={item.imageUrl ? 'home-feed-card has-image' : `home-feed-card ${style.cls}`}
                   key={item.id}
-                  onClick={() => onSectionChange(item.section)}
+                  onClick={() => onOpenFeedItem(item.section, item.id.slice(item.kind.length + 1))}
                   title={`${style.label} · ${item.title}`}
                   type="button"
                 >

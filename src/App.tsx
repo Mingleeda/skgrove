@@ -1350,6 +1350,16 @@ export function App() {
     setActive(section);
   };
 
+  // 홈 피드에서 게시글을 누르면 그 섹션으로 이동해 해당 항목 상세를 연다(딥링크).
+  // 각 보드는 focusId 를 받으면 그 항목 상세를 열고 onFocusHandled 로 한 번만 소비한다.
+  const [feedFocus, setFeedFocus] = useState<{ section: Section; id: string } | null>(null);
+  const openFeedItem = (section: Section, id: string) => {
+    changeSection(section);
+    setFeedFocus({ section, id });
+  };
+  const clearFeedFocus = () => setFeedFocus(null);
+  const focusFor = (section: Section) => (feedFocus?.section === section ? feedFocus.id : null);
+
   // 딥링크: 로그인 상태에서 #해시가 있으면 해당 화면으로 이동(슬랙 알림 링크 진입점).
   // 단, 해시는 '한 번만' 소비하고 주소창에서 지운다. 안 지우면 슬랙 링크로 한 번
   // 들어온 해시가 주소창에 계속 남아, 다음 로그인 때마다 그 페이지로 되돌아간다
@@ -1421,6 +1431,7 @@ export function App() {
           today={today()}
           now={nowStamp()}
           onSectionChange={changeSection}
+          onOpenFeedItem={openFeedItem}
           onIdentityChange={setIdentity}
         />
       )}
@@ -1459,6 +1470,8 @@ export function App() {
           onCreateAgenda={createAgenda}
           actionCountByAgenda={actionCountByAgenda}
           onCreateActions={setAgendaForActions}
+          focusId={focusFor('agenda')}
+          onFocusHandled={clearFeedFocus}
         />
       )}
       {active === 'agenda' && agendaForActions && (
@@ -1525,6 +1538,8 @@ export function App() {
           onResetCoffee={resetCoffeePick}
           canModerate={isTeamLeader(currentUser)}
           onDelete={deleteGathering}
+          focusId={focusFor('gatherings')}
+          onFocusHandled={clearFeedFocus}
         />
       )}
       {active === 'market' && (
@@ -1541,6 +1556,8 @@ export function App() {
           onMarkDone={markMarketDone}
           canModerate={isTeamLeader(currentUser)}
           onDelete={deleteMarketItem}
+          focusId={focusFor('market')}
+          onFocusHandled={clearFeedFocus}
         />
       )}
       {active === 'notifications' && (
@@ -1567,6 +1584,8 @@ export function App() {
           onEditPost={editHumorPost}
           onDeletePost={deleteHumorPost}
           onDeleteComment={deleteHumorComment}
+          focusId={focusFor('humor')}
+          onFocusHandled={clearFeedFocus}
         />
       )}
       {active === 'profiles' && (

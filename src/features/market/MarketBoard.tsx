@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   AlertTriangle,
   ArrowLeft,
@@ -58,6 +58,9 @@ type MarketBoardProps = {
   canModerate: boolean;
   /** 완전 삭제(물건 + 입찰 기록). 판매자 또는 팀리더만 호출한다. */
   onDelete: (item: MarketItem) => void;
+  /** 홈 피드에서 이 물건을 눌러 들어온 경우 그 id. 바로 상세를 열고 한 번만 소비한다. */
+  focusId?: string | null;
+  onFocusHandled?: () => void;
 };
 
 type BoardView = 'feed' | 'create' | 'edit' | 'detail';
@@ -92,6 +95,8 @@ export function MarketBoard({
   onMarkDone,
   canModerate,
   onDelete,
+  focusId,
+  onFocusHandled,
 }: MarketBoardProps) {
   const [view, setView] = useState<BoardView>('feed');
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -123,6 +128,14 @@ export function MarketBoard({
     setConfirmingDelete(false);
     setView('detail');
   };
+
+  // 홈 피드에서 이 물건을 눌러 들어오면 바로 그 상세를 연다(한 번만 소비).
+  useEffect(() => {
+    if (focusId) {
+      openDetail(focusId);
+      onFocusHandled?.();
+    }
+  }, [focusId]);
 
   const create = (draft: MarketDraft) => {
     onCreate(draft);

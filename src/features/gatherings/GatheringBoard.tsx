@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   AlertTriangle,
   ArrowLeft,
@@ -51,6 +51,9 @@ type GatheringBoardProps = {
   onDelete: (gathering: Gathering) => void;
   /** 등록 직후 배경에서 그림을 그리는 중인 모임. 격자에 '그리는 중' 을 띄운다. */
   imagePendingIds: string[];
+  /** 홈 피드에서 이 모임을 눌러 들어온 경우 그 id. 바로 상세를 열고 한 번만 소비한다. */
+  focusId?: string | null;
+  onFocusHandled?: () => void;
 };
 
 type BoardView = 'feed' | 'create' | 'detail';
@@ -108,6 +111,8 @@ export function GatheringBoard({
   canModerate,
   onDelete,
   imagePendingIds,
+  focusId,
+  onFocusHandled,
 }: GatheringBoardProps) {
   const [view, setView] = useState<BoardView>('feed');
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -135,6 +140,14 @@ export function GatheringBoard({
     setView('detail');
     setConfirmingDelete(false);
   };
+
+  // 홈 피드에서 이 모임을 눌러 들어오면 바로 그 상세를 연다(한 번만 소비).
+  useEffect(() => {
+    if (focusId) {
+      openDetail(focusId);
+      onFocusHandled?.();
+    }
+  }, [focusId]);
 
   const create = (draft: GatheringDraft) => {
     onCreate(draft);

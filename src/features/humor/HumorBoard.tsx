@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { ElementType } from 'react';
 import { AlertTriangle, ArrowLeft, Crown, FileText, Hourglass, Image as ImageIcon, Laugh, Link2, MessageCircle, Medal, PenLine, PlayCircle, Send, Sparkles, Trash2, Trophy, X } from 'lucide-react';
 import { Avatar } from '../../components/Avatar';
@@ -19,6 +19,9 @@ type HumorBoardProps = {
   onEditPost: (postId: string, draft: { body: string; mediaUrl: string }) => void;
   onDeletePost: (postId: string) => void;
   onDeleteComment: (commentId: string) => void;
+  /** 홈 피드에서 이 글을 눌러 들어온 경우 그 id. 바로 상세를 열고 한 번만 소비한다. */
+  focusId?: string | null;
+  onFocusHandled?: () => void;
 };
 
 // 'YYYY-MM' 기준으로 delta개월 이동.
@@ -92,6 +95,8 @@ export function HumorBoard({
   onEditPost,
   onDeletePost,
   onDeleteComment,
+  focusId,
+  onFocusHandled,
 }: HumorBoardProps) {
   const [detailId, setDetailId] = useState<string | null>(null);
   const [writing, setWriting] = useState(false);
@@ -111,6 +116,14 @@ export function HumorBoard({
     setEditing(false);
     setDeletingPost(false);
   };
+
+  // 홈 피드에서 이 글을 눌러 들어오면 바로 그 상세를 연다(한 번만 소비).
+  useEffect(() => {
+    if (focusId) {
+      openDetail(focusId);
+      onFocusHandled?.();
+    }
+  }, [focusId]);
 
   const thisMonth = new Date().toISOString().slice(0, 7);
   const lastMonth = shiftMonth(thisMonth, -1);
