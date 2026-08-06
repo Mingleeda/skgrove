@@ -8,10 +8,24 @@
 */
 import * as THREE from 'three';
 
+/**
+ * 무대가 차지하는 공간. 카메라를 여기에 맞춘다 — 무대가 카메라 자리를 직접 정하면
+ * 프레임이 납작해졌을 때(스토리 뷰어는 폭만 정해져 있다) 조각이 화면 밖으로 잘린다.
+ */
+export type StageFit = {
+  /** 원점 기준 이 반지름 안에 무대가 다 들어온다. */
+  radius: number;
+  /** 0~0.9. 클수록 위에서 내려다본다. */
+  elevation?: number;
+  /** 무대의 무게중심 높이. 카메라가 여기를 본다. */
+  focusY?: number;
+};
+
 export type DrawStageHandle = {
   /** 매 프레임 호출된다. t 는 0~1 로 정규화한 진행도. */
   update: (elapsed: number) => void;
   dispose: () => void;
+  fit?: StageFit;
 };
 
 export type StageContext = {
@@ -25,17 +39,19 @@ export type StageContext = {
   이름 한 글자를 캔버스에 그려 텍스처로 쓴다.
   3D 안에 실제 이름이 보여야 "누가 뽑히는지" 가 읽힌다 — 익명의 도형이 도는 것과
   내 이름이 도는 것은 긴장의 크기가 다르다. 그게 이 연출을 바꾸는 이유였다.
+
+  배경은 비워 두고 글자만 그린다. 배경색까지 구우면 그 색이 재질색과 곱해져,
+  조뽑기에서 개인 색을 조 색으로 바꿀 때 두 색이 섞인 흙빛이 나온다.
+  색은 조각이 갖고, 텍스처는 글자만 갖는다.
 */
-export function makeLabelTexture(text: string, background: string, foreground = '#ffffff') {
+export function makeLabelTexture(text: string) {
   const size = 256;
   const canvas = document.createElement('canvas');
   canvas.width = size;
   canvas.height = size;
   const ctx = canvas.getContext('2d');
   if (ctx) {
-    ctx.fillStyle = background;
-    ctx.fillRect(0, 0, size, size);
-    ctx.fillStyle = foreground;
+    ctx.fillStyle = '#ffffff';
     ctx.font = `700 ${Math.round(size * 0.44)}px Pretendard, system-ui, sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
@@ -55,6 +71,23 @@ export function easeOutCubic(t: number) {
 export function easeOutBack(t: number) {
   const c = 1.70158 + 1;
   return 1 + (c + 1) * (t - 1) ** 3 + c * (t - 1) ** 2;
+}
+
+/*
+  무대를 프레임 안에 넣는다.
+
+  시야각은 세로로만 정의돼 있어서, 프레임이 납작해지면(폭 348 · 높이 190 인 스토리
+  뷰어가 그렇다) 세로가 먼저 모자란다. 반대로 좁고 긴 프레임에서는 가로가 모자란다.
+  둘 중 좁은 쪽에 맞춰 물러나면 어느 비율에서도 잘리지 않는다.
+*/
+function frameCamera(camera: THREE.PerspectiveCamera, { radius, elevation = 0, focusY = 0 }: StageFit) {
+  const vertical = (camera.fov * Math.PI) / 180;
+  const horizontal = 2 * Math.atan(Math.tan(vertical / 2) * camera.aspect);
+  const distance = radius / Math.sin(Math.min(vertical, horizontal) / 2);
+
+  const lift = Math.min(Math.max(elevation, 0), 0.9);
+  camera.position.set(0, focusY + distance * lift, distance * Math.sqrt(1 - lift * lift));
+  camera.lookAt(0, focusY, 0);
 }
 
 export type MountOptions = {
@@ -121,6 +154,7 @@ export function mountDrawScene({ canvas, build }: MountOptions): (() => void) | 
     if (!clientWidth || !clientHeight) return;
     renderer.setSize(clientWidth, clientHeight, false);
     camera.aspect = clientWidth / clientHeight;
+    if (stage.fit) frameCamera(camera, stage.fit);
     camera.updateProjectionMatrix();
   };
   resize();

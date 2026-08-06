@@ -38,22 +38,39 @@ const TEAM_HEX = ['#2f6fd0', '#3f6b52', '#c2553f', '#c08a2e', '#6b4fa8', '#2f8f8
 const SIZE = 1.5;
 const THICKNESS = 0.26;
 
+type TileParts = { body: THREE.MeshStandardMaterial; glyph: THREE.MeshStandardMaterial };
+
 /*
   납작한 판이 아니라 두께가 있는 조각으로 만든다.
   판(PlaneGeometry)은 옆에서 보면 선 하나로 사라져, 3D 엔진을 쓰고도 스티커처럼 보였다.
-  앞뒤 두 면에만 이름을 넣고 옆면은 단색이라, 돌아갈 때 두께가 드러난다.
+
+  색과 글자를 분리한다. 이름을 텍스처 배경째 구워 넣으면 그 색이 재질색과 곱해져,
+  조뽑기에서 조 색으로 갈아탈 때 개인 색이 섞인 흙빛이 나왔다. 몸통은 단색 상자가
+  갖고, 글자는 앞뒤에 얇게 띄운 투명 판이 갖는다 — 몸통 색은 마음대로 바뀌어도
+  글자는 흰색 그대로 남는다.
 */
 function makeTile(ctx: StageContext, label: string, hex: string) {
-  const face = ctx.track(makeLabelTexture(label, hex));
   const geometry = ctx.track(new THREE.BoxGeometry(SIZE, SIZE, THICKNESS));
-
-  // 빛을 받는 재질로 바꾼다. Basic 은 조명을 무시해서 어느 면이든 똑같이 평평했다.
-  const front = ctx.track(new THREE.MeshStandardMaterial({ map: face, roughness: 0.42, metalness: 0.05 }));
-  const side = ctx.track(new THREE.MeshStandardMaterial({ color: new THREE.Color(hex), roughness: 0.55, metalness: 0.05 }));
-
-  // BoxGeometry 의 면 순서: +x, -x, +y, -y, +z(앞), -z(뒤)
-  const mesh = new THREE.Mesh(geometry, [side, side, side, side, front, front]);
+  // 빛을 받는 재질을 쓴다. Basic 은 조명을 무시해서 어느 면이든 똑같이 평평했다.
+  const body = ctx.track(new THREE.MeshStandardMaterial({ color: new THREE.Color(hex), roughness: 0.42, metalness: 0.05 }));
+  const mesh = new THREE.Mesh(geometry, body);
   mesh.castShadow = true;
+
+  const glyphTexture = ctx.track(makeLabelTexture(label));
+  const glyphGeometry = ctx.track(new THREE.PlaneGeometry(SIZE, SIZE));
+  // depthWrite 를 끈다 — 몸통 면과 사실상 같은 자리라 켜 두면 서로를 가려 글자가 깜빡인다.
+  const glyph = ctx.track(
+    new THREE.MeshStandardMaterial({ map: glyphTexture, transparent: true, depthWrite: false, roughness: 0.5 }),
+  );
+
+  const front = new THREE.Mesh(glyphGeometry, glyph);
+  front.position.z = THICKNESS / 2 + 0.004;
+  const back = new THREE.Mesh(glyphGeometry, glyph);
+  back.position.z = -THICKNESS / 2 - 0.004;
+  back.rotation.y = Math.PI;
+  mesh.add(front, back);
+
+  mesh.userData = { body, glyph } satisfies TileParts;
   return mesh;
 }
 
@@ -68,16 +85,7 @@ function makeFloor(ctx: StageContext, y: number) {
   return floor;
 }
 
-/** 재질 배열에서 앞면(이름이 있는 면)만 꺼낸다. 투명도·색을 여기에만 준다. */
-function faceMaterial(mesh: THREE.Mesh) {
-  const list = mesh.material as THREE.MeshStandardMaterial[];
-  return list[4];
-}
-
-function eachMaterial(mesh: THREE.Mesh, apply: (m: THREE.MeshStandardMaterial) => void) {
-  const list = mesh.material as THREE.MeshStandardMaterial[];
-  new Set(list).forEach(apply);
-}
+const partsOf = (mesh: THREE.Mesh) => mesh.userData as TileParts & Record<string, unknown>;
 
 /*
   커피뽑기 — 가챠.
@@ -93,13 +101,10 @@ export function buildCoffeeStage(ctx: StageContext, state: () => DrawState, memb
   const tiles = members.map((member, index) => {
     const tile = makeTile(ctx, member.name.slice(0, 1), hexOf(member.color));
     const angle = (index / Math.max(members.length, 1)) * Math.PI * 2;
-    tile.userData = { angle, name: member.name, hex: hexOf(member.color) };
+    Object.assign(tile.userData, { angle, name: member.name, hex: hexOf(member.color) });
     group.add(tile);
     return tile;
   });
-
-  ctx.camera.position.set(0, 0.6, 6.4);
-  ctx.camera.lookAt(0, -0.1, 0);
 
   // 매 프레임 새로 만들지 않는다 — 60fps × 조각 수만큼 쓰레기가 쌓인다.
   const orbit = new THREE.Vector3();
@@ -108,6 +113,10 @@ export function buildCoffeeStage(ctx: StageContext, state: () => DrawState, memb
   const spinE = new THREE.Euler();
 
   return {
+    /* 통(2.3)과 앞으로 튀어나온 당첨자(z 3.1 · 2.4배)가 둘 다 들어오는 값.
+       구로 감싸 계산하면 실제 실루엣보다 넉넉해서 무대가 프레임의 절반만 쓴다 —
+       원점에서 잰 4.9 대신, 화면에서 재 가며 조인 값이 이것이다. */
+    fit: { radius: 3.4, elevation: 0.1, focusY: -0.1 },
     update(elapsed) {
       const s = state();
       const since = Math.max(0, elapsed - s.startedAt);
@@ -147,13 +156,15 @@ export function buildCoffeeStage(ctx: StageContext, state: () => DrawState, memb
         spinQ.setFromEuler(spinE.set(0, elapsed * (0.8 + speed * 0.35) + angle, Math.sin(elapsed * 1.3 + angle) * 0.12));
         tile.quaternion.copy(spinQ).slerp(unspin, pull);
 
-        const material = faceMaterial(tile);
-        material.transparent = true;
-        material.opacity = won ? 1 : 1 - reveal * 0.7;
+        const { body, glyph } = partsOf(tile);
+        body.transparent = true;
+        body.opacity = won ? 1 : 1 - reveal * 0.7;
+        // 글자도 같이 흐려져야 한다. 몸통만 지우면 이름만 허공에 뜬다.
+        glyph.opacity = body.opacity;
         /* 당첨자에게만 빛이 남는다. 발광색은 그 사람의 색이어야 한다 —
            고정색을 쓰면 빨강 아바타에 파란 빛이 더해져 엉뚱한 자홍색이 됐다. */
-        material.emissive.set(won ? hex : '#000000');
-        material.emissiveIntensity = won ? reveal * 0.3 : 0;
+        body.emissive.set(won ? hex : '#000000');
+        body.emissiveIntensity = won ? reveal * 0.3 : 0;
       });
     },
     dispose() {
@@ -176,17 +187,18 @@ export function buildTeamStage(ctx: StageContext, state: () => DrawState, member
     const tile = makeTile(ctx, member.name.slice(0, 1), hexOf(member.color));
     // 섞이는 동안의 자리. 규칙 없이 흩어져야 '섞인다'로 읽힌다.
     const seed = (index * 2.399963) % (Math.PI * 2);
-    tile.userData = { seed, name: member.name, index };
+    Object.assign(tile.userData, { seed, name: member.name, index, own: new THREE.Color(hexOf(member.color)) });
     group.add(tile);
     return tile;
   });
 
-  ctx.camera.position.set(0, 0.8, 7.6);
-  ctx.camera.lookAt(0, -0.2, 0);
   const target = new THREE.Vector3();
-  const white = new THREE.Color('#ffffff');
+  const teamColor = new THREE.Color();
 
   return {
+    /* 섞이는 동안의 반경(2.7)보다 자리를 잡은 뒤의 격자(3열 ±3.4 · 2행)가 넓다.
+       넓은 쪽에 맞춰 둬야 조가 늘어나도 바깥 조가 프레임에 걸리지 않는다. */
+    fit: { radius: 4.4, elevation: 0.08, focusY: -0.4 },
     update(elapsed) {
       const s = state();
       const since = Math.max(0, elapsed - s.startedAt);
@@ -197,7 +209,12 @@ export function buildTeamStage(ctx: StageContext, state: () => DrawState, member
       group.rotation.y = Math.sin(elapsed * 0.25) * 0.2;
 
       tiles.forEach((tile) => {
-        const { seed, name, index } = tile.userData as { seed: number; name: string; index: number };
+        const { seed, name, index, own } = tile.userData as {
+          seed: number;
+          name: string;
+          index: number;
+          own: THREE.Color;
+        };
 
         // 섞이는 자리 — 서로 다른 주기로 도는 리사주 곡선이라 규칙이 눈에 안 띈다.
         const t = elapsed * churn;
@@ -227,13 +244,12 @@ export function buildTeamStage(ctx: StageContext, state: () => DrawState, member
         tile.rotation.y = spin * (1 - settle);
         tile.rotation.x = Math.sin(spin * 0.6) * 0.3 * (1 - settle);
 
-        // 자리를 잡으면서 개인 색이 조 색으로 바뀐다 — 3D 와 결과 목록을 잇는 고리다.
-        if (settle > 0) {
-          const teamColor = new THREE.Color(TEAM_HEX[team % TEAM_HEX.length]);
-          eachMaterial(tile, (material) => {
-            material.color.lerpColors(white, teamColor, settle * 0.9);
-          });
-        }
+        /* 자리를 잡으면서 개인 색이 조 색으로 바뀐다 — 3D 와 결과 목록을 잇는 고리다.
+           시작점은 그 사람의 색이어야 한다. 흰색에서 출발시켰더니 섞임이 끝나는
+           순간 조각이 한 번 하얗게 번쩍였고, 끝점을 0.9 에 두어 조 색에 닿지도
+           못했다 — 아래 결과 카드와 같은 색으로 멎어야 두 화면이 이어진다. */
+        teamColor.set(TEAM_HEX[team % TEAM_HEX.length]);
+        partsOf(tile).body.color.lerpColors(own, teamColor, settle);
       });
     },
     dispose() {
