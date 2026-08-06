@@ -69,13 +69,13 @@ export function Dashboard({
   const openActionCount = actionItems.filter((item) => item.status !== '완료').length;
 
   /*
-    번개(flash)는 스토리로 올린다 — 오늘·내일 급조라 '지금 아니면 지나가는' 성질이
-    인스타 스토리와 정확히 맞다. 취소된 것·이미 지난 것은 뺀다.
+    스토리 줄에는 번개(flash)로 등록된 것만, 최신 등록순(맨 앞이 최신)으로 올린다.
+    취소된 것은 뺀다.
   */
   const flashStories = gatherings
-    .filter((item) => !item.canceled && item.startAt >= now && item.kind === 'flash')
-    .sort((a, b) => a.startAt.localeCompare(b.startAt))
-    .slice(0, 6);
+    .filter((item) => !item.canceled && item.kind === 'flash')
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+    .slice(0, 12);
 
   /*
     홈 통합 피드. 번개는 위 스토리로 이미 올라가므로 피드에서는 뺀다(공모는 남긴다).
@@ -119,16 +119,6 @@ export function Dashboard({
           </span>
           <small>말하기</small>
         </button>
-        {votingAgendas.slice(0, 4).map((agenda) => (
-          <button className="ig-story" key={agenda.id} onClick={() => onSectionChange('agenda')} type="button">
-            <span className="ig-ring">
-              <span className="ig-thumb">
-                <Vote size={22} strokeWidth={1.6} />
-              </span>
-            </span>
-            <small>{agenda.title}</small>
-          </button>
-        ))}
         {flashStories.map((item) => (
           <button className="ig-story" key={item.id} onClick={() => onSectionChange('gatherings')} type="button">
             <span className="ig-ring">
