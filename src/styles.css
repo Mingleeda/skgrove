@@ -4391,6 +4391,38 @@ textarea {
   margin: -6px 0 12px;
 }
 
+/* 달 이동 바 — 이전/다음 달로 넘겨 아무 날짜나 고르게 한다. */
+.memory-month-nav {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: var(--space-3);
+}
+
+.memory-month-nav strong {
+  color: var(--color-ink);
+  font-size: var(--text-body);
+  font-weight: 700;
+}
+
+.memory-month-nav button {
+  align-items: center;
+  background: var(--tint-primary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  color: var(--color-ink);
+  cursor: pointer;
+  display: flex;
+  height: 32px;
+  justify-content: center;
+  width: 32px;
+}
+
+.memory-month-nav button:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
 .memory-calendar-sync {
   display: grid;
   gap: 6px;

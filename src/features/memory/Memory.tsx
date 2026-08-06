@@ -1,6 +1,7 @@
 import {
   CalendarDays,
   ChevronLeft,
+  ChevronRight,
   Download,
   Film,
   Grid3x3,
@@ -23,8 +24,6 @@ type MemoryProps = {
   currentUser: CurrentUser;
 };
 
-const today = new Date('2026-07-25T09:00:00');
-
 const initialMemories: TeamMemory[] = [];
 
 const assetTones: MemoryAsset['tone'][] = ['green', 'blue', 'coral', 'amber'];
@@ -35,23 +34,29 @@ function shortDate(date: string) {
   return `${Number(month)}/${Number(day)}`;
 }
 
-function getCalendarDays(memories: TeamMemory[]) {
-  const base = new Date(today);
-  base.setDate(today.getDate() - today.getDay());
-  base.setHours(0, 0, 0, 0);
+// 로컬 기준 YYYY-MM-DD. toISOString 은 UTC 라 한국(+9)에서 하루가 밀려,
+// 고른 날짜와 저장되는 날짜가 어긋난다. 지역 시간 그대로 키를 만든다.
+function toDateKey(date: Date) {
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${date.getFullYear()}-${month}-${day}`;
+}
+
+type MonthCell = { key: string; day: number; memory?: TeamMemory } | null;
+
+// 한 달치 달력 칸. 1일 앞의 빈칸(전 주 요일 맞춤)은 null 로 둔다.
+// 원하는 달로 넘겨가며 아무 날짜나 고를 수 있게, 3주 고정창이 아니라 월 단위로 만든다.
+function getMonthCells(year: number, month: number, memories: TeamMemory[]): MonthCell[] {
+  const firstWeekday = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
   const eventMap = new Map(memories.map((memory) => [memory.date, memory]));
 
-  return Array.from({ length: 21 }, (_, index) => {
-    const date = new Date(base);
-    date.setDate(base.getDate() + index);
-    const key = date.toISOString().slice(0, 10);
-    return {
-      key,
-      label: `${date.getMonth() + 1}/${date.getDate()}`,
-      weekday: date.getDay(),
-      memory: eventMap.get(key),
-    };
-  });
+  const cells: MonthCell[] = Array.from({ length: firstWeekday }, () => null);
+  for (let day = 1; day <= daysInMonth; day += 1) {
+    const key = toDateKey(new Date(year, month, day));
+    cells.push({ key, day, memory: eventMap.get(key) });
+  }
+  return cells;
 }
 
 export function Memory({ currentUser }: MemoryProps) {
@@ -77,7 +82,21 @@ export function Memory({ currentUser }: MemoryProps) {
   const selectedMemory = memories.find((memory) => memory.id === selectedId) ?? memories[0];
   const selectedAsset =
     selectedMemory?.assets.find((asset) => asset.id === selectedAssetId) ?? selectedMemory?.assets[0];
-  const calendarDays = useMemo(() => getCalendarDays(memories), [memories]);
+  // 달력이 보여주는 달. 기본은 실제 이번 달이고, 이전/다음 버튼으로 옮긴다.
+  const [monthCursor, setMonthCursor] = useState(() => {
+    const now = new Date();
+    return { year: now.getFullYear(), month: now.getMonth() };
+  });
+  const monthCells = useMemo(
+    () => getMonthCells(monthCursor.year, monthCursor.month, memories),
+    [monthCursor, memories],
+  );
+  const shiftMonth = (delta: number) => {
+    setMonthCursor((cursor) => {
+      const moved = new Date(cursor.year, cursor.month + delta, 1);
+      return { year: moved.getFullYear(), month: moved.getMonth() };
+    });
+  };
 
   useEffect(() => {
     let isMounted = true;
@@ -463,34 +482,47 @@ export function Memory({ currentUser }: MemoryProps) {
               <h2>행사 선택</h2>
             </div>
             <p className="memory-calendar-guide">
-              빈 날짜를 누르면 그 날짜의 추억 공간이 만들어져요. 만든 뒤 게시물 탭에서 사진·영상을 올리면 됩니다.
+              빈 날짜를 누르면 그 날짜의 추억 공간이 만들어져요. 지난 행사도 이전 달로 넘겨 등록할 수 있어요.
             </p>
+            <div className="memory-month-nav">
+              <button type="button" aria-label="이전 달" onClick={() => shiftMonth(-1)}>
+                <ChevronLeft size={18} />
+              </button>
+              <strong>{monthCursor.year}년 {monthCursor.month + 1}월</strong>
+              <button type="button" aria-label="다음 달" onClick={() => shiftMonth(1)}>
+                <ChevronRight size={18} />
+              </button>
+            </div>
             <div className="memory-weekdays">
               {['일', '월', '화', '수', '목', '금', '토'].map((day) => (
                 <span key={day}>{day}</span>
               ))}
             </div>
             <div className="memory-calendar">
-              {calendarDays.map((day) => (
-                <button
-                  className={day.memory?.id === selectedMemory?.id ? 'selected' : ''}
-                  key={day.key}
-                  // 칸이 좁아 제목을 넣을 수 없다. 이름은 툴팁과 아래 행사 목록에서 읽는다.
-                  title={day.memory ? day.memory.title : `${day.label} 추억 만들기`}
-                  aria-label={day.memory ? `${day.label} ${day.memory.title}` : `${day.label} 추억 만들기`}
-                  onClick={() => selectCalendarDay(day.key, day.memory)}
-                >
-                  <span>{day.label}</span>
-                  {day.memory ? (
-                    <>
-                      <span className="memory-day-dot" aria-hidden="true" />
-                      <small>{day.memory.assets.length}개</small>
-                    </>
-                  ) : (
-                    <small className="memory-create-hint">만들기</small>
-                  )}
-                </button>
-              ))}
+              {monthCells.map((cell, index) =>
+                cell === null ? (
+                  <span className="memory-day-empty" key={`empty-${index}`} aria-hidden="true" />
+                ) : (
+                  <button
+                    className={cell.memory?.id === selectedMemory?.id && cell.memory ? 'selected' : ''}
+                    key={cell.key}
+                    // 칸이 좁아 제목을 넣을 수 없다. 이름은 툴팁과 아래 행사 목록에서 읽는다.
+                    title={cell.memory ? cell.memory.title : `${cell.day}일 추억 만들기`}
+                    aria-label={cell.memory ? `${cell.day}일 ${cell.memory.title}` : `${cell.day}일 추억 만들기`}
+                    onClick={() => selectCalendarDay(cell.key, cell.memory)}
+                  >
+                    <span>{cell.day}</span>
+                    {cell.memory ? (
+                      <>
+                        <span className="memory-day-dot" aria-hidden="true" />
+                        <small>{cell.memory.assets.length}개</small>
+                      </>
+                    ) : (
+                      <small className="memory-create-hint">만들기</small>
+                    )}
+                  </button>
+                ),
+              )}
             </div>
           </section>
           <section className="memory-event-list">
