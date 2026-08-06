@@ -8,6 +8,7 @@ const POSTS_KEY = 'skgrove:humorposts';
 const COMMENTS_KEY = 'skgrove:humorcomments';
 const POSTS_TABLE = 'humor_posts';
 const COMMENTS_TABLE = 'humor_comments';
+const IMAGE_BUCKET = 'humor-images';
 const SEED_VERSION_KEY = 'skgrove:humorseedv';
 // 시드(mockData)를 바꾸면 이 값을 올린다 → 옛 localStorage 캐시를 한 번 비운다(데모용).
 const SEED_VERSION = '2026-07-29c';
@@ -27,6 +28,7 @@ type HumorPostRow = {
   author: string;
   body?: string | null;
   media_url?: string | null;
+  image_url?: string | null;
   created_at?: string | null;
   liked_by?: unknown;
 };
@@ -126,12 +128,34 @@ export function makeHumorCommentId() {
   return `HMC-${Date.now().toString(36).toUpperCase()}-${commentSequence.toString(36).toUpperCase()}`;
 }
 
+/**
+ * 생성 썸네일 업로드. Supabase 가 없으면 브라우저 안에서만 보이는 objectURL 로 폴백한다.
+ * 로컬 개발에서도 생성 흐름을 끝까지 확인할 수 있어야 한다.
+ */
+export async function uploadHumorImage(postId: string, file: File): Promise<{ imageUrl: string }> {
+  if (!supabase) return { imageUrl: URL.createObjectURL(file) };
+
+  const safeName = file.name.replace(/[^\w.\-]+/g, '_');
+  const storagePath = `${postId}/${safeName}`;
+  const { error } = await supabase.storage.from(IMAGE_BUCKET).upload(storagePath, file, {
+    cacheControl: '3600',
+    upsert: true,
+  });
+  if (error) {
+    console.warn('Supabase humor image upload failed. Browser preview is still available.', error);
+    return { imageUrl: URL.createObjectURL(file) };
+  }
+  const { data } = supabase.storage.from(IMAGE_BUCKET).getPublicUrl(storagePath);
+  return { imageUrl: data.publicUrl };
+}
+
 function postFromRow(row: HumorPostRow): HumorPost {
   return {
     id: row.id,
     author: row.author,
     body: row.body ?? '',
     mediaUrl: row.media_url ?? '',
+    imageUrl: row.image_url ?? undefined,
     createdAt: row.created_at ?? '',
     likedBy: Array.isArray(row.liked_by) ? (row.liked_by as string[]) : [],
   };
@@ -143,6 +167,7 @@ function postToRow(post: HumorPost): HumorPostRow {
     author: post.author,
     body: post.body || null,
     media_url: post.mediaUrl || null,
+    image_url: post.imageUrl ?? null,
     created_at: post.createdAt || null,
     liked_by: post.likedBy,
   };

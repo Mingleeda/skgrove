@@ -383,6 +383,7 @@ export type HumorPost = {
   author: string; // 실명(로그인 사용자)
   body: string;
   mediaUrl: string; // 선택 — 이미지 주소·유튜브·영상 링크. 렌더 시 자동 판별.
+  imageUrl?: string; // 내용으로 생성한 크레파스 썸네일. mediaUrl(사용자가 붙인 링크)과 별개.
   createdAt: string; // 'YYYY-MM-DD'
   likedBy: string[]; // 좋아요 누른 사람 이름 — 토글·집계·랭킹 소스
 };
