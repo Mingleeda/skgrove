@@ -1416,6 +1416,8 @@ export function App() {
           actionItems={actionItems}
           gatherings={gatherings}
           signups={gatheringSignups}
+          humorPosts={humorPosts}
+          marketItems={marketItems}
           today={today()}
           now={nowStamp()}
           onSectionChange={changeSection}
