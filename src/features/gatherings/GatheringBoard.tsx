@@ -17,7 +17,6 @@ import {
   belowMinimum,
   canDrawCoffee,
   canJoinWaitlist,
-  coffeeCandidates,
   confirmedCount,
   deriveStatus,
   formatWhen,
