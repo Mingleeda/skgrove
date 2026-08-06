@@ -10065,14 +10065,17 @@ button.notif-row {
    글과 반응이 그 위에 얹힌다. 목록에서는 플레이어를 붙이지 않는다 —
    영상 열 개가 동시에 로드되면 스크롤이 끊긴다. */
 
+/* 칸 수와 칸 크기를 이음장터·모임번개(.poster-grid)에 맞춘다.
+   auto-fill은 창 폭에 따라 한 줄에 3개가 됐다 5개가 됐다 해서, 화면을 옮겨 다닐 때마다
+   같은 격자가 다른 크기로 보였다. 세 화면이 같은 격자를 쓰면 그 흔들림이 없어진다. */
 .ig-reels {
   display: grid;
   gap: var(--space-3);
-  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .ig-reel {
-  aspect-ratio: 9 / 16;
+  aspect-ratio: 4 / 5;
   background: var(--surface-dark);
   border: 0;
   border-radius: var(--radius);
