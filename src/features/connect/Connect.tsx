@@ -1,8 +1,10 @@
-import { BadgeCheck, ClipboardCopy, Coffee, Dice5, Save, Search, Shuffle, Sparkles, UsersRound } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { BadgeCheck, ClipboardCopy, Coffee, Dice5, Hand, Save, Search, Shuffle, Sparkles, UsersRound } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { EmptyState } from '../../components/EmptyState';
 import { Avatar } from '../../components/Avatar';
 import { PanelHeader } from '../../components/PanelHeader';
+import { DrawCanvas } from './DrawCanvas';
+import { DrawHype, pickHypeClip, type HypeClip } from './DrawHype';
 import {
   clearConnectResults,
   loadConnectResults,
@@ -291,6 +293,31 @@ export function Connect({ members }: ConnectProps) {
   const [coffeeEventText, setCoffeeEventText] = useState('컵을 고르고 운명을 맡겨보세요');
   const [coffeeRound, setCoffeeRound] = useState(0);
   const [coffeeSpotlight, setCoffeeSpotlight] = useState<Profile | null>(null);
+  const [hypeClip, setHypeClip] = useState<HypeClip | null>(null);
+
+  /* 이름 깜빡임 타이머. 멈추기 버튼과 화면 이탈 두 곳에서 꺼야 해서 ref 로 둔다 —
+     지역 변수로 두면 멈추기 쪽에서 손이 안 닿아 뽑기가 끝난 뒤에도 계속 돈다. */
+  const spinTimerRef = useRef<number | null>(null);
+  const stopSpinTimer = () => {
+    if (spinTimerRef.current !== null) {
+      window.clearInterval(spinTimerRef.current);
+      spinTimerRef.current = null;
+    }
+  };
+  useEffect(() => stopSpinTimer, []);
+
+  /* 뽑기가 시작된 순간의 명단을 붙잡아 둔다. 멈출 때 화면 상태를 다시 읽으면,
+     도는 동안 참여자를 지운 경우 빈 명단에서 당첨자를 꺼내다 화면이 죽는다.
+     타이머가 끝내던 시절엔 시작 시점 값을 클로저가 물고 있어 없던 문제다. */
+  const drawRosterRef = useRef<{ members: Profile[]; teamCount: number }>({ members: [], teamCount: 0 });
+
+  /* 탭을 옮기면 돌던 뽑기는 거기서 끝난다. 안 끊으면 커피뽑기의 이름 깜빡임
+     타이머가 조뽑기 화면에서도 130ms 마다 계속 돌아 화면을 다시 그린다 —
+     이것도 1.28초 타이머가 알아서 걷어 가던 것이라 이제 걷을 사람이 없다. */
+  useEffect(() => {
+    stopSpinTimer();
+    setIsDrawing(false);
+  }, [mode]);
   const [participantSearch, setParticipantSearch] = useState('');
   const [savedResults, setSavedResults] = useState<SavedDrawResult[]>([]);
   const [shareNotice, setShareNotice] = useState('');
@@ -380,43 +407,63 @@ export function Connect({ members }: ConnectProps) {
     if (selectedParticipants.length < 2 || isDrawing) return;
 
     setIsDrawing(true);
+    setHypeClip(pickHypeClip());
+    drawRosterRef.current = { members: selectedParticipants, teamCount };
     setCoffeeBuyer(null);
     setCoffeeRound(1);
     setCoffeeSpotlight(selectedParticipants[0] ?? null);
-    setCoffeeEventText('3개의 컵이 동시에 출발합니다');
+    setCoffeeEventText('멈추고 싶을 때 버튼을 누르세요');
 
-    const spinTimer = window.setInterval(() => {
+    /* 이름을 130ms 마다 갈아치운다. 영상만 돌면 그냥 동물을 보는 시간이 된다 —
+       아직 안 정해졌다는 것을 나르는 신호는 이 깜빡임 하나뿐이다. */
+    spinTimerRef.current = window.setInterval(() => {
       setCoffeeRound((current) => current + 1);
       setCoffeeSpotlight(selectedParticipants[Math.floor(Math.random() * selectedParticipants.length)]);
     }, 130);
+  };
 
-    window.setTimeout(() => {
-      setCoffeeEventText('마지막 한 바퀴...');
-    }, 520);
+  /* 결과를 정하는 것은 타이머가 아니라 두 번째 클릭이다.
+     자동으로 1.28초 뒤에 끝나던 때는 뽑는 게 아니라 조회하는 것에 가까웠다. */
+  const stopCoffeeDraw = () => {
+    if (!isDrawing) return;
+    stopSpinTimer();
 
-    window.setTimeout(() => {
-      window.clearInterval(spinTimer);
-      const winner = selectedParticipants[Math.floor(Math.random() * selectedParticipants.length)];
-      setCoffeeBuyer(winner);
-      setCoffeeSpotlight(winner);
-      setCoffeeEventText(`${winner.name}님, 오늘의 커피 요정 당첨`);
+    const roster = drawRosterRef.current.members;
+    if (roster.length === 0) {
       setIsDrawing(false);
-    }, 1280);
+      return;
+    }
+
+    const winner = roster[Math.floor(Math.random() * roster.length)];
+    setCoffeeBuyer(winner);
+    setCoffeeSpotlight(winner);
+    setCoffeeEventText(`${winner.name}님, 오늘의 커피 요정 당첨`);
+    setIsDrawing(false);
   };
 
   const drawTeams = () => {
     if (selectedParticipants.length < 2 || teamCount === 0 || isDrawing) return;
 
     setIsDrawing(true);
+    setHypeClip(pickHypeClip());
+    drawRosterRef.current = { members: selectedParticipants, teamCount };
     setTeams([]);
-    setTeamEventText('파트와 세대를 테이블 위에 골고루 펼치는 중...');
+    setTeamEventText('멈추고 싶을 때 버튼을 누르세요');
+  };
 
-    window.setTimeout(() => {
-      const nextTeams = buildBalancedTeams(selectedParticipants, teamCount, balanceRule);
-      setTeams(nextTeams);
-      setTeamEventText(`${nextTeams.length}개 조가 완성됐어요`);
+  const stopTeamDraw = () => {
+    if (!isDrawing) return;
+
+    const { members, teamCount: rosterTeamCount } = drawRosterRef.current;
+    if (members.length === 0 || rosterTeamCount === 0) {
       setIsDrawing(false);
-    }, 860);
+      return;
+    }
+
+    const nextTeams = buildBalancedTeams(members, rosterTeamCount, balanceRule);
+    setTeams(nextTeams);
+    setTeamEventText(`${nextTeams.length}개 조가 완성됐어요`);
+    setIsDrawing(false);
   };
 
   const saveResult = (result: SavedDrawResult) => {
@@ -600,13 +647,29 @@ export function Connect({ members }: ConnectProps) {
                     <span>세대 {selectedAgeMoods}종</span>
                     <span>예상 {teamCount}개 조</span>
                   </div>
-                  <button className="primary-button wide" disabled={selectedParticipants.length < 2 || isDrawing} onClick={drawTeams} type="button">
-                    <Sparkles size={18} />
-                    조 섞기 시작
+                  {/* 뽑는 중에는 같은 버튼이 멈추기가 된다.
+                      비활성 조건에 !isDrawing 이 붙은 이유: 돌리는 중에 참여자를
+                      전부 해제하면 버튼이 잠겨 뽑기를 끝낼 수가 없었다.
+                      시작은 막아도 되지만 멈추는 길은 항상 열려 있어야 한다. */}
+                  <button
+                    className={isDrawing ? 'primary-button wide draw-stop' : 'primary-button wide'}
+                    disabled={!isDrawing && selectedParticipants.length < 2}
+                    onClick={isDrawing ? stopTeamDraw : drawTeams}
+                    type="button"
+                  >
+                    {isDrawing ? <Hand size={18} /> : <Sparkles size={18} />}
+                    {isDrawing ? '지금 멈춰!' : '조 섞기 시작'}
                   </button>
                 </section>
 
-                <DrawStage isDrawing={isDrawing} text={teamEventText} variant="teams" />
+                <DrawStage
+                  hypeClip={hypeClip}
+                  isDrawing={isDrawing}
+                  members={selectedParticipants}
+                  teams={teams}
+                  text={teamEventText}
+                  variant="teams"
+                />
 
                 <section className="team-result-grid">
                   {teams.map((team) => (
@@ -646,15 +709,22 @@ export function Connect({ members }: ConnectProps) {
                     <strong>오늘 커피는 누가 살까요?</strong>
                     <span>참여자를 고르고 버튼을 누르면 한 명이 당첨됩니다.</span>
                   </div>
-                  <button className="primary-button wide" disabled={selectedParticipants.length < 2 || isDrawing} onClick={drawCoffeeBuyer} type="button">
-                    <Dice5 size={18} />
-                    커피 살 사람 뽑기
+                  <button
+                    className={isDrawing ? 'primary-button wide draw-stop' : 'primary-button wide'}
+                    disabled={!isDrawing && selectedParticipants.length < 2}
+                    onClick={isDrawing ? stopCoffeeDraw : drawCoffeeBuyer}
+                    type="button"
+                  >
+                    {isDrawing ? <Hand size={18} /> : <Dice5 size={18} />}
+                    {isDrawing ? '지금 멈춰!' : '커피 살 사람 뽑기'}
                   </button>
                 </section>
 
                 <CoffeeDrawStage
                   buyer={coffeeBuyer}
+                  hypeClip={hypeClip}
                   isDrawing={isDrawing}
+                  members={selectedParticipants}
                   round={coffeeRound}
                   spotlight={coffeeSpotlight}
                   text={coffeeEventText}
@@ -850,16 +920,47 @@ function StoryFrame({
   );
 }
 
-function DrawStage({ isDrawing, text, variant }: { isDrawing: boolean; text: string; variant: ConnectMode }) {
+function DrawStage({
+  hypeClip,
+  isDrawing,
+  members,
+  teams,
+  text,
+  variant,
+}: {
+  hypeClip: HypeClip | null;
+  isDrawing: boolean;
+  members: Profile[];
+  teams: TeamGroup[];
+  text: string;
+  variant: ConnectMode;
+}) {
+  // 이름 → 조 번호. 3D 타일이 자기 조 색으로 바뀌며 아래 결과 카드와 이어진다.
+  const teamOf = useMemo(() => {
+    const map: Record<string, number> = {};
+    teams.forEach((team, index) => team.members.forEach((member) => (map[member.name] = index)));
+    return map;
+  }, [teams]);
+
   return (
     <StoryFrame label="조뽑기" step={isDrawing ? 2 : text.includes('조') ? 3 : 1} total={3}>
       <section className={isDrawing ? `draw-stage rolling ${variant}` : `draw-stage ${variant}`}>
-        <div className="draw-orbit">
-          <span />
-          <span />
-          <span />
-          <span />
-        </div>
+        <DrawCanvas
+          isDrawing={isDrawing}
+          members={members}
+          teamCount={teams.length}
+          teamOf={teams.length > 0 ? teamOf : undefined}
+          variant="teams"
+        >
+          {/* WebGL 을 못 쓰거나 모션을 줄인 환경에서 쓰는 기존 연출 */}
+          <div className="draw-orbit">
+            <span />
+            <span />
+            <span />
+            <span />
+          </div>
+        </DrawCanvas>
+        <DrawHype active={isDrawing} clip={hypeClip} />
         <strong>{text}</strong>
       </section>
     </StoryFrame>
@@ -868,13 +969,17 @@ function DrawStage({ isDrawing, text, variant }: { isDrawing: boolean; text: str
 
 function CoffeeDrawStage({
   buyer,
+  hypeClip,
   isDrawing,
+  members,
   round,
   spotlight,
   text,
 }: {
   buyer: Profile | null;
+  hypeClip: HypeClip | null;
   isDrawing: boolean;
+  members: Profile[];
   round: number;
   spotlight: Profile | null;
   text: string;
@@ -892,17 +997,21 @@ function CoffeeDrawStage({
           <span />
           <span />
         </div>
-        <div className="coffee-cup-track" aria-hidden="true">
-          <div className="coffee-cup">
-            <Coffee size={24} />
+        <DrawCanvas isDrawing={isDrawing} members={members} variant="coffee" winner={buyer?.name}>
+          {/* WebGL 을 못 쓰거나 모션을 줄인 환경에서 쓰는 기존 연출 */}
+          <div className="coffee-cup-track" aria-hidden="true">
+            <div className="coffee-cup">
+              <Coffee size={24} />
+            </div>
+            <div className="coffee-cup main">
+              <Coffee size={28} />
+            </div>
+            <div className="coffee-cup">
+              <Coffee size={24} />
+            </div>
           </div>
-          <div className="coffee-cup main">
-            <Coffee size={28} />
-          </div>
-          <div className="coffee-cup">
-            <Coffee size={24} />
-          </div>
-        </div>
+        </DrawCanvas>
+        <DrawHype active={isDrawing} clip={hypeClip} />
         <div className="coffee-draw-copy">
           <span>{isDrawing ? `ROUND ${Math.min(round, 9)}` : buyer ? 'RESULT' : 'READY'}</span>
           <strong>{text}</strong>
