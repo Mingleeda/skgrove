@@ -4,6 +4,7 @@ import {
   Ban,
   CalendarClock,
   Check,
+  Coffee,
   Hourglass,
   MapPin,
   Plus,
@@ -14,7 +15,9 @@ import {
 import { EmptyState } from '../../components/EmptyState';
 import {
   belowMinimum,
+  canDrawCoffee,
   canJoinWaitlist,
+  coffeeCandidates,
   confirmedCount,
   deriveStatus,
   formatWhen,
@@ -39,6 +42,8 @@ type GatheringBoardProps = {
   onJoin: (gathering: Gathering) => void;
   onLeave: (gathering: Gathering) => void;
   onCancelGathering: (gathering: Gathering) => void;
+  onDrawCoffee: (gathering: Gathering) => void;
+  onResetCoffee: (gathering: Gathering) => void;
   /** 등록 직후 배경에서 그림을 그리는 중인 모임. 격자에 '그리는 중' 을 띄운다. */
   imagePendingIds: string[];
 };
@@ -93,6 +98,8 @@ export function GatheringBoard({
   onJoin,
   onLeave,
   onCancelGathering,
+  onDrawCoffee,
+  onResetCoffee,
   imagePendingIds,
 }: GatheringBoardProps) {
   const [view, setView] = useState<BoardView>('feed');
@@ -242,6 +249,34 @@ export function GatheringBoard({
                 </button>
               )}
             </div>
+
+            {selected.kind === 'flash' && !selected.canceled && (
+              <div className="coffee-pick">
+                {selected.coffeePick ? (
+                  <div className="coffee-pick-result">
+                    <Coffee size={18} />
+                    <div>
+                      <span>오늘 커피 담당</span>
+                      <strong>{selected.coffeePick}</strong>
+                    </div>
+                    {isHost && (
+                      <button className="btn-ghost" onClick={() => onResetCoffee(selected)} type="button">
+                        다시 뽑기
+                      </button>
+                    )}
+                  </div>
+                ) : isHost ? (
+                  canDrawCoffee(selected, signups) ? (
+                    <button className="primary-button coffee" onClick={() => onDrawCoffee(selected)} type="button">
+                      <Coffee size={18} />
+                      커피 살 사람 뽑기
+                    </button>
+                  ) : (
+                    <p className="coffee-pick-hint">확정 2명부터 커피 담당을 뽑을 수 있어요</p>
+                  )
+                ) : null}
+              </div>
+            )}
 
             <div className="roster">
               <p className="roster-title">
