@@ -64,3 +64,44 @@ export function topCommenter(comments: HumorComment[], month: string): Ranker | 
 export function topLiked(posts: HumorPost[], month: string): Ranker | null {
   return rankLiked(posts, month, 1)[0] ?? null;
 }
+
+// 붙여넣은 링크에서 유튜브 영상 id 추출(watch·youtu.be·shorts·embed).
+export function youtubeId(url: string): string | null {
+  const patterns = [
+    /youtu\.be\/([\w-]{11})/,
+    /[?&]v=([\w-]{11})/,
+    /youtube\.com\/embed\/([\w-]{11})/,
+    /youtube\.com\/shorts\/([\w-]{11})/,
+  ];
+  for (const pattern of patterns) {
+    const match = url.match(pattern);
+    if (match) return match[1];
+  }
+  return null;
+}
+
+export type Media = { type: 'image' | 'youtube' | 'video' | 'link'; src: string };
+
+// 안전한 scheme(http(s)·data:image)만 허용한다. javascript:·data:text/html 등은 미디어로 취급하지 않는다.
+export function resolveMedia(url: string): Media | null {
+  const trimmed = url.trim();
+  if (!trimmed) return null;
+
+  const yt = youtubeId(trimmed);
+  if (yt) return { type: 'youtube', src: `https://www.youtube.com/embed/${yt}` };
+
+  const isHttp = /^https?:\/\//i.test(trimmed);
+  const isDataImage = /^data:image\//i.test(trimmed);
+
+  if (isHttp && /\.(mp4|webm|ogg)(\?|$)/i.test(trimmed)) return { type: 'video', src: trimmed };
+  if (isDataImage || (isHttp && /\.(jpe?g|png|gif|webp|avif|bmp|svg)(\?|$)/i.test(trimmed))) {
+    return { type: 'image', src: trimmed };
+  }
+  if (isHttp) return { type: 'link', src: trimmed };
+  return null;
+}
+
+// 이미지 배경을 이미 가진 글인가 — App이 "썸네일 생성할지" 판단할 때 쓴다.
+export function isImageMedia(url: string): boolean {
+  return resolveMedia(url)?.type === 'image';
+}
