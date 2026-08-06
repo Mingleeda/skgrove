@@ -510,7 +510,9 @@ export function App() {
 
   const promoteToAgenda = (
     issue: Issue,
-    draft: Pick<Agenda, 'title' | 'description' | 'category' | 'part' | 'author' | 'deadline'>,
+    draft: Pick<Agenda, 'title' | 'description' | 'category' | 'part' | 'author' | 'deadline' | 'voteType' | 'multiSelect'> & {
+      optionLabels: string[];
+    },
   ) => {
     const shouldAnonymize = issue.visibility === '리더만 보기';
     const promoted: Agenda = {
@@ -525,10 +527,10 @@ export function App() {
       authorName: shouldAnonymize || draft.author === '익명' ? '' : (currentUser?.name ?? ''),
       approve: 0,
       reject: 0,
-      // 대나무숲에서 올라온 안건은 "이 제안을 받아들일까"를 묻는 것이라 늘 찬반이다.
-      voteType: '찬반',
-      options: [],
-      multiSelect: false,
+      // 접수는 대개 찬반이지만, 리더가 객관식으로 정제하면 선택지도 함께 올린다.
+      voteType: draft.voteType,
+      options: makeAgendaOptions(draft.optionLabels),
+      multiSelect: draft.voteType === '객관식' && draft.multiSelect,
       voterCount: 0,
       status: '투표중',
       createdAt: today(),
