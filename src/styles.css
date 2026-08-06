@@ -4466,13 +4466,21 @@ textarea {
   text-align: left;
 }
 
-/* 월 달력 칸에 행사 제목을 넣을 자리는 없다. 표시만 남기고 이름은 바로 아래
-   행사 목록과 툴팁이 맡는다. */
-.memory-day-dot {
-  background: var(--color-primary);
-  border-radius: 999px;
-  height: 6px;
-  width: 6px;
+/* 달력 칸에 행사 제목을 바로 보여준다. 칸이 좁아 긴 제목은 두 줄로 자른다
+   (알약 배지가 아니라 읽는 텍스트라, 아래 .memory-calendar small 의 배지를 덮는다). */
+.memory-calendar .memory-day-title {
+  -webkit-box-orient: vertical;
+  background: none;
+  color: var(--color-primary-strong);
+  display: -webkit-box;
+  font-size: var(--text-micro);
+  font-weight: 700;
+  line-height: 1.25;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  padding: 0;
+  text-align: left;
+  width: auto;
 }
 
 .memory-calendar button.selected {

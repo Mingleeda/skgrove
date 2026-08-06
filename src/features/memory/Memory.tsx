@@ -609,10 +609,7 @@ export function Memory({ currentUser }: MemoryProps) {
                   >
                     <span>{cell.day}</span>
                     {cell.memory ? (
-                      <>
-                        <span className="memory-day-dot" aria-hidden="true" />
-                        <small>{cell.memory.assets.length}개</small>
-                      </>
+                      <small className="memory-day-title">{cell.memory.title}</small>
                     ) : (
                       <small className="memory-create-hint">만들기</small>
                     )}
