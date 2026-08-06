@@ -3377,8 +3377,7 @@ textarea {
 }
 
 .participant-list button > div,
-.team-member-list div > div,
-.coffee-panel > div {
+.team-member-list div > div {
   display: grid;
   gap: var(--space-1);
 }
@@ -3434,10 +3433,6 @@ textarea {
   padding: 22px;
   position: relative;
   text-align: center;
-}
-
-.draw-stage.coffee {
-  background: var(--surface-dark);
 }
 
 .draw-stage strong {
@@ -3537,26 +3532,6 @@ textarea {
   padding: var(--space-2);
 }
 
-.coffee-panel {
-  grid-template-columns: minmax(0, 1fr) 220px;
-}
-
-/* 안에서 쓰는 z-index 를 밖으로 안 새게 한다 — .draw-stage 의 isolation 과 같은 이유. */
-.coffee-draw-stage {
-  align-items: center;
-  background: var(--surface-dark);
-  border-radius: var(--radius);
-  color: var(--color-surface);
-  display: grid;
-  gap: var(--space-4);
-  isolation: isolate;
-  min-height: 260px;
-  overflow: hidden;
-  padding: var(--space-6);
-  position: relative;
-  text-align: center;
-}
-
 /* 3D 무대. 높이를 직접 주지 않으면 캔버스 기본값(150px)이 잡혀 납작해진다.
    렌더러는 이 요소의 clientWidth/Height 를 보고 해상도를 정하므로 CSS 가 먼저다.
 
@@ -3597,8 +3572,7 @@ textarea {
 
 /* 영상 위 흰 글씨가 폭포·이불 같은 밝은 배경에 묻힌다. 아래쪽을 짙게 깔아
    자막이 놓일 자리를 만든다. 자막은 z-index 1 이라 이 막 위에 남는다. */
-.draw-stage.rolling::after,
-.coffee-draw-stage.rolling::after {
+.draw-stage.rolling::after {
   background: var(--scrim-video);
   content: "";
   inset: 0;
@@ -3611,224 +3585,6 @@ textarea {
 .primary-button.draw-stop {
   background: var(--color-danger);
   border-color: var(--color-danger);
-}
-
-.coffee-draw-stage::before {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 999px;
-  content: "";
-  height: 220px;
-  left: 50%;
-  position: absolute;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  width: 220px;
-}
-
-.coffee-draw-stage.rolling::before {
-  animation: coffee-pulse 0.58s ease-in-out infinite;
-}
-
-.coffee-draw-stage.finished {
-  background: var(--surface-dark);
-}
-
-.coffee-cup-track {
-  align-items: end;
-  display: grid;
-  gap: 14px;
-  grid-template-columns: repeat(3, 82px);
-  justify-content: center;
-  min-height: 92px;
-  position: relative;
-  z-index: 1;
-}
-
-.coffee-cup {
-  align-items: center;
-  background: var(--color-surface);
-  border: 4px solid rgba(255, 255, 255, 0.34);
-  border-radius: var(--radius) 8px 18px 18px;
-  color: var(--color-primary-strong);
-  display: flex;
-  height: 76px;
-  justify-content: center;
-  transform-origin: 50% 100%;
-}
-
-.coffee-cup.main {
-  background: var(--tint-primary);
-  color: var(--color-primary-strong);
-  height: 88px;
-}
-
-.coffee-draw-stage.rolling .coffee-cup:nth-child(1) {
-  animation: cup-left 0.72s ease-in-out infinite;
-}
-
-.coffee-draw-stage.rolling .coffee-cup:nth-child(2) {
-  animation: cup-main 0.56s ease-in-out infinite;
-}
-
-.coffee-draw-stage.rolling .coffee-cup:nth-child(3) {
-  animation: cup-right 0.72s ease-in-out infinite;
-}
-
-.coffee-draw-stage.finished .coffee-cup.main {
-  animation: winner-pop 0.7s ease-out both;
-}
-
-.coffee-draw-copy {
-  display: grid;
-  gap: var(--space-2);
-  justify-items: center;
-  position: relative;
-  z-index: 1;
-}
-
-.coffee-draw-copy span {
-  background: rgba(255, 255, 255, 0.16);
-  border: 1px solid rgba(255, 255, 255, 0.24);
-  border-radius: 999px;
-  color: var(--tint-primary);
-  font-size: var(--text-meta);
-  font-weight: 700;
-  padding: 6px 10px;
-}
-
-.coffee-draw-copy strong {
-  font-size: var(--text-heading);
-  line-height: 1.35;
-}
-
-.coffee-draw-copy em {
-  background: rgba(255, 255, 255, 0.94);
-  border-radius: var(--radius);
-  color: var(--color-primary-strong);
-  font-size: var(--text-display);
-  font-style: normal;
-  font-weight: 700;
-  min-width: 160px;
-  padding: 10px 18px;
-}
-
-.coffee-draw-stage.rolling .coffee-draw-copy em {
-  animation: name-flash 0.26s linear infinite;
-}
-
-.coffee-confetti {
-  inset: 0;
-  pointer-events: none;
-  position: absolute;
-}
-
-.coffee-confetti span {
-  background: var(--color-primary);
-  border-radius: 3px;
-  display: block;
-  height: 18px;
-  opacity: 0;
-  position: absolute;
-  width: 8px;
-}
-
-.coffee-confetti span:nth-child(1) {
-  left: 12%;
-  top: 20%;
-}
-
-.coffee-confetti span:nth-child(2) {
-  background: var(--color-surface);
-  left: 28%;
-  top: 10%;
-}
-
-.coffee-confetti span:nth-child(3) {
-  background: var(--color-primary);
-  right: 30%;
-  top: 16%;
-}
-
-.coffee-confetti span:nth-child(4) {
-  background: var(--color-primary);
-  right: 14%;
-  top: 26%;
-}
-
-.coffee-confetti span:nth-child(5) {
-  background: var(--color-primary);
-  bottom: 18%;
-  left: 20%;
-}
-
-.coffee-confetti span:nth-child(6) {
-  background: var(--color-surface);
-  bottom: 14%;
-  right: 22%;
-}
-
-.coffee-draw-stage.finished .coffee-confetti span {
-  animation: confetti-burst 0.9s ease-out both;
-}
-
-.coffee-draw-stage.finished .coffee-confetti span:nth-child(2) {
-  animation-delay: 0.06s;
-}
-
-.coffee-draw-stage.finished .coffee-confetti span:nth-child(3) {
-  animation-delay: 0.12s;
-}
-
-.coffee-draw-stage.finished .coffee-confetti span:nth-child(4) {
-  animation-delay: 0.18s;
-}
-
-.coffee-draw-stage.finished .coffee-confetti span:nth-child(5) {
-  animation-delay: 0.24s;
-}
-
-.coffee-draw-stage.finished .coffee-confetti span:nth-child(6) {
-  animation-delay: 0.3s;
-}
-
-.coffee-winner-card {
-  align-items: center;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  gap: 6px;
-  justify-items: center;
-  min-height: 220px;
-  padding: var(--space-6);
-  text-align: center;
-}
-
-.coffee-winner-card.green svg,
-.coffee-winner-card.green strong {
-  color: var(--color-primary);
-}
-
-.coffee-winner-card.red svg,
-.coffee-winner-card.red strong {
-  color: var(--color-primary);
-}
-
-.coffee-winner-card.blue svg,
-.coffee-winner-card.blue strong {
-  color: var(--color-primary);
-}
-
-.coffee-winner-card.yellow svg,
-.coffee-winner-card.yellow strong {
-  color: var(--color-primary);
-}
-
-.coffee-winner-card span {
-  color: var(--color-muted);
-  font-weight: 700;
-}
-
-.coffee-winner-card strong {
-  font-size: var(--text-display);
 }
 
 .share-panel,
@@ -3887,8 +3643,7 @@ textarea {
 }
 
 .share-hero-slide,
-.share-team-slide,
-.coffee-share-slide {
+.share-team-slide {
   border-radius: var(--radius);
   display: grid;
   overflow: hidden;
@@ -3903,22 +3658,19 @@ textarea {
   padding: var(--space-6);
 }
 
-.share-hero-slide span,
-.coffee-share-slide span {
+.share-hero-slide span {
   color: var(--tint-primary);
   font-size: var(--text-meta);
   font-weight: 700;
   letter-spacing: 0;
 }
 
-.share-hero-slide strong,
-.coffee-share-slide strong {
+.share-hero-slide strong {
   font-size: var(--text-display);
   line-height: 1.16;
 }
 
-.share-hero-slide p,
-.coffee-share-slide p {
+.share-hero-slide p {
   color: var(--tint-primary);
   line-height: 1.55;
   max-width: 720px;
@@ -4054,33 +3806,6 @@ textarea {
   line-height: 1.55;
 }
 
-.coffee-share-slide {
-  align-items: center;
-  background: var(--surface-dark);
-  color: var(--color-surface);
-  gap: var(--space-2);
-  justify-items: center;
-  min-height: 220px;
-  padding: 28px;
-  text-align: center;
-}
-
-.coffee-share-slide.green {
-  background: var(--surface-dark);
-}
-
-.coffee-share-slide.red {
-  background: var(--color-danger);
-}
-
-.coffee-share-slide.blue {
-  background: var(--surface-dark);
-}
-
-.coffee-share-slide.yellow {
-  background: var(--color-primary);
-}
-
 .share-notice {
   background: var(--tint-primary);
   border: 1px solid var(--color-primary);
@@ -4145,86 +3870,6 @@ textarea {
   }
   50% {
     transform: translateY(10px);
-  }
-}
-
-@keyframes coffee-pulse {
-  0%,
-  100% {
-    opacity: 0.6;
-    transform: translate(-50%, -50%) scale(0.92);
-  }
-  50% {
-    opacity: 0.95;
-    transform: translate(-50%, -50%) scale(1.08);
-  }
-}
-
-@keyframes cup-left {
-  0%,
-  100% {
-    transform: translateX(0) rotate(-6deg);
-  }
-  50% {
-    transform: translateX(96px) rotate(9deg);
-  }
-}
-
-@keyframes cup-main {
-  0%,
-  100% {
-    transform: translateY(0) scale(1);
-  }
-  50% {
-    transform: translateY(-20px) scale(1.06);
-  }
-}
-
-@keyframes cup-right {
-  0%,
-  100% {
-    transform: translateX(0) rotate(6deg);
-  }
-  50% {
-    transform: translateX(-96px) rotate(-9deg);
-  }
-}
-
-@keyframes winner-pop {
-  0% {
-    transform: translateY(0) scale(1);
-  }
-  55% {
-    transform: translateY(-26px) scale(1.16);
-  }
-  100% {
-    transform: translateY(0) scale(1.04);
-  }
-}
-
-@keyframes name-flash {
-  0%,
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.76;
-    transform: scale(0.97);
-  }
-}
-
-@keyframes confetti-burst {
-  0% {
-    opacity: 0;
-    transform: translateY(0) rotate(0deg) scale(0.4);
-  }
-  20% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0;
-    transform: translateY(62px) rotate(220deg) scale(1);
   }
 }
 
@@ -6325,8 +5970,7 @@ textarea {
   /* 리더 관리함의 '하나씩 보기' 는 이제 기본 규칙이라 여기서 다시 쓰지 않는다. */
 
   .connect-layout,
-  .connect-control-grid,
-  .coffee-panel {
+  .connect-control-grid {
     grid-template-columns: 1fr;
   }
 
@@ -6632,10 +6276,6 @@ textarea {
     display: grid;
   }
 
-  .connect-mode-tabs {
-    grid-template-columns: 1fr;
-  }
-
   .participant-head,
   .profile-list-grid button {
     grid-template-columns: 40px minmax(0, 1fr);
@@ -6667,8 +6307,7 @@ textarea {
     display: grid;
   }
 
-  .part-group-list,
-  .coffee-chip-grid {
+  .part-group-list {
     max-height: none;
   }
 
@@ -9614,8 +9253,7 @@ button.notif-row {
 }
 
 /* 안에 들어가는 무대는 이미 어두운 면이라 배경을 다시 칠하지 않는다. */
-.ig-story-view .draw-stage,
-.ig-story-view .coffee-draw-stage {
+.ig-story-view .draw-stage {
   background: none;
   border-radius: 0;
   margin: 0;

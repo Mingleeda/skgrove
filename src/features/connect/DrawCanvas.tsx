@@ -8,13 +8,11 @@
 */
 import { useEffect, useRef, useState } from 'react';
 import { mountDrawScene } from './drawScene';
-import { buildCoffeeStage, buildTeamStage, type DrawState, type Member } from './drawStages';
+import { buildTeamStage, type DrawState, type Member } from './drawStages';
 
 type DrawCanvasProps = {
-  variant: 'coffee' | 'teams';
   members: Member[];
   isDrawing: boolean;
-  winner?: string;
   teamOf?: Record<string, number>;
   teamCount?: number;
   children: React.ReactNode;
@@ -24,7 +22,7 @@ function prefersReducedMotion() {
   return typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 }
 
-export function DrawCanvas({ variant, members, isDrawing, winner, teamOf, teamCount, children }: DrawCanvasProps) {
+export function DrawCanvas({ members, isDrawing, teamOf, teamCount, children }: DrawCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [usable, setUsable] = useState(() => !prefersReducedMotion());
 
@@ -34,7 +32,7 @@ export function DrawCanvas({ variant, members, isDrawing, winner, teamOf, teamCo
     바뀌는 값은 ref 로 흘려보내고, 씬은 참여자가 바뀔 때만 다시 만든다.
   */
   const stateRef = useRef<DrawState>({ phase: 'idle', startedAt: 0 });
-  const phase: DrawState['phase'] = isDrawing ? 'rolling' : winner || teamOf ? 'done' : 'idle';
+  const phase: DrawState['phase'] = isDrawing ? 'rolling' : teamOf ? 'done' : 'idle';
 
   // 단계가 바뀐 순간을 기록해 둔다. 감속 곡선이 이 시각을 기준으로 흐른다.
   const prevPhase = useRef(phase);
@@ -43,7 +41,6 @@ export function DrawCanvas({ variant, members, isDrawing, winner, teamOf, teamCo
     stateRef.current.startedAt = performance.now() / 1000;
   }
   stateRef.current.phase = phase;
-  stateRef.current.winner = winner;
   stateRef.current.teamOf = teamOf;
   stateRef.current.teamCount = teamCount;
 
@@ -63,8 +60,7 @@ export function DrawCanvas({ variant, members, isDrawing, winner, teamOf, teamCo
 
     const dispose = mountDrawScene({
       canvas,
-      build: (ctx) =>
-        variant === 'coffee' ? buildCoffeeStage(ctx, readState, members) : buildTeamStage(ctx, readState, members),
+      build: (ctx) => buildTeamStage(ctx, readState, members),
     });
 
     // WebGL 을 못 만들면 조용히 기존 연출로 돌아간다.
@@ -75,7 +71,7 @@ export function DrawCanvas({ variant, members, isDrawing, winner, teamOf, teamCo
     return dispose;
     // roster 로 명단 변화를 감지한다. members 배열은 매 렌더 새로 만들어져 그대로 쓰면 무한히 다시 만든다.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [roster, variant, usable]);
+  }, [roster, usable]);
 
   if (!usable || members.length === 0) return <>{children}</>;
 

@@ -1,4 +1,4 @@
-import { BadgeCheck, ClipboardCopy, Coffee, Dice5, Hand, Save, Search, Shuffle, Sparkles, UsersRound } from 'lucide-react';
+import { BadgeCheck, ClipboardCopy, Hand, Save, Search, Shuffle, Sparkles } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { EmptyState } from '../../components/EmptyState';
 import { Avatar } from '../../components/Avatar';
@@ -19,7 +19,6 @@ type ConnectProps = {
   members: Profile[];
 };
 
-type ConnectMode = 'coffee' | 'teams';
 type BalanceRule = 'part' | 'age' | 'both' | 'random';
 type TeamBasis = 'count' | 'size';
 
@@ -121,14 +120,6 @@ function buildTeamShareText(groups: TeamGroup[], rule: BalanceRule, basis: TeamB
     '[SKonnection 조뽑기 결과]',
     `조건: ${getBalanceRuleLabel(rule)} · ${getTeamBasisLabel(basis, value)}`,
     ...lines,
-  ].join('\n');
-}
-
-function buildCoffeeShareText(winner: Profile) {
-  return [
-    '[SKonnection 커피뽑기 결과]',
-    `오늘의 커피 담당: ${winner.name}`,
-    `${winner.part} · ${getAgeMood(winner.birthYear).label}`,
   ].join('\n');
 }
 
@@ -274,8 +265,7 @@ function analyzeAllTeams(groups: TeamGroup[]) {
 }
 
 export function Connect({ members }: ConnectProps) {
-  // 커피뽑기는 번개로 통합됐다. 이 화면(커넥셔너 · 조뽑기)은 조뽑기 전용으로 고정한다.
-  const [mode] = useState<ConnectMode>('teams');
+  // 커피뽑기는 번개로 통합됐다. 이 화면(커넥셔너 · 조뽑기)은 조뽑기 전용이다.
   const participantNames = useMemo(() => members.map((member) => member.name), [members]);
   const [selectedNames, setSelectedNames] = useState(participantNames);
 
@@ -287,38 +277,14 @@ export function Connect({ members }: ConnectProps) {
   const [balanceRule, setBalanceRule] = useState<BalanceRule>('both');
   const [teamBasis, setTeamBasis] = useState<TeamBasis>('count');
   const [teamValue, setTeamValue] = useState(4);
-  const [coffeeBuyer, setCoffeeBuyer] = useState<Profile | null>(null);
   const [teams, setTeams] = useState<TeamGroup[]>([]);
   const [isDrawing, setIsDrawing] = useState(false);
   const [teamEventText, setTeamEventText] = useState('조건을 고르고 셔플 버튼을 눌러보세요');
-  const [coffeeEventText, setCoffeeEventText] = useState('컵을 고르고 운명을 맡겨보세요');
-  const [coffeeRound, setCoffeeRound] = useState(0);
-  const [coffeeSpotlight, setCoffeeSpotlight] = useState<Profile | null>(null);
   const [hypeClip, setHypeClip] = useState<HypeClip | null>(null);
 
-  /* 이름 깜빡임 타이머. 멈추기 버튼과 화면 이탈 두 곳에서 꺼야 해서 ref 로 둔다 —
-     지역 변수로 두면 멈추기 쪽에서 손이 안 닿아 뽑기가 끝난 뒤에도 계속 돈다. */
-  const spinTimerRef = useRef<number | null>(null);
-  const stopSpinTimer = () => {
-    if (spinTimerRef.current !== null) {
-      window.clearInterval(spinTimerRef.current);
-      spinTimerRef.current = null;
-    }
-  };
-  useEffect(() => stopSpinTimer, []);
-
   /* 뽑기가 시작된 순간의 명단을 붙잡아 둔다. 멈출 때 화면 상태를 다시 읽으면,
-     도는 동안 참여자를 지운 경우 빈 명단에서 당첨자를 꺼내다 화면이 죽는다.
-     타이머가 끝내던 시절엔 시작 시점 값을 클로저가 물고 있어 없던 문제다. */
+     도는 동안 참여자를 지운 경우 빈 명단에서 당첨자를 꺼내다 화면이 죽는다. */
   const drawRosterRef = useRef<{ members: Profile[]; teamCount: number }>({ members: [], teamCount: 0 });
-
-  /* 탭을 옮기면 돌던 뽑기는 거기서 끝난다. 안 끊으면 커피뽑기의 이름 깜빡임
-     타이머가 조뽑기 화면에서도 130ms 마다 계속 돌아 화면을 다시 그린다 —
-     이것도 1.28초 타이머가 알아서 걷어 가던 것이라 이제 걷을 사람이 없다. */
-  useEffect(() => {
-    stopSpinTimer();
-    setIsDrawing(false);
-  }, [mode]);
   const [participantSearch, setParticipantSearch] = useState('');
   const [savedResults, setSavedResults] = useState<SavedDrawResult[]>([]);
   const [shareNotice, setShareNotice] = useState('');
@@ -374,7 +340,6 @@ export function Connect({ members }: ConnectProps) {
   const selectedParts = new Set(selectedParticipants.map((profile) => profile.part)).size;
   const selectedAgeMoods = new Set(selectedParticipants.map((profile) => getAgeMood(profile.birthYear).key)).size;
   const teamShareText = teams.length > 0 ? buildTeamShareText(teams, balanceRule, teamBasis, teamValue) : '';
-  const coffeeShareText = coffeeBuyer ? buildCoffeeShareText(coffeeBuyer) : '';
 
   const toggleParticipant = (name: string) => {
     setSelectedNames((current) => (
@@ -388,8 +353,6 @@ export function Connect({ members }: ConnectProps) {
 
   const clearAll = () => {
     setSelectedNames([]);
-    setCoffeeBuyer(null);
-    setCoffeeSpotlight(null);
     setTeams([]);
   };
 
@@ -402,44 +365,6 @@ export function Connect({ members }: ConnectProps) {
         ? current.filter((name) => !partMemberNames.includes(name))
         : [...new Set([...current, ...partMemberNames])]
     ));
-  };
-
-  const drawCoffeeBuyer = () => {
-    if (selectedParticipants.length < 2 || isDrawing) return;
-
-    setIsDrawing(true);
-    setHypeClip(pickHypeClip());
-    drawRosterRef.current = { members: selectedParticipants, teamCount };
-    setCoffeeBuyer(null);
-    setCoffeeRound(1);
-    setCoffeeSpotlight(selectedParticipants[0] ?? null);
-    setCoffeeEventText('멈추고 싶을 때 버튼을 누르세요');
-
-    /* 이름을 130ms 마다 갈아치운다. 영상만 돌면 그냥 동물을 보는 시간이 된다 —
-       아직 안 정해졌다는 것을 나르는 신호는 이 깜빡임 하나뿐이다. */
-    spinTimerRef.current = window.setInterval(() => {
-      setCoffeeRound((current) => current + 1);
-      setCoffeeSpotlight(selectedParticipants[Math.floor(Math.random() * selectedParticipants.length)]);
-    }, 130);
-  };
-
-  /* 결과를 정하는 것은 타이머가 아니라 두 번째 클릭이다.
-     자동으로 1.28초 뒤에 끝나던 때는 뽑는 게 아니라 조회하는 것에 가까웠다. */
-  const stopCoffeeDraw = () => {
-    if (!isDrawing) return;
-    stopSpinTimer();
-
-    const roster = drawRosterRef.current.members;
-    if (roster.length === 0) {
-      setIsDrawing(false);
-      return;
-    }
-
-    const winner = roster[Math.floor(Math.random() * roster.length)];
-    setCoffeeBuyer(winner);
-    setCoffeeSpotlight(winner);
-    setCoffeeEventText(`${winner.name}님, 오늘의 커피 요정 당첨`);
-    setIsDrawing(false);
   };
 
   const drawTeams = () => {
@@ -490,22 +415,6 @@ export function Connect({ members }: ConnectProps) {
     });
   };
 
-  const saveCoffeeResult = () => {
-    if (!coffeeBuyer) return;
-    const id = makeConnectResultId('coffee');
-    const shareUrl = makeConnectShareUrl(id);
-
-    saveResult({
-      id,
-      mode: 'coffee',
-      title: `커피 담당 ${coffeeBuyer.name}`,
-      createdAt: new Date().toISOString(),
-      summary: `${coffeeBuyer.part} · ${getAgeMood(coffeeBuyer.birthYear).label}`,
-      shareText: `${coffeeShareText}\n공유 URL: ${shareUrl}`,
-      shareUrl,
-    });
-  };
-
   const copyShareText = async (shareText: string) => {
     if (!shareText) return;
 
@@ -525,7 +434,7 @@ export function Connect({ members }: ConnectProps) {
         <PanelHeader icon={Shuffle} title="조뽑기" note="파트·세대를 골고루 섞어 조를 짜요" />
 
         <div className="connect-layout">
-          <aside className={`participant-panel ${mode === 'coffee' ? 'coffee-participants' : 'team-participants'}`}>
+          <aside className="participant-panel">
             <div className="participant-head">
               <div>
                 <strong>참여자 선택</strong>
@@ -540,204 +449,138 @@ export function Connect({ members }: ConnectProps) {
               <Search size={17} />
               <input
                 aria-label="참여자 검색"
-                placeholder={mode === 'coffee' ? '이름으로 빠르게 찾기' : '이름, 파트, 세대로 찾기'}
+                placeholder="이름, 파트, 세대로 찾기"
                 value={participantSearch}
                 onChange={(event) => setParticipantSearch(event.target.value)}
               />
             </div>
-            {mode === 'coffee' ? (
-              <div className="coffee-chip-grid">
-                {visibleParticipants.map((profile) => (
-                  <button
-                    className={selectedNames.includes(profile.name) ? `selected ${profile.color}` : ''}
-                    key={profile.name}
-                    onClick={() => toggleParticipant(profile.name)}
-                    type="button"
-                  >
-                    {profile.name}
-                  </button>
-                ))}
-              </div>
-            ) : (
-              <div className="part-group-list">
-                {visibleParticipantsByPart.map((group) => (
-                  <section className="part-group" key={group.part}>
-                    <div className="part-group-head">
-                      <div>
-                        <strong>{group.part}</strong>
-                        <span>{group.members.filter((member) => selectedNames.includes(member.name)).length}/{group.members.length}명 선택</span>
-                      </div>
-                      <button className="secondary-button" onClick={() => togglePart(group.part)} type="button">파트 선택</button>
+            <div className="part-group-list">
+              {visibleParticipantsByPart.map((group) => (
+                <section className="part-group" key={group.part}>
+                  <div className="part-group-head">
+                    <div>
+                      <strong>{group.part}</strong>
+                      <span>{group.members.filter((member) => selectedNames.includes(member.name)).length}/{group.members.length}명 선택</span>
                     </div>
-                    <div className="participant-list compact">
-                      {group.members.map((profile) => {
-                        const ageMood = getAgeMood(profile.birthYear);
-                        const isSelected = selectedNames.includes(profile.name);
+                    <button className="secondary-button" onClick={() => togglePart(group.part)} type="button">파트 선택</button>
+                  </div>
+                  <div className="participant-list compact">
+                    {group.members.map((profile) => {
+                      const ageMood = getAgeMood(profile.birthYear);
+                      const isSelected = selectedNames.includes(profile.name);
 
-                        return (
-                          <button
-                            className={isSelected ? `selected ${profile.color}` : ''}
-                            key={profile.name}
-                            onClick={() => toggleParticipant(profile.name)}
-                            type="button"
-                          >
-                            <Avatar name={profile.name} color={profile.color} />
-                            <div>
-                              <strong>{profile.name}</strong>
-                              <small>{ageMood.label}</small>
-                            </div>
-                            {isSelected && <BadgeCheck size={18} />}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </section>
-                ))}
-              </div>
-            )}
+                      return (
+                        <button
+                          className={isSelected ? `selected ${profile.color}` : ''}
+                          key={profile.name}
+                          onClick={() => toggleParticipant(profile.name)}
+                          type="button"
+                        >
+                          <Avatar name={profile.name} color={profile.color} />
+                          <div>
+                            <strong>{profile.name}</strong>
+                            <small>{ageMood.label}</small>
+                          </div>
+                          {isSelected && <BadgeCheck size={18} />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </section>
+              ))}
+            </div>
           </aside>
 
           <div className="connect-workbench">
-            {mode === 'teams' ? (
-              <>
-                <section className="connect-control-panel">
-                  <div className="connect-control-grid">
-                    <label>
-                      섞기 조건
-                      <select value={balanceRule} onChange={(event) => setBalanceRule(event.target.value as BalanceRule)}>
-                        <option value="both">파트 + 연령대 골고루</option>
-                        <option value="part">파트 골고루</option>
-                        <option value="age">연령대 골고루</option>
-                        <option value="random">랜덤</option>
-                      </select>
-                    </label>
-                    <label>
-                      편성 기준
-                      <select value={teamBasis} onChange={(event) => setTeamBasis(event.target.value as TeamBasis)}>
-                        <option value="count">조 개수</option>
-                        <option value="size">조 인원</option>
-                      </select>
-                    </label>
-                    <label>
-                      {teamBasis === 'count' ? '조 개수' : '조당 인원'}
-                      <input
-                        max={selectedParticipants.length || 1}
-                        min={teamBasis === 'count' ? 1 : 2}
-                        type="number"
-                        value={teamValue}
-                        onChange={(event) => setTeamValue(Number(event.target.value))}
-                      />
-                    </label>
-                  </div>
-                  {/* getTeamCount가 인원수에 맞춰 조용히 깎아냈다. 입력칸은 4를 보여주는데
-                      실제로는 3개 조로 돌아가서, 왜 다른지 알 길이 없었다. 덮어쓰지 말고 알린다. */}
-                  {teamAdjustedNote && <p className="form-error">{teamAdjustedNote}</p>}
-                  <div className="connect-summary-strip">
-                    <span>파트 {selectedParts}종</span>
-                    <span>세대 {selectedAgeMoods}종</span>
-                    <span>예상 {teamCount}개 조</span>
-                  </div>
-                  {/* 뽑는 중에는 같은 버튼이 멈추기가 된다.
-                      비활성 조건에 !isDrawing 이 붙은 이유: 돌리는 중에 참여자를
-                      전부 해제하면 버튼이 잠겨 뽑기를 끝낼 수가 없었다.
-                      시작은 막아도 되지만 멈추는 길은 항상 열려 있어야 한다. */}
-                  <button
-                    className={isDrawing ? 'primary-button wide draw-stop' : 'primary-button wide'}
-                    disabled={!isDrawing && selectedParticipants.length < 2}
-                    onClick={isDrawing ? stopTeamDraw : drawTeams}
-                    type="button"
-                  >
-                    {isDrawing ? <Hand size={18} /> : <Sparkles size={18} />}
-                    {isDrawing ? '지금 멈춰!' : '조 섞기 시작'}
-                  </button>
-                </section>
-
-                <DrawStage
-                  hypeClip={hypeClip}
-                  isDrawing={isDrawing}
-                  members={selectedParticipants}
-                  teams={teams}
-                  text={teamEventText}
-                  variant="teams"
-                />
-
-                <section className="team-result-grid">
-                  {teams.map((team) => (
-                    <article className="team-result-card" key={team.id}>
-                      <div className="team-result-head">
-                        <strong>{team.id}조</strong>
-                        <span>{team.members.length}명</span>
-                      </div>
-                      <div className="team-member-list">
-                        {team.members.map((member) => (
-                          <div key={member.name}>
-                            <Avatar name={member.name} color={member.color} />
-                            <div>
-                              <strong>{member.name}</strong>
-                              <small>{member.part} · {getAgeMood(member.birthYear).label}</small>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </article>
-                  ))}
-                </section>
-                {teams.length > 0 && (
-                  <SharePanel
-                    onCopy={() => void copyShareText(teamShareText)}
-                    onSave={saveTeamResult}
-                    shareText={teamShareText}
-                    teams={teams}
-                    title="조뽑기 공유 화면"
+            <section className="connect-control-panel">
+              <div className="connect-control-grid">
+                <label>
+                  섞기 조건
+                  <select value={balanceRule} onChange={(event) => setBalanceRule(event.target.value as BalanceRule)}>
+                    <option value="both">파트 + 연령대 골고루</option>
+                    <option value="part">파트 골고루</option>
+                    <option value="age">연령대 골고루</option>
+                    <option value="random">랜덤</option>
+                  </select>
+                </label>
+                <label>
+                  편성 기준
+                  <select value={teamBasis} onChange={(event) => setTeamBasis(event.target.value as TeamBasis)}>
+                    <option value="count">조 개수</option>
+                    <option value="size">조 인원</option>
+                  </select>
+                </label>
+                <label>
+                  {teamBasis === 'count' ? '조 개수' : '조당 인원'}
+                  <input
+                    max={selectedParticipants.length || 1}
+                    min={teamBasis === 'count' ? 1 : 2}
+                    type="number"
+                    value={teamValue}
+                    onChange={(event) => setTeamValue(Number(event.target.value))}
                   />
-                )}
-              </>
-            ) : (
-              <>
-                <section className="connect-control-panel coffee-panel">
-                  <div>
-                    <strong>오늘 커피는 누가 살까요?</strong>
-                    <span>참여자를 고르고 버튼을 누르면 한 명이 당첨됩니다.</span>
+                </label>
+              </div>
+              {/* getTeamCount가 인원수에 맞춰 조용히 깎아냈다. 입력칸은 4를 보여주는데
+                  실제로는 3개 조로 돌아가서, 왜 다른지 알 길이 없었다. 덮어쓰지 말고 알린다. */}
+              {teamAdjustedNote && <p className="form-error">{teamAdjustedNote}</p>}
+              <div className="connect-summary-strip">
+                <span>파트 {selectedParts}종</span>
+                <span>세대 {selectedAgeMoods}종</span>
+                <span>예상 {teamCount}개 조</span>
+              </div>
+              {/* 뽑는 중에는 같은 버튼이 멈추기가 된다.
+                  비활성 조건에 !isDrawing 이 붙은 이유: 돌리는 중에 참여자를
+                  전부 해제하면 버튼이 잠겨 뽑기를 끝낼 수가 없었다.
+                  시작은 막아도 되지만 멈추는 길은 항상 열려 있어야 한다. */}
+              <button
+                className={isDrawing ? 'primary-button wide draw-stop' : 'primary-button wide'}
+                disabled={!isDrawing && selectedParticipants.length < 2}
+                onClick={isDrawing ? stopTeamDraw : drawTeams}
+                type="button"
+              >
+                {isDrawing ? <Hand size={18} /> : <Sparkles size={18} />}
+                {isDrawing ? '지금 멈춰!' : '조 섞기 시작'}
+              </button>
+            </section>
+
+            <DrawStage
+              hypeClip={hypeClip}
+              isDrawing={isDrawing}
+              members={selectedParticipants}
+              teams={teams}
+              text={teamEventText}
+            />
+
+            <section className="team-result-grid">
+              {teams.map((team) => (
+                <article className="team-result-card" key={team.id}>
+                  <div className="team-result-head">
+                    <strong>{team.id}조</strong>
+                    <span>{team.members.length}명</span>
                   </div>
-                  <button
-                    className={isDrawing ? 'primary-button wide draw-stop' : 'primary-button wide'}
-                    disabled={!isDrawing && selectedParticipants.length < 2}
-                    onClick={isDrawing ? stopCoffeeDraw : drawCoffeeBuyer}
-                    type="button"
-                  >
-                    {isDrawing ? <Hand size={18} /> : <Dice5 size={18} />}
-                    {isDrawing ? '지금 멈춰!' : '커피 살 사람 뽑기'}
-                  </button>
-                </section>
-
-                <CoffeeDrawStage
-                  buyer={coffeeBuyer}
-                  hypeClip={hypeClip}
-                  isDrawing={isDrawing}
-                  members={selectedParticipants}
-                  round={coffeeRound}
-                  spotlight={coffeeSpotlight}
-                  text={coffeeEventText}
-                />
-
-                {coffeeBuyer && (
-                  <>
-                    <section className={`coffee-winner-card ${coffeeBuyer.color}`}>
-                      <Coffee size={34} />
-                      <span>오늘의 커피 담당</span>
-                      <strong>{coffeeBuyer.name}</strong>
-                      <p>{coffeeBuyer.part} · {getAgeMood(coffeeBuyer.birthYear).label}</p>
-                    </section>
-                    <SharePanel
-                      coffeeWinner={coffeeBuyer}
-                      onCopy={() => void copyShareText(coffeeShareText)}
-                      onSave={saveCoffeeResult}
-                      shareText={coffeeShareText}
-                      title="커피뽑기 공유 화면"
-                    />
-                  </>
-                )}
-              </>
+                  <div className="team-member-list">
+                    {team.members.map((member) => (
+                      <div key={member.name}>
+                        <Avatar name={member.name} color={member.color} />
+                        <div>
+                          <strong>{member.name}</strong>
+                          <small>{member.part} · {getAgeMood(member.birthYear).label}</small>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </article>
+              ))}
+            </section>
+            {teams.length > 0 && (
+              <SharePanel
+                onCopy={() => void copyShareText(teamShareText)}
+                onSave={saveTeamResult}
+                shareText={teamShareText}
+                teams={teams}
+                title="조뽑기 공유 화면"
+              />
             )}
             <section className="saved-result-panel">
               <div className="saved-result-head">
@@ -783,14 +626,12 @@ export function Connect({ members }: ConnectProps) {
 }
 
 function SharePanel({
-  coffeeWinner,
   onCopy,
   onSave,
   shareText,
   teams,
   title,
 }: {
-  coffeeWinner?: Profile | null;
   onCopy: () => void;
   onSave: () => void;
   shareText: string;
@@ -864,13 +705,6 @@ function SharePanel({
           </div>
         </div>
       )}
-      {coffeeWinner && (
-        <div className={`coffee-share-slide ${coffeeWinner.color}`}>
-          <span>COFFEE DRAW RESULT</span>
-          <strong>{coffeeWinner.name}</strong>
-          <p>{coffeeWinner.part}에서 온 {getAgeMood(coffeeWinner.birthYear).label} 멤버가 오늘의 커피 담당이에요.</p>
-        </div>
-      )}
       <pre>{shareText}</pre>
     </section>
   );
@@ -916,14 +750,12 @@ function DrawStage({
   members,
   teams,
   text,
-  variant,
 }: {
   hypeClip: HypeClip | null;
   isDrawing: boolean;
   members: Profile[];
   teams: TeamGroup[];
   text: string;
-  variant: ConnectMode;
 }) {
   // 이름 → 조 번호. 3D 타일이 자기 조 색으로 바뀌며 아래 결과 카드와 이어진다.
   const teamOf = useMemo(() => {
@@ -934,13 +766,12 @@ function DrawStage({
 
   return (
     <StoryFrame label="조뽑기" step={isDrawing ? 2 : text.includes('조') ? 3 : 1} total={3}>
-      <section className={isDrawing ? `draw-stage rolling ${variant}` : `draw-stage ${variant}`}>
+      <section className={isDrawing ? 'draw-stage rolling' : 'draw-stage'}>
         <DrawCanvas
           isDrawing={isDrawing}
           members={members}
           teamCount={teams.length}
           teamOf={teams.length > 0 ? teamOf : undefined}
-          variant="teams"
         >
           {/* WebGL 을 못 쓰거나 모션을 줄인 환경에서 쓰는 기존 연출 */}
           <div className="draw-orbit">
@@ -952,61 +783,6 @@ function DrawStage({
         </DrawCanvas>
         <DrawHype active={isDrawing} clip={hypeClip} />
         <strong>{text}</strong>
-      </section>
-    </StoryFrame>
-  );
-}
-
-function CoffeeDrawStage({
-  buyer,
-  hypeClip,
-  isDrawing,
-  members,
-  round,
-  spotlight,
-  text,
-}: {
-  buyer: Profile | null;
-  hypeClip: HypeClip | null;
-  isDrawing: boolean;
-  members: Profile[];
-  round: number;
-  spotlight: Profile | null;
-  text: string;
-}) {
-  const displayName = spotlight?.name ?? buyer?.name ?? '???';
-
-  return (
-    <StoryFrame label="커피뽑기" step={isDrawing ? 2 : buyer ? 3 : 1} total={3}>
-      <section className={isDrawing ? 'coffee-draw-stage rolling' : buyer ? 'coffee-draw-stage finished' : 'coffee-draw-stage'}>
-        <div className="coffee-confetti" aria-hidden="true">
-          <span />
-          <span />
-          <span />
-          <span />
-          <span />
-          <span />
-        </div>
-        <DrawCanvas isDrawing={isDrawing} members={members} variant="coffee" winner={buyer?.name}>
-          {/* WebGL 을 못 쓰거나 모션을 줄인 환경에서 쓰는 기존 연출 */}
-          <div className="coffee-cup-track" aria-hidden="true">
-            <div className="coffee-cup">
-              <Coffee size={24} />
-            </div>
-            <div className="coffee-cup main">
-              <Coffee size={28} />
-            </div>
-            <div className="coffee-cup">
-              <Coffee size={24} />
-            </div>
-          </div>
-        </DrawCanvas>
-        <DrawHype active={isDrawing} clip={hypeClip} />
-        <div className="coffee-draw-copy">
-          <span>{isDrawing ? `ROUND ${Math.min(round, 9)}` : buyer ? 'RESULT' : 'READY'}</span>
-          <strong>{text}</strong>
-          <em>{displayName}</em>
-        </div>
       </section>
     </StoryFrame>
   );
