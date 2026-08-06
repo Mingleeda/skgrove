@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
   belowMinimum,
+  canDrawCoffee,
   canJoinWaitlist,
+  coffeeCandidates,
   deriveStatus,
   formatWhen,
   isFull,
@@ -184,5 +186,46 @@ describe('사람이 읽는 시각', () => {
     expect(timeUntil('2026-08-05T12:30', NOW)).toBe('30분 뒤');
     expect(timeUntil('2026-08-08T12:00', NOW)).toBe('3일 뒤');
     expect(timeUntil('2026-08-05T11:00', NOW)).toBe('지났어요');
+  });
+});
+
+describe('coffeeCandidates / canDrawCoffee', () => {
+  const signups = (names: string[], gatheringId = 'GAT-1'): GatheringSignup[] =>
+    names.map((name, index) => ({
+      id: `S-${index}`,
+      gatheringId,
+      name,
+      createdAt: `2026-08-05T10:0${index}`,
+    }));
+
+  it('확정 로스터만 후보로 돌려준다 (대기 제외)', () => {
+    const g = meetup({ capacity: 2 });
+    const list = coffeeCandidates(g, signups(['가', '나', '다']));
+    expect(list.map((s) => s.name)).toEqual(['가', '나']);
+  });
+
+  it('flash + 확정 2명 이상 + 아직 안 뽑음이면 뽑을 수 있다', () => {
+    const g = meetup({ kind: 'flash', capacity: null });
+    expect(canDrawCoffee(g, signups(['가', '나']))).toBe(true);
+  });
+
+  it('확정이 1명이면 뽑을 수 없다', () => {
+    const g = meetup({ kind: 'flash', capacity: null });
+    expect(canDrawCoffee(g, signups(['가']))).toBe(false);
+  });
+
+  it('callup(일정공모)에서는 뽑을 수 없다', () => {
+    const g = meetup({ kind: 'callup', capacity: null });
+    expect(canDrawCoffee(g, signups(['가', '나']))).toBe(false);
+  });
+
+  it('이미 뽑았으면(잠김) 다시 뽑을 수 없다', () => {
+    const g = meetup({ kind: 'flash', capacity: null, coffeePick: '가' });
+    expect(canDrawCoffee(g, signups(['가', '나']))).toBe(false);
+  });
+
+  it('취소된 모임에서는 뽑을 수 없다', () => {
+    const g = meetup({ kind: 'flash', capacity: null, canceled: true });
+    expect(canDrawCoffee(g, signups(['가', '나']))).toBe(false);
   });
 });

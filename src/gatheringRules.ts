@@ -27,6 +27,23 @@ export function splitRoster(gathering: Gathering, signups: GatheringSignup[]) {
   return { confirmed: ordered.slice(0, gathering.capacity), waiting: ordered.slice(gathering.capacity) };
 }
 
+/** 커피뽑기 후보 = 확정 로스터. 대기자는 아직 오는 사람이 아니라 제외한다. */
+export function coffeeCandidates(gathering: Gathering, signups: GatheringSignup[]) {
+  return splitRoster(gathering, signups).confirmed;
+}
+
+/**
+ * 커피 담당을 뽑을 수 있는가.
+ * 번개(flash) · 취소 아님 · 아직 안 뽑음 · 확정 2명 이상.
+ * (주최자 여부는 UI 관심사라 여기서 보지 않는다 — currentUser 를 규칙에 들이지 않는다.)
+ */
+export function canDrawCoffee(gathering: Gathering, signups: GatheringSignup[]) {
+  if (gathering.kind !== 'flash') return false;
+  if (gathering.canceled) return false;
+  if (gathering.coffeePick) return false;
+  return coffeeCandidates(gathering, signups).length >= 2;
+}
+
 export function confirmedCount(gathering: Gathering, signups: GatheringSignup[]) {
   return splitRoster(gathering, signups).confirmed.length;
 }
