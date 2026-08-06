@@ -157,6 +157,18 @@ export async function POST(request: Request): Promise<Response> {
     return new Response('Bad Request', { status: 400 });
   }
 
+  // 빈/무의미한 요청은 슬랙에 아무것도 보내지 않는다. 예전엔 {} 만 보내도 커넥셔너
+  // 채널에 빈 '알림' 카드가 게시됐다(배포 점검용 빈 POST 가 실제로 새벽에 채널로 샜다).
+  // 보낼 내용이 하나도 없으면 게시 없이 막는다.
+  const hasContent =
+    payload.announce === true ||
+    payload.dm === true ||
+    Boolean((payload.title ?? '').trim()) ||
+    Boolean((payload.text ?? '').trim());
+  if (!hasContent) {
+    return Response.json({ ok: false, reason: 'empty payload — nothing to send' });
+  }
+
   const msg = buildMessage(payload.kind ?? '', payload.title ?? '', payload.text ?? '', payload.from ?? '시스템');
 
   // 티미팅 공지문: 완성된 안내문을 채널에 그대로 게시.
