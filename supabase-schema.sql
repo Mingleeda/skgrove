@@ -130,7 +130,8 @@ create table if not exists public.agendas (
   author_name text not null default '',
   approve integer not null default 0,
   reject integer not null default 0,
-  status text not null check (status in ('투표중', '통과', '부결')),
+  -- '결정됨'은 객관식 전용. 찬반의 통과/부결과 달리 "어느 선택지로 정해졌는가"를 뜻한다.
+  status text not null check (status in ('투표중', '통과', '부결', '결정됨')),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -161,10 +162,26 @@ alter table public.agendas
   add column if not exists deadline date,
   add column if not exists closed_at date,
   -- 등록 시점의 투표 대상 인원. 계정 변동에 과거 안건의 정족수/참여율이 흔들리지 않도록 스냅샷으로 둔다.
-  add column if not exists eligible_count integer not null default 0;
+  add column if not exists eligible_count integer not null default 0,
+  -- 객관식 투표. 전부 기본값이 있어 이미 쌓인 안건은 그대로 찬반으로 읽힌다.
+  add column if not exists vote_type text not null default '찬반',
+  -- [{ id, label, count }]. 찬반이면 빈 배열이다.
+  add column if not exists options jsonb not null default '[]'::jsonb,
+  add column if not exists multi_select boolean not null default false,
+  -- 실제로 투표한 '사람' 수. 복수 선택이면 options의 count 합이 인원을 넘으므로 따로 센다.
+  add column if not exists voter_count integer not null default 0;
 
--- 투표용지. 익명성을 위해 "누가 투표했는가"만 담고 선택(찬성/반대)은 담지 않는다.
--- 선택은 agendas.approve / agendas.reject 카운터에만 반영되므로
+-- 이미 만들어진 테이블에는 위 create table의 check가 적용되지 않는다. 제약을 다시 건다.
+alter table public.agendas drop constraint if exists agendas_status_check;
+alter table public.agendas
+  add constraint agendas_status_check check (status in ('투표중', '통과', '부결', '결정됨'));
+
+alter table public.agendas drop constraint if exists agendas_vote_type_check;
+alter table public.agendas
+  add constraint agendas_vote_type_check check (vote_type in ('찬반', '객관식'));
+
+-- 투표용지. 익명성을 위해 "누가 투표했는가"만 담고 선택(찬성/반대 · 객관식 선택지)은 담지 않는다.
+-- 선택은 agendas.approve / agendas.reject 카운터와 agendas.options[].count 집계에만 반영되므로
 -- 이 테이블의 어떤 행도 사람과 선택을 이어주지 못한다.
 create table if not exists public.agenda_ballots (
   agenda_id text not null references public.agendas(id) on delete cascade,

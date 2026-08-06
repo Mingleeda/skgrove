@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { FilePlus2, Search, Vote } from 'lucide-react';
-import { daysLeft, isOpen, voteTotal } from '../../agendaRules';
+import { daysLeft, isOpen, optionRate, voteTotal, winningOptions } from '../../agendaRules';
 import { teamParts } from '../../auth';
-import type { Agenda, CurrentUser, TeamPart, VoteChoice } from '../../types';
+import type { Agenda, CurrentUser, TeamPart, VoteSelection } from '../../types';
 import { EmptyState } from '../../components/EmptyState';
 import { AgendaDetail } from './AgendaDetail';
 import { AgendaForm, type AgendaDraft } from './AgendaForm';
@@ -22,7 +22,7 @@ type AgendaBoardProps = {
   votedAgendaIds: string[];
   canClose: boolean;
   today: string;
-  onVote: (id: string, choice: VoteChoice) => void;
+  onVote: (id: string, selection: VoteSelection) => void;
   onCloseAgenda: (id: string) => void;
   onCreateAgenda: (draft: AgendaDraft) => Agenda;
   // 안건별로 이미 만들어진 액션아이템 수. 중복 생성 여부를 사용자가 판단할 근거가 된다.
@@ -150,8 +150,15 @@ export function AgendaBoard({
             const open = isOpen(agenda);
             const remaining = daysLeft(agenda, today);
             const done = voted.has(agenda.id);
+            const multipleChoice = agenda.voteType === '객관식';
+            const total = voteTotal(agenda);
+            const winners = winningOptions(agenda);
             const statusClass =
-              agenda.status === '통과' ? 'pass' : agenda.status === '부결' ? 'fail' : 'moss';
+              agenda.status === '통과' || agenda.status === '결정됨'
+                ? 'pass'
+                : agenda.status === '부결'
+                  ? 'fail'
+                  : 'moss';
             const when = open
               ? done
                 ? '투표 완료'
@@ -181,20 +188,36 @@ export function AgendaBoard({
                   <p className="ig-headline">{agenda.title}</p>
 
                   <div className="ig-poll">
-                    <div className={rate >= 50 ? 'ig-opt win' : 'ig-opt'}>
-                      <span className="ig-opt-bar" style={{ width: `${rate}%` }} />
-                      <b>찬성</b>
-                      <em>{rate}%</em>
-                    </div>
-                    <div className={rate < 50 ? 'ig-opt win' : 'ig-opt'}>
-                      <span className="ig-opt-bar" style={{ width: `${100 - rate}%` }} />
-                      <b>반대</b>
-                      <em>{100 - rate}%</em>
-                    </div>
+                    {multipleChoice ? (
+                      agenda.options.map((option) => {
+                        const share = optionRate(agenda, option);
+                        const leading = total > 0 && winners.some((winner) => winner.id === option.id);
+                        return (
+                          <div className={leading ? 'ig-opt win' : 'ig-opt'} key={option.id}>
+                            <span className="ig-opt-bar" style={{ width: `${share}%` }} />
+                            <b>{option.label}</b>
+                            <em>{share}%</em>
+                          </div>
+                        );
+                      })
+                    ) : (
+                      <>
+                        <div className={rate >= 50 ? 'ig-opt win' : 'ig-opt'}>
+                          <span className="ig-opt-bar" style={{ width: `${rate}%` }} />
+                          <b>찬성</b>
+                          <em>{rate}%</em>
+                        </div>
+                        <div className={rate < 50 ? 'ig-opt win' : 'ig-opt'}>
+                          <span className="ig-opt-bar" style={{ width: `${100 - rate}%` }} />
+                          <b>반대</b>
+                          <em>{100 - rate}%</em>
+                        </div>
+                      </>
+                    )}
                   </div>
 
                   <p className="ig-poll-meta">
-                    {voteTotal(agenda)}표 · {when}
+                    {multipleChoice ? `${total}명 참여` : `${total}표`} · {when}
                   </p>
 
                   <button className={done || !open ? 'ig-join done' : 'ig-join'} onClick={() => openDetail(agenda.id)} type="button">

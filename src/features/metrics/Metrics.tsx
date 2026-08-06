@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { isTeamLeader } from '../../auth';
 import { loadAccounts } from '../../accountStore';
 import { loadActionItems } from '../../actionItemStore';
+import { voteTotal } from '../../agendaRules';
 import { loadAgendas } from '../../agendaStore';
 import { loadBallots } from '../../ballotStore';
 import {
@@ -269,7 +270,8 @@ function getConnectParticipation(partMembers: Profile[], shareTexts: string[]) {
 function getVoteParticipation(partAgendas: Agenda[], allAgendas: Agenda[], ballots: AgendaBallot[]) {
   const targetAgendas = partAgendas.length > 0 ? partAgendas : allAgendas;
   const eligibleCount = targetAgendas.reduce((sum, agenda) => sum + Math.max(agenda.eligibleCount, 0), 0);
-  const visibleVoteCount = targetAgendas.reduce((sum, agenda) => sum + agenda.approve + agenda.reject, 0);
+  // 참여율이므로 '표'가 아니라 '사람'을 센다. 객관식 복수 선택은 한 사람이 여러 표를 던진다.
+  const visibleVoteCount = targetAgendas.reduce((sum, agenda) => sum + voteTotal(agenda), 0);
   const anonymousBallotHint = allAgendas.length > 0 ? Math.round(ballots.length / allAgendas.length) : 0;
 
   if (eligibleCount <= 0) return 0;
