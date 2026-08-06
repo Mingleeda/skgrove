@@ -85,7 +85,10 @@ import {
   makeHumorId,
   saveHumorComments,
   saveHumorPosts,
+  uploadHumorImage,
 } from './humorStore';
+import { requestHumorImage } from './humorImage';
+import { isImageMedia } from './humorRules';
 import { makePoster } from './aiPoster';
 import { requestGatheringImage } from './gatheringImage';
 import {
@@ -806,6 +809,14 @@ export function App() {
     saveHumorComments(next);
   };
 
+  const patchHumorPost = (id: string, patch: Partial<HumorPost>) => {
+    setHumorPosts((prev) => {
+      const next = prev.map((post) => (post.id === id ? { ...post, ...patch } : post));
+      saveHumorPosts(next);
+      return next;
+    });
+  };
+
   const addHumorPost = (draft: { body: string; mediaUrl: string }) => {
     if (!currentUser || !draft.body.trim()) return;
     const post: HumorPost = {
@@ -817,6 +828,24 @@ export function App() {
       likedBy: [],
     };
     persistHumorPosts([post, ...humorPosts]);
+
+    /*
+      이미지가 없는 글이면 등록을 마친 뒤 배경에서 크레파스 썸네일을 그린다 — 이음장터·모임과 같은 방식.
+      그동안 릴스는 텍스트만 보여주고, 다 그려지면 그 글에만 imageUrl 이 붙어 배경이 깔린다. 실패하면 그대로.
+    */
+    if (!isImageMedia(post.mediaUrl)) {
+      setImagePendingIds((prev) => [...prev, post.id]);
+      void (async () => {
+        try {
+          const generated = await requestHumorImage(post);
+          if (!generated) return;
+          const { imageUrl } = await uploadHumorImage(post.id, generated);
+          patchHumorPost(post.id, { imageUrl });
+        } finally {
+          setImagePendingIds((prev) => prev.filter((pendingId) => pendingId !== post.id));
+        }
+      })();
+    }
   };
 
   const toggleHumorLike = (postId: string) => {
@@ -1420,6 +1449,7 @@ export function App() {
           comments={humorComments}
           currentUser={currentUser}
           canModerate={isTeamLeader(currentUser)}
+          imagePendingIds={imagePendingIds}
           onAddPost={addHumorPost}
           onToggleLike={toggleHumorLike}
           onAddComment={addHumorComment}

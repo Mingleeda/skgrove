@@ -1,10 +1,10 @@
 import { useMemo, useState } from 'react';
 import type { ElementType } from 'react';
-import { AlertTriangle, ArrowLeft, Crown, FileText, Image as ImageIcon, Laugh, Link2, MessageCircle, Medal, PenLine, PlayCircle, Send, Sparkles, Trash2, Trophy, X } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, Crown, FileText, Hourglass, Image as ImageIcon, Laugh, Link2, MessageCircle, Medal, PenLine, PlayCircle, Send, Sparkles, Trash2, Trophy, X } from 'lucide-react';
 import { Avatar } from '../../components/Avatar';
 import { PanelHeader } from '../../components/PanelHeader';
-import { monthOf, rankCommenters, rankLiked, rankPosters, topCommenter, topLiked, topPoster } from '../../humorRules';
-import type { Ranker } from '../../humorRules';
+import { monthOf, rankCommenters, rankLiked, rankPosters, resolveMedia, topCommenter, topLiked, topPoster } from '../../humorRules';
+import type { Media, Ranker } from '../../humorRules';
 import type { CurrentUser, HumorComment, HumorPost } from '../../types';
 
 type HumorBoardProps = {
@@ -12,6 +12,7 @@ type HumorBoardProps = {
   comments: HumorComment[];
   currentUser: CurrentUser;
   canModerate: boolean;
+  imagePendingIds: string[];
   onAddPost: (draft: { body: string; mediaUrl: string }) => void;
   onToggleLike: (postId: string) => void;
   onAddComment: (postId: string, body: string) => void;
@@ -24,44 +25,6 @@ type HumorBoardProps = {
 function shiftMonth(month: string, delta: number): string {
   const [year, mon] = month.split('-').map(Number);
   return new Date(Date.UTC(year, mon - 1 + delta, 1)).toISOString().slice(0, 7);
-}
-
-// 붙여넣은 링크에서 유튜브 영상 id 추출(watch·youtu.be·shorts·embed).
-function youtubeId(url: string): string | null {
-  const patterns = [
-    /youtu\.be\/([\w-]{11})/,
-    /[?&]v=([\w-]{11})/,
-    /youtube\.com\/embed\/([\w-]{11})/,
-    /youtube\.com\/shorts\/([\w-]{11})/,
-  ];
-  for (const pattern of patterns) {
-    const match = url.match(pattern);
-    if (match) return match[1];
-  }
-  return null;
-}
-
-type Media = { type: 'image' | 'youtube' | 'video' | 'link'; src: string };
-
-// 백엔드가 없으므로 파일 업로드 대신 붙여넣은 URL을 종류별로 판별해 렌더한다.
-// 안전한 scheme(http(s)·data:image)만 허용한다. javascript:·data:text/html 등은
-// 렌더하지 않는다(<a href>·<img src> XSS/피싱 차단).
-function resolveMedia(url: string): Media | null {
-  const trimmed = url.trim();
-  if (!trimmed) return null;
-
-  const yt = youtubeId(trimmed);
-  if (yt) return { type: 'youtube', src: `https://www.youtube.com/embed/${yt}` };
-
-  const isHttp = /^https?:\/\//i.test(trimmed);
-  const isDataImage = /^data:image\//i.test(trimmed);
-
-  if (isHttp && /\.(mp4|webm|ogg)(\?|$)/i.test(trimmed)) return { type: 'video', src: trimmed };
-  if (isDataImage || (isHttp && /\.(jpe?g|png|gif|webp|avif|bmp|svg)(\?|$)/i.test(trimmed))) {
-    return { type: 'image', src: trimmed };
-  }
-  if (isHttp) return { type: 'link', src: trimmed };
-  return null; // 미지원·위험 scheme은 미디어로 취급하지 않음
 }
 
 /*
@@ -122,6 +85,7 @@ export function HumorBoard({
   comments,
   currentUser,
   canModerate,
+  imagePendingIds,
   onAddPost,
   onToggleLike,
   onAddComment,
@@ -268,6 +232,11 @@ export function HumorBoard({
             <>
               <p className="humor-card-body">{detailPost.body}</p>
               <MediaBlock media={resolveMedia(detailPost.mediaUrl)} />
+              {!resolveMedia(detailPost.mediaUrl) && detailPost.imageUrl && (
+                <div className="humor-card-image">
+                  <img src={detailPost.imageUrl} alt="" loading="lazy" />
+                </div>
+              )}
             </>
           )}
           <div className="humor-card-actions">
@@ -464,14 +433,23 @@ export function HumorBoard({
           const media = resolveMedia(post.mediaUrl);
           const Glyph = mediaGlyph(media);
           const liked = post.likedBy.includes(currentUser.name);
+          // 배경: 사용자가 붙인 이미지 우선, 없으면 생성 썸네일(imageUrl).
+          const bgSrc = media?.type === 'image' ? media.src : post.imageUrl || null;
+          const drawing = imagePendingIds.includes(post.id);
           return (
             <button
-              className={media?.type === 'image' ? 'ig-reel has-media' : 'ig-reel'}
+              className={bgSrc ? 'ig-reel has-media' : 'ig-reel'}
               key={post.id}
               onClick={() => openDetail(post.id)}
               type="button"
             >
-              {media?.type === 'image' && <img alt="" className="ig-reel-bg" loading="lazy" src={media.src} />}
+              {bgSrc && <img alt="" className="ig-reel-bg" loading="lazy" src={bgSrc} />}
+              {drawing && !bgSrc && (
+                <span className="ig-drawing">
+                  <Hourglass size={14} />
+                  그림 그리는 중
+                </span>
+              )}
 
               <span className="ig-reel-side">
                 <span className={liked ? 'liked' : ''}>

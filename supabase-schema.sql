@@ -487,12 +487,15 @@ create table if not exists public.humor_posts (
   author text not null,
   body text not null default '',
   media_url text not null default '',
+  image_url text,
   created_at text not null default '',
   liked_by jsonb not null default '[]'::jsonb
 );
 alter table public.humor_posts enable row level security;
 drop policy if exists "Allow prototype humor posts all" on public.humor_posts;
 create policy "Allow prototype humor posts all" on public.humor_posts for all using (true) with check (true);
+-- 이미 만들어진 DB에도 컬럼을 더한다(create table if not exists 는 기존 테이블을 안 건드린다).
+alter table public.humor_posts add column if not exists image_url text;
 
 create table if not exists public.humor_comments (
   id text primary key,
@@ -715,3 +718,35 @@ create policy "Allow prototype market image deletes"
   on storage.objects
   for delete
   using (bucket_id = 'market-images');
+
+-- 유머게시판 생성 썸네일 버킷. gathering-images/market-images 와 같은 개방 정책이다.
+insert into storage.buckets (id, name, public)
+values ('humor-images', 'humor-images', true)
+on conflict (id) do update set
+  public = excluded.public;
+
+drop policy if exists "Allow prototype humor image reads" on storage.objects;
+drop policy if exists "Allow prototype humor image writes" on storage.objects;
+drop policy if exists "Allow prototype humor image updates" on storage.objects;
+drop policy if exists "Allow prototype humor image deletes" on storage.objects;
+
+create policy "Allow prototype humor image reads"
+  on storage.objects
+  for select
+  using (bucket_id = 'humor-images');
+
+create policy "Allow prototype humor image writes"
+  on storage.objects
+  for insert
+  with check (bucket_id = 'humor-images');
+
+create policy "Allow prototype humor image updates"
+  on storage.objects
+  for update
+  using (bucket_id = 'humor-images')
+  with check (bucket_id = 'humor-images');
+
+create policy "Allow prototype humor image deletes"
+  on storage.objects
+  for delete
+  using (bucket_id = 'humor-images');
