@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { AlertTriangle, FileCheck2, Plus, Send, Trash2 } from 'lucide-react';
 import { PanelHeader } from '../../components/PanelHeader';
+import { winningOptions } from '../../agendaRules';
 import type { ActionItem, Agenda, ManagedAccount } from '../../types';
 
 export type ActionDraft = Pick<ActionItem, 'title' | 'owner' | 'due'>;
@@ -15,9 +16,20 @@ type ActionCreateFormProps = {
 
 const emptyDraft = (): ActionDraft => ({ title: '', owner: '미정', due: '' });
 
+/**
+ * 객관식에서 넘어왔으면 정해진 선택지를 첫 줄 제목에 미리 넣어준다.
+ * 동점이면 무엇을 할지가 아직 정해지지 않은 것이므로 비워 둔다.
+ */
+const seedDrafts = (agenda: Agenda): ActionDraft[] => {
+  if (agenda.voteType !== '객관식') return [emptyDraft()];
+  const winners = winningOptions(agenda);
+  if (winners.length !== 1) return [emptyDraft()];
+  return [{ ...emptyDraft(), title: winners[0].label }];
+};
+
 export function ActionCreateForm({ agenda, accounts, today, onCreate, onCancel }: ActionCreateFormProps) {
   // 통과된 안건 하나에서 여러 액션이 나오는 경우가 흔해 처음부터 여러 줄을 다룬다.
-  const [drafts, setDrafts] = useState<ActionDraft[]>([emptyDraft()]);
+  const [drafts, setDrafts] = useState<ActionDraft[]>(() => seedDrafts(agenda));
   const [error, setError] = useState('');
 
   const owners = accounts.filter((account) => account.status === '활성');
@@ -49,7 +61,7 @@ export function ActionCreateForm({ agenda, accounts, today, onCreate, onCancel }
       <PanelHeader icon={FileCheck2} title="액션아이템 생성" />
 
       <p className="action-form-source">
-        통과 안건 · {agenda.title} <span>({agenda.id})</span>
+        {agenda.status === '결정됨' ? '결정된 안건' : '통과 안건'} · {agenda.title} <span>({agenda.id})</span>
       </p>
 
       <div className="action-draft-list">

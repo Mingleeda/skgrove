@@ -3,7 +3,7 @@ create table if not exists public.accounts (
   name text not null,
   email text not null unique,
   role text not null check (role in ('팀원', '파트리더', '팀리더')),
-  part text not null check (part in ('전체', 'TEST혁신파트', 'ITS혁신파트', '혁신도구파트')),
+  part text not null check (part in ('전체', 'TEST혁신파트', 'ITS혁신파트', 'PM혁신파트', '혁신도구파트')),
   status text not null check (status in ('승인 대기', '활성', '비활성')),
   joined_at date not null default current_date,
   created_at timestamptz not null default now(),
@@ -18,6 +18,9 @@ alter table public.accounts add column if not exists is_connectioner boolean not
 
 -- 슬랙 DM 발송용 이메일. 앱 로그인 이메일과 슬랙 계정 이메일이 다를 수 있어 별도 관리(없으면 email로 폴백).
 alter table public.accounts add column if not exists slack_email text;
+
+-- 로그인 비밀번호 해시(pbkdf2$...). 없으면 첫 로그인 때 본인이 설정. 평문은 저장하지 않는다.
+alter table public.accounts add column if not exists password_hash text;
 
 alter table public.accounts enable row level security;
 
@@ -125,12 +128,13 @@ create table if not exists public.agendas (
   description text not null default '',
   category text not null,
   source text not null,
-  part text not null check (part in ('전체', 'TEST혁신파트', 'ITS혁신파트', '혁신도구파트')),
+  part text not null check (part in ('전체', 'TEST혁신파트', 'ITS혁신파트', 'PM혁신파트', '혁신도구파트')),
   author text not null check (author in ('익명', '실명')),
   author_name text not null default '',
   approve integer not null default 0,
   reject integer not null default 0,
-  status text not null check (status in ('투표중', '통과', '부결')),
+  -- '결정됨'은 객관식 전용. 찬반의 통과/부결과 달리 "어느 선택지로 정해졌는가"를 뜻한다.
+  status text not null check (status in ('투표중', '통과', '부결', '결정됨')),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -161,10 +165,26 @@ alter table public.agendas
   add column if not exists deadline date,
   add column if not exists closed_at date,
   -- 등록 시점의 투표 대상 인원. 계정 변동에 과거 안건의 정족수/참여율이 흔들리지 않도록 스냅샷으로 둔다.
-  add column if not exists eligible_count integer not null default 0;
+  add column if not exists eligible_count integer not null default 0,
+  -- 객관식 투표. 전부 기본값이 있어 이미 쌓인 안건은 그대로 찬반으로 읽힌다.
+  add column if not exists vote_type text not null default '찬반',
+  -- [{ id, label, count }]. 찬반이면 빈 배열이다.
+  add column if not exists options jsonb not null default '[]'::jsonb,
+  add column if not exists multi_select boolean not null default false,
+  -- 실제로 투표한 '사람' 수. 복수 선택이면 options의 count 합이 인원을 넘으므로 따로 센다.
+  add column if not exists voter_count integer not null default 0;
 
--- 투표용지. 익명성을 위해 "누가 투표했는가"만 담고 선택(찬성/반대)은 담지 않는다.
--- 선택은 agendas.approve / agendas.reject 카운터에만 반영되므로
+-- 이미 만들어진 테이블에는 위 create table의 check가 적용되지 않는다. 제약을 다시 건다.
+alter table public.agendas drop constraint if exists agendas_status_check;
+alter table public.agendas
+  add constraint agendas_status_check check (status in ('투표중', '통과', '부결', '결정됨'));
+
+alter table public.agendas drop constraint if exists agendas_vote_type_check;
+alter table public.agendas
+  add constraint agendas_vote_type_check check (vote_type in ('찬반', '객관식'));
+
+-- 투표용지. 익명성을 위해 "누가 투표했는가"만 담고 선택(찬성/반대 · 객관식 선택지)은 담지 않는다.
+-- 선택은 agendas.approve / agendas.reject 카운터와 agendas.options[].count 집계에만 반영되므로
 -- 이 테이블의 어떤 행도 사람과 선택을 이어주지 못한다.
 create table if not exists public.agenda_ballots (
   agenda_id text not null references public.agendas(id) on delete cascade,
@@ -232,7 +252,7 @@ create table if not exists public.profiles (
   profile_key text primary key,
   owner_email text,
   name text not null,
-  part text not null check (part in ('전체', 'TEST혁신파트', 'ITS혁신파트', '혁신도구파트')),
+  part text not null check (part in ('전체', 'TEST혁신파트', 'ITS혁신파트', 'PM혁신파트', '혁신도구파트')),
   role text not null default '',
   english_name text not null default '',
   birth_year text not null default '',
@@ -470,12 +490,15 @@ create table if not exists public.humor_posts (
   author text not null,
   body text not null default '',
   media_url text not null default '',
+  image_url text,
   created_at text not null default '',
   liked_by jsonb not null default '[]'::jsonb
 );
 alter table public.humor_posts enable row level security;
 drop policy if exists "Allow prototype humor posts all" on public.humor_posts;
 create policy "Allow prototype humor posts all" on public.humor_posts for all using (true) with check (true);
+-- 이미 만들어진 DB에도 컬럼을 더한다(create table if not exists 는 기존 테이블을 안 건드린다).
+alter table public.humor_posts add column if not exists image_url text;
 
 create table if not exists public.humor_comments (
   id text primary key,
@@ -593,6 +616,41 @@ alter table public.gathering_signups enable row level security;
 drop policy if exists "Allow prototype gathering signups all" on public.gathering_signups;
 create policy "Allow prototype gathering signups all" on public.gathering_signups for all using (true) with check (true);
 
+-- 모임 대표 이미지 버킷. 첨부 사진과 AI 가 그린 썸네일이 같은 경로를 탄다
+-- (gatheringStore.uploadGatheringImage). 버킷이 없으면 업로드가 실패하고 프론트가
+-- URL.createObjectURL 로 폴백하는데, blob: 은 그 페이지 수명까지만 살아서
+-- 새로고침하면 이미지가 사라진다. team-memory-assets 와 같은 개방 정책이다.
+insert into storage.buckets (id, name, public)
+values ('gathering-images', 'gathering-images', true)
+on conflict (id) do update set
+  public = excluded.public;
+
+drop policy if exists "Allow prototype gathering image reads" on storage.objects;
+drop policy if exists "Allow prototype gathering image writes" on storage.objects;
+drop policy if exists "Allow prototype gathering image updates" on storage.objects;
+drop policy if exists "Allow prototype gathering image deletes" on storage.objects;
+
+create policy "Allow prototype gathering image reads"
+  on storage.objects
+  for select
+  using (bucket_id = 'gathering-images');
+
+create policy "Allow prototype gathering image writes"
+  on storage.objects
+  for insert
+  with check (bucket_id = 'gathering-images');
+
+create policy "Allow prototype gathering image updates"
+  on storage.objects
+  for update
+  using (bucket_id = 'gathering-images')
+  with check (bucket_id = 'gathering-images');
+
+create policy "Allow prototype gathering image deletes"
+  on storage.objects
+  for delete
+  using (bucket_id = 'gathering-images');
+
 -- ===== 벼룩숲 (팀 내 중고거래) =====
 -- 모임·번개와 같은 구조다. 물건 하나 + 입찰 별도 행.
 -- 상태(거래중/거래완료/유찰)는 저장하지 않고 close_at 과 입찰에서 파생시킨다 —
@@ -667,3 +725,35 @@ create policy "Allow prototype market image deletes"
   on storage.objects
   for delete
   using (bucket_id = 'market-images');
+
+-- 유머게시판 생성 썸네일 버킷. gathering-images/market-images 와 같은 개방 정책이다.
+insert into storage.buckets (id, name, public)
+values ('humor-images', 'humor-images', true)
+on conflict (id) do update set
+  public = excluded.public;
+
+drop policy if exists "Allow prototype humor image reads" on storage.objects;
+drop policy if exists "Allow prototype humor image writes" on storage.objects;
+drop policy if exists "Allow prototype humor image updates" on storage.objects;
+drop policy if exists "Allow prototype humor image deletes" on storage.objects;
+
+create policy "Allow prototype humor image reads"
+  on storage.objects
+  for select
+  using (bucket_id = 'humor-images');
+
+create policy "Allow prototype humor image writes"
+  on storage.objects
+  for insert
+  with check (bucket_id = 'humor-images');
+
+create policy "Allow prototype humor image updates"
+  on storage.objects
+  for update
+  using (bucket_id = 'humor-images')
+  with check (bucket_id = 'humor-images');
+
+create policy "Allow prototype humor image deletes"
+  on storage.objects
+  for delete
+  using (bucket_id = 'humor-images');

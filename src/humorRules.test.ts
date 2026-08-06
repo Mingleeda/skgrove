@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { monthOf, rankLiked, rankPosters, topCommenter, topLiked, topPoster } from './humorRules';
+import { isImageMedia, monthOf, rankLiked, rankPosters, resolveMedia, topCommenter, topLiked, topPoster } from './humorRules';
 import type { HumorComment, HumorPost } from './types';
 
 const MONTH = '2026-07';
@@ -82,5 +82,32 @@ describe('1~3등 랭킹', () => {
   });
   it('유효 데이터 없으면 빈 배열', () => {
     expect(rankPosters([], MONTH)).toEqual([]);
+  });
+});
+
+describe('resolveMedia — 붙여넣은 URL을 종류별로 판별한다', () => {
+  it('이미지 확장자와 data:image는 이미지', () => {
+    expect(resolveMedia('https://x.com/a.png')?.type).toBe('image');
+    expect(resolveMedia('https://x.com/a.JPG?v=1')?.type).toBe('image');
+    expect(resolveMedia('data:image/png;base64,AAAA')?.type).toBe('image');
+  });
+  it('유튜브 링크는 embed로 바뀐다', () => {
+    const m = resolveMedia('https://youtu.be/abcdefghijk');
+    expect(m?.type).toBe('youtube');
+    expect(m?.src).toContain('/embed/abcdefghijk');
+  });
+  it('mp4는 video, 그 외 http는 link', () => {
+    expect(resolveMedia('https://x.com/a.mp4')?.type).toBe('video');
+    expect(resolveMedia('https://x.com/post')?.type).toBe('link');
+  });
+  it('빈 값·위험 scheme은 null', () => {
+    expect(resolveMedia('')).toBeNull();
+    expect(resolveMedia('javascript:alert(1)')).toBeNull();
+    expect(resolveMedia('data:text/html,<b>x')).toBeNull();
+  });
+  it('isImageMedia는 이미지일 때만 참', () => {
+    expect(isImageMedia('https://x.com/a.png')).toBe(true);
+    expect(isImageMedia('https://youtu.be/abcdefghijk')).toBe(false);
+    expect(isImageMedia('')).toBe(false);
   });
 });

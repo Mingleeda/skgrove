@@ -132,6 +132,18 @@ export async function deleteMarketItemRecord(id: string) {
   }
 }
 
+/**
+ * 물건에 딸린 입찰을 통째로 지운다. market_bids 는 item 에 FK 가 없어(스키마상 item_id 는 text)
+ * 물건을 지워도 입찰이 남는다. 물건 완전 삭제 때 호출해 함께 정리한다.
+ */
+export async function deleteMarketBidsForItem(itemId: string) {
+  if (!supabase) return;
+  const { error } = await supabase.from(BIDS_TABLE).delete().eq('item_id', itemId);
+  if (error) {
+    console.warn('Supabase market bids delete failed. Local fallback is still updated.', error);
+  }
+}
+
 export async function loadMarketBids(): Promise<MarketBid[]> {
   if (supabase) {
     const { data, error } = await supabase.from(BIDS_TABLE).select('*').order('created_at', { ascending: true });

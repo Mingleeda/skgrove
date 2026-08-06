@@ -1,10 +1,17 @@
 import { useState } from 'react';
 import { AlertTriangle, EyeOff, FilePlus2, Send, ShieldCheck } from 'lucide-react';
 import { PanelHeader } from '../../components/PanelHeader';
+import { MIN_OPTIONS, VoteMethodEditor, validateVoteOptions } from './VoteMethodEditor';
 import { teamParts } from '../../auth';
-import type { Agenda, Identity, TeamPart } from '../../types';
+import type { Agenda, Identity, TeamPart, VoteType } from '../../types';
 
-export type AgendaDraft = Pick<Agenda, 'title' | 'description' | 'category' | 'part' | 'author' | 'deadline'>;
+export type AgendaDraft = Pick<
+  Agenda,
+  'title' | 'description' | 'category' | 'part' | 'author' | 'deadline' | 'voteType' | 'multiSelect'
+> & {
+  // 라벨만 넘긴다. 선택지 id 발급과 집계 초기화는 안건을 만드는 쪽 책임이다.
+  optionLabels: string[];
+};
 
 type AgendaFormProps = {
   onSubmit: (draft: AgendaDraft) => void;
@@ -25,6 +32,9 @@ export function AgendaForm({ onSubmit, onCancel }: AgendaFormProps) {
   const [part, setPart] = useState<TeamPart>('전체');
   const [author, setAuthor] = useState<Identity>('익명');
   const [deadline, setDeadline] = useState(addDays(DEFAULT_VOTING_DAYS));
+  const [voteType, setVoteType] = useState<VoteType>('찬반');
+  const [optionLabels, setOptionLabels] = useState<string[]>(Array(MIN_OPTIONS).fill(''));
+  const [multiSelect, setMultiSelect] = useState(false);
   const [error, setError] = useState('');
 
   const submit = () => {
@@ -46,8 +56,25 @@ export function AgendaForm({ onSubmit, onCancel }: AgendaFormProps) {
       return;
     }
 
+    const { error: optionError, labels } = validateVoteOptions(voteType, optionLabels);
+    if (optionError) {
+      setError(optionError);
+      return;
+    }
+
     setError('');
-    onSubmit({ title: trimmedTitle, description: trimmedDescription, category, part, author, deadline });
+    onSubmit({
+      title: trimmedTitle,
+      description: trimmedDescription,
+      category,
+      part,
+      author,
+      deadline,
+      voteType,
+      // 찬반이면 선택지를 저장하지 않는다. 방식을 바꿔가며 쓴 흔적이 남을 이유가 없다.
+      optionLabels: voteType === '객관식' ? labels : [],
+      multiSelect: voteType === '객관식' && multiSelect,
+    });
   };
 
   return (
@@ -63,11 +90,6 @@ export function AgendaForm({ onSubmit, onCancel }: AgendaFormProps) {
           >
             {item === '익명' ? <EyeOff size={22} /> : <ShieldCheck size={22} />}
             <strong>{item}</strong>
-            <span>
-              {item === '익명'
-                ? '안건 상세에 작성자가 표시되지 않습니다.'
-                : '작성자 이름이 안건 상세에 함께 표시됩니다.'}
-            </span>
           </button>
         ))}
       </div>
@@ -95,6 +117,15 @@ export function AgendaForm({ onSubmit, onCancel }: AgendaFormProps) {
         투표 마감일
         <input type="date" value={deadline} min={addDays(1)} onChange={(event) => setDeadline(event.target.value)} />
       </label>
+
+      <VoteMethodEditor
+        voteType={voteType}
+        optionLabels={optionLabels}
+        multiSelect={multiSelect}
+        onVoteTypeChange={setVoteType}
+        onOptionLabelsChange={setOptionLabels}
+        onMultiSelectChange={setMultiSelect}
+      />
 
       <label>
         안건 제목

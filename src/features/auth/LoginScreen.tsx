@@ -1,7 +1,11 @@
 import { FormEvent, useState } from 'react';
 import { HeartHandshake, LogIn, UserPlus } from 'lucide-react';
 import { teamParts, isCompanyEmail } from '../../auth';
+import { hashPassword, verifyPassword } from '../../passwordHash';
 import type { CurrentUser, ManagedAccount, TeamPart } from '../../types';
+
+// 첫 로그인 때 정할 비밀번호의 최소 길이. 너무 짧으면 해시를 걸어도 금방 뚫린다.
+const MIN_PASSWORD_LENGTH = 6;
 
 const toCurrentUser = (account: ManagedAccount): CurrentUser => ({
   name: account.name,
@@ -19,17 +23,25 @@ type LoginScreenProps = {
   accounts: ManagedAccount[];
   onLogin: (user: CurrentUser) => void;
   onRegister: (account: Omit<ManagedAccount, 'id' | 'joinedAt' | 'status'>) => void;
+  // 첫 로그인 때 정한 비밀번호 해시를 그 계정에 저장한다.
+  onSetPassword: (email: string, passwordHash: string) => void;
 };
 
 type AuthMode = 'login' | 'signup';
 
-export function LoginScreen({ accounts, onLogin, onRegister }: LoginScreenProps) {
+export function LoginScreen({ accounts, onLogin, onRegister, onSetPassword }: LoginScreenProps) {
   const [mode, setMode] = useState<AuthMode>('login');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [part, setPart] = useState<TeamPart>('TEST혁신파트');
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
+  const [busy, setBusy] = useState(false);
+
+  // 입력한 메일과 맞는 계정. 아직 비번을 정하지 않았으면 '첫 로그인'(비번 설정) 흐름.
+  const matchedAccount = accounts.find((item) => item.email.toLowerCase() === email.trim().toLowerCase());
+  const isFirstLogin = mode === 'login' && Boolean(matchedAccount) && !matchedAccount?.passwordHash;
   // 빠른 로그인(데모)은 로그인 화면 로고를 눌러야 열리는 히든 제스처. 일반 유저는 발견하기 어렵다.
   const [showQuickLogin, setShowQuickLogin] = useState(false);
 
@@ -40,8 +52,9 @@ export function LoginScreen({ accounts, onLogin, onRegister }: LoginScreenProps)
     (account) => account.email.toLowerCase() === DEMO_MEMBER_EMAIL && account.status === '활성',
   );
 
-  const submit = (event: FormEvent<HTMLFormElement>) => {
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (busy) return;
     const trimmedName = name.trim();
     const trimmedEmail = email.trim().toLowerCase();
 
@@ -78,9 +91,43 @@ export function LoginScreen({ accounts, onLogin, onRegister }: LoginScreenProps)
         return;
       }
 
-      setError('');
-      setNotice('');
-      onLogin(toCurrentUser(account));
+      // 첫 로그인: 아직 비밀번호가 없으면 지금 입력한 값을 새 비밀번호로 등록한다.
+      if (!account.passwordHash) {
+        if (password.length < MIN_PASSWORD_LENGTH) {
+          setError(`첫 로그인이에요. 사용할 비밀번호를 ${MIN_PASSWORD_LENGTH}자 이상 정해주세요.`);
+          return;
+        }
+        setBusy(true);
+        try {
+          const hash = await hashPassword(password);
+          onSetPassword(account.email, hash);
+          setError('');
+          setNotice('');
+          onLogin(toCurrentUser(account));
+        } finally {
+          setBusy(false);
+        }
+        return;
+      }
+
+      // 이후 로그인: 비밀번호 검증.
+      if (!password) {
+        setError('비밀번호를 입력해주세요.');
+        return;
+      }
+      setBusy(true);
+      try {
+        const ok = await verifyPassword(password, account.passwordHash);
+        if (!ok) {
+          setError('비밀번호가 일치하지 않아요.');
+          return;
+        }
+        setError('');
+        setNotice('');
+        onLogin(toCurrentUser(account));
+      } finally {
+        setBusy(false);
+      }
       return;
     }
 
@@ -144,6 +191,22 @@ export function LoginScreen({ accounts, onLogin, onRegister }: LoginScreenProps)
           />
         </label>
 
+        {mode === 'login' && (
+          <label>
+            {isFirstLogin ? '비밀번호 설정' : '비밀번호'}
+            <input
+              type="password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              placeholder={isFirstLogin ? `앞으로 쓸 비밀번호 (${MIN_PASSWORD_LENGTH}자 이상)` : '비밀번호'}
+              autoComplete={isFirstLogin ? 'new-password' : 'current-password'}
+            />
+            {isFirstLogin && (
+              <small className="login-hint">👋 처음이면, 여기 입력한 비밀번호가 그대로 등록돼요.</small>
+            )}
+          </label>
+        )}
+
         {mode === 'signup' && (
           <>
             <label>
@@ -176,9 +239,9 @@ export function LoginScreen({ accounts, onLogin, onRegister }: LoginScreenProps)
           누르는 순간 신청이 들어간 줄 안다. 제출만 채운 버튼으로 둔다.
         */}
         <div className="login-actions">
-          <button className="primary-button" type="submit">
+          <button className="primary-button" type="submit" disabled={busy}>
             {mode === 'login' ? <LogIn size={18} /> : <UserPlus size={18} />}
-            {mode === 'login' ? '로그인' : '가입 요청'}
+            {mode === 'login' ? (busy ? '확인 중…' : isFirstLogin ? '비밀번호 설정하고 로그인' : '로그인') : '가입 요청'}
           </button>
           <button
             className="secondary-button"
@@ -187,6 +250,7 @@ export function LoginScreen({ accounts, onLogin, onRegister }: LoginScreenProps)
               setMode(mode === 'login' ? 'signup' : 'login');
               setError('');
               setNotice('');
+              setPassword('');
             }}
           >
             {mode === 'login' ? '가입' : '로그인으로'}

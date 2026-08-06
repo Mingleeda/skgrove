@@ -4,5 +4,10 @@
     "deploymentEnabled": {
       "dev": false
     }
+  },
+  "functions": {
+    "api/gathering-image.ts": {
+      "maxDuration": 60
+    }
   }
 }

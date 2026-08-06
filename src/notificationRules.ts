@@ -43,8 +43,12 @@ export function leadersFor(accounts: ManagedAccount[], target: string): ManagedA
     (a) => a.status === '활성' && (a.role === '파트리더' || a.role === '팀리더'),
   );
   if (target === '팀리더') return leaders.filter((a) => a.role === '팀리더');
-  if (target === '파트리더') return leaders.filter((a) => a.role === '파트리더');
-  return leaders; // '리더 전체' 등
+  if (target === '파트리더') return leaders.filter((a) => a.role === '파트리더'); // 레거시 · 파트리더 전원
+  if (target === '리더 전체') return leaders;
+  // 접수 폼에서 특정 파트리더를 이름으로 골랐으면 그 한 사람에게만 전달.
+  // (익명이어도 대상이 명시적이라 라우팅에 작성자 파트가 필요 없다.)
+  const chosen = leaders.filter((a) => a.name === target);
+  return chosen.length > 0 ? chosen : leaders;
 }
 
 // 안건 등록(112)·마감 임박(113): 해당 파트의 투표 대상자(활성). 전체 소속(팀리더)도 포함.

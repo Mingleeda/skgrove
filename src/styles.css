@@ -82,6 +82,9 @@
      rgba 개수를 늘리지 않는다(designTokens.test.ts 가 상한을 지킨다). */
   --scrim-strong: rgba(0, 0, 0, 0.62);
   --scrim-none: rgba(0, 0, 0, 0);
+  /* 뽑기 영상 위 자막용. 아래가 짙고 가운데가 비어 동물이 안 가린다.
+     한 값이 아니라 그라디언트라 --scrim-strong 으로는 못 쓴다. */
+  --scrim-video: linear-gradient(to top, rgba(0, 0, 0, 0.74) 0%, rgba(0, 0, 0, 0.12) 46%, rgba(0, 0, 0, 0.3) 100%);
 
   /* 어두운 면(내 프로필 카드) 위의 구분선. 흰 계열 반투명이라야 배경 그라디언트가
      비쳐 보인다. 토큰으로 두면 styles.css 본문의 rgba 개수를 늘리지 않는다. */
@@ -628,6 +631,19 @@ h1 {
 .role-note span {
   font-size: var(--text-body);
   line-height: 1.45;
+}
+
+/* 첫 로그인 안내(비밀번호 설정). 놓치지 않게 옅은 파랑 박스로 또렷하게. */
+.login-hint {
+  background: var(--tint-primary);
+  border-radius: var(--radius);
+  color: var(--tint-primary-ink);
+  display: block;
+  font-size: var(--text-meta);
+  font-weight: 600;
+  line-height: 1.45;
+  margin-top: 6px;
+  padding: 8px 10px;
 }
 
 .hero-panel {
@@ -2040,6 +2056,12 @@ textarea {
   color: var(--tint-danger-ink);
 }
 
+/* 객관식이 끝난 상태. 통과와 같은 "결론이 났다"는 뜻이라 같은 색을 쓴다. */
+.status-dot.결정됨 {
+  background: var(--tint-success);
+  color: var(--tint-success-ink);
+}
+
 /* 진행바 트랙은 페이지색이 아니라 파랑 틴트다(design.md 5.5). 카드 위에
    얹히는 요소라 페이지색을 쓰면 카드와 같은 흰 면 위에서 사라진다. */
 .vote-bar,
@@ -2140,12 +2162,16 @@ textarea {
   font-size: var(--text-body);
 }
 
+/* 이 패널은 .screen(grid)의 아이템이다. 그리드 아이템에 margin:auto를 주면 stretch가
+   꺼지고 폭이 '내용물 크기'로 정해진다 — 안에 든 글이 짧아지는 순간 폼이 통째로 쪼그라든다.
+   width를 못 박아 폭이 내용에 끌려다니지 않게 한다. */
 .agenda-form-panel,
 .agenda-detail-panel {
   display: grid;
   gap: var(--space-4);
   margin: 0 auto;
   max-width: 720px;
+  width: 100%;
 }
 
 .agenda-detail-head {
@@ -2194,6 +2220,126 @@ textarea {
   font-size: var(--text-body);
   font-weight: 700;
   gap: 6px;
+}
+
+/* 안건 등록 폼의 선택 카드는 아이콘과 이름만 남긴다.
+   이 화면에서만 고를 것이 넷(익명/실명 · 찬반/객관식)이라, 카드마다 설명이 붙으면
+   정작 채워야 할 제목·배경 설명이 화면 밖으로 밀려난다. 다른 화면의 카드는 그대로 둔다. */
+.agenda-form-panel .choice-card {
+  align-items: center;
+  gap: var(--space-2);
+  grid-auto-flow: column;
+  justify-content: start;
+  min-height: 0;
+  padding: var(--space-3);
+}
+
+/* 폼 안에서 여러 입력을 한 덩어리로 묶는 제목. label이 아니라 묶음의 이름이다. */
+.form-section-label {
+  color: var(--color-ink);
+  font-size: var(--text-body);
+  font-weight: 700;
+}
+
+.agenda-options-editor {
+  display: grid;
+  gap: 10px;
+}
+
+.agenda-option-row {
+  display: flex;
+  gap: 8px;
+}
+
+.agenda-option-row input {
+  flex: 1;
+  min-width: 0;
+}
+
+.agenda-option-remove {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  color: var(--color-muted);
+  flex: none;
+  width: 42px;
+}
+
+.agenda-option-remove:disabled {
+  opacity: 0.4;
+}
+
+.agenda-multi-toggle {
+  align-items: start;
+  display: flex;
+  gap: 10px;
+}
+
+/* 전역 input은 width:100% · min-height:42px짜리 텍스트 입력 기준이다.
+   체크박스가 그걸 물려받으면 줄을 통째로 먹고 옆 설명이 세로로 눌린다. */
+.agenda-multi-toggle input {
+  flex: none;
+  height: 18px;
+  margin-top: 3px;
+  min-height: 0;
+  padding: 0;
+  width: 18px;
+}
+
+.agenda-multi-toggle span {
+  color: var(--color-muted);
+  display: grid;
+  font-size: var(--text-body);
+  gap: 2px;
+  line-height: 1.45;
+}
+
+.agenda-multi-toggle strong {
+  color: var(--color-ink);
+}
+
+/* 투표 전 선택지 고르기. 결과 막대(.ig-opt)와 높이를 맞춰
+   고른 뒤 결과 화면으로 넘어갈 때 줄이 튀지 않게 한다. */
+.agenda-choice-list {
+  display: grid;
+  gap: 6px;
+}
+
+.agenda-choice {
+  align-items: center;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  color: var(--color-ink);
+  display: flex;
+  font-size: var(--text-body);
+  gap: 10px;
+  min-height: 44px;
+  padding: 0 var(--space-3);
+  text-align: left;
+}
+
+.agenda-choice.selected {
+  background: var(--tint-primary);
+  border-color: var(--color-primary);
+  font-weight: 600;
+}
+
+.agenda-choice-mark {
+  align-items: center;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  display: flex;
+  flex: none;
+  height: 20px;
+  justify-content: center;
+  width: 20px;
+}
+
+.agenda-choice.selected .agenda-choice-mark {
+  background: var(--color-cta);
+  border-color: var(--color-cta);
+  color: var(--color-cta-ink);
 }
 
 .issue-body-box {
@@ -3106,6 +3252,13 @@ textarea {
   flex: 0 1 420px;
 }
 
+/*
+  z-index 가 필요한 이유: 이 패널은 sticky(=배치 요소)인데 z-index 가 없었고,
+  아래 뽑기 무대도 position: relative 라 역시 배치 요소였다. z-index 없는 배치
+  요소끼리는 DOM 순서가 이겨서, 스크롤로 무대가 패널 밑으로 들어오면 무대가
+  패널을 덮었다 — 당첨 조각이 참여자 목록 위에 떠 있는 것처럼 보였다.
+  고정해 두는 쪽이 위에 있어야 고정한 의미가 있다.
+*/
 .participant-panel {
   background: var(--tint-primary);
   border: 1px solid var(--color-border);
@@ -3113,6 +3266,7 @@ textarea {
   max-height: calc(100vh - 56px);
   padding: 14px;
   position: sticky;
+  z-index: 1;
   top: 28px;
 }
 
@@ -3341,11 +3495,18 @@ textarea {
   text-align: center;
 }
 
+/*
+  isolation 이 필요한 이유: 무대 안에서 자막이 z-index 1 로 캔버스·영상 위에
+  올라선다. 무대가 쌓임 맥락을 안 만들면 그 1 이 무대 밖까지 새어 나가 바깥
+  요소들과 직접 겨룬다 — 참여자 패널을 z-index 1 로 올려도 자막만 그 위로
+  다시 뚫고 올라왔다. 안에서 쓰는 층은 안에서 끝나야 한다.
+*/
 .draw-stage {
   align-items: center;
   background: var(--surface-dark);
   color: var(--color-surface);
   gap: 14px;
+  isolation: isolate;
   min-height: 170px;
   overflow: hidden;
   padding: 22px;
@@ -3458,6 +3619,7 @@ textarea {
   grid-template-columns: minmax(0, 1fr) 220px;
 }
 
+/* 안에서 쓰는 z-index 를 밖으로 안 새게 한다 — .draw-stage 의 isolation 과 같은 이유. */
 .coffee-draw-stage {
   align-items: center;
   background: var(--surface-dark);
@@ -3465,6 +3627,7 @@ textarea {
   color: var(--color-surface);
   display: grid;
   gap: var(--space-4);
+  isolation: isolate;
   min-height: 260px;
   overflow: hidden;
   padding: var(--space-6);
@@ -3473,11 +3636,59 @@ textarea {
 }
 
 /* 3D 무대. 높이를 직접 주지 않으면 캔버스 기본값(150px)이 잡혀 납작해진다.
-   렌더러는 이 요소의 clientWidth/Height 를 보고 해상도를 정하므로 CSS 가 먼저다. */
+   렌더러는 이 요소의 clientWidth/Height 를 보고 해상도를 정하므로 CSS 가 먼저다.
+
+   190px 로 못박았더니 폭 348 · 높이 190 인 우편함이 됐다 — 스토리 뷰어 안인데
+   스토리와 정반대 비율이라, 당첨자가 튀어나오면 위아래가 잘렸다. 폭을 따라가는
+   세로 비율로 두되 화면을 다 먹지는 않게 높이만 막는다. 막혀서 다시 납작해져도
+   카메라가 비율을 보고 물러난다(drawScene 의 frameCamera). */
 .draw-canvas {
+  aspect-ratio: 4 / 5;
   display: block;
-  height: 190px;
+  max-height: 52vh;
   width: 100%;
+}
+
+/*
+  뽑는 동안 무대를 덮는 춤추는 동물 영상.
+
+  3D 캔버스를 지우지 않고 그 위에 깐다 — 뽑을 때마다 캔버스를 껐다 켜면 WebGL
+  컨텍스트가 쌓이다 브라우저 한도에 걸린다. 캔버스는 자리에 그대로 있고, 이
+  영상이 opacity 로 걷혔다 덮였다 한다.
+
+  자막(z-index 1)보다는 아래다. 이름이 깜빡이는 줄이 가려지면 "아직 안 정해졌다"
+  를 나르는 신호가 사라진다. */
+.draw-hype {
+  height: 100%;
+  inset: 0;
+  object-fit: cover;
+  opacity: 0;
+  pointer-events: none;
+  position: absolute;
+  transition: opacity 0.2s ease;
+  width: 100%;
+}
+
+.draw-hype.on {
+  opacity: 1;
+}
+
+/* 영상 위 흰 글씨가 폭포·이불 같은 밝은 배경에 묻힌다. 아래쪽을 짙게 깔아
+   자막이 놓일 자리를 만든다. 자막은 z-index 1 이라 이 막 위에 남는다. */
+.draw-stage.rolling::after,
+.coffee-draw-stage.rolling::after {
+  background: var(--scrim-video);
+  content: "";
+  inset: 0;
+  pointer-events: none;
+  position: absolute;
+}
+
+/* 뽑는 중에는 같은 버튼이 멈추기가 된다. 색까지 갈라 놓아야 "다시 뽑기" 로
+   잘못 읽고 누르는 일이 없다. */
+.primary-button.draw-stop {
+  background: var(--color-danger);
+  border-color: var(--color-danger);
 }
 
 .coffee-draw-stage::before {
@@ -4193,6 +4404,38 @@ textarea {
   margin: -6px 0 12px;
 }
 
+/* 달 이동 바 — 이전/다음 달로 넘겨 아무 날짜나 고르게 한다. */
+.memory-month-nav {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: var(--space-3);
+}
+
+.memory-month-nav strong {
+  color: var(--color-ink);
+  font-size: var(--text-body);
+  font-weight: 700;
+}
+
+.memory-month-nav button {
+  align-items: center;
+  background: var(--tint-primary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  color: var(--color-ink);
+  cursor: pointer;
+  display: flex;
+  height: 32px;
+  justify-content: center;
+  width: 32px;
+}
+
+.memory-month-nav button:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
 .memory-calendar-sync {
   display: grid;
   gap: 6px;
@@ -4236,13 +4479,21 @@ textarea {
   text-align: left;
 }
 
-/* 월 달력 칸에 행사 제목을 넣을 자리는 없다. 표시만 남기고 이름은 바로 아래
-   행사 목록과 툴팁이 맡는다. */
-.memory-day-dot {
-  background: var(--color-primary);
-  border-radius: 999px;
-  height: 6px;
-  width: 6px;
+/* 달력 칸에 행사 제목을 바로 보여준다. 칸이 좁아 긴 제목은 두 줄로 자른다
+   (알약 배지가 아니라 읽는 텍스트라, 아래 .memory-calendar small 의 배지를 덮는다). */
+.memory-calendar .memory-day-title {
+  -webkit-box-orient: vertical;
+  background: none;
+  color: var(--color-primary-strong);
+  display: -webkit-box;
+  font-size: var(--text-micro);
+  font-weight: 700;
+  line-height: 1.25;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  padding: 0;
+  text-align: left;
+  width: auto;
 }
 
 .memory-calendar button.selected {
@@ -4473,6 +4724,80 @@ textarea {
   font-size: var(--text-meta);
   line-height: 1.45;
   padding: 0 var(--space-3);
+}
+
+/* 상세 머리 — 행사 정보 한 줄 + 오른쪽에 수정·삭제. 좁으면 아래로 접힌다. */
+.memory-detail-head {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  justify-content: space-between;
+}
+
+.memory-detail-actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.memory-detail-actions button {
+  align-items: center;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius);
+  color: var(--color-ink);
+  cursor: pointer;
+  display: inline-flex;
+  font-size: var(--text-meta);
+  font-weight: 600;
+  gap: 4px;
+  min-height: 34px;
+  padding: 0 12px;
+}
+
+.memory-detail-actions button:hover {
+  border-color: var(--color-ink);
+}
+
+.memory-detail-actions button.danger {
+  border-color: var(--color-danger);
+  color: var(--color-danger);
+}
+
+.memory-detail-actions button.danger:hover {
+  background: var(--color-danger);
+  color: var(--color-surface);
+}
+
+/* 행사명·장소 편집 폼. */
+.memory-info-edit {
+  display: grid;
+  gap: var(--space-3);
+  padding: 0 var(--space-3);
+}
+
+.memory-info-edit label {
+  color: var(--color-muted);
+  display: grid;
+  font-size: var(--text-meta);
+  font-weight: 600;
+  gap: 4px;
+}
+
+.memory-info-edit input {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius);
+  color: var(--color-ink);
+  font-size: var(--text-body);
+  min-height: 40px;
+  padding: 0 12px;
+}
+
+.memory-info-edit-actions {
+  display: flex;
+  gap: var(--space-2);
+  justify-content: flex-end;
 }
 
 .memory-album-head {
@@ -9867,14 +10192,17 @@ button.notif-row {
    글과 반응이 그 위에 얹힌다. 목록에서는 플레이어를 붙이지 않는다 —
    영상 열 개가 동시에 로드되면 스크롤이 끊긴다. */
 
+/* 칸 수와 칸 크기를 이음장터·모임번개(.poster-grid)에 맞춘다.
+   auto-fill은 창 폭에 따라 한 줄에 3개가 됐다 5개가 됐다 해서, 화면을 옮겨 다닐 때마다
+   같은 격자가 다른 크기로 보였다. 세 화면이 같은 격자를 쓰면 그 흔들림이 없어진다. */
 .ig-reels {
   display: grid;
   gap: var(--space-3);
-  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .ig-reel {
-  aspect-ratio: 9 / 16;
+  aspect-ratio: 4 / 5;
   background: var(--surface-dark);
   border: 0;
   border-radius: var(--radius);
@@ -10043,6 +10371,10 @@ button.notif-row {
   justify-content: flex-start;
   max-width: none;
   padding: 0 var(--space-3) var(--space-6);
+  /* 웹(데스크톱)은 스와이프가 없어 가로 스크롤을 감추면 넘어간 스토리를 볼 수 없다.
+     이벤트가 전부 나열되는 트레이라, 가로 스크롤 대신 여러 줄로 펼쳐 다 보이게 한다. */
+  flex-wrap: wrap;
+  overflow-x: visible;
 }
 
 .ig-tabs {
@@ -10145,6 +10477,51 @@ button.notif-row {
   right: 8px;
   top: 8px;
   width: 26px;
+}
+
+/* 앨범 커버 칸 — 사진 위에 행사 이름·개수를 얹는다. 밝은 사진에서도 읽히도록
+   .ig-cell-mark 와 같은 스크림(어둠 한 겹) 위에 흰 글자를 둔다. */
+.memory-album-cell .memory-album-cap {
+  background: linear-gradient(to top, var(--scrim-strong), transparent);
+  bottom: 0;
+  color: var(--color-surface);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  left: 0;
+  padding: var(--space-4) var(--space-2) var(--space-2);
+  position: absolute;
+  right: 0;
+  text-align: left;
+}
+
+.memory-album-cell .memory-album-cap strong {
+  -webkit-box-orient: vertical;
+  display: -webkit-box;
+  font-size: var(--text-meta);
+  font-weight: 600;
+  line-height: 1.25;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+.memory-album-cell .memory-album-cap small {
+  font-size: var(--text-meta);
+  opacity: 0.85;
+}
+
+/* 상세로 들어간 앨범에서 목록으로 돌아가는 길. */
+.memory-back {
+  align-items: center;
+  background: none;
+  border: 0;
+  color: var(--color-primary);
+  cursor: pointer;
+  display: inline-flex;
+  font-size: var(--text-meta);
+  font-weight: 600;
+  gap: 4px;
+  padding: var(--space-2) var(--space-3);
 }
 
 /* 좁은 폭 — 반드시 위 기본 규칙 뒤에 온다. 앞에 두면 같은 특이도에서
@@ -10617,6 +10994,14 @@ button.notif-row {
   overflow-x: auto;
   padding-bottom: var(--space-4);
   width: 100%;
+  /* 스토리 트레이는 인스타처럼 가로로 넘기되 스크롤바는 감춘다 — 회색 막대가 보이면
+     지저분하다. 스와이프·트랙패드·shift+휠로 여전히 넘어간다. */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* 옛 Edge */
+}
+
+.ig-tray::-webkit-scrollbar {
+  display: none; /* Chrome · Safari */
 }
 
 .ig-story {

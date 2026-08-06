@@ -18,7 +18,9 @@ export type Section =
 
 export type Identity = '익명' | '실명';
 export type Urgency = '낮음' | '보통' | '높음';
-export type AgendaStatus = '투표중' | '통과' | '부결';
+// '결정됨'은 객관식 전용이다. 찬반의 통과/부결은 "안건이 받아들여졌는가"를 말하지만
+// 객관식은 받아들이고 말고가 아니라 "어느 쪽으로 정해졌는가"를 묻는다.
+export type AgendaStatus = '투표중' | '통과' | '부결' | '결정됨';
 export type UserRole = '팀원' | '파트리더' | '팀리더';
 export type TeamPart = '전체' | 'TEST혁신파트' | 'ITS혁신파트' | 'PM혁신파트';
 export type AccountStatus = '승인 대기' | '활성' | '비활성';
@@ -41,6 +43,8 @@ export type ManagedAccount = CurrentUser & {
   // 슬랙 DM 발송용 이메일. 앱 로그인 이메일과 슬랙 계정 이메일이 다를 수 있어 별도 관리.
   // 없으면 앱 이메일(email)로 폴백.
   slackEmail?: string;
+  // 로그인 비밀번호 해시(pbkdf2$...). 없으면 첫 로그인 때 본인이 설정한다.
+  passwordHash?: string;
 };
 
 // 접수자가 고른 공개 범위. '리더만 보기'는 안건 전환을 막는 약속이므로 저장해야 한다.
@@ -87,8 +91,17 @@ export type Agenda = {
   author: Identity;
   // 익명 안건이면 빈 문자열. 상세 화면은 author를 보고 노출 여부를 정한다.
   authorName: string;
+  // 찬반 투표의 집계. 객관식 안건에서는 0으로 남는다.
   approve: number;
   reject: number;
+  voteType: VoteType;
+  // 객관식 선택지. 찬반이면 빈 배열.
+  options: AgendaOption[];
+  // 객관식에서 여러 개를 고를 수 있는지. 등록할 때 정하고 이후 바뀌지 않는다.
+  multiSelect: boolean;
+  // 실제로 투표한 '사람' 수. 복수 선택이면 선택지 득표 합계가 사람 수보다 커지므로
+  // 정족수·참여율 계산에 쓸 인원을 따로 센다. 찬반은 approve + reject가 곧 사람 수라 0으로 둔다.
+  voterCount: number;
   status: AgendaStatus;
   createdAt: string;
   // 등록 시점의 투표 대상 인원 스냅샷.
@@ -102,9 +115,23 @@ export type Agenda = {
 
 export type VoteChoice = 'approve' | 'reject';
 
+export type VoteType = '찬반' | '객관식';
+
+export type AgendaOption = {
+  // 안건 안에서만 고유하면 된다. 라벨을 키로 쓰면 같은 글자를 두 번 넣었을 때 집계가 엉킨다.
+  id: string;
+  label: string;
+  count: number;
+};
+
+// 확정 버튼이 App으로 올려보내는 값. 투표 방식마다 담기는 것이 다르다.
+export type VoteSelection =
+  | { kind: '찬반'; choice: VoteChoice }
+  | { kind: '객관식'; optionIds: string[] };
+
 // 익명성 유지를 위해 "누가 투표했는가"와 "무엇을 골랐는가"를 분리한다.
-// 투표용지(ballot)는 선택을 담지 않고, 선택은 Agenda의 approve/reject 카운터로만 남는다.
-// 따라서 어떤 행 하나도 사람과 선택을 이어주지 못한다.
+// 투표용지(ballot)는 선택을 담지 않고, 선택은 Agenda의 approve/reject 카운터와
+// options[].count 집계로만 남는다. 따라서 어떤 행 하나도 사람과 선택을 이어주지 못한다.
 export type AgendaBallot = {
   agendaId: string;
   // 안건마다 다른 값이 나오는 단방향 해시. 안건 간 투표 이력 연결을 막는다.
@@ -358,6 +385,7 @@ export type HumorPost = {
   author: string; // 실명(로그인 사용자)
   body: string;
   mediaUrl: string; // 선택 — 이미지 주소·유튜브·영상 링크. 렌더 시 자동 판별.
+  imageUrl?: string; // 내용으로 생성한 크레파스 썸네일. mediaUrl(사용자가 붙인 링크)과 별개.
   createdAt: string; // 'YYYY-MM-DD'
   likedBy: string[]; // 좋아요 누른 사람 이름 — 토글·집계·랭킹 소스
 };

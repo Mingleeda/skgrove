@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { loadAccounts, makeAccountId, saveAccounts, seedAccounts } from './accountStore';
 import { loadActionItems, makeActionItemId, saveActionItems } from './actionItemStore';
-import { finalStatus, isOpen, liveStatus, settleAgendas } from './agendaRules';
-import { loadAgendas, makeAgendaId, saveAgendas } from './agendaStore';
+import { applySelection, finalStatus, isOpen, liveStatus, settleAgendas } from './agendaRules';
+import { loadAgendas, makeAgendaId, makeAgendaOptions, saveAgendas } from './agendaStore';
 import { hasVoted, loadBallots, makeVoterKey, saveBallots } from './ballotStore';
 import { hasLeaderRole, isLeader, isTeamLeader, teamParts } from './auth';
 import { loadCanSteps, saveCanSteps } from './canStepsStore';
@@ -42,6 +42,7 @@ import {
 import { ActionBoard } from './features/actions/ActionBoard';
 import { ActionCreateForm } from './features/actions/ActionCreateForm';
 import { AgendaBoard } from './features/agenda/AgendaBoard';
+import type { AgendaDraft } from './features/agenda/AgendaForm';
 import { AccountManagement } from './features/auth/AccountManagement';
 import { LoginScreen } from './features/auth/LoginScreen';
 import { Connect } from './features/connect/Connect';
@@ -84,7 +85,10 @@ import {
   makeHumorId,
   saveHumorComments,
   saveHumorPosts,
+  uploadHumorImage,
 } from './humorStore';
+import { requestHumorImage } from './humorImage';
+import { isImageMedia } from './humorRules';
 import { makePoster } from './aiPoster';
 import { requestGatheringImage } from './gatheringImage';
 import {
@@ -108,6 +112,7 @@ import {
 } from './marketRules';
 import {
   cacheMarketBids,
+  deleteMarketBidsForItem,
   deleteMarketItemRecord,
   insertMarketBid,
   loadMarketBids,
@@ -146,7 +151,7 @@ import type {
   Section,
   TeaSession,
   TeaSessionStatus,
-  VoteChoice,
+  VoteSelection,
 } from './types';
 
 const today = () => new Date().toISOString().slice(0, 10);
@@ -415,19 +420,32 @@ export function App() {
     if (fresh.length === 0) return;
     const next = [...fresh, ...notifications];
     persistNotifications(next);
-    // 슬랙: 이벤트(kind:sourceId)당 1회, 채널 라우팅. fresh는 최초 1회만 생기므로 슬랙도 이벤트당 1회.
-    const events = new Map<string, AppNotification>();
+    // 슬랙: 이벤트(kind:sourceId)당 채널 1회. DM은 수신자별이라 이벤트별 draft를 모아둔다.
+    const byEvent = new Map<string, AppNotification[]>();
     fresh.forEach((item) => {
       const key = `${item.kind}:${item.sourceId}`;
-      if (!events.has(key)) events.set(key, item);
+      const list = byEvent.get(key);
+      if (list) list.push(item);
+      else byEvent.set(key, [item]);
     });
-    events.forEach((rep) => {
-      // 개인 메시지(DM): 계정 관리에서 슬랙 이메일을 명시적으로 등록한 사람에게만 DM을 보낸다.
-      // 앱 로그인 이메일로는 폴백하지 않음(매핑 안 된 사람에게 잘못된 상대로 DM이 가는 걸 방지).
-      // 매핑 없으면 인앱 알림만 남고 슬랙 DM은 조용히 스킵. 실제 발송은 프록시(SLACK_DM_ENABLED)에서 잠금.
+    // 슬랙 이메일이 명시적으로 등록된 사람만 DM 대상. 앱 로그인 이메일로 폴백하지 않는다
+    // (매핑 안 된 사람에게 엉뚱한 상대로 DM이 가는 걸 방지). 실제 발송은 서버 SLACK_DM_ENABLED 로 잠금.
+    const slackEmailFor = (name: string) => accounts.find((item) => item.name === name)?.slackEmail;
+    byEvent.forEach((items) => {
+      const rep = items[0];
       if (rep.kind === 'message') {
-        const slackEmail = accounts.find((item) => item.name === rep.recipientName)?.slackEmail;
+        const slackEmail = slackEmailFor(rep.recipientName);
         if (slackEmail) deliverDm(slackEmail, rep.kind, rep.title, rep.body, rep.fromName);
+        return;
+      }
+      // 대나무숲 접수는 채널에 뿌리지 않고 '전달 대상' 리더에게만 개인 DM으로 보낸다.
+      // (채널 게시는 모두에게 노출돼, 특정 리더에게 향한 접수 취지와 안 맞는다.)
+      // 익명 접수도 본문엔 '익명 접수'로만 나가 작성자는 드러나지 않는다.
+      if (rep.kind === 'issue') {
+        items.forEach((item) => {
+          const slackEmail = slackEmailFor(item.recipientName);
+          if (slackEmail) deliverDm(slackEmail, item.kind, item.title, item.body, item.fromName);
+        });
         return;
       }
       const channel = slackChannelForKind(rep.kind);
@@ -482,16 +500,17 @@ export function App() {
     ).length;
 
   // 안건 직접 등록(안건함 화면). 익명이면 작성자 이름은 저장하지 않는다.
-  const createAgenda = (
-    draft: Pick<Agenda, 'title' | 'description' | 'category' | 'part' | 'author' | 'deadline'>,
-  ) => {
+  const createAgenda = (draft: AgendaDraft) => {
+    const { optionLabels, ...rest } = draft;
     const next: Agenda = {
-      ...draft,
+      ...rest,
       id: makeAgendaId(),
       source: '직접 등록',
       authorName: draft.author === '실명' ? (currentUser?.name ?? '') : '',
       approve: 0,
       reject: 0,
+      options: makeAgendaOptions(optionLabels),
+      voterCount: 0,
       status: '투표중',
       createdAt: today(),
       eligibleCount: eligibleCountFor(draft.part),
@@ -505,7 +524,9 @@ export function App() {
 
   const promoteToAgenda = (
     issue: Issue,
-    draft: Pick<Agenda, 'title' | 'description' | 'category' | 'part' | 'author' | 'deadline'>,
+    draft: Pick<Agenda, 'title' | 'description' | 'category' | 'part' | 'author' | 'deadline' | 'voteType' | 'multiSelect'> & {
+      optionLabels: string[];
+    },
   ) => {
     const shouldAnonymize = issue.visibility === '리더만 보기';
     const promoted: Agenda = {
@@ -520,6 +541,11 @@ export function App() {
       authorName: shouldAnonymize || draft.author === '익명' ? '' : (currentUser?.name ?? ''),
       approve: 0,
       reject: 0,
+      // 접수는 대개 찬반이지만, 리더가 객관식으로 정제하면 선택지도 함께 올린다.
+      voteType: draft.voteType,
+      options: makeAgendaOptions(draft.optionLabels),
+      multiSelect: draft.voteType === '객관식' && draft.multiSelect,
+      voterCount: 0,
       status: '투표중',
       createdAt: today(),
       eligibleCount: eligibleCountFor(draft.part),
@@ -548,11 +574,16 @@ export function App() {
   //  - 선택(찬성/반대)은 안건의 카운터에만 더한다. 누가 골랐는지는 남기지 않는다.
   //  - "이 사람이 투표했다"는 사실만 투표용지에 남긴다. 무엇을 골랐는지는 담지 않는다.
   // 두 기록이 만나지 않으므로 중복은 막으면서 선택은 익명으로 남는다.
-  const vote = async (id: string, type: VoteChoice) => {
+  const vote = async (id: string, selection: VoteSelection) => {
     if (!currentUser) return;
 
     const target = agendas.find((agenda) => agenda.id === id);
     if (!target || !isOpen(target)) return;
+
+    const applied = applySelection(target, selection);
+    // 고른 것이 없거나 없는 선택지를 가리키면 투표용지까지 써버리면 안 된다.
+    // 한 번 남은 투표용지는 지울 수 없어서, 표는 안 들어가고 투표권만 사라진다.
+    if (!applied) return;
 
     const voterKey = await makeVoterKey(currentUser.email, id);
     if (hasVoted(ballots, id, voterKey)) return;
@@ -560,10 +591,9 @@ export function App() {
     persistAgendas(
       agendas.map((agenda) => {
         if (agenda.id !== id) return agenda;
-        const next = { ...agenda, [type]: agenda[type] + 1 };
-        const status = liveStatus(next);
+        const status = liveStatus(applied);
         // 조기 확정된 경우에만 마감 처리한다. 아직 뒤집힐 수 있으면 열어둔다.
-        return status === '투표중' ? next : { ...next, status, closedAt: today() };
+        return status === '투표중' ? applied : { ...applied, status, closedAt: today() };
       }),
     );
 
@@ -668,6 +698,11 @@ export function App() {
         authorName: '',
         approve: 0,
         reject: 0,
+        // 캔미팅 후속 안건도 제목 하나로 찬반을 묻는 형태다.
+        voteType: '찬반',
+        options: [],
+        multiSelect: false,
+        voterCount: 0,
         status: '투표중',
         createdAt: today(),
         eligibleCount: eligibleCountFor('전체'),
@@ -790,6 +825,14 @@ export function App() {
     saveHumorComments(next);
   };
 
+  const patchHumorPost = (id: string, patch: Partial<HumorPost>) => {
+    setHumorPosts((prev) => {
+      const next = prev.map((post) => (post.id === id ? { ...post, ...patch } : post));
+      saveHumorPosts(next);
+      return next;
+    });
+  };
+
   const addHumorPost = (draft: { body: string; mediaUrl: string }) => {
     if (!currentUser || !draft.body.trim()) return;
     const post: HumorPost = {
@@ -801,6 +844,24 @@ export function App() {
       likedBy: [],
     };
     persistHumorPosts([post, ...humorPosts]);
+
+    /*
+      이미지가 없는 글이면 등록을 마친 뒤 배경에서 크레파스 썸네일을 그린다 — 이음장터·모임과 같은 방식.
+      그동안 릴스는 텍스트만 보여주고, 다 그려지면 그 글에만 imageUrl 이 붙어 배경이 깔린다. 실패하면 그대로.
+    */
+    if (!isImageMedia(post.mediaUrl)) {
+      setImagePendingIds((prev) => [...prev, post.id]);
+      void (async () => {
+        try {
+          const generated = await requestHumorImage(post);
+          if (!generated) return;
+          const { imageUrl } = await uploadHumorImage(post.id, generated);
+          patchHumorPost(post.id, { imageUrl });
+        } finally {
+          setImagePendingIds((prev) => prev.filter((pendingId) => pendingId !== post.id));
+        }
+      })();
+    }
   };
 
   const toggleHumorLike = (postId: string) => {
@@ -878,6 +939,15 @@ export function App() {
   const persistAccounts = (nextAccounts: ManagedAccount[]) => {
     setAccounts(nextAccounts);
     void saveAccounts(nextAccounts);
+  };
+
+  // 첫 로그인 때 본인이 정한 비밀번호 해시를 그 계정에 저장한다.
+  const setAccountPassword = (email: string, passwordHash: string) => {
+    persistAccounts(
+      accounts.map((account) =>
+        account.email.toLowerCase() === email.toLowerCase() ? { ...account, passwordHash } : account,
+      ),
+    );
   };
 
   // 자율 관리: 로그인한 본인 계정의 프로필 사진만 갱신한다.
@@ -1055,6 +1125,19 @@ export function App() {
     persistGatherings(gatherings.filter((item) => item.id !== gathering.id));
   };
 
+  // 완전 삭제. 취소(기록 보존)와 달리 모임과 신청 기록까지 통째로 지운다. 글쓴이(주최자)와 팀리더만.
+  const deleteGathering = (gathering: Gathering) => {
+    if (!currentUser) return;
+    if (gathering.host !== currentUser.name && !isTeamLeader(currentUser)) return;
+    // gathering_signups 는 gatherings 에 on delete cascade 라 DB 에서는 함께 지워진다.
+    void deleteGatheringRecord(gathering.id);
+    persistGatherings(gatherings.filter((item) => item.id !== gathering.id));
+    // 로컬 상태·캐시에 남은 신청 기록도 걷어낸다(DB cascade 는 로컬 미러를 모른다).
+    const nextSignups = gatheringSignups.filter((signup) => signup.gatheringId !== gathering.id);
+    setGatheringSignups(nextSignups);
+    cacheSignups(nextSignups);
+  };
+
   /* ===== 이음장터 ===== */
 
   const persistMarketItems = (next: MarketItem[]) => {
@@ -1211,6 +1294,19 @@ export function App() {
     persistMarketItems(marketItems.filter((entry) => entry.id !== item.id));
   };
 
+  // 완전 삭제. 내리기(기록 보존)와 달리 물건과 입찰 기록까지 통째로 지운다. 글쓴이(판매자)와 팀리더만.
+  const deleteMarketItem = (item: MarketItem) => {
+    if (!currentUser) return;
+    if (item.seller !== currentUser.name && !isTeamLeader(currentUser)) return;
+    void deleteMarketItemRecord(item.id);
+    // market_bids 는 item 에 FK 가 없어 DB 에서 자동으로 안 지워진다. 명시적으로 걷어낸다.
+    void deleteMarketBidsForItem(item.id);
+    persistMarketItems(marketItems.filter((entry) => entry.id !== item.id));
+    const nextBids = marketBids.filter((bid) => bid.itemId !== item.id);
+    setMarketBids(nextBids);
+    cacheMarketBids(nextBids);
+  };
+
   /* 거래 완료는 양쪽이 각각 누른다. 앱은 결제를 다루지 않아 누가 잘못했는지
      판정할 수 없으므로, 한쪽 말만 듣고 완료로 바꾸지 않는다. */
   const markMarketDone = (item: MarketItem) => {
@@ -1255,11 +1351,20 @@ export function App() {
   };
 
   // 딥링크: 로그인 상태에서 #해시가 있으면 해당 화면으로 이동(슬랙 알림 링크 진입점).
+  // 단, 해시는 '한 번만' 소비하고 주소창에서 지운다. 안 지우면 슬랙 링크로 한 번
+  // 들어온 해시가 주소창에 계속 남아, 다음 로그인 때마다 그 페이지로 되돌아간다
+  // (닫았던 화면이 되살아나 '새 로그인 = 홈'이 깨짐). 소비 후 지우면 다음 로그인은
+  // 해시가 없어 홈(dashboard)으로 시작한다.
   useEffect(() => {
     if (!currentUser) return;
     const applyHash = () => {
       const target = SECTION_BY_HASH[window.location.hash];
-      if (target) changeSection(target);
+      if (!target) return;
+      changeSection(target);
+      // 해시를 읽는 하위 화면(예: 티미팅 tea 탭)이 먼저 읽도록 다음 틱에 지운다.
+      window.setTimeout(() => {
+        window.history.replaceState(null, '', window.location.pathname + window.location.search);
+      }, 0);
     };
     applyHash();
     window.addEventListener('hashchange', applyHash);
@@ -1274,7 +1379,14 @@ export function App() {
   };
 
   if (!currentUser) {
-    return <LoginScreen accounts={accounts} onLogin={handleLogin} onRegister={registerAccount} />;
+    return (
+      <LoginScreen
+        accounts={accounts}
+        onLogin={handleLogin}
+        onRegister={registerAccount}
+        onSetPassword={setAccountPassword}
+      />
+    );
   }
 
   const unreadCount = notifications.filter(
@@ -1315,13 +1427,23 @@ export function App() {
           currentUser={currentUser}
           identity={identity}
           issues={issues}
+          partLeaders={accounts
+            .filter((account) => account.status === '활성' && account.role === '파트리더')
+            .map((account) => ({ name: account.name, part: account.part }))}
           onIdentityChange={setIdentity}
           onIssueUpdate={updateIssue}
           onSubmitIssue={submitIssue}
         />
       )}
       {active === 'leader' && hasLeaderRole(currentUser) && (
-        <LeaderInbox issues={issues} today={today()} onIssueUpdate={updateIssue} onPromoteToAgenda={promoteToAgenda} />
+        <LeaderInbox
+          issues={issues}
+          accounts={accounts}
+          currentUser={currentUser}
+          today={today()}
+          onIssueUpdate={updateIssue}
+          onPromoteToAgenda={promoteToAgenda}
+        />
       )}
       {active === 'agenda' && !agendaForActions && (
         <AgendaBoard
@@ -1399,6 +1521,8 @@ export function App() {
           onCancelGathering={cancelGathering}
           onDrawCoffee={drawCoffeePick}
           onResetCoffee={resetCoffeePick}
+          canModerate={isTeamLeader(currentUser)}
+          onDelete={deleteGathering}
         />
       )}
       {active === 'market' && (
@@ -1413,6 +1537,8 @@ export function App() {
           onCreate={(draft) => void createMarketItem(draft)}
           onUpdate={(item, draft) => void updateMarketItem(item, draft)}
           onMarkDone={markMarketDone}
+          canModerate={isTeamLeader(currentUser)}
+          onDelete={deleteMarketItem}
         />
       )}
       {active === 'notifications' && (
@@ -1432,6 +1558,7 @@ export function App() {
           comments={humorComments}
           currentUser={currentUser}
           canModerate={isTeamLeader(currentUser)}
+          imagePendingIds={imagePendingIds}
           onAddPost={addHumorPost}
           onToggleLike={toggleHumorLike}
           onAddComment={addHumorComment}
