@@ -10349,6 +10349,51 @@ button.notif-row {
   width: 26px;
 }
 
+/* 앨범 커버 칸 — 사진 위에 행사 이름·개수를 얹는다. 밝은 사진에서도 읽히도록
+   .ig-cell-mark 와 같은 스크림(어둠 한 겹) 위에 흰 글자를 둔다. */
+.memory-album-cell .memory-album-cap {
+  background: linear-gradient(to top, var(--scrim-strong), transparent);
+  bottom: 0;
+  color: var(--color-surface);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  left: 0;
+  padding: var(--space-4) var(--space-2) var(--space-2);
+  position: absolute;
+  right: 0;
+  text-align: left;
+}
+
+.memory-album-cell .memory-album-cap strong {
+  -webkit-box-orient: vertical;
+  display: -webkit-box;
+  font-size: var(--text-meta);
+  font-weight: 600;
+  line-height: 1.25;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+.memory-album-cell .memory-album-cap small {
+  font-size: var(--text-meta);
+  opacity: 0.85;
+}
+
+/* 상세로 들어간 앨범에서 목록으로 돌아가는 길. */
+.memory-back {
+  align-items: center;
+  background: none;
+  border: 0;
+  color: var(--color-primary);
+  cursor: pointer;
+  display: inline-flex;
+  font-size: var(--text-meta);
+  font-weight: 600;
+  gap: 4px;
+  padding: var(--space-2) var(--space-3);
+}
+
 /* 좁은 폭 — 반드시 위 기본 규칙 뒤에 온다. 앞에 두면 같은 특이도에서
    순서로 져 오류 없이 조용히 무시된다(이 저장소에서 반복해서 밟은 함정).
    인스타 모바일 프로필의 아바타는 86px 다. 138px 를 그대로 두면 390px 폭에서

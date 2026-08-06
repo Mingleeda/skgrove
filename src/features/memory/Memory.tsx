@@ -1,5 +1,6 @@
 import {
   CalendarDays,
+  ChevronLeft,
   Download,
   Film,
   Grid3x3,
@@ -217,6 +218,9 @@ export function Memory({ currentUser }: MemoryProps) {
   // 인스타 프로필의 탭. 기본은 격자다 — 이 화면에 오는 이유가 사진을 보는 것이라
   // 캘린더(행사 만들기)는 필요할 때 들어가는 두 번째 탭으로 내렸다.
   const [tab, setTab] = useState<'grid' | 'calendar'>('grid');
+  // 게시물 탭 안의 두 단계. 'events'는 행사별 커버 한 장씩 보는 앨범 목록,
+  // 'detail'은 한 행사로 들어가 그 안의 사진들을 보고 올리는 곳이다.
+  const [view, setView] = useState<'events' | 'detail'>('events');
 
   // 프로필 통계. 인스타의 게시물·팔로워 자리라 팀 전체를 세야 뜻이 맞는다.
   const totalAssets = memories.reduce((sum, memory) => sum + memory.assets.length, 0);
@@ -248,10 +252,18 @@ export function Memory({ currentUser }: MemoryProps) {
     void saveMemories(nextMemories);
   };
 
+  // 한 행사 앨범으로 들어간다. 어디서 부르든(스토리·캘린더·목록) 게시물 탭의
+  // 상세로 데려가, 사진을 보고 바로 올릴 수 있게 한다.
+  const openAlbum = (memory: TeamMemory) => {
+    setSelectedId(memory.id);
+    setSelectedAssetId(memory.assets[0]?.id ?? 0);
+    setTab('grid');
+    setView('detail');
+  };
+
   const selectCalendarDay = (date: string, memory?: TeamMemory) => {
     if (memory) {
-      setSelectedId(memory.id);
-      setSelectedAssetId(memory.assets[0]?.id ?? 0);
+      openAlbum(memory);
       return;
     }
 
@@ -271,8 +283,11 @@ export function Memory({ currentUser }: MemoryProps) {
     };
 
     persistMemories([...memories, nextMemory].sort((a, b) => a.date.localeCompare(b.date)));
+    // 새 앨범은 바로 상세로 들어가 첫 사진을 올릴 수 있게 한다.
     setSelectedId(nextMemory.id);
     setSelectedAssetId(0);
+    setTab('grid');
+    setView('detail');
   };
 
   const uploadAssets = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -393,11 +408,7 @@ export function Memory({ currentUser }: MemoryProps) {
           <button
             className="ig-story"
             key={memory.id}
-            onClick={() => {
-              setSelectedId(memory.id);
-              setSelectedAssetId(memory.assets[0]?.id ?? 0);
-              setTab('grid');
-            }}
+            onClick={() => openAlbum(memory)}
             type="button"
           >
             <span className={memory.id === selectedMemory.id ? 'ig-ring' : 'ig-ring seen'}>
@@ -413,7 +424,10 @@ export function Memory({ currentUser }: MemoryProps) {
       <div className="ig-tabs">
         <button
           className={tab === 'grid' ? 'on' : ''}
-          onClick={() => setTab('grid')}
+          onClick={() => {
+            setTab('grid');
+            setView('events');
+          }}
           type="button"
         >
           <Grid3x3 size={12} />
@@ -430,7 +444,53 @@ export function Memory({ currentUser }: MemoryProps) {
       </div>
 
       {tab === 'grid' ? (
+        view === 'events' ? (
+          // 앨범 목록 — 행사마다 커버 한 장. 인스타 프로필 격자를 재사용하되
+          // 각 칸이 사진 하나가 아니라 '행사 하나'다. 누르면 그 행사 상세로 들어간다.
+          <div className="ig-grid-tab">
+            <p className="ig-grid-note">
+              <b>행사 앨범</b>
+              행사를 누르면 그 행사의 사진을 볼 수 있어요.
+            </p>
+            <div className="ig-cells">
+              {memories.map((memory) => {
+                const cover = memory.assets.find((asset) => asset.previewUrl);
+                return (
+                  <button
+                    className="ig-cell memory-album-cell"
+                    key={memory.id}
+                    onClick={() => openAlbum(memory)}
+                    type="button"
+                  >
+                    {cover?.previewUrl ? (
+                      cover.type === 'photo' ? (
+                        <img alt="" src={cover.previewUrl} />
+                      ) : (
+                        <video muted src={cover.previewUrl} />
+                      )
+                    ) : (
+                      <span className="ig-cell-blank">
+                        <CalendarDays size={26} />
+                      </span>
+                    )}
+                    <span className="memory-album-cap">
+                      <strong>{memory.title}</strong>
+                      <small>{memory.assets.length}개</small>
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+            {memories.length === 0 && (
+              <div className="memory-empty">캘린더 탭에서 행사를 먼저 만들어 보세요.</div>
+            )}
+          </div>
+        ) : (
         <div className="ig-grid-tab">
+          <button className="memory-back" type="button" onClick={() => setView('events')}>
+            <ChevronLeft size={16} />
+            앨범 목록
+          </button>
           <p className="ig-grid-note">
             <b>{selectedMemory.title}</b>
             {selectedMemory.date} · {selectedMemory.place} · 담당 {selectedMemory.host}
@@ -544,6 +604,7 @@ export function Memory({ currentUser }: MemoryProps) {
             </article>
           )}
         </div>
+        )
       ) : (
         <div className="ig-grid-tab">
           <section className="panel memory-calendar-panel">
