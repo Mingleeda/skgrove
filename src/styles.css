@@ -6111,11 +6111,17 @@ textarea {
   }
 
   .nav {
+    align-items: center;
     display: flex;
     gap: var(--space-1);
   }
 
-  .nav-group {
+  /* 데스크톱의 '.nav-group + .nav-group { margin-top·padding-top·border-top }' 은 인접형제라
+     specificity 가 높아, 낮은 '.nav-group' 오버라이드로는 안 지워졌다. 그래서 둘째 그룹부터
+     12px 씩 아래로 밀려 하단 탭바가 두 줄로 어긋나 보였다. 같은/높은 특이도로 함께 지운다. */
+  .nav-group,
+  .sidebar .nav-group + .nav-group {
+    align-items: center;
     border-top: none;
     display: flex;
     gap: var(--space-1);
