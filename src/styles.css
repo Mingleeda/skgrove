@@ -12793,3 +12793,21 @@ button.notif-row {
   font-size: var(--text-meta);
   color: var(--color-muted);
 }
+
+/* 내 접수 상세: 내가 쓴 본문·기대 변화 */
+.submission-own {
+  margin-bottom: var(--space-3);
+}
+.submission-own-label {
+  margin: 0 0 2px;
+  font-size: var(--text-meta);
+  font-weight: 600;
+  color: var(--color-muted);
+}
+.submission-own-body {
+  margin: 0;
+  color: var(--color-ink);
+  white-space: pre-wrap;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}

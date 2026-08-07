@@ -572,6 +572,20 @@ export function Intake({ identity, currentUser, issues, partLeaders, onIdentityC
 
                     {isExpanded && (
                       <div className="submission-detail">
+                        {/* 내가 쓴 본문·기대 변화를 먼저 보여준다. 예전에는 리더 답변만 렌더돼
+                            정작 작성자가 자기가 뭘 냈는지 다시 볼 수 없었다. */}
+                        {issue.body && (
+                          <div className="submission-own">
+                            <p className="submission-own-label">작성한 내용</p>
+                            <p className="submission-own-body">{issue.body}</p>
+                          </div>
+                        )}
+                        {issue.expectedChange && (
+                          <div className="submission-own">
+                            <p className="submission-own-label">기대 변화</p>
+                            <p className="submission-own-body">{issue.expectedChange}</p>
+                          </div>
+                        )}
                         {/* 보류·종료는 결과만 통보하면 무시당한 것으로 읽힌다. 리더가 남긴 사유를 함께 보여준다. */}
                         {issue.statusReason && (
                           <p className="submission-reason">
@@ -674,6 +688,18 @@ export function Intake({ identity, currentUser, issues, partLeaders, onIdentityC
                   <span className="status-pill">{anonymousIssue.status}</span>
                 </div>
                 <div className="submission-detail">
+                  {anonymousIssue.body && (
+                    <div className="submission-own">
+                      <p className="submission-own-label">작성한 내용</p>
+                      <p className="submission-own-body">{anonymousIssue.body}</p>
+                    </div>
+                  )}
+                  {anonymousIssue.expectedChange && (
+                    <div className="submission-own">
+                      <p className="submission-own-label">기대 변화</p>
+                      <p className="submission-own-body">{anonymousIssue.expectedChange}</p>
+                    </div>
+                  )}
                   {anonymousIssue.statusReason && (
                     <p className="submission-reason">
                       {anonymousIssue.status} 사유: {anonymousIssue.statusReason}
