@@ -24,12 +24,26 @@ const KIND_LABELS: Record<NotificationKind, string> = {
   issue: '대나무숲 접수',
   agenda: '안건 등록',
   deadline: '투표 마감 임박',
-  tea: '티미팅 제안',
+  tea: '티미팅 제안 접수',
   message: '개인 메시지',
   action: '액션아이템',
   humor: '유머게시판',
   gathering: '모임 · 번개',
   market: '이음장터',
+};
+
+// 각 알림이 '언제' 나가는지. 종류와 설정 사이에 짧게 보여, 커넥셔너가 무슨 시점의
+// 알림인지 알고 발송 위치를 정하게 한다. (문구는 실제 트리거 코드 기준)
+const KIND_TIMING: Record<NotificationKind, string> = {
+  issue: '팀원이 대나무숲에 의견을 접수한 때',
+  agenda: '새 안건이 등록돼 투표가 열린 때',
+  deadline: '안건 투표 마감이 임박한 때',
+  tea: '티미팅 세션이 제안된 때',
+  message: '누군가 나에게 메시지를 보낸 때',
+  action: '내가 액션 담당자로 지정된 때',
+  humor: '내 글에 댓글이 달린 때',
+  gathering: '모임 자리 승계·취소가 생긴 때',
+  market: '상회 입찰·낙찰·취소가 생긴 때',
 };
 
 const ROUTE_OPTIONS: NotifyRoute[] = ['team', 'connector', 'dm', 'off'];
@@ -117,7 +131,8 @@ export function SystemManagement({ settings, onSettingsChange }: SystemManagemen
         <div className="system-route-list">
           {KIND_ORDER.map((kind) => (
             <div className="system-route-row" key={kind}>
-              <span>{KIND_LABELS[kind]}</span>
+              <span className="system-route-kind">{KIND_LABELS[kind]}</span>
+              <span className="system-route-when">{KIND_TIMING[kind]}</span>
               <select
                 value={settings.routes[kind]}
                 aria-label={`${KIND_LABELS[kind]} 발송 위치`}

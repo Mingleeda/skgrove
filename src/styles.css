@@ -674,11 +674,19 @@ h1 {
   align-items: center;
   display: grid;
   gap: var(--space-3);
-  grid-template-columns: 1fr auto;
+  grid-template-columns: auto 1fr auto;
 }
 
-.system-route-row span {
+.system-route-kind {
   font-weight: 600;
+  white-space: nowrap;
+}
+
+/* 종류와 설정 사이에 '언제 나가는 알림인지'를 옅게 적는다. 좁으면 줄바꿈된다. */
+.system-route-when {
+  color: var(--color-muted);
+  font-size: var(--text-meta);
+  line-height: 1.35;
 }
 
 /* 첫 로그인 안내(비밀번호 설정). 놓치지 않게 옅은 파랑 박스로 또렷하게. */
