@@ -12078,8 +12078,8 @@ button.notif-row {
   color: var(--color-muted);
   font-size: var(--text-micro);
 }
-/* 결과 그리드에선 프로필 사진을 크게, 둥글게 — '사람들'이 한눈에. */
-.team-member-cell .tiny-avatar.lg {
+/* 큰 둥근 프로필 사진(조뽑기 결과 그리드 · 커피뽑기 당첨자) — '사람'이 한눈에. */
+.tiny-avatar.lg {
   border-radius: var(--radius-full);
   font-size: 20px;
   height: 56px;

@@ -14,6 +14,7 @@ import {
   Wallet,
   Zap,
 } from 'lucide-react';
+import { Avatar } from '../../components/Avatar';
 import { EmptyState } from '../../components/EmptyState';
 import {
   belowMinimum,
@@ -340,7 +341,7 @@ export function GatheringBoard({
                 ) : selected.coffeePick ? (
                   <div className="coffee-pick-result">
                     <div className="coffee-pick-winner">
-                      <Coffee size={18} />
+                      <Avatar name={selected.coffeePick} className="lg" />
                       <div>
                         <span>오늘 커피 담당</span>
                         <strong>{selected.coffeePick}</strong>
