@@ -50,7 +50,12 @@
   feedback·guide) + `(지정 시) 상대 성향 프로필` + `대나무숲·안건에서 키워드 유사 상위
   3건 요약`(제목·상태·한 줄, 상수로 조정 가능). 유사도는 프론트에서 간단 키워드 매칭으로 후보를 추리고
   프록시에 넘긴다(임베딩·RAG는 과함 — YAGNI).
-- 룰 모드: `src/content/team-ground-rules.md` 전문.
+- 룰 모드: `src/content/team-ground-rules.md` 전문(실제 팀 가이드 반영됨 — 근태·비용·
+  예산 계정·정산·BP·교육·보안·AI 도구 정산·KPI·FAQ·수치 요약). 이 문서 **§12 "챗봇 답변
+  규칙"이 룰 모드 시스템 프롬프트의 뼈대**가 된다: 관련 규정 우선, 수치 명시, 원칙/권고/
+  가능/필수 구분, 문서에 없는 예외 지어내지 않기, 예외는 승인권자 협의 안내, 프로젝트비/
+  조직비·L/A/CL/AI/프로젝트코드·공통KPI/파트KPI 혼동 금지, 날짜 충돌 시 최신 우선.
+  민감 정보(예산·KPI)가 포함되므로 룰 모드 질의는 그 내용이 외부 LLM으로 전송됨(§5 한계와 동일 맥락).
 
 ## 4. 스트리밍
 
@@ -90,7 +95,7 @@
 ## 7. 파일 (신규/변경)
 
 - 신규: `src/aiChat.ts`(seam), `src/features/chat/ChatWidget.tsx`(+하위),
-  `src/counselStore.ts`, `src/content/team-ground-rules.md`(자리표시 샘플),
+  `src/counselStore.ts`, `src/content/team-ground-rules.md`(✅ 실제 팀 가이드 반영 완료),
   `scripts/chat-proxy.mjs`, `supabase-schema.sql`에 `counsel_messages` 추가,
   `.env.ai.example`에 `CHAT_*`/`VITE_CHAT_ENDPOINT` 안내.
 - 변경: `src/App.tsx`(ChatWidget 마운트 + currentUser·profiles·issues·agendas 전달),
