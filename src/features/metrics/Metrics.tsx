@@ -2,6 +2,7 @@ import { BarChart3, CalendarClock, CheckCircle2, Eye, Gauge, LockKeyhole, Settin
 import { useEffect, useMemo, useState } from 'react';
 import { isTeamLeader } from '../../auth';
 import { loadAccounts } from '../../accountStore';
+import { mockCalendarEvents } from '../../mockCalendar';
 import { loadActionItems } from '../../actionItemStore';
 import { voteTotal } from '../../agendaRules';
 import { loadAgendas } from '../../agendaStore';
@@ -44,6 +45,7 @@ import type {
   CanSession,
   CurrentUser,
   Issue,
+  ManagedAccount,
   Profile,
   TeaSession,
 } from '../../types';
@@ -126,59 +128,6 @@ const CALENDAR_STORAGE_KEY = 'skgrove:metrics-calendar-events';
 const CALENDAR_STATUS_KEY = 'skgrove:metrics-calendar-status';
 // 몇 일치를 모은 값인지 함께 남긴다. 이게 없으면 저장된 합계를 주당으로 되돌릴 수 없다.
 const CALENDAR_WINDOW_KEY = 'skgrove:metrics-calendar-window-days';
-
-const sampleCalendarEvents: CalendarMetricEvent[] = [
-  {
-    id: 'GCAL-001',
-    title: 'TEST혁신파트 주간 싱크',
-    part: 'TEST혁신파트',
-    type: '파트회의',
-    startsAt: '2026-08-03T10:00:00',
-    durationMinutes: 70,
-    attendees: 9,
-    isRecurring: true,
-  },
-  {
-    id: 'GCAL-002',
-    title: 'ITS혁신파트 캔미팅',
-    part: 'ITS혁신파트',
-    type: '캔미팅',
-    startsAt: '2026-08-04T14:00:00',
-    durationMinutes: 95,
-    attendees: 11,
-    isRecurring: false,
-  },
-  {
-    id: 'GCAL-003',
-    title: 'PM혁신파트 원온원 블록',
-    part: 'PM혁신파트',
-    type: '원온원',
-    startsAt: '2026-08-05T11:00:00',
-    durationMinutes: 30,
-    attendees: 2,
-    isRecurring: true,
-  },
-  {
-    id: 'GCAL-004',
-    title: 'PM혁신파트 티미팅 리허설',
-    part: 'PM혁신파트',
-    type: '티미팅',
-    startsAt: '2026-08-06T16:00:00',
-    durationMinutes: 55,
-    attendees: 7,
-    isRecurring: false,
-  },
-  {
-    id: 'GCAL-005',
-    title: 'ITS혁신파트 장기 이슈 리뷰',
-    part: 'ITS혁신파트',
-    type: '파트회의',
-    startsAt: '2026-08-07T09:30:00',
-    durationMinutes: 120,
-    attendees: 8,
-    isRecurring: true,
-  },
-];
 
 // clampScore·회의 건강도 계산은 meetingRules.ts 로 옮겼다. 테스트가 붙는 자리다.
 function getMeetingHealth(part: PartMetric) {
@@ -420,6 +369,8 @@ export function Metrics({ currentUser }: MetricsProps) {
   // 사람별 집계는 파트 판정과 다른 축이라 원시 일정에서 따로 센다.
   // 회의 부담 — 요청한 세 지표(평균·최대·최소)와 그 값이 얼마나 믿을 만한지.
   const [meetingLoad, setMeetingLoad] = useState<ReturnType<typeof meetingLoadByPerson> | null>(null);
+  // 캘린더 미연결일 때 등록된 회원으로 만든 목업을 보여주는 중인지. 배너로 밝힌다.
+  const [isSample, setIsSample] = useState(false);
   const [calendarBusy, setCalendarBusy] = useState(false);
   const [calendarError, setCalendarError] = useState('');
   const [selectedPart, setSelectedPart] = useState(currentUser.part === '전체' ? partNames[0] : currentUser.part);
@@ -529,44 +480,57 @@ export function Metrics({ currentUser }: MetricsProps) {
     try {
       const snap = await fetchCalendarSnapshot();
       if (!snap.ok || !snap.events) {
-        // '설정 안 됨'은 잘못이 아니다. 조용히 샘플 흐름을 유지한다.
-        if (snap.reason === 'disabled') return;
-        // 자동 로드에서는 경고를 띄우지 않는다 — 화면을 열 때마다 빨간 배너가 뜨면 소음이 된다.
-        if (manual) setCalendarError(`캘린더를 읽지 못했어요: ${snap.reason ?? '알 수 없는 오류'}`);
+        // 설정 안 됨·읽기 실패 모두 실제 데이터가 없는 것 — 이미 채워둔 샘플을 그대로 둔다.
+        if (manual && snap.reason !== 'disabled') {
+          setCalendarError(`캘린더를 읽지 못해 샘플을 유지합니다: ${snap.reason ?? '알 수 없는 오류'}`);
+        }
         return;
       }
 
       // 파트 판정은 계정 정보를 가진 이 화면에서 한다. 조직 구성을 프록시로 보내지 않는다.
       const accounts = await loadAccounts();
       const events = toMetricEvents(snap.events, accounts);
+      if (events.length === 0) {
+        // 실제 회의가 파트로 안 잡히면 빈 화면 대신 샘플을 유지한다.
+        if (manual) {
+          setCalendarError(
+            `읽어온 일정 ${snap.events.length}건 중 파트를 정할 수 있는 회의가 없어 샘플을 유지합니다. ` +
+              '제목 앞에 [회의/참여자] 또는 [파트명] 을 적으면 파트별로 집계됩니다.',
+          );
+        }
+        return;
+      }
+      // 실제 회의가 있으니 샘플을 대체한다.
       applyCalendarEvents('synced', events, CALENDAR_LOOKBACK_DAYS);
       setCalendarSyncedAt(snap.syncedAt ?? null);
       setMeetingLoad(meetingLoadByPerson(snap.events, accounts));
-
-      if (events.length === 0 && manual) {
-        // 0건을 조용히 넘기면 "연동했는데 왜 그대로지?"가 된다. 이유를 밝힌다.
-        setCalendarError(
-          `읽어온 일정 ${snap.events.length}건 중 파트를 정할 수 있는 회의가 없었어요. ` +
-            '제목 앞에 [회의/참여자] 또는 [파트명] 을 적으면 파트별로 집계됩니다.',
-        );
-      }
+      setIsSample(false);
     } finally {
       setCalendarBusy(false);
     }
   };
 
-  /* 화면을 열면 서버가 담아둔 값을 한 번 읽는다. 사용자 동작이 필요 없다. */
+  // 등록된 회원으로 4주치 목업 회의를 만들어 파트·사람별 대시보드를 채운다(샘플).
+  const applyMockCalendar = (accounts: ManagedAccount[]) => {
+    const raw = mockCalendarEvents(accounts, new Date(), 4);
+    const events = toMetricEvents(raw, accounts);
+    applyCalendarEvents('disconnected', events, 28); // 4주 = 28일 창
+    setMeetingLoad(meetingLoadByPerson(raw, accounts));
+    setIsSample(true);
+    setCalendarError('');
+  };
+
+  /* 화면을 열면 대시보드를 비우지 않게 등록 회원으로 목업을 먼저 채우고,
+     연동이 설정돼 실제 회의가 있으면 그것으로 대체한다(없으면 샘플 유지). */
   useEffect(() => {
-    if (!calendarConfigured()) return;
-    void loadFromServer(false);
+    void loadAccounts().then(applyMockCalendar);
+    if (calendarConfigured()) void loadFromServer(false);
     // 마운트 때 한 번만. 주기 조회는 서버가 한다.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const importSampleCalendar = () => {
-    // 샘플은 한 주치 회의를 흉내낸 것이다. 90일 분모로 나누면 없는 것처럼 보인다.
-    applyCalendarEvents('synced', sampleCalendarEvents, DEFAULT_CALENDAR_WINDOW_DAYS);
-    setCalendarError('');
+    void loadAccounts().then(applyMockCalendar);
   };
 
   const updateWeight = (key: keyof MetricWeights, value: number) => {
@@ -624,12 +588,23 @@ export function Metrics({ currentUser }: MetricsProps) {
           <span>
             {calendarStatus === 'synced'
               ? `${calendarEvents.length}개 회의 반영됨`
-              : calendarStatus === 'connected'
-                ? '연결됨 · 회의 가져오기 대기'
-                : '미연결 · 샘플 연동 가능'}
+              : isSample
+                ? `샘플 ${calendarEvents.length}개 회의 표시 중`
+                : calendarStatus === 'connected'
+                  ? '연결됨 · 회의 가져오기 대기'
+                  : '미연결'}
           </span>
         </div>
       </section>
+
+      {isSample && (
+        <section className="metrics-sample-banner">
+          <Sparkles size={16} />
+          <span>
+            샘플 데이터예요 — 캘린더 연동 전, 등록된 회원으로 만든 4주치 예시 회의량입니다. 연동되면 실제 값으로 대체됩니다.
+          </span>
+        </section>
+      )}
 
       <section className="metrics-summary">
         <div>
@@ -694,7 +669,7 @@ export function Metrics({ currentUser }: MetricsProps) {
           {!calendarConfigured() && (
             <div className="calendar-sync-actions">
               <button className="secondary-button" type="button" onClick={importSampleCalendar}>
-                샘플 회의로 보기
+                샘플 다시 생성
               </button>
             </div>
           )}
