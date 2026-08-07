@@ -88,13 +88,14 @@ export function Dashboard({
     .slice(0, 12);
 
   /*
-    홈 통합 피드. 번개는 위 스토리로 이미 올라가므로 피드에서는 뺀다(공모는 남긴다).
-    안건·액션·공모·유머·장터를 buildHomeFeed 가 최신순 30개로 접는다.
+    홈 통합 피드. 모임(번개·공모)도 피드에 타일로 넣는다 — 번개는 위 스토리에도 뜨지만,
+    피드는 "모든 최근 소식"을 모으는 곳이라 함께 보이는 게 자연스럽다.
+    안건·액션·모임·유머·장터를 buildHomeFeed 가 최신순으로 접는다.
   */
   const feedItems = buildHomeFeed({
     agendas,
     actionItems,
-    gatherings: gatherings.filter((item) => item.kind !== 'flash'),
+    gatherings,
     humorPosts,
     marketItems,
   });

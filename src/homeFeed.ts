@@ -16,7 +16,9 @@ export type HomeFeedItem = {
   meta?: string; // 작은 메타 한 줄: 상태 / 좋아요 / 나눔·경매 등
 };
 
-export const HOME_FEED_LIMIT = 30;
+// 팀 하나의 최근 소식을 다 담을 만큼 넉넉히. 너무 낮으면 항목 많은 도메인(안건 등)이
+// 상한을 채워 유머처럼 건수 적은 도메인이 통째로 안 보이는 문제가 생긴다.
+export const HOME_FEED_LIMIT = 60;
 
 export type HomeFeedSources = {
   agendas: Agenda[];

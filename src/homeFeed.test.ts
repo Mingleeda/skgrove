@@ -40,8 +40,8 @@ describe('buildHomeFeed', () => {
     expect(feed[0]).toMatchObject({ id: 'gathering:GAT1', section: 'gatherings', kind: 'gathering', title: '점심 번개' });
   });
 
-  it('최근 30개로 자른다', () => {
-    const many = Array.from({ length: 40 }, (_, index) =>
+  it('최근 HOME_FEED_LIMIT개로 자른다', () => {
+    const many = Array.from({ length: HOME_FEED_LIMIT + 15 }, (_, index) =>
       action({ id: `AC${index}`, createdAt: `2026-07-${String((index % 28) + 1).padStart(2, '0')}` }),
     );
     expect(buildHomeFeed({ ...empty, actionItems: many })).toHaveLength(HOME_FEED_LIMIT);
