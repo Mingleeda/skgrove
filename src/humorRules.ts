@@ -80,6 +80,13 @@ export function youtubeId(url: string): string | null {
   return null;
 }
 
+// 유튜브 링크에서 영상 썸네일 URL을 만든다. API 키·서버 불필요(고정 주소).
+// hqdefault 는 어느 영상에나 존재하는 480x360 썸네일이다(maxres 는 없는 영상이 있어 안 쓴다).
+export function youtubeThumb(url: string): string | undefined {
+  const id = youtubeId(url);
+  return id ? `https://img.youtube.com/vi/${id}/hqdefault.jpg` : undefined;
+}
+
 export type Media = { type: 'image' | 'youtube' | 'video' | 'link'; src: string };
 
 // 안전한 scheme(http(s)·data:image)만 허용한다. javascript:·data:text/html 등은 미디어로 취급하지 않는다.

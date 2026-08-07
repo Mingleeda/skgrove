@@ -1,7 +1,7 @@
 // 홈 통합 피드 — 5개 도메인(안건·액션·번개·유머·장터)을 하나의 최신순 목록으로 접는다.
 // 화면 없이 정렬·개수·매핑을 테스트할 수 있도록 순수 함수로 둔다. 카드의 색·아이콘·라벨은
 // 화면(Dashboard)이 kind 로 정하고, 여기서는 데이터만 만든다.
-import { resolveMedia } from './humorRules';
+import { resolveMedia, youtubeThumb } from './humorRules';
 import type { ActionItem, Agenda, Gathering, HumorPost, MarketItem, Section } from './types';
 
 export type HomeFeedKind = 'agenda' | 'action' | 'gathering' | 'humor' | 'market';
@@ -28,11 +28,12 @@ export type HomeFeedSources = {
   marketItems: MarketItem[];
 };
 
-// 유머 배경 = 사용자가 붙인 이미지 우선, 없으면 내용으로 생성한 썸네일. HumorBoard 와 같은 규칙.
+// 유머 배경 = 사용자가 붙인 이미지, 또는 유튜브 링크면 그 영상 썸네일. AI 생성 썸네일은 쓰지 않는다.
 function humorImage(post: HumorPost): string | undefined {
   const media = resolveMedia(post.mediaUrl);
-  if (media && media.type === 'image') return media.src;
-  return post.imageUrl || undefined;
+  if (media?.type === 'image') return media.src;
+  if (media?.type === 'youtube') return youtubeThumb(post.mediaUrl);
+  return undefined;
 }
 
 // 유머는 제목이 없다. 본문 첫 줄을 제목처럼 쓰되 너무 길면 자른다.

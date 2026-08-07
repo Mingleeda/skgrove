@@ -58,11 +58,16 @@ describe('buildHomeFeed', () => {
     expect(byKind.gathering).toBe('https://x/y.jpg');
   });
 
-  it('유머는 붙인 이미지 URL을 배경으로 쓰고, 없으면 생성 썸네일로 떨어진다', () => {
-    const withMedia = buildHomeFeed({ ...empty, humorPosts: [humor({ mediaUrl: 'https://x/pic.png' })] });
-    expect(withMedia[0].imageUrl).toBe('https://x/pic.png');
-    const withThumb = buildHomeFeed({ ...empty, humorPosts: [humor({ mediaUrl: '', imageUrl: 'https://x/thumb.png' })] });
-    expect(withThumb[0].imageUrl).toBe('https://x/thumb.png');
+  it('유머 배경 = 붙인 이미지 / 유튜브면 영상 썸네일 / 그 외엔 없음(AI 생성 썸네일 미사용)', () => {
+    const withImage = buildHomeFeed({ ...empty, humorPosts: [humor({ mediaUrl: 'https://x/pic.png' })] });
+    expect(withImage[0].imageUrl).toBe('https://x/pic.png');
+
+    const withYoutube = buildHomeFeed({ ...empty, humorPosts: [humor({ mediaUrl: 'https://youtu.be/dQw4w9WgXcQ' })] });
+    expect(withYoutube[0].imageUrl).toBe('https://img.youtube.com/vi/dQw4w9WgXcQ/hqdefault.jpg');
+
+    // 미디어 없음 + (옛) imageUrl 있어도 이제 배경으로 쓰지 않는다.
+    const noMedia = buildHomeFeed({ ...empty, humorPosts: [humor({ mediaUrl: '', imageUrl: 'https://x/thumb.png' })] });
+    expect(noMedia[0].imageUrl).toBeUndefined();
   });
 
   it('메타에 도메인별 상태를 담는다 (취소된 번개 표시 포함)', () => {
