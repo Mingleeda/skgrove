@@ -443,6 +443,8 @@ export type Gathering = {
   coffeeDraw?: boolean;
   coffeePick?: string | null;
   coffeePickedAt?: string | null; // ISO. 언제 뽑았는지(표시용)
+  // 뽑은 순간의 후보 전원(실명). 재추첨은 막고, 이 풀을 결과에 박제해 "이 명단에서 나왔다"를 증명한다.
+  coffeePool?: string[] | null;
   canceled: boolean;
 };
 

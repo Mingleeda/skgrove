@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   AlertTriangle,
   ArrowLeft,
@@ -44,7 +44,6 @@ type GatheringBoardProps = {
   onLeave: (gathering: Gathering) => void;
   onCancelGathering: (gathering: Gathering) => void;
   onDrawCoffee: (gathering: Gathering) => void;
-  onResetCoffee: (gathering: Gathering) => void;
   /** 팀리더 권한. 남의 모임도 삭제할 수 있다. */
   canModerate: boolean;
   /** 완전 삭제(모임 + 신청 기록). 주최자 또는 팀리더만 호출한다. */
@@ -97,6 +96,13 @@ const STATUS_TONE: Record<GatheringStatus, 'moss' | 'clay' | 'muted'> = {
   취소: 'muted',
 };
 
+// 커피 뽑은 시각(ISO)을 짧게. "08/07 18:05" 처럼.
+function formatPickedAt(iso: string) {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return '';
+  return new Intl.DateTimeFormat('ko-KR', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }).format(date);
+}
+
 export function GatheringBoard({
   gatherings,
   signups,
@@ -107,7 +113,6 @@ export function GatheringBoard({
   onLeave,
   onCancelGathering,
   onDrawCoffee,
-  onResetCoffee,
   canModerate,
   onDelete,
   imagePendingIds,
@@ -148,6 +153,26 @@ export function GatheringBoard({
       onFocusHandled?.();
     }
   }, [focusId]);
+
+  // 커피 뽑기 룰렛: 주최자가 '방금' 뽑았을 때만, 후보를 훑다가 멈추는 연출을 보여준다.
+  // (상세를 그냥 열었을 땐 안 돈다 — justDrewRef 로 구분.)
+  const justDrewRef = useRef(false);
+  const [drawSpin, setDrawSpin] = useState<string | null>(null);
+  useEffect(() => {
+    if (!justDrewRef.current || !selected?.coffeePick) return;
+    justDrewRef.current = false;
+    const pool = selected.coffeePool && selected.coffeePool.length > 0 ? selected.coffeePool : [selected.coffeePick];
+    setDrawSpin(pool[0]);
+    const tick = window.setInterval(() => setDrawSpin(pool[Math.floor(Math.random() * pool.length)]), 90);
+    const stop = window.setTimeout(() => {
+      window.clearInterval(tick);
+      setDrawSpin(null); // 멈추면 결과 카드가 당첨자·후보를 보여준다
+    }, 1700);
+    return () => {
+      window.clearInterval(tick);
+      window.clearTimeout(stop);
+    };
+  }, [selected?.coffeePick]);
 
   const create = (draft: GatheringDraft) => {
     onCreate(draft);
@@ -306,24 +331,48 @@ export function GatheringBoard({
 
             {selected.kind === 'flash' && !selected.canceled && selected.coffeeDraw && (
               <div className="coffee-pick">
-                {selected.coffeePick ? (
+                {drawSpin !== null ? (
+                  <div className="coffee-roulette">
+                    <Coffee size={20} />
+                    <span>커피 담당 뽑는 중…</span>
+                    <strong className="coffee-roulette-name">{drawSpin}</strong>
+                  </div>
+                ) : selected.coffeePick ? (
                   <div className="coffee-pick-result">
-                    <Coffee size={18} />
-                    <div>
-                      <span>오늘 커피 담당</span>
-                      <strong>{selected.coffeePick}</strong>
+                    <div className="coffee-pick-winner">
+                      <Coffee size={18} />
+                      <div>
+                        <span>오늘 커피 담당</span>
+                        <strong>{selected.coffeePick}</strong>
+                      </div>
+                      {selected.coffeePickedAt && <em>{formatPickedAt(selected.coffeePickedAt)} 뽑음</em>}
                     </div>
-                    {isHost && (
-                      <button className="btn-ghost" onClick={() => onResetCoffee(selected)} type="button">
-                        다시 뽑기
-                      </button>
+                    {/* 뽑은 순간의 후보 전원을 박제해 보여준다 — 재추첨이 막혀 있어 이 명단에서 공정하게 나온 것이 증명된다. */}
+                    {selected.coffeePool && selected.coffeePool.length > 0 && (
+                      <div className="coffee-pool">
+                        <span className="coffee-pool-label">후보 {selected.coffeePool.length}명 중에서</span>
+                        <div className="coffee-pool-chips">
+                          {selected.coffeePool.map((name) => (
+                            <span className={name === selected.coffeePick ? 'won' : ''} key={name}>
+                              {name}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
                     )}
                   </div>
                 ) : isHost ? (
                   canDrawCoffee(selected, signups) ? (
-                    <button className="primary-button coffee" onClick={() => onDrawCoffee(selected)} type="button">
+                    <button
+                      className="primary-button coffee"
+                      onClick={() => {
+                        justDrewRef.current = true;
+                        onDrawCoffee(selected);
+                      }}
+                      type="button"
+                    >
                       <Coffee size={18} />
-                      커피 살 사람 뽑기
+                      커피 살 사람 룰렛 돌리기
                     </button>
                   ) : (
                     <p className="coffee-pick-hint">

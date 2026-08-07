@@ -11920,3 +11920,75 @@ button.notif-row {
 .ig-ring.viewed {
   background: var(--color-border);
 }
+
+/* 번개 커피뽑기: 공개 룰렛 + 후보 박제(재추첨 없음, 과정을 결과에 남긴다) */
+.coffee-roulette {
+  align-items: center;
+  background: var(--surface-dark);
+  border-radius: var(--radius);
+  color: var(--color-surface);
+  display: grid;
+  gap: 4px;
+  justify-items: center;
+  padding: var(--space-4);
+  text-align: center;
+}
+.coffee-roulette > span {
+  font-size: var(--text-meta);
+  opacity: 0.85;
+}
+.coffee-roulette-name {
+  font-size: 26px;
+  font-weight: 700;
+}
+.coffee-pick-result {
+  display: grid;
+  gap: var(--space-2);
+}
+.coffee-pick-winner {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+}
+.coffee-pick-winner > div {
+  display: grid;
+  line-height: 1.2;
+}
+.coffee-pick-winner > div span {
+  font-size: var(--text-micro);
+  opacity: 0.7;
+}
+.coffee-pick-winner strong {
+  font-size: 18px;
+}
+.coffee-pick-winner em {
+  color: var(--color-muted);
+  font-size: var(--text-micro);
+  font-style: normal;
+  margin-left: auto;
+}
+.coffee-pool {
+  display: grid;
+  gap: 4px;
+}
+.coffee-pool-label {
+  color: var(--color-muted);
+  font-size: var(--text-micro);
+}
+.coffee-pool-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.coffee-pool-chips span {
+  background: var(--tint-neutral);
+  border-radius: 999px;
+  color: var(--tint-neutral-ink);
+  font-size: var(--text-micro);
+  padding: 3px 9px;
+}
+.coffee-pool-chips span.won {
+  background: var(--tint-primary);
+  color: var(--tint-primary-ink);
+  font-weight: 600;
+}

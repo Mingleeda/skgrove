@@ -595,6 +595,7 @@ create table if not exists public.gatherings (
 -- 번개 커피뽑기: 모임당 커피 담당 한 명(1:1)이라 컬럼으로 둔다. 기존 행은 null = 아직 안 뽑음.
 alter table public.gatherings add column if not exists coffee_draw boolean;
 alter table public.gatherings add column if not exists coffee_pick text;
+alter table public.gatherings add column if not exists coffee_pool jsonb;
 alter table public.gatherings add column if not exists coffee_picked_at timestamptz;
 
 alter table public.gatherings enable row level security;

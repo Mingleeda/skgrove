@@ -1092,21 +1092,14 @@ export function App() {
     if (gathering.coffeePick) return; // 잠김
     const candidates = coffeeCandidates(gathering, gatheringSignups);
     if (candidates.length < 2) return;
-    const winner = candidates[Math.floor(Math.random() * candidates.length)].name;
+    // 뽑는 순간의 후보 전원을 얼려 결과에 박제한다(이후 신청 변화와 무관하게 "이 명단에서 나왔다").
+    const pool = candidates.map((candidate) => candidate.name);
+    const winner = pool[Math.floor(Math.random() * pool.length)];
     persistGatherings(
       gatherings.map((item) =>
         item.id === gathering.id
-          ? { ...item, coffeePick: winner, coffeePickedAt: new Date().toISOString() }
+          ? { ...item, coffeePick: winner, coffeePickedAt: new Date().toISOString(), coffeePool: pool }
           : item,
-      ),
-    );
-  };
-
-  const resetCoffeePick = (gathering: Gathering) => {
-    if (!currentUser || gathering.host !== currentUser.name) return;
-    persistGatherings(
-      gatherings.map((item) =>
-        item.id === gathering.id ? { ...item, coffeePick: null, coffeePickedAt: null } : item,
       ),
     );
   };
@@ -1558,7 +1551,6 @@ export function App() {
           imagePendingIds={imagePendingIds}
           onCancelGathering={cancelGathering}
           onDrawCoffee={drawCoffeePick}
-          onResetCoffee={resetCoffeePick}
           canModerate={isTeamLeader(currentUser)}
           onDelete={deleteGathering}
           focusId={focusFor('gatherings')}

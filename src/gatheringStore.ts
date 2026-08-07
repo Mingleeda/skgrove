@@ -34,6 +34,7 @@ type GatheringRow = {
   coffee_draw?: boolean | null;
   coffee_pick?: string | null;
   coffee_picked_at?: string | null;
+  coffee_pool?: string[] | null;
 };
 
 type SignupRow = {
@@ -84,6 +85,7 @@ function gatheringFromRow(row: GatheringRow): Gathering {
     coffeeDraw: row.coffee_draw ?? false,
     coffeePick: row.coffee_pick ?? null,
     coffeePickedAt: row.coffee_picked_at ?? null,
+    coffeePool: (row.coffee_pool as string[] | null) ?? null,
   };
 }
 
@@ -108,6 +110,7 @@ function gatheringToRow(gathering: Gathering): GatheringRow {
     coffee_draw: gathering.coffeeDraw ?? false,
     coffee_pick: gathering.coffeePick ?? null,
     coffee_picked_at: gathering.coffeePickedAt ?? null,
+    coffee_pool: gathering.coffeePool ?? null,
   };
 }
 
