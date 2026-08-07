@@ -12173,8 +12173,17 @@ button.notif-row {
   background: var(--color-primary);
   box-shadow: var(--shadow-float);
   cursor: pointer;
+  overflow: hidden;
   z-index: 60;
   transition: transform 0.15s ease;
+}
+/* PNG 마스코트: 원형 컨테이너에 꽉 차게. 생성 이미지에 여백이 있어 살짝 확대해 채운다. */
+.chat-mascot-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scale(1.9);
 }
 .chat-fab:hover {
   transform: translateY(-2px) scale(1.04);
@@ -12265,6 +12274,9 @@ button.notif-row {
   width: 34px;
   height: 34px;
   flex: none;
+  overflow: hidden;
+  border-radius: var(--radius-full);
+  background: var(--color-primary);
 }
 .chat-head-id strong {
   display: block;

@@ -8,7 +8,7 @@
   - AI 미설정(VITE_CHAT_ENDPOINT 없음)이면 위젯은 뜨되 안내만 — 앱은 안 깨진다.
 */
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Maximize2, Minimize2, Send, Sparkles, X } from 'lucide-react';
+import { Maximize2, Minimize2, Send, X } from 'lucide-react';
 import {
   briefOf,
   streamChat,
@@ -20,6 +20,7 @@ import { insertCounselMessage, loadCounselMessages } from '../../counselStore';
 import type { CounselMessage, CurrentUser, Agenda, Issue, Profile } from '../../types';
 import { findSimilarCases } from './similarCases';
 import { Markdownish } from './Markdownish';
+import mascotUrl from './mascot.png';
 
 type ChatWidgetProps = {
   currentUser: CurrentUser;
@@ -66,6 +67,13 @@ function Mascot() {
       <path d="M18 30.5c2.4 3 9.6 3 12 0" className="chat-mascot-smile" fill="none" strokeLinecap="round" />
     </svg>
   );
+}
+
+/* 생성한 PNG 마스코트를 쓰고, 로드 실패(에셋 누락 등) 시 위 SVG 로 폴백한다. */
+function MascotImg() {
+  const [failed, setFailed] = useState(false);
+  if (failed) return <Mascot />;
+  return <img className="chat-mascot-img" src={mascotUrl} alt="" onError={() => setFailed(true)} />;
 }
 
 export function ChatWidget({ currentUser, profiles, issues, agendas }: ChatWidgetProps) {
@@ -184,10 +192,7 @@ export function ChatWidget({ currentUser, profiles, issues, agendas }: ChatWidge
   if (!open) {
     return (
       <button type="button" className="chat-fab" onClick={() => setOpen(true)} aria-label="AI 상담 열기">
-        <Mascot />
-        <span className="chat-fab-spark" aria-hidden="true">
-          <Sparkles size={14} />
-        </span>
+        <MascotImg />
       </button>
     );
   }
@@ -201,7 +206,7 @@ export function ChatWidget({ currentUser, profiles, issues, agendas }: ChatWidge
     >
       <header className="chat-head">
         <div className="chat-head-id">
-          <span className="chat-head-mascot"><Mascot /></span>
+          <span className="chat-head-mascot"><MascotImg /></span>
           <div>
             <strong>팀 마음상담</strong>
             <span className="chat-head-sub">오은영 선생님처럼, 팀 규칙을 근거로</span>
