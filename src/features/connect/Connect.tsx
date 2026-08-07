@@ -557,7 +557,9 @@ export function Connect({ members }: ConnectProps) {
             </section>
 
             {/* ③ 결과 — 뽑는 중이거나 결과가 있을 때만 무대를 띄운다(평소 빈 검은 박스 제거). */}
-            {(isDrawing || teams.length > 0) && (
+            {/* 3D 무대는 '돌리는 중'에만. 결과는 아래 조별 프로필 사진 카드로 깔끔하게 본다
+                (3D 타일에 이름을 겹쳐 그리면 글자가 깨져 보였다). */}
+            {isDrawing && (
               <DrawStage
                 hypeClip={hypeClip}
                 isDrawing={isDrawing}
@@ -574,14 +576,12 @@ export function Connect({ members }: ConnectProps) {
                     <strong>{team.id}조</strong>
                     <span>{team.members.length}명</span>
                   </div>
-                  <div className="team-member-list">
+                  <div className="team-member-grid">
                     {team.members.map((member) => (
-                      <div key={member.name}>
-                        <Avatar name={member.name} color={member.color} />
-                        <div>
-                          <strong>{member.name}</strong>
-                          <small>{member.part} · {getAgeMood(member.birthYear).label}</small>
-                        </div>
+                      <div className="team-member-cell" key={member.name}>
+                        <Avatar name={member.name} color={member.color} className="lg" />
+                        <strong>{member.name}</strong>
+                        <small>{getAgeMood(member.birthYear).label}</small>
                       </div>
                     ))}
                   </div>
