@@ -12818,3 +12818,39 @@ button.notif-row {
   word-break: keep-all;
   overflow-wrap: anywhere;
 }
+
+/* 유머 릴스: 작성자 이름이 세로로 깨지지 않게 truncate + 아바타 축소 */
+.ig-reel-text b {
+  min-width: 0;
+}
+.ig-reel-author {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ig-reel-text .tiny-avatar {
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+  font-size: 11px;
+  flex: none;
+}
+
+/* 유머게시판 모바일: 릴스 2열(3열은 너무 작음) + 명예의 전당은 가로 스크롤 한 줄로 컴팩트 */
+@media (max-width: 720px) {
+  .ig-reels {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .humor-rank-grid {
+    grid-auto-columns: 78%;
+    grid-auto-flow: column;
+    grid-template-columns: none;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    padding-bottom: var(--space-1);
+  }
+  .humor-rank-grid > .market-rank {
+    scroll-snap-align: start;
+  }
+}

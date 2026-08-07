@@ -477,7 +477,7 @@ export function HumorBoard({
               <span className="ig-reel-text">
                 <b>
                   <Avatar name={post.author} />
-                  {post.author}
+                  <span className="ig-reel-author">{post.author}</span>
                 </b>
                 <em>{post.body}</em>
                 <small>{post.createdAt}</small>
