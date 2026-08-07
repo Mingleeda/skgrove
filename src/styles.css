@@ -5023,6 +5023,15 @@ textarea {
   line-height: 1.5;
 }
 
+/* 좁은 폰에서는 요약/콘솔의 다열 카드가 뭉개진다. 4열→2열, 3열→2열로 줄여
+   카드 폭을 확보한다(한글 라벨이 한 글자씩 세로로 깨지는 것을 막는다). */
+@media (max-width: 720px) {
+  .metrics-summary,
+  .metrics-leader-console {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 /* 설명문을 걷어내니 왼쪽 열이 제목만 남아 크게 비었다. 두 열로 나눌 내용이
    더는 없으므로 한 열로 쌓는다 — 제목이 머리가 되고 숫자가 그 아래로 온다. */
 .metrics-calendar-panel {
@@ -5976,6 +5985,9 @@ textarea {
   .login-page,
   .memory-hero,
   .memory-layout,
+  .metrics-hero,
+  .metrics-visibility-banner,
+  .metrics-layout,
   .profiles-screen,
   .my-profile-card,
   .two-column,
