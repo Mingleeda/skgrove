@@ -15,7 +15,9 @@ export type ReviewInput = { title: string; body: string; expectedChange: string 
 export type ReviewResult = { ok: boolean; findings?: ReviewFinding[]; reason?: string };
 
 const FIELDS: ReviewField[] = ['title', 'body', 'expectedChange'];
-const TIMEOUT_MS = 8000;
+// 서버리스 콜드스타트 + LLM 이 3개 항목을 건설적으로 재작성하는 데 8초로는 부족해
+// 배포에서 요청이 취소(canceled)됐다. 넉넉히 잡되 무한정 매달리지는 않는다.
+const TIMEOUT_MS = 30000;
 
 // 모듈 로드 시점이 아니라 호출 시점에 읽는다. 테스트에서 환경변수를 갈아끼울 수 있어야 한다.
 function endpoint(): string | undefined {

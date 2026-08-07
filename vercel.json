@@ -8,6 +8,12 @@
   "functions": {
     "api/gathering-image.ts": {
       "maxDuration": 60
+    },
+    "api/review.ts": {
+      "maxDuration": 60
+    },
+    "api/chat.ts": {
+      "maxDuration": 60
     }
   }
 }
