@@ -22,6 +22,13 @@
 - 클릭 → 패널 오픈(우하단에서 위로). 상단: 모드 토글 + 닫기. 본문: 메시지 목록 +
   입력창. 상담 모드일 때만 "갈등 상대 지정(선택)" 셀렉트(팀원 이름).
 - 접힘/펼침만 로컬 상태로 관리. 안 읽음 배지 등은 후속 확장 여지로 남긴다.
+- **벤치마킹(Intercom vs Drift)**: 지식베이스까지 우겨넣지 말고 **채팅에 집중**(Drift가
+  더 깔끔해 선호됨). 콘텐츠를 가리지 않게 — 쉬운 닫기, 적절한 z-index, 모바일(≤720px)에선
+  전체폭 시트로 전환해 본문을 가리지 않기. 접근성: 포커스 트랩·`aria`·`Esc` 닫기.
+- **메시지 표시(ChatGPT·Claude 벤치마킹)**: 컴팩트 위젯이라 말풍선을 쓰되 과하지 않게
+  (사용자=우측 옅은 톤, 봇=좌측 텍스트+마크다운). 답 대기엔 **shimmer 타이핑 표시**,
+  스트리밍으로 토큰을 흘려 "대기"를 "읽기"로. 첫 토큰 <800ms 목표. shimmer는
+  `prefers-reduced-motion`에서 정적 표시로 대체.
 
 ## 3. 구조 — 기존 AI 프록시 규약 재사용
 
@@ -65,12 +72,20 @@
   강제 차단하지 못한다(대나무숲·안건과 동일한 신뢰 모델). 사용자가 이 한계를 인지하고
   C(계정별 저장, 기기 이동 시 이어짐)를 선택함. 향후 Supabase Auth 도입 시 RLS로 강화.
 
-## 6. 페르소나 · 가드레일
+## 6. 페르소나 · 가드레일 (Woebot·Wysa 벤치마킹)
 
-- 톤: 따뜻하되 직설적인 "오은영"식 관계 코칭. 양쪽을 다 이해시키고 **다음 한 걸음**을
-  제안. 평가·편들기보다 번역(서로의 성향을 상대 언어로 옮겨 주기).
-- 가드: 의료·심리 **진단은 하지 않는다**. 위기 신호(자·타해 등)엔 전문가·상담창구 안내로
-  전환. 특정인을 깎아내리는 발언 금지. 근거로 성향·그라운드룰을 인용.
+잘 되는 상담봇(Woebot·Wysa·Pi)의 공통 골격 — **가벼운 구조 + 공감 기법 + 안전장치** — 를
+자유 LLM 위에 얹는다. 완전 자유대화는 품질이 흔들리고, 완전 스크립트는 딱딱하다. 중간.
+
+- **대화 골격(3스텝, 시스템 프롬프트에 명시)**: ① 감정 인정·요약("~해서 답답했겠어요")
+  → ② **양쪽 성향 번역**(나와 상대의 성향을 상대 언어로 옮겨 오해를 풀기) → ③ **다음 한
+  걸음**(오늘 할 수 있는 작은 행동 1개). Woebot의 구조화·목표설정에서 가져옴.
+- **공감 기법**: 이름 부르기, 인정하는 언어, 비판단 톤, 고립감 낮추기("팀에도 비슷한
+  일이 있었어요" — 유사 사례가 여기서 근거로 쓰인다).
+- **가드**: 의료·심리 **진단 금지**. 위기 신호(자·타해 등)엔 조언 대신 **전문 상담창구
+  안내로 전환**(Woebot도 생성형 도입 시 이 경계를 강조). 특정인을 깎아내리는 발언 금지.
+- **출처 인용(신뢰 패턴)**: 답 끝에 근거를 짧게 밝힌다 — "(근거: OO님 성향 '기준형
+  설계자', 팀 룰 §3, 유사사례 SOOP-142)". LLM 자유생성의 불신을 줄인다.
 
 ## 7. 파일 (신규/변경)
 
@@ -90,4 +105,26 @@
 
 ## 9. 스코프 밖(후속)
 
-임베딩 기반 유사도, 스트리밍 중단 버튼, 안 읽음 배지, 상담→안건 전환, 다국어.
+임베딩 기반 유사도, 스트리밍 중단 버튼, 안 읽음 배지, 상담→안건 전환, 다국어,
+주간 목표 리마인드(Woebot식 self-monitoring), 답변 좋아요/싫어요 피드백.
+
+## 10. 벤치마킹 (세계적 챗봇에서 가져온 것 / 버린 것)
+
+| 출처 | 배운 것 | 우리 결정 |
+|---|---|---|
+| **Woebot / Wysa** (CBT 상담봇) | 공감→구조→다음걸음의 가벼운 경로, 이름 부르기·비판단 톤, 위기 안전장치, 목표설정 | §6 3스텝 골격 + 공감 기법 채택. 단, Wysa식 완전 스크립트는 안 씀(자유 LLM + 페르소나 가드로 절충) |
+| **Pi (Inflection)** | 공감·경청 우선 톤 | 오은영 페르소나에 반영 |
+| **ChatGPT / Claude / Cursor** | 스트리밍이 지연 체감을 "읽기"로 전환(첫 토큰<800ms), 타이핑 표시가 지연 불만 완화, 신뢰=스트리밍+인용+피드백+안전+접근성 | 스트리밍 + shimmer 타이핑 + 출처 인용 채택. "본문 풀폭(툴 프레이밍)"은 **안 따름** — 우린 컴팩트 위젯이라 말풍선이 맞음 |
+| **Intercom vs Drift** | Drift의 "채팅만" 깔끔함이 선호, 위젯이 콘텐츠를 가리는 문제 | 지식베이스 우겨넣지 않기, 비차단·모바일 전체폭 시트·쉬운 닫기 |
+
+**버린 것**: 임베딩/RAG 유사도(키워드 매칭으로 충분, YAGNI), 본문 풀폭 레이아웃(위젯엔
+부적합), 스크립트 기반 고정 플로우(딱딱함).
+
+**출처**:
+- [Chatbot UI examples — Lazarev.agency](https://www.lazarev.agency/articles/chatbot-ui-examples)
+- [Designing AI chat interfaces: Anatomy, patterns, pitfalls — Setproduct](https://www.setproduct.com/blog/ai-chat-interface-ui-design)
+- [16 Chat UI Design Patterns That Work in 2026 — Bricx Labs](https://bricxlabs.com/blogs/message-screen-ui-deisgn)
+- [CBT-based chatbots for depression/anxiety: narrative review — ScienceDirect](https://www.sciencedirect.com/org/science/article/pii/S2368795925001271)
+- [Woebot tries generative AI — IEEE Spectrum](https://spectrum.ieee.org/woebot)
+- [Therapeutic alliance with Wysa (free-text CBT agent) — Frontiers](https://www.frontiersin.org/journals/digital-health/articles/10.3389/fdgth.2022.847991/full)
+- [Intercom vs Drift chat tool comparison — Aloa](https://aloa.co/blog/intercom-vs-drift)
