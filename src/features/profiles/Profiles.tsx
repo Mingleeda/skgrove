@@ -13,7 +13,7 @@ import { PanelHeader } from '../../components/PanelHeader';
 import { profiles as initialProfiles } from '../../data/mockData';
 import { loadProfiles, saveProfileForUser } from '../../profileStore';
 import { Assessment } from './AssessmentFlow';
-import { DISC_LABEL } from './assessment';
+import { DISC_GUIDE, DISC_LABEL } from './assessment';
 import { Markdownish } from '../chat/Markdownish';
 import type { CurrentUser, Profile } from '../../types';
 
@@ -107,6 +107,8 @@ export function Profiles({ mode, currentUser, onProfilesChange }: ProfilesProps)
   const [searchTerm, setSearchTerm] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [showAssessment, setShowAssessment] = useState(false);
+  const [editingCollab, setEditingCollab] = useState(false);
+  const [collabDraft, setCollabDraft] = useState('');
 
   const myProfile = useMemo(() => {
     return profileList.find((profile) => profile.name === currentUser.name) ?? profileList[0];
@@ -223,6 +225,12 @@ export function Profiles({ mode, currentUser, onProfilesChange }: ProfilesProps)
     setShowAssessment(false);
   };
 
+  // '나와 일하는 법'만 따로 수정·저장한다(성향 진단 재수행 없이).
+  const saveCollab = () => {
+    applyAssessment({ collabGuide: collabDraft.trim() || undefined });
+    setEditingCollab(false);
+  };
+
   const saveProfile = () => {
     if (!draft.name.trim()) return;
 
@@ -293,25 +301,50 @@ export function Profiles({ mode, currentUser, onProfilesChange }: ProfilesProps)
               <span>역할</span>
               <strong>{cardProfile.role}</strong>
             </div>
-            <div>
-              <span>협업</span>
-              <strong>{cardProfile.collaboration}</strong>
-            </div>
-            <div>
-              <span>피드백</span>
-              <strong>{cardProfile.feedback}</strong>
-            </div>
-            <div>
-              <span>동료 이해 가이드</span>
-              <strong>{cardProfile.guide}</strong>
-            </div>
+            {cardProfile.discType && (
+              <div>
+                <span>소통 가이드 (업무 성향)</span>
+                <strong>{DISC_GUIDE[cardProfile.discType]}</strong>
+              </div>
+            )}
           </div>
-          {cardProfile.collabGuide && (
-            <div className="my-profile-collab">
+
+          <div className="my-profile-collab">
+            <div className="my-profile-collab-head">
               <span>나와 일하는 법</span>
-              <div className="my-profile-collab-body"><Markdownish text={cardProfile.collabGuide} /></div>
+              {!editingCollab && (
+                <button
+                  className="btn-ghost"
+                  onClick={() => {
+                    setCollabDraft(cardProfile.collabGuide ?? '');
+                    setEditingCollab(true);
+                  }}
+                >
+                  <PenLine size={14} /> {cardProfile.collabGuide ? '수정' : '작성'}
+                </button>
+              )}
             </div>
-          )}
+            {editingCollab ? (
+              <div className="my-profile-collab-edit">
+                <textarea
+                  value={collabDraft}
+                  onChange={(event) => setCollabDraft(event.target.value)}
+                  placeholder="예) - 소통: 결론부터 간결하게 주세요"
+                  rows={5}
+                />
+                <div className="profile-form-actions">
+                  <button className="secondary-button" onClick={() => setEditingCollab(false)}>취소</button>
+                  <button className="primary-button" onClick={saveCollab}>
+                    <BadgeCheck size={16} /> 저장
+                  </button>
+                </div>
+              </div>
+            ) : cardProfile.collabGuide ? (
+              <div className="my-profile-collab-body"><Markdownish text={cardProfile.collabGuide} /></div>
+            ) : (
+              <p className="my-profile-collab-empty">아직 없어요. ‘작성’을 눌러 동료가 참고할 협업 방식을 남겨보세요.</p>
+            )}
+          </div>
         </section>
       )}
 
