@@ -6209,7 +6209,8 @@ textarea {
     flex: 1;
   }
 
-  .leader-summary,
+  /* .leader-summary 는 위에서 이미 2열(2x2)로 잡았다 — 여기서 다시 1fr 로 덮으면
+     요약 카드 4개가 세로로 쌓여 화면을 다 먹는다. 탭만 1열로 둔다. */
   .leader-action-tabs {
     grid-template-columns: 1fr;
   }
