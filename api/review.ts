@@ -68,11 +68,9 @@ function parseJson(content: string): { findings?: unknown } | null {
   }
 }
 
-export default async function handler(request: Request): Promise<Response> {
-  if (request.method !== 'POST') {
-    return new Response('Method Not Allowed', { status: 405 });
-  }
-
+// Vercel 은 default export 를 (req,res) 로 호출해 반환 Response 를 버린다(→ 응답 없음 → 504).
+// api/ai.ts·version.ts 처럼 메서드별 named export 를 써야 Web Response 를 제대로 보낸다.
+export async function POST(request: Request): Promise<Response> {
   const apiKey = env('OPENROUTER_API_KEY');
   if (!apiKey) {
     // 키 미주입 → 휴면. reason 은 반드시 'disabled' 여야 한다.
