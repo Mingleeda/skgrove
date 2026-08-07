@@ -20,12 +20,27 @@ export type FaceBrief = {
   collaboration?: string;
   feedback?: string;
   guide?: string;
+  mbti?: string; // 평소 성향(MBTI 4글자)
+  disc?: string; // 업무 성향(DISC: D/I/S/C)
+  collabGuide?: string; // 본인이 밝힌 "나와 일하는 법"
 };
 
 export function briefOf(p: Profile | undefined): FaceBrief | undefined {
   if (!p) return undefined;
   const { name, part, character, trait, style, collaboration, feedback, guide } = p;
-  return { name, part, character, trait, style, collaboration, feedback, guide };
+  return {
+    name,
+    part,
+    character,
+    trait,
+    style,
+    collaboration,
+    feedback,
+    guide,
+    mbti: p.mbtiType,
+    disc: p.discType,
+    collabGuide: p.collabGuide,
+  };
 }
 
 export type CaseBrief = { source: string; id: string; title: string; status: string; snippet: string };

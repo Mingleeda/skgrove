@@ -21,6 +21,12 @@ type ProfileRow = {
   feedback: string;
   guide: string;
   color: Profile['color'];
+  mbti_type?: string | null;
+  mbti_scores?: unknown;
+  disc_type?: string | null;
+  disc_secondary?: string | null;
+  disc_scores?: unknown;
+  collab_guide?: string | null;
 };
 
 export async function loadProfiles(fallback: Profile[], currentUser: CurrentUser) {
@@ -100,6 +106,12 @@ function profileFromRow(row: ProfileRow): Profile {
     feedback: row.feedback,
     guide: row.guide,
     color: row.color,
+    mbtiType: row.mbti_type ?? undefined,
+    mbtiScores: (row.mbti_scores as Profile['mbtiScores']) ?? undefined,
+    discType: (row.disc_type as Profile['discType']) ?? undefined,
+    discSecondary: (row.disc_secondary as Profile['discSecondary']) ?? undefined,
+    discScores: (row.disc_scores as Profile['discScores']) ?? undefined,
+    collabGuide: row.collab_guide ?? undefined,
   };
 }
 
@@ -120,5 +132,11 @@ function profileToRow(profile: Profile, ownerEmail?: string): ProfileRow {
     feedback: profile.feedback,
     guide: profile.guide,
     color: profile.color,
+    mbti_type: profile.mbtiType ?? null,
+    mbti_scores: profile.mbtiScores ?? null,
+    disc_type: profile.discType ?? null,
+    disc_secondary: profile.discSecondary ?? null,
+    disc_scores: profile.discScores ?? null,
+    collab_guide: profile.collabGuide ?? null,
   };
 }

@@ -180,7 +180,20 @@ export type Profile = {
   feedback: string;
   guide: string;
   color: 'green' | 'red' | 'blue' | 'yellow';
+  // 성향 진단 결과(선택). 없으면 아직 진단 안 함.
+  mbtiType?: string; // 예: 'INFP'
+  mbtiScores?: MbtiScores; // 각 축 lean 0~100 (해당 글자 쪽 비중)
+  discType?: DiscKey; // 업무 1차 유형
+  discSecondary?: DiscKey;
+  discScores?: DiscScores;
+  collabGuide?: string; // "나와 일하는 법" — AI로 뽑아 붙여넣은 자유서술
 };
+
+// MBTI 4축. 값은 첫 글자(E/S/T/J) 쪽 비중 0~100. 50 미만이면 반대 글자(I/N/F/P).
+export type MbtiScores = { EI: number; SN: number; TF: number; JP: number };
+
+export type DiscKey = 'D' | 'I' | 'S' | 'C';
+export type DiscScores = { D: number; I: number; S: number; C: number };
 
 // AI 상담 챗봇 — 한 대화(session)의 메시지 한 건. 저장은 counselStore(Supabase/localStorage).
 export type CounselMode = 'counsel' | 'rule';

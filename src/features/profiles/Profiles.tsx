@@ -12,6 +12,9 @@ import { Avatar } from '../../components/Avatar';
 import { PanelHeader } from '../../components/PanelHeader';
 import { profiles as initialProfiles } from '../../data/mockData';
 import { loadProfiles, saveProfileForUser } from '../../profileStore';
+import { Assessment } from './AssessmentFlow';
+import { DISC_LABEL } from './assessment';
+import { Markdownish } from '../chat/Markdownish';
 import type { CurrentUser, Profile } from '../../types';
 
 type ProfileDraft = Omit<Profile, 'color'>;
@@ -103,6 +106,7 @@ export function Profiles({ mode, currentUser, onProfilesChange }: ProfilesProps)
   const [partFilter, setPartFilter] = useState('전체');
   const [searchTerm, setSearchTerm] = useState('');
   const [isEditing, setIsEditing] = useState(false);
+  const [showAssessment, setShowAssessment] = useState(false);
 
   const myProfile = useMemo(() => {
     return profileList.find((profile) => profile.name === currentUser.name) ?? profileList[0];
@@ -207,6 +211,18 @@ export function Profiles({ mode, currentUser, onProfilesChange }: ProfilesProps)
     setIsEditing(true);
   };
 
+  // 진단 결과를 내 프로필에 병합·저장한다(색·요약·협업 가이드 포함).
+  const applyAssessment = (patch: Partial<Profile>) => {
+    if (!myProfile) return;
+    const nextProfile: Profile = { ...myProfile, ...patch };
+    const nextProfiles = [nextProfile, ...profileList.filter((profile) => profile.name !== nextProfile.name)];
+    setProfileList(nextProfiles);
+    onProfilesChange?.(nextProfiles);
+    void saveProfileForUser(nextProfile, currentUser, profileList);
+    setSelectedName(nextProfile.name);
+    setShowAssessment(false);
+  };
+
   const saveProfile = () => {
     if (!draft.name.trim()) return;
 
@@ -214,6 +230,13 @@ export function Profiles({ mode, currentUser, onProfilesChange }: ProfilesProps)
       ...draft,
       name: draft.name.trim(),
       color: myProfile?.color ?? colorCycle[profileList.length % colorCycle.length],
+      // 진단 결과는 draft(텍스트 설문)에 없으므로, 카드 텍스트만 고칠 때 지워지지 않게 보존한다.
+      mbtiType: myProfile?.mbtiType,
+      mbtiScores: myProfile?.mbtiScores,
+      discType: myProfile?.discType,
+      discSecondary: myProfile?.discSecondary,
+      discScores: myProfile?.discScores,
+      collabGuide: myProfile?.collabGuide,
     };
     const nextProfiles = [nextProfile, ...profileList.filter((profile) => profile.name !== nextProfile.name)];
     setProfileList(nextProfiles);
@@ -246,11 +269,25 @@ export function Profiles({ mode, currentUser, onProfilesChange }: ProfilesProps)
               <strong>{cardProfile.englishName} · {cardProfile.character}</strong>
             </div>
             <p className="my-profile-trait">{cardProfile.trait}</p>
-            <button className="secondary-button" onClick={startEdit}>
-              <PenLine size={17} />
-              카드 수정
-            </button>
+            <div className="my-profile-actions">
+              <button className="primary-button" onClick={() => setShowAssessment(true)}>
+                <Sparkles size={16} />
+                {cardProfile.mbtiType ? '성향 재진단' : '성향 진단'}
+              </button>
+              <button className="secondary-button" onClick={startEdit}>
+                <PenLine size={17} />
+                카드 수정
+              </button>
+            </div>
           </div>
+          {(cardProfile.mbtiType || cardProfile.discType) && (
+            <div className="my-profile-typechips">
+              {cardProfile.mbtiType && <span className="type-chip mbti">{cardProfile.mbtiType}</span>}
+              {cardProfile.discType && (
+                <span className="type-chip disc">{DISC_LABEL[cardProfile.discType]} ({cardProfile.discType})</span>
+              )}
+            </div>
+          )}
           <div className="my-profile-notes">
             <div>
               <span>역할</span>
@@ -269,7 +306,17 @@ export function Profiles({ mode, currentUser, onProfilesChange }: ProfilesProps)
               <strong>{cardProfile.guide}</strong>
             </div>
           </div>
+          {cardProfile.collabGuide && (
+            <div className="my-profile-collab">
+              <span>나와 일하는 법</span>
+              <div className="my-profile-collab-body"><Markdownish text={cardProfile.collabGuide} /></div>
+            </div>
+          )}
         </section>
+      )}
+
+      {mode === 'mine' && showAssessment && myProfile && (
+        <Assessment profile={myProfile} onComplete={applyAssessment} onCancel={() => setShowAssessment(false)} />
       )}
 
       {mode === 'mine' && isEditing && (

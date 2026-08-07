@@ -786,3 +786,11 @@ create policy "Allow prototype counsel reads"
   on public.counsel_messages for select using (true);
 create policy "Allow prototype counsel writes"
   on public.counsel_messages for insert with check (true);
+
+-- 성향 진단(MBTI/DISC) + 협업 가이드 컬럼 (profiles). 모두 nullable.
+alter table public.profiles add column if not exists mbti_type text;
+alter table public.profiles add column if not exists mbti_scores jsonb;
+alter table public.profiles add column if not exists disc_type text;
+alter table public.profiles add column if not exists disc_secondary text;
+alter table public.profiles add column if not exists disc_scores jsonb;
+alter table public.profiles add column if not exists collab_guide text;
