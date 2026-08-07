@@ -1353,9 +1353,31 @@ export function App() {
   // 홈 피드에서 게시글을 누르면 그 섹션으로 이동해 해당 항목 상세를 연다(딥링크).
   // 각 보드는 focusId 를 받으면 그 항목 상세를 열고 onFocusHandled 로 한 번만 소비한다.
   const [feedFocus, setFeedFocus] = useState<{ section: Section; id: string } | null>(null);
+  // 인스타처럼 '본 스토리'를 기록한다. 본 번개는 트레이에서 뒤로 밀리고 링이 회색이 된다.
+  const [viewedStoryIds, setViewedStoryIds] = useState<string[]>(() => {
+    try {
+      const raw = localStorage.getItem('skgrove:viewedStories');
+      return raw ? (JSON.parse(raw) as string[]) : [];
+    } catch {
+      return [];
+    }
+  });
   const openFeedItem = (section: Section, id: string) => {
     changeSection(section);
     setFeedFocus({ section, id });
+    // 번개 스토리를 열면 '봤음'으로 기록(피드의 다른 도메인은 스토리가 아니라 무시).
+    if (section === 'gatherings') {
+      setViewedStoryIds((prev) => {
+        if (prev.includes(id)) return prev;
+        const next = [...prev, id];
+        try {
+          localStorage.setItem('skgrove:viewedStories', JSON.stringify(next));
+        } catch {
+          // 저장 실패해도 화면 정렬/링은 이번 세션 동안 유지된다.
+        }
+        return next;
+      });
+    }
   };
   const clearFeedFocus = () => setFeedFocus(null);
   const focusFor = (section: Section) => (feedFocus?.section === section ? feedFocus.id : null);
@@ -1432,6 +1454,7 @@ export function App() {
           now={nowStamp()}
           onSectionChange={changeSection}
           onOpenFeedItem={openFeedItem}
+          viewedStoryIds={viewedStoryIds}
           onIdentityChange={setIdentity}
         />
       )}

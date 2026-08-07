@@ -49,6 +49,8 @@ type DashboardProps = {
   onSectionChange: (section: Section) => void;
   // 피드 게시글 클릭: 섹션으로만 가지 않고 그 항목 상세를 연다. id 는 도메인 원본 id(접두어 제거).
   onOpenFeedItem: (section: Section, id: string) => void;
+  // 인스타처럼 본 스토리는 뒤로 밀고 링을 회색으로. App 이 localStorage 로 유지한다.
+  viewedStoryIds: string[];
   onIdentityChange: (identity: Identity) => void;
 };
 
@@ -66,15 +68,23 @@ export function Dashboard({
   now,
   onSectionChange,
   onOpenFeedItem,
+  viewedStoryIds,
   onIdentityChange,
 }: DashboardProps) {
+  const viewedSet = new Set(viewedStoryIds);
   /*
     스토리 줄에는 번개(flash)로 등록된 것만, 최신 등록순(맨 앞이 최신)으로 올린다.
     취소된 것은 뺀다.
   */
   const flashStories = gatherings
     .filter((item) => !item.canceled && item.kind === 'flash')
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+    .sort((a, b) => {
+      // 안 본 스토리 먼저(인스타). 같은 그룹 안에서는 최신 등록순.
+      const av = viewedSet.has(a.id) ? 1 : 0;
+      const bv = viewedSet.has(b.id) ? 1 : 0;
+      if (av !== bv) return av - bv;
+      return b.createdAt.localeCompare(a.createdAt);
+    })
     .slice(0, 12);
 
   /*
@@ -113,7 +123,7 @@ export function Dashboard({
         </button>
         {flashStories.map((item) => (
           <button className="ig-story" key={item.id} onClick={() => onOpenFeedItem('gatherings', item.id)} type="button">
-            <span className="ig-ring">
+            <span className={viewedSet.has(item.id) ? 'ig-ring viewed' : 'ig-ring'}>
               <span className="ig-thumb">
                 <Zap size={22} strokeWidth={1.6} />
               </span>

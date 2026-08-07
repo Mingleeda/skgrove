@@ -11915,3 +11915,8 @@ button.notif-row {
 .cp-summary-actions .rotated {
   transform: rotate(180deg);
 }
+
+/* 인스타처럼 이미 본 번개 스토리는 링을 회색으로 (안 본 것만 컬러) */
+.ig-ring.viewed {
+  background: var(--color-border);
+}
