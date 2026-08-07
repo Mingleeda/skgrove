@@ -340,18 +340,22 @@ export function GatheringBoard({
                   </div>
                 ) : selected.coffeePick ? (
                   <div className="coffee-pick-result">
-                    <div className="coffee-pick-winner">
-                      <Avatar name={selected.coffeePick} className="lg" />
-                      <div>
-                        <span>오늘 커피 담당</span>
-                        <strong>{selected.coffeePick}</strong>
-                      </div>
-                      {selected.coffeePickedAt && <em>{formatPickedAt(selected.coffeePickedAt)} 뽑음</em>}
+                    <div className="coffee-result-hero">
+                      <span className="coffee-result-avatar">
+                        <Avatar name={selected.coffeePick} className="xl" />
+                      </span>
+                      <span className="coffee-result-label">
+                        <Coffee size={13} /> 오늘 커피 담당
+                      </span>
+                      <strong className="coffee-result-name">{selected.coffeePick}</strong>
+                      {selected.coffeePickedAt && (
+                        <span className="coffee-result-meta">{formatPickedAt(selected.coffeePickedAt)} · 재추첨 없이 확정</span>
+                      )}
                     </div>
                     {/* 뽑은 순간의 후보 전원을 박제해 보여준다 — 재추첨이 막혀 있어 이 명단에서 공정하게 나온 것이 증명된다. */}
                     {selected.coffeePool && selected.coffeePool.length > 0 && (
-                      <div className="coffee-pool">
-                        <span className="coffee-pool-label">후보 {selected.coffeePool.length}명 중에서</span>
+                      <div className="coffee-result-pool">
+                        <span className="coffee-pool-label">후보 {selected.coffeePool.length}명 중에서 공정하게 뽑혔어요</span>
                         <div className="coffee-pool-chips">
                           {selected.coffeePool.map((name) => (
                             <span className={name === selected.coffeePick ? 'won' : ''} key={name}>
