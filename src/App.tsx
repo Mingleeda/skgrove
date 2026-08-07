@@ -1034,6 +1034,23 @@ export function App() {
     persistGatherings([enriched, ...gatherings]);
 
     /*
+      연 사람은 자기 모임의 기본 참여자다. 커피내기는 확정 2명부터 뽑히는데
+      호스트가 안 잡히면 혼자 열고도 못 뽑는다. 열자마자 확정 1번으로 넣는다.
+      원치 않으면 상세에서 '신청 취소'로 빠질 수 있어 되돌릴 수 있다.
+    */
+    const hostSignup: GatheringSignup = {
+      id: `SGN-${Date.now().toString(36).toUpperCase()}`,
+      gatheringId: id,
+      name: currentUser.name,
+      createdAt: new Date().toISOString(),
+    };
+    if (await insertSignup(hostSignup)) {
+      const nextSignups = [...gatheringSignups, hostSignup];
+      setGatheringSignups(nextSignups);
+      cacheSignups(nextSignups);
+    }
+
+    /*
       그림은 등록을 마친 뒤 배경에서 그린다. 10초 넘게 걸리는 일을 등록 버튼에 매달면
       '번개' 가 번개가 아니게 된다. 그동안 카드는 방금 만든 포스터를 보여주고 있으므로
       빈 자리가 생기지도 않는다. 다 그려지면 그 자리만 조용히 사진으로 바뀐다.
