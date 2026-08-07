@@ -20,7 +20,7 @@ import { insertCounselMessage, loadCounselMessages } from '../../counselStore';
 import type { CounselMessage, CurrentUser, Agenda, Issue, Profile } from '../../types';
 import { findSimilarCases } from './similarCases';
 import { Markdownish } from './Markdownish';
-import mascotUrl from './mascot.png';
+import mascotUrl from './mascot.webp';
 
 type ChatWidgetProps = {
   currentUser: CurrentUser;
