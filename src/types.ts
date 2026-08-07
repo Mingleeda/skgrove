@@ -182,6 +182,19 @@ export type Profile = {
   color: 'green' | 'red' | 'blue' | 'yellow';
 };
 
+// AI 상담 챗봇 — 한 대화(session)의 메시지 한 건. 저장은 counselStore(Supabase/localStorage).
+export type CounselMode = 'counsel' | 'rule';
+export type CounselMessage = {
+  id: string;
+  sessionId: string;
+  author: string; // 작성자 이메일(소프트 스코핑 키)
+  mode: CounselMode;
+  role: 'user' | 'assistant';
+  content: string;
+  partnerName?: string; // 상담 모드에서 지정한 갈등 상대(있을 때만)
+  createdAt: string;
+};
+
 export type ConnectResultMode = 'coffee' | 'teams';
 
 export type SavedDrawResult = {

@@ -41,6 +41,7 @@ import {
 } from './data/mockData';
 import { ActionBoard } from './features/actions/ActionBoard';
 import { ActionCreateForm } from './features/actions/ActionCreateForm';
+import { ChatWidget } from './features/chat/ChatWidget';
 import { AgendaBoard } from './features/agenda/AgendaBoard';
 import type { AgendaDraft } from './features/agenda/AgendaForm';
 import { AccountManagement } from './features/auth/AccountManagement';
@@ -1662,6 +1663,8 @@ export function App() {
       {/* 토스트는 경계 밖에 둔다. 화면이 깨져도 저장 실패 같은 알림은 계속 보여야 한다. */}
       <ToastRegion toasts={toasts} onDismiss={dismiss} />
     </AppShell>
+    {/* AI 상담 챗봇 — 라우팅과 무관하게 모든 화면 위에 떠 있는 플로팅 위젯. */}
+    <ChatWidget currentUser={currentUser} profiles={profileDirectory} issues={issues} agendas={agendas} />
     </ProfilesContext.Provider>
   );
 }

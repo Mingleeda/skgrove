@@ -759,3 +759,30 @@ create policy "Allow prototype humor image deletes"
   on storage.objects
   for delete
   using (bucket_id = 'humor-images');
+
+-- ============================================================
+-- AI 상담 챗봇 대화 저장 (counsel_messages)
+-- 주의: 이 앱은 실제 인증이 없고 anon 키 + prototype RLS라, author 필터는
+-- 소프트 스코핑이다(DB가 남의 상담 열람을 강제 차단하지 못함). 다른 테이블과 동일 모델.
+-- ============================================================
+create table if not exists public.counsel_messages (
+  id text primary key,
+  session_id text,
+  author text,
+  mode text,
+  role text,
+  content text,
+  partner_name text,
+  created_at timestamptz default now()
+);
+create index if not exists counsel_messages_author_idx on public.counsel_messages (author, created_at);
+
+alter table public.counsel_messages enable row level security;
+
+drop policy if exists "Allow prototype counsel reads" on public.counsel_messages;
+drop policy if exists "Allow prototype counsel writes" on public.counsel_messages;
+
+create policy "Allow prototype counsel reads"
+  on public.counsel_messages for select using (true);
+create policy "Allow prototype counsel writes"
+  on public.counsel_messages for insert with check (true);
