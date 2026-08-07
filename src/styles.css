@@ -12170,7 +12170,9 @@ button.notif-row {
   padding: 0;
   border: none;
   border-radius: var(--radius-full);
-  background: var(--color-primary);
+  /* 마스코트의 흰 부분은 투명 구멍이라, 뒤에 흰 배경을 깔아야 흰 얼굴로 보인다.
+     파란 배경을 깔면 그 파랑이 얼굴로 비쳐 '파란 얼굴'이 된다. */
+  background: var(--color-surface);
   box-shadow: var(--shadow-float);
   cursor: pointer;
   overflow: hidden;
@@ -12276,7 +12278,7 @@ button.notif-row {
   flex: none;
   overflow: hidden;
   border-radius: var(--radius-full);
-  background: var(--color-primary);
+  background: var(--color-surface);
 }
 .chat-head-id strong {
   display: block;
