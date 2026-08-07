@@ -12497,9 +12497,10 @@ button.notif-row {
     height: 82vh;
     border-radius: var(--radius-lg) var(--radius-lg) 0 0;
   }
+  /* 하단 탭바(.sidebar, 약 76px)를 가리지 않게 그 위로 띄운다. safe-area 까지 더한다. */
   .chat-fab {
     right: var(--space-4);
-    bottom: var(--space-4);
+    bottom: calc(76px + var(--space-3) + env(safe-area-inset-bottom, 0px));
   }
 }
 
