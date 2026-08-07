@@ -8,6 +8,7 @@ const CONFIG_TABLE = 'app_config';
 // DB가 없을 때 쓰는 로컬 키. 기존 저장분을 그대로 이어받도록 예전 키를 유지한다.
 export const CAN_STEPS_KEY = 'skgrove:cansteps';
 export const TEA_SESSION_TYPES_KEY = 'skgrove:teasessiontypes';
+export const NOTIFY_SETTINGS_KEY = 'skgrove:notifysettings';
 
 // DB 없거나 값이 없으면 fallback. 로컬 캐시는 항상 갱신해 다음 오프라인 로드에 대비한다.
 export async function loadConfig<T>(key: string, fallback: T): Promise<T> {

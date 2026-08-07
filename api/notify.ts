@@ -15,6 +15,8 @@
 
 type NotifyPayload = {
   channel?: 'team' | 'connector';
+  // 시스템 관리 화면에서 설정한 실제 채널 ID. 있으면 이걸로 게시, 없으면 env 폴백.
+  channelId?: string;
   dm?: boolean;
   announce?: boolean;
   recipientEmail?: string;
@@ -23,6 +25,12 @@ type NotifyPayload = {
   text?: string;
   from?: string;
 };
+
+// 게시할 채널 ID: 프론트가 설정에서 넘긴 channelId 우선, 없으면 서버 env 폴백.
+function resolveChannelId(payload: NotifyPayload): string | undefined {
+  if (payload.channelId) return payload.channelId;
+  return payload.channel === 'team' ? env('SLACK_CHANNEL_TEAM') : env('SLACK_CHANNEL_CONNECTOR');
+}
 
 const SLACK_API = 'https://slack.com/api';
 
@@ -173,7 +181,7 @@ export async function POST(request: Request): Promise<Response> {
 
   // 티미팅 공지문: 완성된 안내문을 채널에 그대로 게시.
   if (payload.announce) {
-    const channelId = payload.channel === 'team' ? env('SLACK_CHANNEL_TEAM') : env('SLACK_CHANNEL_CONNECTOR');
+    const channelId = resolveChannelId(payload);
     if (!channelId) {
       return Response.json({ ok: false, reason: `channel id not configured for ${payload.channel}` });
     }
@@ -181,11 +189,9 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json({ ok: sent.ok, reason: sent.error });
   }
 
-  // 개인 DM: 기능은 완성돼 있으나 SLACK_DM_ENABLED로 잠가둔다(세팅 완료 후 개방).
+  // 개인 DM: DM 허용 여부는 시스템 관리 화면(dmEnabled)에서 프론트가 결정한다.
+  // 서버는 요청이 오면 발송한다(수신자 슬랙 이메일이 등록된 사람만 프론트가 보냄).
   if (payload.dm) {
-    if (env('SLACK_DM_ENABLED') !== 'true') {
-      return Response.json({ ok: false, reason: 'DM disabled (SLACK_DM_ENABLED not set)' });
-    }
     if (!payload.recipientEmail) {
       return Response.json({ ok: false, reason: 'no recipientEmail' });
     }
@@ -205,7 +211,7 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   // 채널 게시
-  const channelId = payload.channel === 'team' ? env('SLACK_CHANNEL_TEAM') : env('SLACK_CHANNEL_CONNECTOR');
+  const channelId = resolveChannelId(payload);
   if (!channelId) {
     return Response.json({ ok: false, reason: `channel id not configured for ${payload.channel}` });
   }

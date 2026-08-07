@@ -633,6 +633,54 @@ h1 {
   line-height: 1.45;
 }
 
+/* 시스템 관리(알림 발송 설정) 레이아웃. 색은 토큰만 쓴다. */
+.system-note {
+  color: var(--color-muted);
+  font-size: var(--text-meta);
+  line-height: 1.5;
+  margin: -4px 0 12px;
+}
+
+.system-toggle-row {
+  align-items: center;
+  display: flex;
+  gap: var(--space-3);
+  justify-content: space-between;
+  padding: 10px 0;
+}
+
+.system-toggle-row > div {
+  display: grid;
+  gap: 2px;
+}
+
+.system-toggle-row strong {
+  font-size: var(--text-body);
+  font-weight: 600;
+}
+
+.system-toggle-row span {
+  color: var(--color-muted);
+  font-size: var(--text-meta);
+  line-height: 1.4;
+}
+
+.system-route-list {
+  display: grid;
+  gap: 8px;
+}
+
+.system-route-row {
+  align-items: center;
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: 1fr auto;
+}
+
+.system-route-row span {
+  font-weight: 600;
+}
+
 /* 첫 로그인 안내(비밀번호 설정). 놓치지 않게 옅은 파랑 박스로 또렷하게. */
 .login-hint {
   background: var(--tint-primary);

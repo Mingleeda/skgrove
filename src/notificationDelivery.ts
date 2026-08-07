@@ -21,14 +21,16 @@ function post(body: Record<string, unknown>) {
 }
 
 // 채널 게시(공지·제안 등, 이벤트당 1회). kind는 프록시가 헤더/이모지를 꾸미는 데 쓴다.
+// channelId: 설정에 든 실제 슬랙 채널 ID. 비어 있으면 서버가 env(SLACK_CHANNEL_*)로 폴백한다.
 export function deliverToSlack(
   channel: SlackChannel,
+  channelId: string,
   kind: NotificationKind,
   title: string,
   text: string,
   from: string,
 ) {
-  post({ channel, kind, title, text, from });
+  post({ channel, channelId, kind, title, text, from });
 }
 
 // 개인 DM(수신자별). 프록시가 SLACK_DM_ENABLED로 잠가둬, 세팅 완료 전까지 실제 발송되지 않는다.
@@ -43,13 +45,17 @@ export function deliverDm(
 }
 
 // 이번 티미팅 공지문을 채널로 전송(버튼). 결과를 반환해 UI 피드백에 쓴다.
-export async function sendAnnouncement(channel: SlackChannel, text: string): Promise<'sent' | 'failed' | 'disabled'> {
+export async function sendAnnouncement(
+  channel: SlackChannel,
+  channelId: string,
+  text: string,
+): Promise<'sent' | 'failed' | 'disabled'> {
   if (!ENDPOINT) return 'disabled';
   try {
     const res = await fetch(ENDPOINT, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ channel, announce: true, text }),
+      body: JSON.stringify({ channel, channelId, announce: true, text }),
     });
     const data = (await res.json().catch(() => ({ ok: false }))) as { ok?: boolean };
     return data.ok ? 'sent' : 'failed';

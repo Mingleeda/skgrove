@@ -14,8 +14,9 @@ import { Avatar } from './Avatar';
 function canSee(id: Section, canUseLeaderMenu: boolean, canUseAccountsMenu: boolean, canUseConnectionerMenu: boolean) {
   if (id === 'leader') return canUseLeaderMenu;
   if (id === 'accounts') return canUseAccountsMenu;
-  // 조뽑기 등 커넥셔너 도구는 커넥셔너로 지정된 사람에게만.
+  // 조뽑기·시스템 관리 등 커넥셔너 도구는 커넥셔너로 지정된 사람에게만.
   if (id === 'connect') return canUseConnectionerMenu;
+  if (id === 'system') return canUseConnectionerMenu;
   return true;
 }
 
@@ -44,6 +45,7 @@ export function AppShell({
   // 리더 관리함은 실제 리더 역할(파트리더·팀리더)에게만. 커넥셔너 전권은 통과시키지 않는다.
   const userCanUseLeaderMenu = hasLeaderRole(currentUser);
   const userCanUseAccountsMenu = isTeamLeader(currentUser);
+  // 조뽑기·시스템 관리는 커넥셔너(슈퍼관리자)에게만 노출.
   const userCanUseConnectionerMenu = isConnectioner(currentUser);
 
   const [photoOpen, setPhotoOpen] = useState(false);

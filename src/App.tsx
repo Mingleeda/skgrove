@@ -4,7 +4,7 @@ import { loadActionItems, makeActionItemId, saveActionItems } from './actionItem
 import { applySelection, finalStatus, isOpen, liveStatus, settleAgendas } from './agendaRules';
 import { loadAgendas, makeAgendaId, makeAgendaOptions, saveAgendas } from './agendaStore';
 import { hasVoted, loadBallots, makeVoterKey, saveBallots } from './ballotStore';
-import { hasLeaderRole, isLeader, isTeamLeader, teamParts } from './auth';
+import { hasLeaderRole, isConnectioner, isLeader, isTeamLeader, teamParts } from './auth';
 import { loadCanSteps, saveCanSteps } from './canStepsStore';
 import {
   loadCanOpinions,
@@ -73,11 +73,19 @@ import {
   marketCanceledDrafts,
   marketOutbidDrafts,
   marketWonDrafts,
-  slackChannelForKind,
   teaProposalDrafts,
   type NotificationDraft,
 } from './notificationRules';
 import { loadNotifications, makeNotificationId, saveNotifications } from './notificationStore';
+import {
+  DEFAULT_NOTIFY_SETTINGS,
+  channelIdFor,
+  loadNotifySettings,
+  routeForKind,
+  saveNotifySettings,
+  type NotifySettings,
+} from './notifySettingsStore';
+import { SystemManagement } from './features/system/SystemManagement';
 import {
   loadHumorComments,
   loadHumorPosts,
@@ -208,6 +216,8 @@ export function App() {
   const [teaSessions, setTeaSessions] = useState<TeaSession[]>(initialTeaSessions);
   const [teaSessionTypes, setTeaSessionTypes] = useState<string[]>(DEFAULT_TEA_SESSION_TYPES);
   const [notifications, setNotifications] = useState<AppNotification[]>(initialNotifications);
+  // 알림 발송 설정(팀 공용). 시스템 관리 화면에서 커넥셔너가 조정. DB에서 로드 전엔 기본값.
+  const [notifySettings, setNotifySettings] = useState<NotifySettings>(DEFAULT_NOTIFY_SETTINGS);
   const [humorPosts, setHumorPosts] = useState<HumorPost[]>(initialHumorPosts);
   const [humorComments, setHumorComments] = useState<HumorComment[]>(initialHumorComments);
   const [gatherings, setGatherings] = useState<Gathering[]>([]);
@@ -316,6 +326,9 @@ export function App() {
     loadCanSteps().then((loaded) => {
       if (isMounted) setCanSteps(loaded);
     });
+    loadNotifySettings().then((loaded) => {
+      if (isMounted) setNotifySettings(loaded);
+    });
     loadNotifications().then((loaded) => {
       if (isMounted) {
         setNotifications(loaded);
@@ -410,6 +423,11 @@ export function App() {
     saveNotifications(next);
   };
 
+  const persistNotifySettings = (next: NotifySettings) => {
+    setNotifySettings(next);
+    void saveNotifySettings(next);
+  };
+
   // draft들을 dedupe 후 id 부여해 추가하고, 각 건을 전송 어댑터로 흘려보낸다.
   // 같은 tick에 여러 이벤트가 있으면 반드시 한 번의 notify(배열)로 넘긴다(중간 상태 클로버 방지).
   const notify = (drafts: NotificationDraft[]) => {
@@ -420,7 +438,9 @@ export function App() {
     if (fresh.length === 0) return;
     const next = [...fresh, ...notifications];
     persistNotifications(next);
-    // 슬랙: 이벤트(kind:sourceId)당 채널 1회. DM은 수신자별이라 이벤트별 draft를 모아둔다.
+    // 슬랙 발송은 시스템 관리 설정을 따른다. 마스터가 꺼져 있으면 인앱 알림만.
+    if (!notifySettings.slackEnabled) return;
+    // 이벤트(kind:sourceId)당 채널 1회. DM은 수신자별이라 이벤트별 draft를 모아둔다.
     const byEvent = new Map<string, AppNotification[]>();
     fresh.forEach((item) => {
       const key = `${item.kind}:${item.sourceId}`;
@@ -429,27 +449,24 @@ export function App() {
       else byEvent.set(key, [item]);
     });
     // 슬랙 이메일이 명시적으로 등록된 사람만 DM 대상. 앱 로그인 이메일로 폴백하지 않는다
-    // (매핑 안 된 사람에게 엉뚱한 상대로 DM이 가는 걸 방지). 실제 발송은 서버 SLACK_DM_ENABLED 로 잠금.
+    // (매핑 안 된 사람에게 엉뚱한 상대로 DM이 가는 걸 방지).
     const slackEmailFor = (name: string) => accounts.find((item) => item.name === name)?.slackEmail;
     byEvent.forEach((items) => {
       const rep = items[0];
-      if (rep.kind === 'message') {
-        const slackEmail = slackEmailFor(rep.recipientName);
-        if (slackEmail) deliverDm(slackEmail, rep.kind, rep.title, rep.body, rep.fromName);
-        return;
-      }
-      // 대나무숲 접수는 채널에 뿌리지 않고 '전달 대상' 리더에게만 개인 DM으로 보낸다.
-      // (채널 게시는 모두에게 노출돼, 특정 리더에게 향한 접수 취지와 안 맞는다.)
-      // 익명 접수도 본문엔 '익명 접수'로만 나가 작성자는 드러나지 않는다.
-      if (rep.kind === 'issue') {
+      const route = routeForKind(notifySettings, rep.kind);
+      if (route === 'off') return;
+      if (route === 'dm') {
+        // 대나무숲·개인 메시지 등 DM 경로는 수신자마다 개인 DM. 익명 접수도 본문엔
+        // '익명 접수'로만 나가 작성자는 드러나지 않는다.
+        if (!notifySettings.dmEnabled) return;
         items.forEach((item) => {
           const slackEmail = slackEmailFor(item.recipientName);
           if (slackEmail) deliverDm(slackEmail, item.kind, item.title, item.body, item.fromName);
         });
         return;
       }
-      const channel = slackChannelForKind(rep.kind);
-      if (channel) deliverToSlack(channel, rep.kind, rep.title, rep.body, rep.fromName);
+      // 채널 경로(team/connector): 설정에 든 실제 채널 ID로 게시(비면 서버 env 폴백).
+      deliverToSlack(route, channelIdFor(notifySettings, route), rep.kind, rep.title, rep.body, rep.fromName);
     });
   };
 
@@ -813,7 +830,10 @@ export function App() {
   };
 
   // 이번 티미팅 공지문을 팀 전체 채널로 전송.
-  const announceTeaToSlack = (text: string) => sendAnnouncement('team', text);
+  const announceTeaToSlack = (text: string) =>
+    notifySettings.slackEnabled
+      ? sendAnnouncement('team', channelIdFor(notifySettings, 'team'), text)
+      : Promise.resolve('disabled' as const);
 
   // ===== 유머게시판 =====
   const persistHumorPosts = (next: HumorPost[]) => {
@@ -1340,6 +1360,11 @@ export function App() {
       setActive('dashboard');
       return;
     }
+    // 시스템 관리는 커넥셔너(슈퍼관리자)만. 딥링크(#system)로도 못 들어온다.
+    if (section === 'system' && currentUser && !isConnectioner(currentUser)) {
+      setActive('dashboard');
+      return;
+    }
     setActive(section);
   };
 
@@ -1613,6 +1638,9 @@ export function App() {
       {active === 'memory' && <Memory currentUser={currentUser} />}
       {active === 'metrics' && <Metrics currentUser={currentUser} />}
       {active === 'accounts' && isTeamLeader(currentUser) && <AccountManagement accounts={accounts} onAccountsChange={persistAccounts} />}
+      {active === 'system' && isConnectioner(currentUser) && (
+        <SystemManagement settings={notifySettings} onSettingsChange={persistNotifySettings} />
+      )}
       </ErrorBoundary>
       {/* 토스트는 경계 밖에 둔다. 화면이 깨져도 저장 실패 같은 알림은 계속 보여야 한다. */}
       <ToastRegion toasts={toasts} onDismiss={dismiss} />

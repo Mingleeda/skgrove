@@ -9,6 +9,7 @@ import {
   Inbox,
   Laugh,
   MessageSquarePlus,
+  Settings,
   Shuffle,
   Sparkles,
   Store,
@@ -47,6 +48,7 @@ export const sections: AppSection[] = [
   { id: 'metrics', label: '파트지수 / 리포트', icon: BarChart3, owner: '김수정' },
   { id: 'notifications', label: '알림 / 메시지', icon: Bell, owner: '김승현' },
   { id: 'accounts', label: '계정 관리', icon: UsersRound, owner: '팀리더' },
+  { id: 'system', label: '시스템 관리', icon: Settings, owner: '커넥셔너' },
   /* 마이페이지는 사이드바에 넣지 않는다. 사이드바는 일을 하러 가는 곳이고,
      개인 영역은 헤더 우측 사용자 칩이 입구다(사진 변경도 거기 붙어 있다).
      다만 헤더 제목을 뽑으려면 sections 목록에는 있어야 한다. */
@@ -76,6 +78,6 @@ export const navGroups: NavGroup[] = [
   },
   {
     title: '살펴보기 · 관리',
-    items: ['metrics', 'notifications', 'accounts'].map((id) => bySection(id as Section)),
+    items: ['metrics', 'notifications', 'accounts', 'system'].map((id) => bySection(id as Section)),
   },
 ];

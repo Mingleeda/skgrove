@@ -12,6 +12,7 @@ export type Section =
   | 'memory'
   | 'metrics'
   | 'accounts'
+  | 'system'
   | 'notifications'
   | 'humor'
   | 'market';
