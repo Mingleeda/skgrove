@@ -3217,9 +3217,9 @@ textarea {
   flex: 1 1 340px;
 }
 
-/* 스토리는 폰 모양이라 늘리지 않는다. 자리가 없으면 조건 아래로 내려간다. */
+/* 조뽑기 무대는 조건 아래에 화면 폭을 가득 쓴다(요청). 폰 모양 420px 고정을 푼다. */
 .connect-workbench > .ig-story-view {
-  flex: 0 1 420px;
+  flex: 1 1 100%;
 }
 
 /*
@@ -9212,6 +9212,14 @@ button.notif-row {
   overflow: hidden;
   padding: var(--space-3) var(--space-3) 0;
   width: 100%;
+}
+
+/* 커피뽑기 스토리(홈)만 폰 모양 420px 유지. 조뽑기 무대는 화면 폭을 가득 쓴다. */
+.connect-workbench .ig-story-view {
+  max-width: none;
+}
+.connect-workbench .draw-canvas {
+  max-height: 64vh;
 }
 
 .ig-story-bars {
