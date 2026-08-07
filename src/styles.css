@@ -12239,6 +12239,12 @@ button.notif-row {
   box-shadow: var(--shadow-float);
   overflow: hidden;
   z-index: 60;
+  transition: width 0.18s ease, height 0.18s ease;
+}
+/* 확대 상태 — 넓고 길게. 긴 상담·규정 답을 한눈에 보기 좋다. */
+.chat-panel.expanded {
+  width: min(760px, calc(100vw - var(--space-8)));
+  height: calc(100vh - var(--space-10));
 }
 
 .chat-head {
@@ -12268,7 +12274,14 @@ button.notif-row {
   font-size: var(--text-meta);
   color: var(--color-muted);
 }
+.chat-head-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
 .chat-close {
+  display: grid;
+  place-items: center;
   border: none;
   background: none;
   color: var(--color-muted);

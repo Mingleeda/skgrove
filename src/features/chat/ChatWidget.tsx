@@ -8,7 +8,7 @@
   - AI 미설정(VITE_CHAT_ENDPOINT 없음)이면 위젯은 뜨되 안내만 — 앱은 안 깨진다.
 */
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Send, Sparkles, X } from 'lucide-react';
+import { Maximize2, Minimize2, Send, Sparkles, X } from 'lucide-react';
 import {
   briefOf,
   streamChat,
@@ -70,6 +70,7 @@ function Mascot() {
 
 export function ChatWidget({ currentUser, profiles, issues, agendas }: ChatWidgetProps) {
   const [open, setOpen] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   const [mode, setMode] = useState<ChatMode>('counsel');
   const [partner, setPartner] = useState('');
   const [messages, setMessages] = useState<CounselMessage[]>([]);
@@ -192,7 +193,12 @@ export function ChatWidget({ currentUser, profiles, issues, agendas }: ChatWidge
   }
 
   return (
-    <section className="chat-panel" role="dialog" aria-label="AI 상담" onKeyDown={(e) => e.key === 'Escape' && setOpen(false)}>
+    <section
+      className={expanded ? 'chat-panel expanded' : 'chat-panel'}
+      role="dialog"
+      aria-label="AI 상담"
+      onKeyDown={(e) => e.key === 'Escape' && setOpen(false)}
+    >
       <header className="chat-head">
         <div className="chat-head-id">
           <span className="chat-head-mascot"><Mascot /></span>
@@ -201,9 +207,19 @@ export function ChatWidget({ currentUser, profiles, issues, agendas }: ChatWidge
             <span className="chat-head-sub">오은영 선생님처럼, 팀 규칙을 근거로</span>
           </div>
         </div>
-        <button type="button" className="chat-close" onClick={() => setOpen(false)} aria-label="닫기">
-          <X size={18} />
-        </button>
+        <div className="chat-head-actions">
+          <button
+            type="button"
+            className="chat-close"
+            onClick={() => setExpanded((v) => !v)}
+            aria-label={expanded ? '작게' : '크게'}
+          >
+            {expanded ? <Minimize2 size={17} /> : <Maximize2 size={17} />}
+          </button>
+          <button type="button" className="chat-close" onClick={() => setOpen(false)} aria-label="닫기">
+            <X size={18} />
+          </button>
+        </div>
       </header>
 
       <div className="chat-modes" role="tablist" aria-label="모드">
