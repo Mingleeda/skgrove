@@ -253,7 +253,6 @@ export function Intake({ identity, currentUser, issues, partLeaders, onIdentityC
                 <button className={identity === item ? 'choice-card selected' : 'choice-card'} onClick={() => onIdentityChange(item)} key={item}>
                   {item === '익명' ? <EyeOff size={22} /> : <ShieldCheck size={22} />}
                   <strong>{item}</strong>
-                  <span>{item === '익명' ? '작성자 정보는 리더 화면에서 분리됩니다.' : '이름과 사내메일이 리더에게 함께 전달됩니다.'}</span>
                 </button>
               ))}
             </div>

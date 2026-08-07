@@ -6051,8 +6051,6 @@ textarea {
     grid-template-columns: 1fr 1fr;
   }
 
-  .intake-stepper,
-  .intake-choice-grid,
   .profile-mini-fields,
   .profile-directory-tools,
   .form-grid,
@@ -6249,8 +6247,6 @@ textarea {
   .team-result-grid,
   .match-list,
   .category-cloud,
-  .intake-stepper,
-  .intake-choice-grid,
   .form-grid,
   .choice-row,
   .summary-strip,
@@ -12852,5 +12848,33 @@ button.notif-row {
   }
   .humor-rank-grid > .market-rank {
     scroll-snap-align: start;
+  }
+}
+
+/* 대나무숲 접수 익명/실명: 설명 제거로 컴팩트한 한 줄(아이콘+라벨) 카드 */
+.intake-panel .choice-card {
+  align-items: center;
+  gap: var(--space-2);
+  grid-auto-flow: column;
+  justify-content: center;
+  min-height: 0;
+  padding: var(--space-3);
+}
+
+/* 모바일 접수 스텝퍼: 세로 스택 대신 4단계 한 줄(번호 위·라벨 아래) */
+@media (max-width: 720px) {
+  .intake-stepper button {
+    flex-direction: column;
+    gap: 2px;
+    min-height: 0;
+    padding: var(--space-1) 2px;
+    font-size: var(--text-micro);
+    line-height: 1.15;
+    text-align: center;
+  }
+  .intake-stepper span {
+    height: 20px;
+    width: 20px;
+    font-size: var(--text-micro);
   }
 }
