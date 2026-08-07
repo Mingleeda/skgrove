@@ -42,6 +42,7 @@ import {
 import { ActionBoard } from './features/actions/ActionBoard';
 import { ActionCreateForm } from './features/actions/ActionCreateForm';
 import { ChatWidget } from './features/chat/ChatWidget';
+import { clearSession, loadSession, saveSession } from './session';
 import { AgendaBoard } from './features/agenda/AgendaBoard';
 import type { AgendaDraft } from './features/agenda/AgendaForm';
 import { AccountManagement } from './features/auth/AccountManagement';
@@ -202,7 +203,8 @@ const SECTION_BY_HASH: Record<string, Section> = {
 
 export function App() {
   const [accounts, setAccounts] = useState<ManagedAccount[]>(seedAccounts);
-  const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
+  // 저장된 세션이 있으면 복원한다 — 새로고침해도 로그인이 유지된다.
+  const [currentUser, setCurrentUser] = useState<CurrentUser | null>(() => loadSession());
   const [active, setActive] = useState<Section>('dashboard');
   const [issues, setIssues] = useState<Issue[]>(initialIssues);
   const [agendas, setAgendas] = useState<Agenda[]>(initialAgendas);
@@ -1444,6 +1446,7 @@ export function App() {
     setActive('dashboard');
     setSelectedCanId(null);
     setCurrentUser(user);
+    saveSession(user); // 새로고침해도 로그인 유지
   };
 
   if (!currentUser) {
@@ -1469,7 +1472,10 @@ export function App() {
       currentPhotoUrl={accounts.find((account) => account.email.toLowerCase() === currentUser.email.toLowerCase())?.photoUrl}
       onSavePhoto={saveMyProfilePhoto}
       unreadCount={unreadCount}
-      onLogout={() => setCurrentUser(null)}
+      onLogout={() => {
+        clearSession();
+        setCurrentUser(null);
+      }}
       onSectionChange={changeSection}
     >
       {/* 화면 단위 경계. 접수 화면 하나가 깨졌다고 사이드바까지 사라져 다른 메뉴로
