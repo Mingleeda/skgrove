@@ -71,11 +71,12 @@ const RULE_PERSONA = [
 ].join(' ');
 
 function buildMessages(body) {
-  const { mode, messages = [], self, partner, cases } = body;
+  const { mode, messages = [], self, partner, cases, knowledge: sent } = body;
   const system = [];
   if (mode === 'rule') {
     system.push(RULE_PERSONA);
-    system.push('\n\n[지식 문서]\n' + knowledge());
+    // 프론트가 실어 보낸 지식을 우선 쓰고, 없으면 디스크에서 읽는다(서버리스와 규약 일치).
+    system.push('\n\n[지식 문서]\n' + (sent || knowledge()));
   } else {
     system.push(PERSONA);
     if (self) system.push('\n\n[상담을 요청한 사람의 성향]\n' + JSON.stringify(self, null, 2));

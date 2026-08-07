@@ -4,8 +4,25 @@
 // "AI 미설정" 안내만 보이고 앱은 깨지지 않는다.
 import type { Profile } from './types';
 
-const ENDPOINT = (import.meta.env as Record<string, string | undefined>).VITE_CHAT_ENDPOINT;
+// 배포(프로덕션)에선 같은 도메인의 서버리스 함수(/api/chat)를 기본으로 쓴다 — 이미지 생성과
+// 같은 OPENROUTER_API_KEY 를 재사용하므로 새 설정이 필요 없다. 로컬은 VITE_CHAT_ENDPOINT 로
+// 로컬 프록시를 가리킨다. 둘 다 없으면(로컬 미설정) disabled 로 조용히 폴백한다.
+const ENDPOINT =
+  (import.meta.env as Record<string, string | undefined>).VITE_CHAT_ENDPOINT ||
+  (import.meta.env.PROD ? '/api/chat' : undefined);
 export const CHAT_ENABLED = Boolean(ENDPOINT);
+
+// 룰 모드 지식(src/content/*.md)은 프론트가 번들해 요청에 실어 보낸다 — 서버리스 함수가
+// 런타임에 파일을 읽지 못해도 동작하고, md 가 단일 출처로 유지된다. glob 이라 파일을 더 넣으면 자동 포함.
+const KNOWLEDGE_FILES = import.meta.glob('./content/*.md', {
+  query: '?raw',
+  import: 'default',
+  eager: true,
+}) as Record<string, string>;
+const RULE_KNOWLEDGE = Object.entries(KNOWLEDGE_FILES)
+  .sort(([a], [b]) => a.localeCompare(b))
+  .map(([path, text]) => `\n\n===== 문서: ${path.split('/').pop()} =====\n${text}`)
+  .join('\n');
 
 export type ChatMode = 'counsel' | 'rule';
 export type ChatTurn = { role: 'user' | 'assistant'; content: string };
@@ -51,6 +68,7 @@ export type ChatRequest = {
   self?: FaceBrief;
   partner?: FaceBrief;
   cases?: CaseBrief[];
+  knowledge?: string; // 룰 모드 지식(프론트가 번들해 실어 보냄)
 };
 
 export type ChatResult = { ok: boolean; reason?: string };
@@ -62,11 +80,14 @@ export type ChatResult = { ok: boolean; reason?: string };
  */
 export async function streamChat(req: ChatRequest, onToken: (t: string) => void): Promise<ChatResult> {
   if (!ENDPOINT) return { ok: false, reason: 'disabled' };
+  // 룰 모드면 지식 문서를 실어 보낸다(서버리스 함수가 파일을 못 읽어도 동작).
+  const payload: ChatRequest =
+    req.mode === 'rule' && !req.knowledge ? { ...req, knowledge: RULE_KNOWLEDGE } : req;
   try {
     const res = await fetch(ENDPOINT, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(req),
+      body: JSON.stringify(payload),
     });
     if (!res.ok || !res.body) return { ok: false, reason: `http ${res.status}` };
 

@@ -19,7 +19,12 @@ const TIMEOUT_MS = 8000;
 
 // 모듈 로드 시점이 아니라 호출 시점에 읽는다. 테스트에서 환경변수를 갈아끼울 수 있어야 한다.
 function endpoint(): string | undefined {
-  return (import.meta.env as Record<string, string | undefined>).VITE_REVIEW_ENDPOINT || undefined;
+  // 배포(프로덕션)에선 같은 도메인의 서버리스 함수(/api/review)를 기본으로 쓴다 — 이미지 생성과
+  // 같은 OPENROUTER_API_KEY 를 재사용하므로 새 설정이 필요 없다. 로컬은 VITE_REVIEW_ENDPOINT.
+  return (
+    (import.meta.env as Record<string, string | undefined>).VITE_REVIEW_ENDPOINT ||
+    (import.meta.env.PROD ? '/api/review' : undefined)
+  );
 }
 
 // 응답이 신뢰할 수 없는 형태여도 앱이 깨지지 않게 방어적으로 정제한다.
