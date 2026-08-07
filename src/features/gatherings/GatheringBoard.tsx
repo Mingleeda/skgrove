@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import {
   AlertTriangle,
   ArrowLeft,
@@ -16,6 +16,9 @@ import {
 } from 'lucide-react';
 import { Avatar } from '../../components/Avatar';
 import { EmptyState } from '../../components/EmptyState';
+import { ProfilesContext } from '../../profilesContext';
+import { CoffeeDrawCanvas } from './CoffeeDrawCanvas';
+import type { CoffeeMember } from './coffeeStage';
 import {
   belowMinimum,
   canDrawCoffee,
@@ -155,25 +158,28 @@ export function GatheringBoard({
     }
   }, [focusId]);
 
-  // 커피 뽑기 룰렛: 주최자가 '방금' 뽑았을 때만, 후보를 훑다가 멈추는 연출을 보여준다.
-  // (상세를 그냥 열었을 땐 안 돈다 — justDrewRef 로 구분.)
+  // 커피 뽑기 룰렛: 주최자가 '방금' 뽑았을 때만, 프로필이 섞이다 감속해 걸리는 3D 연출.
+  // (상세를 그냥 열었을 땐 안 돈다 — justDrewRef 로 구분.) 당첨자는 이미 확정돼 넘어온다.
+  const directory = useContext(ProfilesContext);
   const justDrewRef = useRef(false);
-  const [drawSpin, setDrawSpin] = useState<string | null>(null);
+  const [spinning, setSpinning] = useState(false);
   useEffect(() => {
     if (!justDrewRef.current || !selected?.coffeePick) return;
     justDrewRef.current = false;
-    const pool = selected.coffeePool && selected.coffeePool.length > 0 ? selected.coffeePool : [selected.coffeePick];
-    setDrawSpin(pool[0]);
-    const tick = window.setInterval(() => setDrawSpin(pool[Math.floor(Math.random() * pool.length)]), 90);
-    const stop = window.setTimeout(() => {
-      window.clearInterval(tick);
-      setDrawSpin(null); // 멈추면 결과 카드가 당첨자·후보를 보여준다
-    }, 1700);
-    return () => {
-      window.clearInterval(tick);
-      window.clearTimeout(stop);
-    };
+    setSpinning(true); // 당첨자·후보가 state 에 도착한 시점 — 이제 무대를 돌린다.
   }, [selected?.coffeePick]);
+
+  // 뽑는 순간 박제된 후보(coffeePool)를 3D 원반 멤버로. 색·사진은 라이브 디렉토리에서.
+  const coffeePool = selected?.coffeePool ?? [];
+  const coffeeMembers = useMemo<CoffeeMember[]>(
+    () =>
+      coffeePool.map((name) => {
+        const info = directory.get(name);
+        return { name, color: info?.color, photoUrl: info?.photoUrl };
+      }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [coffeePool.join('|'), directory],
+  );
 
   const create = (draft: GatheringDraft) => {
     onCreate(draft);
@@ -332,12 +338,19 @@ export function GatheringBoard({
 
             {selected.kind === 'flash' && !selected.canceled && selected.coffeeDraw && (
               <div className="coffee-pick">
-                {drawSpin !== null ? (
-                  <div className="coffee-roulette">
-                    <Coffee size={20} />
-                    <span>커피 담당 뽑는 중…</span>
-                    <strong className="coffee-roulette-name">{drawSpin}</strong>
-                  </div>
+                {spinning && selected.coffeePick ? (
+                  <CoffeeDrawCanvas
+                    members={coffeeMembers}
+                    winner={selected.coffeePick}
+                    spinning={spinning}
+                    onLanded={() => setSpinning(false)}
+                  >
+                    {/* WebGL·모션 불가 시 폴백: 이름은 감춰 긴장을 남긴다 */}
+                    <div className="coffee-roulette">
+                      <Coffee size={20} />
+                      <span>커피 담당 뽑는 중…</span>
+                    </div>
+                  </CoffeeDrawCanvas>
                 ) : selected.coffeePick ? (
                   <div className="coffee-pick-result">
                     <div className="coffee-result-hero">

@@ -12005,6 +12005,16 @@ button.notif-row {
   font-size: 26px;
   font-weight: 700;
 }
+/* 커피뽑기 3D 무대. three 는 alpha 로 그려 캔버스가 투명하므로 어두운 무대색을 깐다. */
+.coffee-draw-canvas {
+  aspect-ratio: 4 / 5;
+  background: var(--surface-dark);
+  border-radius: var(--radius);
+  display: block;
+  margin: 0 auto;
+  max-height: 52vh;
+  width: 100%;
+}
 .coffee-pick-result {
   display: grid;
   gap: var(--space-2);
