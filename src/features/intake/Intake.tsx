@@ -460,6 +460,14 @@ export function Intake({ identity, currentUser, issues, partLeaders, onIdentityC
               expectedChange={expectedChange}
               onEditManually={() => setStep('content')}
               onReadyChange={setReviewReady}
+              onApply={(fields, rewritten) => {
+                // 수정안을 해당 항목에 반영한다. 값이 바뀌면 ReviewGate 가 자동으로 다시 검토한다.
+                fields.forEach((field) => {
+                  if (field === 'title') setTitle(rewritten);
+                  else if (field === 'body') setBody(rewritten);
+                  else setExpectedChange(rewritten);
+                });
+              }}
             />
 
             {/* 경고를 세 개 쌓으면 서로를 무력화한다. 막는 역할은 위의 ReviewGate 하나만 맡고,

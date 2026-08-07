@@ -1,18 +1,20 @@
 import { useCallback, useEffect, useState } from 'react';
-import { AlertTriangle, PenLine, RefreshCw, ShieldCheck, Sparkles } from 'lucide-react';
+import { AlertTriangle, Check, PenLine, RefreshCw, ShieldCheck, Sparkles } from 'lucide-react';
 import { groupFindings, reviewIntake, type ReviewField, type ReviewFinding } from '../../intakeReview';
 
 // 검토 입력을 객체로 받지 않는다. 매 렌더마다 새 객체가 되어 재검토가 무한히 돈다.
 //
-// 제안을 자동 반영하는 버튼은 두지 않는다. 실제로 돌려보니 모델이 문제 표현만
-// 바꾸는 게 아니라 항목 전체를 다시 써서, 대상(누가)과 사안(무슨 일)이 통째로
-// 사라지고 입력에 없던 주제가 들어왔다. 고치는 것은 작성자가 한다.
+// 수정안 '바로 적용' 버튼을 둔다. 예전엔 모델이 항목 전체를 다시 써서 대상·사안이
+// 사라지는 문제로 뺐지만, 이제 프롬프트가 "대상·행동·요구 보존, 새 주제 금지"를
+// 강제하는 건설적 재구성이라 안전하다. 적용은 항목 단위로 하고(rewritten = 그 항목의
+// 완성 대체문), 적용하면 값이 바뀌어 자동으로 다시 검토된다. 최종 판단은 여전히 작성자다.
 type ReviewGateProps = {
   title: string;
   body: string;
   expectedChange: string;
   onEditManually: () => void;
   onReadyChange: (ready: boolean) => void;
+  onApply: (fields: ReviewField[], rewritten: string) => void;
 };
 
 type GateState =
@@ -34,6 +36,7 @@ export function ReviewGate({
   expectedChange,
   onEditManually,
   onReadyChange,
+  onApply,
 }: ReviewGateProps) {
   const [state, setState] = useState<GateState>({ phase: 'checking' });
 
@@ -109,9 +112,16 @@ export function ReviewGate({
             {group.fields.map((field) => FIELD_LABEL[field]).join(', ')}
           </span>
           {group.reason && <p className="review-reason">{group.reason}</p>}
-          {/* 참고 예시일 뿐이다. 그대로 쓰라는 뜻이 아니라는 걸 라벨로 분명히 한다. */}
           <p className="review-suggestion-label">이렇게 바꿔볼 수 있어요</p>
           <p className="review-rewritten">{group.rewritten}</p>
+          <button
+            type="button"
+            className="secondary-button review-apply"
+            onClick={() => onApply(group.fields, group.rewritten)}
+          >
+            <Check size={15} />
+            이 문장으로 적용
+          </button>
         </article>
       ))}
 

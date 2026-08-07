@@ -12736,3 +12736,10 @@ button.notif-row {
   font-size: var(--text-body);
   color: var(--color-ink);
 }
+
+/* 접수 검토: 수정안 '바로 적용' 버튼 */
+.review-apply {
+  margin-top: var(--space-2);
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--text-meta);
+}
