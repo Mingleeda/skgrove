@@ -1,11 +1,13 @@
 // AI 상담 챗봇 서버리스 프록시 — 프론트(aiChat.ts)가 /api/chat 으로 대화를 POST하면
-// OpenRouter(Claude)로 스트리밍 호출해 SSE(data:{token}/{done}/{error})로 되돌린다.
+// OpenRouter(Claude)로 호출해 **전체 답을 한 번에 JSON 으로** 돌려준다.
 //
-// 이미지 생성(api/gathering-image.ts)·검토(api/review.ts)와 같은 OPENROUTER_API_KEY 를
-// 재사용한다 — 비밀은 서버에만. 그래서 배포에 새 설정이 필요 없다.
-// 룰 모드 지식(src/content/*.md)은 프론트가 번들해 body.knowledge 로 실어 보낸다
-// (서버리스가 런타임에 파일을 못 읽어도 동작하고, md 가 단일 출처로 유지된다).
+// 왜 스트리밍이 아니라 한 번에? — 이미지 생성(api/gathering-image.ts)·검토(api/review.ts)와
+// 같은 방식이다. Vercel 서버리스에서 스트리밍 응답은 버퍼링·첫바이트 지연으로 504 가 나기
+// 쉬웠다. 이미지처럼 완성해서 한 번에 반환하면 maxDuration 안에서 안정적으로 동작한다.
+// (로컬 개발은 scripts/chat-proxy.mjs 가 SSE 로 토큰별 스트리밍 — 프론트가 둘 다 처리한다.)
 //
+// 이미지·검토와 같은 OPENROUTER_API_KEY 를 재사용한다 — 비밀은 서버에만, 새 설정 불필요.
+// 룰 모드 지식은 프론트가 body.knowledge 로 실어 보낸다.
 // 페르소나는 scripts/chat-proxy.mjs 와 동일하게 유지할 것(런타임이 달라 두 벌).
 
 type FaceBrief = Record<string, unknown>;
@@ -20,10 +22,10 @@ type ChatBody = {
   knowledge?: string;
 };
 
+// LLM 완성까지 시간이 걸리므로 함수 최대 실행시간을 넉넉히(이미지 함수와 동일).
+export const maxDuration = 60;
+
 const OPENROUTER = 'https://openrouter.ai/api/v1/chat/completions';
-const encoder = new TextEncoder();
-const sseChunk = (obj: unknown) => encoder.encode(`data: ${JSON.stringify(obj)}\n\n`);
-const SSE_HEADERS = { 'Content-Type': 'text/event-stream; charset=utf-8', 'Cache-Control': 'no-cache' };
 
 function env(name: string): string | undefined {
   return (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.[name];
@@ -72,82 +74,40 @@ function buildMessages(body: ChatBody) {
   ];
 }
 
-/** 즉시 한 이벤트만 흘려보내는 SSE 응답(에러·폴백용). */
-function sseOnce(obj: unknown): Response {
-  const stream = new ReadableStream({
-    start(controller) {
-      controller.enqueue(sseChunk(obj));
-      controller.close();
-    },
-  });
-  return new Response(stream, { headers: SSE_HEADERS });
-}
-
 export default async function handler(request: Request): Promise<Response> {
   if (request.method !== 'POST') return new Response('Method Not Allowed', { status: 405 });
 
   const apiKey = env('OPENROUTER_API_KEY');
-  if (!apiKey) return sseOnce({ error: 'OPENROUTER_API_KEY not configured' });
+  if (!apiKey) return Response.json({ ok: false, reason: 'OPENROUTER_API_KEY not configured' });
 
   let body: ChatBody;
   try {
     body = (await request.json()) as ChatBody;
   } catch {
-    return sseOnce({ error: '잘못된 요청 형식' });
+    return new Response('Bad Request', { status: 400 });
   }
 
   const model = env('OPENROUTER_MODEL') || 'anthropic/claude-haiku-4.5';
-
-  const stream = new ReadableStream({
-    async start(controller) {
-      try {
-        const upstream = await fetch(OPENROUTER, {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${apiKey}`,
-            'Content-Type': 'application/json',
-            'X-Title': 'Connectioner',
-          },
-          body: JSON.stringify({ model, stream: true, messages: buildMessages(body) }),
-        });
-        if (!upstream.ok || !upstream.body) {
-          controller.enqueue(sseChunk({ error: `LLM 오류 ${upstream.status}` }));
-          controller.close();
-          return;
-        }
-
-        // OpenRouter SSE 델타 → 우리 규약(token) 으로 변환해 흘려보낸다.
-        const reader = upstream.body.getReader();
-        const decoder = new TextDecoder();
-        let buffer = '';
-        for (;;) {
-          const { value, done } = await reader.read();
-          if (done) break;
-          buffer += decoder.decode(value, { stream: true });
-          const lines = buffer.split('\n');
-          buffer = lines.pop() ?? '';
-          for (const line of lines) {
-            const t = line.trim();
-            if (!t.startsWith('data:')) continue;
-            const p = t.slice(5).trim();
-            if (!p || p === '[DONE]') continue;
-            try {
-              const token = (JSON.parse(p) as { choices?: { delta?: { content?: string } }[] }).choices?.[0]?.delta
-                ?.content;
-              if (token) controller.enqueue(sseChunk({ token }));
-            } catch {
-              /* keep-alive 주석 등 — 무시 */
-            }
-          }
-        }
-        controller.enqueue(sseChunk({ done: true }));
-        controller.close();
-      } catch (error) {
-        controller.enqueue(sseChunk({ error: String(error) }));
-        controller.close();
-      }
-    },
-  });
-
-  return new Response(stream, { headers: SSE_HEADERS });
+  try {
+    const upstream = await fetch(OPENROUTER, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+        'X-Title': 'Connectioner',
+      },
+      body: JSON.stringify({ model, messages: buildMessages(body) }),
+    });
+    const data = (await upstream.json().catch(() => null)) as
+      | { choices?: { message?: { content?: string } }[]; error?: { message?: string } }
+      | null;
+    if (!upstream.ok || !data) {
+      return Response.json({ ok: false, reason: data?.error?.message || `openrouter ${upstream.status}` });
+    }
+    const text = (data.choices?.[0]?.message?.content ?? '').trim();
+    if (!text) return Response.json({ ok: false, reason: 'empty' });
+    return Response.json({ ok: true, text });
+  } catch (error) {
+    return Response.json({ ok: false, reason: String(error) });
+  }
 }

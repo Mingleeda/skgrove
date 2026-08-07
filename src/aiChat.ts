@@ -91,6 +91,18 @@ export async function streamChat(req: ChatRequest, onToken: (t: string) => void)
     });
     if (!res.ok || !res.body) return { ok: false, reason: `http ${res.status}` };
 
+    // 배포 서버리스(api/chat)는 비스트리밍 JSON({ok,text})으로 답한다 — 전체를 한 번에 표시.
+    // 로컬 프록시는 SSE 로 토큰별 스트리밍. Content-Type 으로 구분한다.
+    const contentType = res.headers.get('Content-Type') ?? '';
+    if (!contentType.includes('text/event-stream')) {
+      const data = (await res.json().catch(() => null)) as { ok?: boolean; text?: string; reason?: string } | null;
+      if (data?.ok && data.text) {
+        onToken(data.text);
+        return { ok: true };
+      }
+      return { ok: false, reason: data?.reason || 'failed' };
+    }
+
     const reader = res.body.getReader();
     const decoder = new TextDecoder();
     let buffer = '';
