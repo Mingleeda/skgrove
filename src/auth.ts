@@ -36,6 +36,17 @@ export function isTeamLeader(user: CurrentUser) {
   return isConnectioner(user) || user.role === '팀리더';
 }
 
+/**
+ * 데이터 삭제(정제) 전용 관리자. 오직 admin@sk.com 계정만 게시글·안건·계정 등을
+ * 삭제할 수 있다. 팀리더/작성자에게는 삭제 권한을 주지 않는다 — 실서비스 전
+ * 콘텐츠 정제는 이 한 계정으로만 수행해 실수/오남용을 막는다.
+ */
+export const ADMIN_EMAIL = 'admin@sk.com';
+
+export function isAdmin(user: CurrentUser | null | undefined) {
+  return !!user && user.email?.toLowerCase() === ADMIN_EMAIL;
+}
+
 // 커넥셔너 전권을 적용하지 않는 '순수 팀리더 역할' 체크.
 // 캔미팅처럼 커넥셔너도 참여자로 의견을 내야 하는 화면에서 쓴다
 // (전권으로 진행자 화면이 열리면 정작 본인 의견을 낼 수가 없다).

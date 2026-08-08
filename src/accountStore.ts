@@ -47,6 +47,18 @@ export const seedAccounts: ManagedAccount[] = [
     status: '활성',
     joinedAt: '2026-07-24',
   },
+  // 데이터 정제 전용 관리자. 오직 이 계정(admin@sk.com)만 게시글·안건·계정을
+  // 삭제할 수 있다(isAdmin). 프로덕션에는 이미 Supabase accounts 에 존재하며,
+  // 여기 시드는 Supabase 미연결(로컬) 환경 폴백용이다. 비밀번호는 첫 로그인 때 설정.
+  {
+    id: 'ACC-SYS-ADMIN',
+    name: '관리자',
+    email: 'admin@sk.com',
+    role: '팀리더',
+    part: '전체',
+    status: '활성',
+    joinedAt: '2026-08-08',
+  },
 ];
 
 type AccountRow = {
@@ -106,7 +118,7 @@ export async function saveAccounts(accounts: ManagedAccount[]) {
   }
 }
 
-/** 계정(등록한 사람) 삭제 — 팀리더 전용. Supabase accounts 에서 제거한다. */
+/** 계정(등록한 사람) 삭제 — admin@sk.com 전용. Supabase accounts 에서 제거한다. */
 export async function deleteAccount(id: string) {
   if (!supabase) return;
   const { error } = await supabase.from(ACCOUNT_TABLE).delete().eq('id', id);

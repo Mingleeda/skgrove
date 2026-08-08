@@ -81,7 +81,7 @@ export async function saveAgendas(agendas: Agenda[]): Promise<boolean> {
 // Date.now()만 쓰면 같은 밀리초에 생성된 안건끼리 id가 겹치므로 세션 카운터를 덧붙인다.
 let agendaSequence = 0;
 
-/** 안건 삭제(팀리더 전용). 투표 기록(agenda_ballots)도 함께 지운다. */
+/** 안건 삭제(admin@sk.com 전용). 투표 기록(agenda_ballots)도 함께 지운다. */
 export async function deleteAgenda(id: string) {
   if (!supabase) return;
   await supabase.from('agenda_ballots').delete().eq('agenda_id', id);

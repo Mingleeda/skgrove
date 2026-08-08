@@ -334,7 +334,7 @@ export function LeaderInbox({ issues, accounts, currentUser, today, onIssueUpdat
                       className="secondary-button"
                       onClick={() => handleDelete(issue)}
                       style={{ color: '#dc2626', borderColor: '#f0999599' }}
-                      title="이 접수를 삭제합니다(팀리더 전용)"
+                      title="이 접수를 삭제합니다(admin 전용)"
                     >
                       <Trash2 size={17} /> 삭제
                     </button>

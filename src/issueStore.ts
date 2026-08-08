@@ -71,7 +71,7 @@ export async function saveIssues(issues: Issue[]): Promise<boolean> {
   return true;
 }
 
-/** 접수 삭제(팀리더 전용). Supabase issues 에서 제거한다. */
+/** 접수 삭제(admin@sk.com 전용). Supabase issues 에서 제거한다. */
 export async function deleteIssue(id: string) {
   if (!supabase) return;
   const { error } = await supabase.from(ISSUE_TABLE).delete().eq('id', id);

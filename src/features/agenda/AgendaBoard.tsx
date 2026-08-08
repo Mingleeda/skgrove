@@ -250,7 +250,7 @@ export function AgendaBoard({
                     <button
                       type="button"
                       onClick={() => handleDeleteAgenda(agenda)}
-                      title="이 안건을 삭제합니다(팀리더 전용)"
+                      title="이 안건을 삭제합니다(admin 전용)"
                       style={{ marginTop: 6, width: '100%', color: '#dc2626', background: '#fef2f2', border: '1px solid #f0999599', borderRadius: 8, padding: '6px 10px', fontSize: 13, cursor: 'pointer' }}
                     >
                       삭제

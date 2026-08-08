@@ -304,7 +304,7 @@ export function GatheringBoard({
                 </button>
               )}
 
-              {(isHost || canModerate) && !confirmingDelete && (
+              {canModerate && !confirmingDelete && (
                 <button className="btn-ghost danger" onClick={() => setConfirmingDelete(true)} type="button">
                   <Trash2 size={16} />
                   삭제

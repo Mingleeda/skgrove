@@ -146,8 +146,9 @@ export function HumorBoard({
     setCommentDrafts({ ...commentDrafts, [postId]: '' });
   };
 
-  const canDeletePost = (post: HumorPost) => post.author === currentUser.name || canModerate;
-  const canDeleteComment = (comment: HumorComment) => comment.author === currentUser.name || canModerate;
+  // 삭제는 admin@sk.com 전용(canModerate = isAdmin). 작성자 본인도 삭제 불가.
+  const canDeletePost = (_post: HumorPost) => canModerate;
+  const canDeleteComment = (_comment: HumorComment) => canModerate;
   const canEditPost = (post: HumorPost) => post.author === currentUser.name; // 수정은 본인 글만
 
   const startEditPost = (post: HumorPost) => {

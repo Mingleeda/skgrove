@@ -4,7 +4,7 @@ import { deleteActionItem, loadActionItems, makeActionItemId, saveActionItems } 
 import { applySelection, finalStatus, isOpen, liveStatus, settleAgendas } from './agendaRules';
 import { deleteAgenda, loadAgendas, makeAgendaId, makeAgendaOptions, saveAgendas } from './agendaStore';
 import { hasVoted, loadBallots, makeVoterKey, saveBallots } from './ballotStore';
-import { hasLeaderRole, isConnectioner, isLeader, isTeamLeader, teamParts } from './auth';
+import { hasLeaderRole, isAdmin, isConnectioner, isLeader, isTeamLeader, teamParts } from './auth';
 import { loadCanSteps, saveCanSteps } from './canStepsStore';
 import {
   loadCanOpinions,
@@ -901,7 +901,7 @@ export function App() {
   const deleteHumorPost = (postId: string) => {
     const post = humorPosts.find((item) => item.id === postId);
     if (!post || !currentUser) return;
-    if (post.author !== currentUser.name && !isTeamLeader(currentUser)) return; // 본인·팀리더만
+    if (!isAdmin(currentUser)) return; // 삭제는 admin@sk.com 전용
     persistHumorPosts(humorPosts.filter((item) => item.id !== postId));
     persistHumorComments(humorComments.filter((item) => item.postId !== postId));
   };
@@ -909,7 +909,7 @@ export function App() {
   const deleteHumorComment = (commentId: string) => {
     const comment = humorComments.find((item) => item.id === commentId);
     if (!comment || !currentUser) return;
-    if (comment.author !== currentUser.name && !isTeamLeader(currentUser)) return;
+    if (!isAdmin(currentUser)) return; // 삭제는 admin@sk.com 전용
     persistHumorComments(humorComments.filter((item) => item.id !== commentId));
   };
 
@@ -937,27 +937,27 @@ export function App() {
     void saveAccounts(nextAccounts);
   };
 
-  // 등록한 사람(계정) 삭제 — 팀리더 전용(계정 관리 화면 접근이 이미 팀리더로 제한됨).
+  // 등록한 사람(계정) 삭제 — admin@sk.com 전용(실서비스 전 데이터 정제).
   const removeAccount = (id: string) => {
-    if (!currentUser || !isTeamLeader(currentUser)) return;
+    if (!currentUser || !isAdmin(currentUser)) return;
     if (id === currentUser.email) return; // 본인 계정은 삭제 불가
     setAccounts((prev) => prev.filter((account) => account.id !== id));
     void deleteAccount(id);
   };
 
-  // 접수·안건·액션 삭제 — 팀리더 전용(실서비스 전 데이터 정제).
+  // 접수·안건·액션 삭제 — admin@sk.com 전용(실서비스 전 데이터 정제).
   const removeIssue = (id: string) => {
-    if (!currentUser || !isTeamLeader(currentUser)) return;
+    if (!currentUser || !isAdmin(currentUser)) return;
     setIssues((prev) => prev.filter((issue) => issue.id !== id));
     void deleteIssue(id);
   };
   const removeAgenda = (id: string) => {
-    if (!currentUser || !isTeamLeader(currentUser)) return;
+    if (!currentUser || !isAdmin(currentUser)) return;
     setAgendas((prev) => prev.filter((agenda) => agenda.id !== id));
     void deleteAgenda(id);
   };
   const removeActionItem = (id: string) => {
-    if (!currentUser || !isTeamLeader(currentUser)) return;
+    if (!currentUser || !isAdmin(currentUser)) return;
     setActionItems((prev) => prev.filter((item) => item.id !== id));
     void deleteActionItem(id);
   };
@@ -1156,10 +1156,10 @@ export function App() {
     persistGatherings(gatherings.filter((item) => item.id !== gathering.id));
   };
 
-  // 완전 삭제. 취소(기록 보존)와 달리 모임과 신청 기록까지 통째로 지운다. 글쓴이(주최자)와 팀리더만.
+  // 완전 삭제. 취소(기록 보존)와 달리 모임과 신청 기록까지 통째로 지운다. admin@sk.com 전용.
   const deleteGathering = (gathering: Gathering) => {
     if (!currentUser) return;
-    if (gathering.host !== currentUser.name && !isTeamLeader(currentUser)) return;
+    if (!isAdmin(currentUser)) return;
     // gathering_signups 는 gatherings 에 on delete cascade 라 DB 에서는 함께 지워진다.
     void deleteGatheringRecord(gathering.id);
     persistGatherings(gatherings.filter((item) => item.id !== gathering.id));
@@ -1325,10 +1325,10 @@ export function App() {
     persistMarketItems(marketItems.filter((entry) => entry.id !== item.id));
   };
 
-  // 완전 삭제. 내리기(기록 보존)와 달리 물건과 입찰 기록까지 통째로 지운다. 글쓴이(판매자)와 팀리더만.
+  // 완전 삭제. 내리기(기록 보존)와 달리 물건과 입찰 기록까지 통째로 지운다. admin@sk.com 전용.
   const deleteMarketItem = (item: MarketItem) => {
     if (!currentUser) return;
-    if (item.seller !== currentUser.name && !isTeamLeader(currentUser)) return;
+    if (!isAdmin(currentUser)) return;
     void deleteMarketItemRecord(item.id);
     // market_bids 는 item 에 FK 가 없어 DB 에서 자동으로 안 지워진다. 명시적으로 걷어낸다.
     void deleteMarketBidsForItem(item.id);
@@ -1519,7 +1519,7 @@ export function App() {
           today={today()}
           onIssueUpdate={updateIssue}
           onPromoteToAgenda={promoteToAgenda}
-          canDelete={isTeamLeader(currentUser)}
+          canDelete={isAdmin(currentUser)}
           onDeleteIssue={removeIssue}
         />
       )}
@@ -1537,7 +1537,7 @@ export function App() {
           onCreateActions={setAgendaForActions}
           focusId={focusFor('agenda')}
           onFocusHandled={clearFeedFocus}
-          canDelete={isTeamLeader(currentUser)}
+          canDelete={isAdmin(currentUser)}
           onDeleteAgenda={removeAgenda}
         />
       )}
@@ -1562,7 +1562,7 @@ export function App() {
           currentUser={currentUser}
           today={today()}
           onUpdate={updateActionItem}
-          canDelete={isTeamLeader(currentUser)}
+          canDelete={isAdmin(currentUser)}
           onDeleteItem={removeActionItem}
         />
       )}
@@ -1604,7 +1604,7 @@ export function App() {
           imagePendingIds={imagePendingIds}
           onCancelGathering={cancelGathering}
           onDrawCoffee={drawCoffeePick}
-          canModerate={isTeamLeader(currentUser)}
+          canModerate={isAdmin(currentUser)}
           onDelete={deleteGathering}
           focusId={focusFor('gatherings')}
           onFocusHandled={clearFeedFocus}
@@ -1622,7 +1622,7 @@ export function App() {
           onCreate={(draft) => void createMarketItem(draft)}
           onUpdate={(item, draft) => void updateMarketItem(item, draft)}
           onMarkDone={markMarketDone}
-          canModerate={isTeamLeader(currentUser)}
+          canModerate={isAdmin(currentUser)}
           onDelete={deleteMarketItem}
           focusId={focusFor('market')}
           onFocusHandled={clearFeedFocus}
@@ -1644,7 +1644,7 @@ export function App() {
           posts={humorPosts}
           comments={humorComments}
           currentUser={currentUser}
-          canModerate={isTeamLeader(currentUser)}
+          canModerate={isAdmin(currentUser)}
           imagePendingIds={imagePendingIds}
           onAddPost={addHumorPost}
           onToggleLike={toggleHumorLike}
@@ -1665,7 +1665,7 @@ export function App() {
       {active === 'connect' && <Connect members={connectMembers} />}
       {active === 'memory' && <Memory currentUser={currentUser} />}
       {active === 'metrics' && <Metrics currentUser={currentUser} />}
-      {active === 'accounts' && isTeamLeader(currentUser) && <AccountManagement accounts={accounts} onAccountsChange={persistAccounts} onDelete={removeAccount} currentEmail={currentUser.email} />}
+      {active === 'accounts' && isTeamLeader(currentUser) && <AccountManagement accounts={accounts} onAccountsChange={persistAccounts} onDelete={isAdmin(currentUser) ? removeAccount : undefined} currentEmail={currentUser.email} />}
       {active === 'system' && isConnectioner(currentUser) && (
         <SystemManagement settings={notifySettings} onSettingsChange={persistNotifySettings} />
       )}

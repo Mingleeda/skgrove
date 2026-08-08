@@ -227,7 +227,7 @@ export function ActionBoard({ items, accounts, currentUser, today, onUpdate, can
                     type="button"
                     className="secondary-button"
                     onClick={() => handleDelete(item)}
-                    title="이 액션아이템을 삭제합니다(팀리더 전용)"
+                    title="이 액션아이템을 삭제합니다(admin 전용)"
                     style={{ marginTop: 8, color: '#dc2626', borderColor: '#f0999599' }}
                   >
                     <Trash2 size={16} aria-hidden /> 삭제
