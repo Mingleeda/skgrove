@@ -35,6 +35,8 @@ type AgendaDetailProps = {
   onClose: (id: string) => void;
   onCreateActions: (agenda: Agenda) => void;
   onBack: () => void;
+  /** 뒤로 버튼 라벨. 홈 피드에서 진입했으면 '홈으로', 목록에서면 '안건 목록'. */
+  backLabel?: string;
 };
 
 export function AgendaDetail({
@@ -47,6 +49,7 @@ export function AgendaDetail({
   onClose,
   onCreateActions,
   onBack,
+  backLabel = '안건 목록',
 }: AgendaDetailProps) {
   // 확정 전 임시 선택. 확정 버튼을 눌러야만 onVote가 호출된다.
   const [pendingChoice, setPendingChoice] = useState<VoteChoice | null>(null);
@@ -103,7 +106,7 @@ export function AgendaDetail({
     <section className="panel agenda-detail-panel">
       <button className="can-back" onClick={onBack}>
         <ArrowLeft size={16} />
-        안건 목록
+        {backLabel}
       </button>
 
       <div className="agenda-detail-head">

@@ -61,6 +61,8 @@ type MarketBoardProps = {
   /** 홈 피드에서 이 물건을 눌러 들어온 경우 그 id. 바로 상세를 열고 한 번만 소비한다. */
   focusId?: string | null;
   onFocusHandled?: () => void;
+  /** 홈 피드에서 진입한 상세에서 '뒤로'를 누르면 목록이 아니라 홈으로 돌아간다. */
+  onExitToHome?: () => void;
 };
 
 type BoardView = 'feed' | 'create' | 'edit' | 'detail';
@@ -97,9 +99,12 @@ export function MarketBoard({
   onDelete,
   focusId,
   onFocusHandled,
+  onExitToHome,
 }: MarketBoardProps) {
   const [view, setView] = useState<BoardView>('feed');
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  // 상세를 '홈 피드'에서 열었는지 기록한다. 뒤로가기 목적지(홈 vs 목록)를 이걸로 정한다.
+  const [openedFromFeed, setOpenedFromFeed] = useState(false);
   const [filter, setFilter] = useState<Filter>('거래중');
   const [amountInput, setAmountInput] = useState('');
   const [bidError, setBidError] = useState('');
@@ -121,18 +126,25 @@ export function MarketBoard({
   // 목록 필터에서 빠져도 열어둔 상세는 유지되어야 하므로 전체에서 찾는다.
   const selected = items.find((item) => item.id === selectedId) ?? null;
 
-  const openDetail = (id: string) => {
+  const openDetail = (id: string, fromFeed = false) => {
     setSelectedId(id);
     setAmountInput('');
     setBidError('');
     setConfirmingDelete(false);
     setView('detail');
+    setOpenedFromFeed(fromFeed);
+  };
+
+  // 상세 '뒤로': 홈에서 들어왔으면 홈으로, 목록에서 들어왔으면 목록으로.
+  const backFromDetail = () => {
+    if (openedFromFeed && onExitToHome) onExitToHome();
+    else setView('feed');
   };
 
   // 홈 피드에서 이 물건을 눌러 들어오면 바로 그 상세를 연다(한 번만 소비).
   useEffect(() => {
     if (focusId) {
-      openDetail(focusId);
+      openDetail(focusId, true);
       onFocusHandled?.();
     }
   }, [focusId]);
@@ -195,9 +207,9 @@ export function MarketBoard({
 
     return (
       <section className="screen">
-        <button className="btn-ghost back-link" onClick={() => setView('feed')} type="button">
+        <button className="btn-ghost back-link" onClick={backFromDetail} type="button">
           <ArrowLeft size={16} />
-          목록으로
+          {openedFromFeed ? '홈으로' : '목록으로'}
         </button>
 
         <div className="gathering-detail">

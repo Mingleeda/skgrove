@@ -57,18 +57,18 @@ export const sections: AppSection[] = [
 
 const bySection = (id: Section) => sections.find((section) => section.id === id)!;
 
-// 13개를 평면으로 늘어놓으면 핵심 흐름(말하기 → 정하기)이
-// 유머게시판·커피뽑기와 같은 무게로 읽힌다. 목적 단위로 묶는다.
+// 메뉴를 평면으로 늘어놓으면 매일 오는 '함께하기'가 관리 메뉴와 같은 무게로 읽힌다.
+// 목적 단위로 묶고, 사용자가 가장 자주 오는 '함께하기'(홈 포함)를 최상단에 둔다.
 export const navGroups: NavGroup[] = [
   {
-    title: '말하고 정하기',
-    items: ['dashboard', 'intake', 'leader', 'agenda', 'actions'].map((id) => bySection(id as Section)),
+    // 매일 들르는 공간. 홈을 입구로 두고 함께 노는 메뉴를 모은다.
+    title: '함께하기',
+    items: ['dashboard', 'gatherings', 'memory', 'humor', 'market'].map((id) => bySection(id as Section)),
   },
   {
-    title: '함께하기',
-    items: ['meetings', 'gatherings', 'profiles', 'memory', 'humor', 'market'].map((id) =>
-      bySection(id as Section),
-    ),
+    // 팀이 의견을 모으고 결정하는 흐름(말하기 → 정하기). 캔미팅/티미팅이 말하기의 출발점.
+    title: '말하고 정하기',
+    items: ['meetings', 'intake', 'leader', 'agenda', 'actions'].map((id) => bySection(id as Section)),
   },
   // 커넥셔너(팀문화 담당) 전용 메뉴 묶음. 커넥셔너로 지정된 사람에게만 보인다(AppShell.canSee).
   // 조뽑기를 시작으로, 앞으로 커넥셔너가 쓰는 도구를 여기에 모은다.
@@ -78,6 +78,6 @@ export const navGroups: NavGroup[] = [
   },
   {
     title: '살펴보기 · 관리',
-    items: ['metrics', 'notifications', 'accounts', 'system'].map((id) => bySection(id as Section)),
+    items: ['metrics', 'profiles', 'notifications', 'accounts', 'system'].map((id) => bySection(id as Section)),
   },
 ];

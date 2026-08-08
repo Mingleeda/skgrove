@@ -22,6 +22,8 @@ type HumorBoardProps = {
   /** 홈 피드에서 이 글을 눌러 들어온 경우 그 id. 바로 상세를 열고 한 번만 소비한다. */
   focusId?: string | null;
   onFocusHandled?: () => void;
+  /** 홈 피드에서 진입한 상세에서 '뒤로'를 누르면 목록이 아니라 홈으로 돌아간다. */
+  onExitToHome?: () => void;
 };
 
 // 'YYYY-MM' 기준으로 delta개월 이동.
@@ -97,8 +99,11 @@ export function HumorBoard({
   onDeleteComment,
   focusId,
   onFocusHandled,
+  onExitToHome,
 }: HumorBoardProps) {
   const [detailId, setDetailId] = useState<string | null>(null);
+  // 상세를 '홈 피드'에서 열었는지 기록한다. 뒤로가기 목적지(홈 vs 목록)를 이걸로 정한다.
+  const [openedFromFeed, setOpenedFromFeed] = useState(false);
   const [writing, setWriting] = useState(false);
   const [body, setBody] = useState('');
   const [mediaUrl, setMediaUrl] = useState('');
@@ -111,16 +116,23 @@ export function HumorBoard({
   // 삭제는 되돌릴 수 없는 행동 — 네이티브 confirm() 대신 카드 안에서 펼치는 확인 UI로 받는다.
   const [deletingPost, setDeletingPost] = useState(false);
 
-  const openDetail = (postId: string | null) => {
+  const openDetail = (postId: string | null, fromFeed = false) => {
     setDetailId(postId);
     setEditing(false);
     setDeletingPost(false);
+    setOpenedFromFeed(fromFeed);
+  };
+
+  // 상세 '뒤로': 홈에서 들어왔으면 홈으로, 목록에서 들어왔으면 목록으로.
+  const backFromDetail = () => {
+    if (openedFromFeed && onExitToHome) onExitToHome();
+    else openDetail(null);
   };
 
   // 홈 피드에서 이 글을 눌러 들어오면 바로 그 상세를 연다(한 번만 소비).
   useEffect(() => {
     if (focusId) {
-      openDetail(focusId);
+      openDetail(focusId, true);
       onFocusHandled?.();
     }
   }, [focusId]);
@@ -170,9 +182,9 @@ export function HumorBoard({
     const liked = detailPost.likedBy.includes(currentUser.name);
     return (
       <section className="screen humor-screen">
-        <button className="humor-back" onClick={() => openDetail(null)}>
+        <button className="humor-back" onClick={backFromDetail}>
           <ArrowLeft size={16} />
-          목록으로
+          {openedFromFeed ? '홈으로' : '목록으로'}
         </button>
         <article className="humor-card humor-detail">
           <header className="humor-card-head">

@@ -1537,6 +1537,7 @@ export function App() {
           onCreateActions={setAgendaForActions}
           focusId={focusFor('agenda')}
           onFocusHandled={clearFeedFocus}
+          onExitToHome={() => changeSection('dashboard')}
           canDelete={isAdmin(currentUser)}
           onDeleteAgenda={removeAgenda}
         />
@@ -1608,6 +1609,7 @@ export function App() {
           onDelete={deleteGathering}
           focusId={focusFor('gatherings')}
           onFocusHandled={clearFeedFocus}
+          onExitToHome={() => changeSection('dashboard')}
         />
       )}
       {active === 'market' && (
@@ -1626,6 +1628,7 @@ export function App() {
           onDelete={deleteMarketItem}
           focusId={focusFor('market')}
           onFocusHandled={clearFeedFocus}
+          onExitToHome={() => changeSection('dashboard')}
         />
       )}
       {active === 'notifications' && (
@@ -1654,6 +1657,7 @@ export function App() {
           onDeleteComment={deleteHumorComment}
           focusId={focusFor('humor')}
           onFocusHandled={clearFeedFocus}
+          onExitToHome={() => changeSection('dashboard')}
         />
       )}
       {active === 'profiles' && (

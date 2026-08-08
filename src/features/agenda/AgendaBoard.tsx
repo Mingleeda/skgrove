@@ -31,6 +31,8 @@ type AgendaBoardProps = {
   /** 홈 피드에서 이 안건을 눌러 들어온 경우 그 id. 바로 상세를 열고 한 번만 소비한다. */
   focusId?: string | null;
   onFocusHandled?: () => void;
+  /** 홈 피드에서 진입한 상세에서 '뒤로'를 누르면 목록이 아니라 홈으로 돌아간다. */
+  onExitToHome?: () => void;
   canDelete?: boolean;
   onDeleteAgenda?: (id: string) => void;
 };
@@ -52,10 +54,13 @@ export function AgendaBoard({
   onCreateActions,
   focusId,
   onFocusHandled,
+  onExitToHome,
   canDelete,
   onDeleteAgenda,
 }: AgendaBoardProps) {
   const [view, setView] = useState<BoardView>('list');
+  // 상세를 '홈 피드'에서 열었는지 기록한다. 뒤로가기 목적지(홈 vs 목록)를 이걸로 정한다.
+  const [openedFromFeed, setOpenedFromFeed] = useState(false);
   const handleDeleteAgenda = (agenda: Agenda) => {
     if (!onDeleteAgenda) return;
     if (window.confirm(`'${agenda.title}' 안건을 삭제할까요? 투표 기록도 함께 사라지며 되돌릴 수 없습니다.`)) {
@@ -73,15 +78,22 @@ export function AgendaBoard({
   // 목록 필터에서 빠졌더라도 열어둔 상세는 유지되어야 하므로 전체 목록에서 찾는다.
   const selectedAgenda = agendas.find((agenda) => agenda.id === selectedId) ?? null;
 
-  const openDetail = (id: string) => {
+  const openDetail = (id: string, fromFeed = false) => {
     setSelectedId(id);
     setView('detail');
+    setOpenedFromFeed(fromFeed);
+  };
+
+  // 상세 '뒤로': 홈에서 들어왔으면 홈으로, 목록에서 들어왔으면 목록으로.
+  const backFromDetail = () => {
+    if (openedFromFeed && onExitToHome) onExitToHome();
+    else setView('list');
   };
 
   // 홈 피드에서 이 안건을 눌러 들어오면 바로 그 상세를 연다(한 번만 소비).
   useEffect(() => {
     if (focusId) {
-      openDetail(focusId);
+      openDetail(focusId, true);
       onFocusHandled?.();
     }
   }, [focusId]);
@@ -112,7 +124,8 @@ export function AgendaBoard({
           onVote={onVote}
           onClose={onCloseAgenda}
           onCreateActions={onCreateActions}
-          onBack={() => setView('list')}
+          onBack={backFromDetail}
+          backLabel={openedFromFeed ? '홈으로' : '안건 목록'}
         />
       </section>
     );
