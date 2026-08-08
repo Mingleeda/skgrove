@@ -6,11 +6,19 @@ import type { AccountStatus, ManagedAccount, TeamPart, UserRole } from '../../ty
 type AccountManagementProps = {
   accounts: ManagedAccount[];
   onAccountsChange: (accounts: ManagedAccount[]) => void;
+  onDelete?: (id: string) => void;
+  currentEmail?: string;
 };
 
 const ROLE_ORDER: Record<UserRole, number> = { 팀리더: 0, 파트리더: 1, 팀원: 2 };
 
-export function AccountManagement({ accounts, onAccountsChange }: AccountManagementProps) {
+export function AccountManagement({ accounts, onAccountsChange, onDelete, currentEmail }: AccountManagementProps) {
+  const removeAccount = (account: ManagedAccount) => {
+    if (!onDelete) return;
+    if (window.confirm(`'${account.name}'(${account.email}) 계정을 삭제할까요? 되돌릴 수 없습니다.`)) {
+      onDelete(account.id);
+    }
+  };
   const updateRole = (id: string, role: UserRole) => {
     onAccountsChange(
       accounts.map((account) =>
@@ -144,6 +152,17 @@ export function AccountManagement({ accounts, onAccountsChange }: AccountManagem
                   onChange={(event) => updateConnectioner(account.id, event.target.checked)}
                 />
               </label>
+              {onDelete && account.email !== currentEmail && (
+                <button
+                  type="button"
+                  className="account-delete"
+                  aria-label={`${account.name} 계정 삭제`}
+                  onClick={() => removeAccount(account)}
+                  style={{ color: '#dc2626', border: '1px solid #f0999599', background: '#fef2f2', borderRadius: 8, padding: '6px 10px', fontSize: 13, cursor: 'pointer' }}
+                >
+                  삭제
+                </button>
+              )}
             </div>
           ))}
         </div>

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { loadAccounts, makeAccountId, saveAccounts, seedAccounts } from './accountStore';
+import { deleteAccount, loadAccounts, makeAccountId, saveAccounts, seedAccounts } from './accountStore';
 import { loadActionItems, makeActionItemId, saveActionItems } from './actionItemStore';
 import { applySelection, finalStatus, isOpen, liveStatus, settleAgendas } from './agendaRules';
 import { loadAgendas, makeAgendaId, makeAgendaOptions, saveAgendas } from './agendaStore';
@@ -47,7 +47,6 @@ import { AgendaBoard } from './features/agenda/AgendaBoard';
 import type { AgendaDraft } from './features/agenda/AgendaForm';
 import { AccountManagement } from './features/auth/AccountManagement';
 import { LoginScreen } from './features/auth/LoginScreen';
-import { DataCleanup } from './features/admin/DataCleanup';
 import { Connect } from './features/connect/Connect';
 import { Dashboard } from './features/dashboard/Dashboard';
 import { HumorBoard } from './features/humor/HumorBoard';
@@ -938,6 +937,14 @@ export function App() {
     void saveAccounts(nextAccounts);
   };
 
+  // 등록한 사람(계정) 삭제 — 팀리더 전용(계정 관리 화면 접근이 이미 팀리더로 제한됨).
+  const removeAccount = (id: string) => {
+    if (!currentUser || !isTeamLeader(currentUser)) return;
+    if (id === currentUser.email) return; // 본인 계정은 삭제 불가
+    setAccounts((prev) => prev.filter((account) => account.id !== id));
+    void deleteAccount(id);
+  };
+
   // 첫 로그인 때 본인이 정한 비밀번호 해시를 그 계정에 저장한다.
   const setAccountPassword = (email: string, passwordHash: string) => {
     persistAccounts(
@@ -1434,11 +1441,6 @@ export function App() {
     );
   }
 
-  // 관리자(admin) 로그인 시 데이터 정제 화면만 보여준다(일반 앱 진입 없이).
-  if (currentUser.email === 'admin') {
-    return <DataCleanup onLogout={() => { clearSession(); setCurrentUser(null); }} />;
-  }
-
   const unreadCount = notifications.filter(
     (item) => item.recipientName === currentUser.name && !item.read,
   ).length;
@@ -1640,7 +1642,7 @@ export function App() {
       {active === 'connect' && <Connect members={connectMembers} />}
       {active === 'memory' && <Memory currentUser={currentUser} />}
       {active === 'metrics' && <Metrics currentUser={currentUser} />}
-      {active === 'accounts' && isTeamLeader(currentUser) && <AccountManagement accounts={accounts} onAccountsChange={persistAccounts} />}
+      {active === 'accounts' && isTeamLeader(currentUser) && <AccountManagement accounts={accounts} onAccountsChange={persistAccounts} onDelete={removeAccount} currentEmail={currentUser.email} />}
       {active === 'system' && isConnectioner(currentUser) && (
         <SystemManagement settings={notifySettings} onSettingsChange={persistNotifySettings} />
       )}

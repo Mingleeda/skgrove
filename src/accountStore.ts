@@ -106,6 +106,15 @@ export async function saveAccounts(accounts: ManagedAccount[]) {
   }
 }
 
+/** 계정(등록한 사람) 삭제 — 팀리더 전용. Supabase accounts 에서 제거한다. */
+export async function deleteAccount(id: string) {
+  if (!supabase) return;
+  const { error } = await supabase.from(ACCOUNT_TABLE).delete().eq('id', id);
+  if (error) {
+    console.warn('Supabase account delete failed.', error);
+  }
+}
+
 export function makeAccountId() {
   return `USR-${Date.now().toString(36).toUpperCase()}`;
 }
