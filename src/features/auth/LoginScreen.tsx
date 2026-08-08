@@ -58,7 +58,8 @@ export function LoginScreen({ accounts, onLogin, onRegister, onSetPassword }: Lo
     const trimmedName = name.trim();
     const trimmedEmail = email.trim().toLowerCase();
 
-    if (!trimmedName) {
+    // 로그인은 이메일+비밀번호만으로 한다(모바일과 동일). 이름은 가입 때만 받는다.
+    if (mode === 'signup' && !trimmedName) {
       setError('이름을 입력해주세요.');
       return;
     }
@@ -73,11 +74,6 @@ export function LoginScreen({ accounts, onLogin, onRegister, onSetPassword }: Lo
 
       if (!account) {
         setError('가입된 계정이 없어요. 먼저 가입 요청을 해주세요.');
-        return;
-      }
-
-      if (account.name !== trimmedName) {
-        setError('이름과 사내메일이 가입 정보와 일치하지 않아요.');
         return;
       }
 
@@ -176,10 +172,12 @@ export function LoginScreen({ accounts, onLogin, onRegister, onSetPassword }: Lo
           </div>
         </div>
 
-        <label>
-          이름
-          <input value={name} onChange={(event) => setName(event.target.value)} placeholder="이선민" />
-        </label>
+        {mode === 'signup' && (
+          <label>
+            이름
+            <input value={name} onChange={(event) => setName(event.target.value)} placeholder="이선민" />
+          </label>
+        )}
 
         <label>
           사내메일
