@@ -8,6 +8,7 @@ import {
   PenLine,
   Send,
   ShieldCheck,
+  Trash2,
   UserRoundCheck,
   Vote,
 } from 'lucide-react';
@@ -40,6 +41,8 @@ type LeaderInboxProps = {
   today: string;
   onIssueUpdate: (issue: Issue) => void;
   onPromoteToAgenda: (issue: Issue, draft: AgendaDraft) => void;
+  canDelete?: boolean;
+  onDeleteIssue?: (id: string) => void;
 };
 // 안건 탭에서 답변·1on1·안건화·메모를 처리한다. '액션'은 별도 액션보드로 옮겨 여기선 뺐다.
 type LeaderAction = 'reply' | 'oneOnOne' | 'agenda' | 'memo';
@@ -63,7 +66,11 @@ const agendaParts: TeamPart[] = ['전체', ...teamParts];
 const DEFAULT_VOTING_DAYS = 7;
 const addDays = (days: number) => new Date(Date.now() + days * 86400000).toISOString().slice(0, 10);
 
-export function LeaderInbox({ issues, accounts, currentUser, today, onIssueUpdate, onPromoteToAgenda }: LeaderInboxProps) {
+export function LeaderInbox({ issues, accounts, currentUser, today, onIssueUpdate, onPromoteToAgenda, canDelete, onDeleteIssue }: LeaderInboxProps) {
+  const handleDelete = (issue: Issue) => {
+    if (!onDeleteIssue) return;
+    if (window.confirm(`'${issue.title}' 접수를 삭제할까요? 되돌릴 수 없습니다.`)) onDeleteIssue(issue.id);
+  };
   const [filter, setFilter] = useState<'전체' | IssueStatus>('전체');
   /*
     목록과 상세를 화면 단위로 나눈다. 예전에는 좌우 분할이었는데, 작업판이
@@ -322,6 +329,16 @@ export function LeaderInbox({ issues, accounts, currentUser, today, onIssueUpdat
                     {issue.visibility === '리더만 보기' ? <ShieldCheck size={17} /> : <Vote size={17} />}
                     {issue.visibility === '리더만 보기' ? '정제 후 안건화' : '안건화'}
                   </button>
+                  {canDelete && onDeleteIssue && (
+                    <button
+                      className="secondary-button"
+                      onClick={() => handleDelete(issue)}
+                      style={{ color: '#dc2626', borderColor: '#f0999599' }}
+                      title="이 접수를 삭제합니다(팀리더 전용)"
+                    >
+                      <Trash2 size={17} /> 삭제
+                    </button>
+                  )}
                 </div>
               </article>
             ))}

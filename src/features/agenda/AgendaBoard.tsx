@@ -31,6 +31,8 @@ type AgendaBoardProps = {
   /** 홈 피드에서 이 안건을 눌러 들어온 경우 그 id. 바로 상세를 열고 한 번만 소비한다. */
   focusId?: string | null;
   onFocusHandled?: () => void;
+  canDelete?: boolean;
+  onDeleteAgenda?: (id: string) => void;
 };
 
 type BoardView = 'list' | 'create' | 'detail';
@@ -50,8 +52,16 @@ export function AgendaBoard({
   onCreateActions,
   focusId,
   onFocusHandled,
+  canDelete,
+  onDeleteAgenda,
 }: AgendaBoardProps) {
   const [view, setView] = useState<BoardView>('list');
+  const handleDeleteAgenda = (agenda: Agenda) => {
+    if (!onDeleteAgenda) return;
+    if (window.confirm(`'${agenda.title}' 안건을 삭제할까요? 투표 기록도 함께 사라지며 되돌릴 수 없습니다.`)) {
+      onDeleteAgenda(agenda.id);
+    }
+  };
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [status, setStatus] = useState<AgendaStatusFilter>('전체');
   const [part, setPart] = useState<TeamPart>(currentUser.part);
@@ -236,6 +246,16 @@ export function AgendaBoard({
                   <button className={done || !open ? 'ig-join done' : 'ig-join'} onClick={() => openDetail(agenda.id)} type="button">
                     {open ? (done ? '결과 보기' : '투표하기') : '결과 보기'}
                   </button>
+                  {canDelete && onDeleteAgenda && (
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteAgenda(agenda)}
+                      title="이 안건을 삭제합니다(팀리더 전용)"
+                      style={{ marginTop: 6, width: '100%', color: '#dc2626', background: '#fef2f2', border: '1px solid #f0999599', borderRadius: 8, padding: '6px 10px', fontSize: 13, cursor: 'pointer' }}
+                    >
+                      삭제
+                    </button>
+                  )}
                 </div>
               </article>
             );

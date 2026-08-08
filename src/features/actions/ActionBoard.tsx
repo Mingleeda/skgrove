@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { AlertTriangle, FileCheck2, RotateCcw, Search } from 'lucide-react';
+import { AlertTriangle, FileCheck2, RotateCcw, Search, Trash2 } from 'lucide-react';
 import { actionStatuses, daysUntilDue, isOverdue, nextStatuses, sortActionItems } from '../../actionRules';
 import type { ActionItem, ActionStatus, CurrentUser, ManagedAccount } from '../../types';
 import { STATUS_ICON, dueLabel } from './actionDisplay';
@@ -10,6 +10,8 @@ type ActionBoardProps = {
   currentUser: CurrentUser;
   today: string;
   onUpdate: (item: ActionItem) => void;
+  canDelete?: boolean;
+  onDeleteItem?: (id: string) => void;
 };
 
 type StatusFilter = '전체' | ActionStatus;
@@ -17,7 +19,11 @@ type OwnerFilter = '전체' | '내 담당';
 
 const statusFilters: StatusFilter[] = ['전체', ...actionStatuses];
 
-export function ActionBoard({ items, accounts, currentUser, today, onUpdate }: ActionBoardProps) {
+export function ActionBoard({ items, accounts, currentUser, today, onUpdate, canDelete, onDeleteItem }: ActionBoardProps) {
+  const handleDelete = (item: ActionItem) => {
+    if (!onDeleteItem) return;
+    if (window.confirm(`'${item.title}' 액션아이템을 삭제할까요? 되돌릴 수 없습니다.`)) onDeleteItem(item.id);
+  };
   const [status, setStatus] = useState<StatusFilter>('전체');
   const [owner, setOwner] = useState<OwnerFilter>('전체');
   const [keyword, setKeyword] = useState('');
@@ -215,6 +221,17 @@ export function ActionBoard({ items, accounts, currentUser, today, onUpdate }: A
                       );
                     })}
                   </div>
+                )}
+                {canDelete && onDeleteItem && (
+                  <button
+                    type="button"
+                    className="secondary-button"
+                    onClick={() => handleDelete(item)}
+                    title="이 액션아이템을 삭제합니다(팀리더 전용)"
+                    style={{ marginTop: 8, color: '#dc2626', borderColor: '#f0999599' }}
+                  >
+                    <Trash2 size={16} aria-hidden /> 삭제
+                  </button>
                 )}
               </article>
             );

@@ -55,6 +55,13 @@ export async function saveActionItems(items: ActionItem[]) {
 // 안건 통과 시 여러 액션이 한 번에 만들어질 수 있어 세션 카운터로 같은 밀리초 충돌을 막는다.
 let actionSequence = 0;
 
+/** 액션아이템 삭제(팀리더 전용). Supabase action_items 에서 제거한다. */
+export async function deleteActionItem(id: string) {
+  if (!supabase) return;
+  const { error } = await supabase.from(ACTION_TABLE).delete().eq('id', id);
+  if (error) console.warn('Supabase action item delete failed.', error);
+}
+
 export function makeActionItemId() {
   actionSequence += 1;
   return `ACT-${Date.now().toString(36).toUpperCase()}-${actionSequence.toString(36).toUpperCase()}`;

@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { deleteAccount, loadAccounts, makeAccountId, saveAccounts, seedAccounts } from './accountStore';
-import { loadActionItems, makeActionItemId, saveActionItems } from './actionItemStore';
+import { deleteActionItem, loadActionItems, makeActionItemId, saveActionItems } from './actionItemStore';
 import { applySelection, finalStatus, isOpen, liveStatus, settleAgendas } from './agendaRules';
-import { loadAgendas, makeAgendaId, makeAgendaOptions, saveAgendas } from './agendaStore';
+import { deleteAgenda, loadAgendas, makeAgendaId, makeAgendaOptions, saveAgendas } from './agendaStore';
 import { hasVoted, loadBallots, makeVoterKey, saveBallots } from './ballotStore';
 import { hasLeaderRole, isConnectioner, isLeader, isTeamLeader, teamParts } from './auth';
 import { loadCanSteps, saveCanSteps } from './canStepsStore';
@@ -57,7 +57,7 @@ import { Memory } from './features/memory/Memory';
 import { Metrics } from './features/metrics/Metrics';
 import { NotificationCenter } from './features/notifications/NotificationCenter';
 import { Profiles } from './features/profiles/Profiles';
-import { loadIssues, makeIssueId, saveIssues } from './issueStore';
+import { deleteIssue, loadIssues, makeIssueId, saveIssues } from './issueStore';
 import { deliverDm, deliverToSlack, sendAnnouncement } from './notificationDelivery';
 import {
   actionDraft,
@@ -945,6 +945,23 @@ export function App() {
     void deleteAccount(id);
   };
 
+  // 접수·안건·액션 삭제 — 팀리더 전용(실서비스 전 데이터 정제).
+  const removeIssue = (id: string) => {
+    if (!currentUser || !isTeamLeader(currentUser)) return;
+    setIssues((prev) => prev.filter((issue) => issue.id !== id));
+    void deleteIssue(id);
+  };
+  const removeAgenda = (id: string) => {
+    if (!currentUser || !isTeamLeader(currentUser)) return;
+    setAgendas((prev) => prev.filter((agenda) => agenda.id !== id));
+    void deleteAgenda(id);
+  };
+  const removeActionItem = (id: string) => {
+    if (!currentUser || !isTeamLeader(currentUser)) return;
+    setActionItems((prev) => prev.filter((item) => item.id !== id));
+    void deleteActionItem(id);
+  };
+
   // 첫 로그인 때 본인이 정한 비밀번호 해시를 그 계정에 저장한다.
   const setAccountPassword = (email: string, passwordHash: string) => {
     persistAccounts(
@@ -1502,6 +1519,8 @@ export function App() {
           today={today()}
           onIssueUpdate={updateIssue}
           onPromoteToAgenda={promoteToAgenda}
+          canDelete={isTeamLeader(currentUser)}
+          onDeleteIssue={removeIssue}
         />
       )}
       {active === 'agenda' && !agendaForActions && (
@@ -1518,6 +1537,8 @@ export function App() {
           onCreateActions={setAgendaForActions}
           focusId={focusFor('agenda')}
           onFocusHandled={clearFeedFocus}
+          canDelete={isTeamLeader(currentUser)}
+          onDeleteAgenda={removeAgenda}
         />
       )}
       {active === 'agenda' && agendaForActions && (
@@ -1541,6 +1562,8 @@ export function App() {
           currentUser={currentUser}
           today={today()}
           onUpdate={updateActionItem}
+          canDelete={isTeamLeader(currentUser)}
+          onDeleteItem={removeActionItem}
         />
       )}
       {active === 'meetings' && (
